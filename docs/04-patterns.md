@@ -60,3 +60,5 @@ becomes interactive); toast → alert → banner → alert dialog (urgency rises
 | 2026-10-15 | `DialogHeader` → title + description (19× / 18 files) | The standard composition, used as designed | **Dismissed**: correct use, nothing to promote |
 | 2026-10-15 | `DropdownMenuItem` + `Icon` (`DropdownMenuRecipe`, 17×) | The standard composition | **Dismissed**: correct use |
 | 2026-10-15 | One-off `Fab` (floating compose on phones) | 1 use | **Parked**: below the threshold. Revisit if a second product needs a floating action. |
+| 2026-10-15 | Dialog footers that keep Delete, Cancel, and Save in one row on phones (`ActionDialog`, 4 dialogs) | Mailbird: 4 `flex-row` overrides on `DialogFooter`; 11 footers pair a dismiss with a confirm | **Component**: `DialogActions` + `DialogAction`. Decided by Sean: on phones, a row of icon buttons, laid out like Apple's sheet controls (not the glass look) |
+| 2026-10-15 | Solid menus (`bg-popover` over the frosted default, 7 menus) | Mailbird: the menus with the most text | **Decided by Sean: glass.** Menus stay frosted, and the overrides go. |

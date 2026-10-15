@@ -21,6 +21,8 @@ import {
   CommandList,
   CommandShortcut,
   Dialog,
+  DialogAction,
+  DialogActions,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -126,6 +128,14 @@ export function Showcase() {
         <IconButton label="Pin" render={<Toggle size="sm" defaultPressed />}>
           <Icon name="keep" fill />
         </IconButton>
+        <div className="w-full max-w-md rounded-xl border p-4 pb-0">
+          <p className="text-sm">DialogActions (narrow the window to see the phone row)</p>
+          <DialogActions className="mt-4">
+            <DialogAction kind="destructive">Delete split</DialogAction>
+            <DialogAction kind="cancel">Cancel</DialogAction>
+            <DialogAction>Save</DialogAction>
+          </DialogActions>
+        </div>
         <Icon name="schedule" tone="muted" />
         <Icon name="error" tone="destructive" />
         <Button size="icon" aria-label="Add">

@@ -7,7 +7,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "../../lib/utils"
 
 import { Button } from "./button"
-import { Icon } from "../icon"
+import { Icon, type IconName } from "../icon"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -139,8 +139,45 @@ function DialogDescription({
   )
 }
 
+/**
+ * A dialog's actions as one row, everywhere. On a phone each action becomes a round 40px
+ * icon button (Apple's sheet controls: × to dismiss, ✓ to confirm, a destructive action on
+ * the far left), and its words stay as its accessible name. From `sm` up they're the usual
+ * text buttons, right-aligned.
+ */
+function DialogActions({ className, ...props }: React.ComponentProps<"div">) {
+  return <DialogFooter className={cn("flex-row items-center justify-end", className)} {...props} />
+}
+
+type DialogActionKind = "confirm" | "cancel" | "destructive"
+const ACTION: Record<DialogActionKind, { variant: "default" | "outline" | "ghost-destructive"; icon: IconName; className?: string }> = {
+  confirm: { variant: "default", icon: "check" },
+  cancel: { variant: "outline", icon: "close" },
+  // Leads the row, apart from the others; tinted on phones so the icon reads as a control.
+  destructive: { variant: "ghost-destructive", icon: "delete", className: "mr-auto max-sm:bg-destructive/10" },
+}
+
+/** One action in `DialogActions`. `kind` sets its look and its phone icon; `icon` overrides the icon. */
+function DialogAction({
+  kind = "confirm",
+  icon,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof Button> & { kind?: DialogActionKind; icon?: IconName }) {
+  const a = ACTION[kind]
+  return (
+    <Button data-kind={kind} variant={a.variant} className={cn("max-sm:size-10 max-sm:rounded-full max-sm:p-0", a.className, className)} {...props}>
+      <Icon name={icon ?? a.icon} className="size-5 sm:hidden" />
+      <span className="max-sm:sr-only">{children}</span>
+    </Button>
+  )
+}
+
 export {
   Dialog,
+  DialogAction,
+  DialogActions,
   DialogClose,
   DialogContent,
   DialogDescription,
