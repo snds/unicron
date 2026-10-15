@@ -19,8 +19,13 @@ jobs:
       - run: pnpm tokens:build
       - run: pnpm typecheck
       - run: pnpm lint
+      # Token lint: tiers 2/3 alias lower tiers; no colour literals in packages/ui/src.
+      - run: pnpm lint:tokens
       - run: pnpm build
       - run: pnpm test
       # Design-system analytics ratchet: fails when correct-use violations grow
       # beyond .dsa/baseline.json (sense and gate with the same code).
       - run: pnpm ds:ratchet
+      # Every package still packs (files whitelist, exports, workspace:* rewrite) before a release
+      # depends on it. Private packages (root, playground) are listed too; only @unicron/* ship.
+      - run: pnpm -r pack --dry-run

@@ -21,8 +21,8 @@
   "accent": { "$type": "color", "$value": "{neutral.100}", "$extensions": { "unicron.modes": { "dark": "{neutral.800}" } } },
   "accent-foreground": { "$type": "color", "$value": "{neutral.900}", "$extensions": { "unicron.modes": { "dark": "{neutral.25}" } } },
   "destructive": { "$type": "color", "$value": "{red.500}", "$extensions": { "unicron.modes": { "dark": "{red.400}" } } },
-  "border": { "$type": "color", "$value": "{neutral.200}", "$extensions": { "unicron.modes": { "dark": "oklch(1 0 0 / 10%)" } } },
-  "input": { "$type": "color", "$value": "{neutral.200}", "$extensions": { "unicron.modes": { "dark": "oklch(1 0 0 / 15%)" } } },
+  "border": { "$type": "color", "$value": "{neutral.200}", "$extensions": { "unicron.modes": { "dark": "{white-alpha.10}" } } },
+  "input": { "$type": "color", "$value": "{neutral.200}", "$extensions": { "unicron.modes": { "dark": "{white-alpha.15}" } } },
   "ring": { "$type": "color", "$value": "{neutral.400}", "$extensions": { "unicron.modes": { "dark": "{neutral.500}" } } },
   "radius": { "$type": "dimension", "$value": "{radius.base}" },
 

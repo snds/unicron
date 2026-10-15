@@ -10,7 +10,7 @@ Mailbird, Synapse and Lockdown build on. Public, personal, Apache-2.0.
 | `playground` (`apps/playground`) | Vite + React 19 page that renders every primitive in light and dark, side by side, with a theme toggle. It is also what `dsa` scans. |
 
 Docs: [principles](docs/01-principles.md) · [tokens](docs/02-tokens.md) · [components](docs/03-components.md) ·
-[patterns](docs/04-patterns.md) · [consuming](docs/05-consuming.md`, `docs/06-contributing.md) · [DESIGN.md](DESIGN.md) (visual identity anchor).
+[patterns](docs/04-patterns.md) · [consuming](docs/05-consuming.md) · [contributing and releasing](docs/06-contributing.md) · [DESIGN.md](DESIGN.md) (visual identity anchor).
 
 ## Stack
 
@@ -25,10 +25,23 @@ pnpm install
 pnpm tokens:build        # DTCG JSON → dist/tokens.css + dist/tokens.json
 pnpm typecheck
 pnpm lint                # oxlint
-pnpm build               # tokens → ui (tsc) → playground (vite), in dependency order
+pnpm lint:tokens         # tiers 2/3 alias lower tiers; no colour literals in packages/ui/src
+pnpm build               # tokens → ui (tsc + styles copy) → playground (vite), in dependency order
 pnpm test                # token round-trip check (core semantic set present, no app roles)
-pnpm dev                 # playground on http://localhost:5180
+pnpm dev                 # builds @unicron/ui (+tokens), then the playground on http://localhost:5180
 ```
+
+### Release
+
+```bash
+pnpm changeset           # one per PR that touches packages/*: bump type + one actionable line
+pnpm run version         # changeset version — normally done by the Version Packages PR
+pnpm pack:packages       # tarballs into artifacts/ (gitignored) for a consumer smoke test
+pnpm release             # pnpm build && changeset publish — the release workflow runs this
+```
+
+Flow and the npm/GitHub-Release split: [docs/06-contributing.md → Releasing](docs/06-contributing.md#releasing).
+Consuming either way: [docs/05-consuming.md](docs/05-consuming.md).
 
 ### Design-system analytics (dsa)
 
@@ -77,6 +90,7 @@ once a second consumer needs it.
 ```
 packages/tokens/tokens/{global,semantic,component}.json   DTCG sources (the truth)
 packages/tokens/scripts/build.mjs                         tiny builder (Style Dictionary planned)
+packages/tokens/scripts/lint.mjs                          token lint (pnpm lint:tokens)
 packages/tokens/examples/app-extension.css                how an app adds its own roles
 packages/ui/src/components/ui/*.tsx                       the primitives (owned source)
 packages/ui/src/components/icon.tsx                       Material Symbols <Icon>
@@ -84,6 +98,8 @@ packages/ui/src/styles/index.css                          Tailwind entry: tokens
 apps/playground/                                          every primitive, light + dark
 docs/                                                     principles, tokens, components, patterns, consuming
 dsa.config.json · .github/workflows/ci.yml                analytics wiring · CI
+.changeset/ · .github/workflows/release.yml               changesets · Version Packages PR → tags, GitHub Releases, npm
+.github/CODEOWNERS · pull_request_template.md · ISSUE_TEMPLATE/promotion.md   governance (docs/06-contributing.md)
 ```
 
 ## License

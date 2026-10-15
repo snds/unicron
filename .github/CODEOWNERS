@@ -1,0 +1,14 @@
+# Code owners: unicron core (docs/06-contributing.md → Roles). Contribution is open, ownership is
+# not: every PR needs a review from an owner before it merges (enable "Require review from Code
+# Owners" in branch protection for main). Later patterns map to a more specific line below.
+
+*                     @snds
+
+# Tokens and primitives are the contract consumers depend on; owned explicitly.
+/packages/tokens/     @snds
+/packages/ui/         @snds
+
+# Release and governance plumbing.
+/.changeset/          @snds
+/.github/             @snds
+/docs/                @snds
