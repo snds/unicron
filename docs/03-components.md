@@ -63,3 +63,6 @@ components) rather than hand-writing.
 - No component imports a `--g-*` token. Everything goes through tier 2 or tier 3.
 - `AdaptiveSheetContent` is the one primitive that reads tier-3 knobs directly
   (`--c-sheet-*`): a bottom sheet under the `sm` breakpoint, a side panel above it.
+  Its `wide` prop widens the side panel (`--c-sheet-wide-width`, 36rem) for content like a
+  photo or a drawing; on phones it's the same bottom sheet. The panel never exceeds the
+  viewport (`max-w-full`). Its `className` styles the inner scroll area, not the panel.
