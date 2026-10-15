@@ -64,26 +64,18 @@ separator: pnpm 10 forwards `--` literally and dsa then reads it as the director
 ## Regenerating components
 
 shadcn's CLI only ships Lucide, Tabler, Hugeicons, Phosphor and Remix icons, so the primitives
-are produced by a local transform that reads a checkout of `shadcn-ui/ui`, inlines the `base-nova`
-style classes and swaps every Lucide icon for a Material Symbol. The tool lives in Mailbird
-(`tools/shadcn-material/transform.mjs` + `icon-map.json`, in
-[snds/mailbird](https://github.com/snds/mailbird)); it is not copied here because it is still
-Mailbird-shaped (it writes `@/…` alias imports). To add or refresh a primitive:
+are produced by a local transform, [`tools/shadcn-material`](tools/shadcn-material/README.md). It
+reads a checkout of `shadcn-ui/ui`, inlines the `base-nova` style classes, swaps every Lucide icon
+for a Material Symbol, and writes the package-relative imports `@unicron/ui` uses:
 
 ```bash
 git clone --depth 1 https://github.com/shadcn-ui/ui /tmp/shadcn
-git clone --depth 1 https://github.com/snds/mailbird /tmp/mailbird
-node /tmp/mailbird/tools/shadcn-material/transform.mjs /tmp/shadcn /tmp/out calendar popover
-# then move /tmp/out/*.tsx into packages/ui/src/components/ui and rewrite the aliases:
-#   "@/lib/utils"            → "../../lib/utils"
-#   "@/components/ui/<x>"    → "./<x>"
-#   "@/components/icon"      → "../icon"
-# and add an `export * from "./components/ui/<x>"` line to packages/ui/src/index.ts.
+pnpm regen /tmp/shadcn /tmp/out calendar popover
+# review, move into packages/ui/src/components/ui, and export from packages/ui/src/index.ts
 ```
 
 If a component uses a Lucide icon that is not mapped yet, the transform stops; add the mapping to
-`icon-map.json`. Moving the transform into this repo (with a `--alias relative` flag) is the plan
-once a second consumer needs it.
+`tools/shadcn-material/icon-map.json`. The tool's README covers regenerating over an owned file.
 
 ## Layout
 

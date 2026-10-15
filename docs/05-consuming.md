@@ -97,8 +97,9 @@ components and fails CI when the count grows.
 ## 6. Regenerate or add components
 
 Primitives are owned source in `packages/ui/src/components/ui`. To add one, run the
-shadcn-material transform against a `shadcn-ui/ui` checkout and rewrite the alias imports (see
-the README → Regenerating components). Do not fork a primitive into your app under the same name;
+shadcn-material transform (`pnpm regen`, in `tools/shadcn-material`) against a `shadcn-ui/ui`
+checkout (see the README → Regenerating components). An app that needs a primitive of its own,
+with `@/…` aliases, runs the same tool with `--alias-mode app`. Do not fork a primitive into your app under the same name;
 `dsa` reports local look-alikes of system names as violations.
 
 ## 7. Moving off the submodule (Mailbird)
