@@ -1,5 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
+// Promoted from: snds/mailbird · PR snds/unicron#2 · DSA 389e81101949 (shape="pill"); none (ghost-muted, ghost-destructive, raised from correct-use override counts)
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"

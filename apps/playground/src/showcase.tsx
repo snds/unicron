@@ -129,8 +129,8 @@ export function Showcase() {
           <Icon name="keep" fill />
         </IconButton>
         <div className="w-full max-w-md rounded-xl border p-4 pb-0">
-          <p className="text-sm">DialogActions (narrow the window to see the phone row)</p>
-          <DialogActions className="mt-4">
+          <p className="mb-4 text-sm">DialogActions (narrow the window to see the phone row)</p>
+          <DialogActions>
             <DialogAction kind="destructive">Delete split</DialogAction>
             <DialogAction kind="cancel">Cancel</DialogAction>
             <DialogAction>Save</DialogAction>

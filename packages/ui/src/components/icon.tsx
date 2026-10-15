@@ -1,3 +1,4 @@
+// Promoted from: Seeded from snds/mailbird; tone: snds/mailbird · PR snds/unicron#2 · DSA none (raised from correct-use override counts)
 import type { CSSProperties, SVGProps } from "react"
 import type { MaterialSymbol } from "material-symbols"
 

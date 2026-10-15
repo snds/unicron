@@ -1,3 +1,4 @@
+// Promoted from: snds/mailbird · PR snds/unicron#2 · DSA 503c2fad12b5, b6400588fc4c
 import type * as React from "react"
 import type { VariantProps } from "class-variance-authority"
 

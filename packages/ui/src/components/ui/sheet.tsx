@@ -1,6 +1,7 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
 // Promoted from: Seeded from snds/mailbird (initial copy; AdaptiveSheetContent and its wide variant arrived with the set)
+// Promoted from: snds/mailbird · PR snds/unicron#2 · DSA none (SheetContent fullscreen, raised from correct-use override counts)
 "use client"
 
 import * as React from "react"
