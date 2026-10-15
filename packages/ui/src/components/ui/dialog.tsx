@@ -64,7 +64,8 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-2 right-2"
+                // On phones a DialogActions row with a Cancel is the one way out; one × is enough.
+                className="absolute top-2 right-2 max-sm:in-[[data-slot=dialog-content]:has([data-kind=cancel])]:hidden"
                 size="icon-sm"
               />
             }
