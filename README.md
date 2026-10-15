@@ -10,7 +10,7 @@ Mailbird, Synapse and Lockdown build on. Public, personal, Apache-2.0.
 | `playground` (`apps/playground`) | Vite + React 19 page that renders every primitive in light and dark, side by side, with a theme toggle. It is also what `dsa` scans. |
 
 Docs: [principles](docs/01-principles.md) · [tokens](docs/02-tokens.md) · [components](docs/03-components.md) ·
-[patterns](docs/04-patterns.md) · [consuming](docs/05-consuming.md) · [DESIGN.md](DESIGN.md) (visual identity anchor).
+[patterns](docs/04-patterns.md) · [consuming](docs/05-consuming.md`, `docs/06-contributing.md) · [DESIGN.md](DESIGN.md) (visual identity anchor).
 
 ## Stack
 
