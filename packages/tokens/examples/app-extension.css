@@ -1,0 +1,69 @@
+/*
+ * App extension layer — EXAMPLE.
+ *
+ * The core semantic tier is the shadcn contract and nothing else. Roles that only one
+ * product understands (which pane is chrome, what colour "unread" is, one hue per
+ * app area) are declared by that product, in its own stylesheet, after the core:
+ *
+ *   @import "@unicron/ui/styles";
+ *   @import "./app-extension.css";
+ *
+ * Rules: alias tier-1 (--g-*) or tier-2 (--*) tokens, never raw values; swap only in
+ * .dark; expose to Tailwind through your own @theme inline block. Component-tier knobs
+ * for app-only components (list rows, composer, note cards…) also live here, as --c-*.
+ *
+ * This example is the layer Mailbird (a mail / calendar / contacts / notes suite) adds.
+ */
+
+:root {
+  /* Panes */
+  --surface-chrome: var(--g-neutral-50);   /* nav rail, tab bar, list pane */
+  --surface-canvas: var(--g-neutral-0);    /* reading / editing pane */
+  --surface-selected: var(--g-neutral-100);
+
+  /* One hue per app area, the same wayfinding Apple uses. */
+  --vertical-mail: var(--g-blue-500);
+  --vertical-calendar: var(--g-coral-500);
+  --vertical-contacts: var(--g-green-500);
+  --vertical-notes: var(--g-amber-500);
+  --unread: var(--g-blue-500);
+
+  /* Tinted surfaces (note cards): a light, soft wash behind dark text. */
+  --tint-l: 0.95;
+  --tint-c: 0.045;
+
+  /* The core sidebar contract can be re-pointed at an app role. */
+  --sidebar: var(--surface-chrome);
+}
+
+.dark {
+  --surface-chrome: var(--g-neutral-900);
+  --surface-canvas: var(--g-neutral-950);
+  --surface-selected: var(--g-neutral-800);
+  --vertical-mail: var(--g-blue-400);
+  --vertical-calendar: var(--g-coral-400);
+  --vertical-contacts: var(--g-green-400);
+  --vertical-notes: var(--g-amber-400);
+  --unread: var(--g-blue-400);
+  /* Deep and quiet, so light text keeps its contrast. */
+  --tint-l: 0.3;
+  --tint-c: 0.05;
+}
+
+/* App-only component knobs (tier 3) alias the roles above. */
+:root {
+  --c-list-row-selected: var(--surface-selected);
+  --c-list-row-unread-dot: var(--unread);
+  --c-note-card-blue: oklch(var(--tint-l) var(--tint-c) var(--g-hue-blue));
+}
+
+@theme inline {
+  --color-surface-chrome: var(--surface-chrome);
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-selected: var(--surface-selected);
+  --color-unread: var(--unread);
+  --color-vertical-mail: var(--vertical-mail);
+  --color-vertical-calendar: var(--vertical-calendar);
+  --color-vertical-contacts: var(--vertical-contacts);
+  --color-vertical-notes: var(--vertical-notes);
+}

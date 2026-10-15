@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["vite/client"],
+    /* Typecheck against the UI source so it works before `pnpm build` has emitted dist/.
+       At runtime Vite resolves @unicron/ui through its package exports (dist/). */
+    "paths": { "@unicron/ui": ["../../packages/ui/src/index.ts"] }
+  },
+  "include": ["src", "vite.config.ts"]
+}

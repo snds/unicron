@@ -1,0 +1,21 @@
+{
+  "name": "@unicron/tokens",
+  "version": "0.1.0",
+  "description": "unicron design tokens: DTCG JSON source, three tiers (global → semantic → component), built to CSS custom properties and a Tailwind v4 theme map.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": ["dist", "tokens", "examples"],
+  "exports": {
+    ".": "./dist/tokens.json",
+    "./tokens.css": "./dist/tokens.css",
+    "./dist/tokens.css": "./dist/tokens.css",
+    "./dist/tokens.json": "./dist/tokens.json",
+    "./examples/*": "./examples/*",
+    "./tokens/*": "./tokens/*"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/build.mjs && node scripts/check.mjs",
+    "typecheck": "node --check scripts/build.mjs && node --check scripts/check.mjs"
+  }
+}

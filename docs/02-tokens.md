@@ -1,0 +1,84 @@
+# 02 · Tokens
+
+Source of truth: `packages/tokens/tokens/*.json`, in the
+[DTCG](https://tr.designtokens.org/format/) format. `pnpm tokens:build` writes
+`packages/tokens/dist/tokens.css` and `dist/tokens.json`. Nothing reads the JSON directly at
+runtime; everything reads the CSS custom properties.
+
+## Three tiers
+
+| Tier | File | CSS prefix | Holds | Example |
+|---|---|---|---|---|
+| 1 Global | `global.json` | `--g-` | Raw values: the neutral ramp, accent hues, bare hue angles, radius base, durations, easing, font stacks | `--g-neutral-900: oklch(0.185 0.008 260)` |
+| 2 Semantic | `semantic.json` | `--` | Roles. Exactly the shadcn/ui contract plus the sidebar contract. Light = `$value`; dark = `$extensions["unicron.modes"].dark` | `--primary: var(--g-neutral-900)` / `.dark { --primary: var(--g-neutral-100) }` |
+| 3 Component | `component.json` | `--c-` | Knobs the core primitives read; they alias tier 2 or hold per-component sizes | `--c-icon-fill: 0`, `--c-sheet-regular-width: 24rem` |
+
+Only tier 2 swaps between light and dark. Tier 1 is theme-agnostic. Tier 3 follows tier 2 through
+`var()` and may carry a dark override for perceptual corrections only (icons are graded down
+slightly on dark surfaces).
+
+## Naming
+
+- The CSS name is the tier prefix plus the JSON path joined with `-`: `neutral.900` in
+  `global.json` → `--g-neutral-900`; `icon.fill` in `component.json` → `--c-icon-fill`.
+- Semantic names follow shadcn exactly (`background`, `muted-foreground`, `ring`, …) so any
+  shadcn component drops in unchanged.
+- References use DTCG syntax and are tier-agnostic: `{neutral.0}`, `{foreground}`, `{icon.fill}`.
+  The builder resolves them to `var(--…)` so the cascade stays live.
+
+## Modes
+
+Light and dark are modes of the semantic tier, kept on the token itself:
+
+```json
+"primary": {
+  "$type": "color",
+  "$value": "{neutral.900}",
+  "$extensions": { "unicron.modes": { "dark": "{neutral.100}" } }
+}
+```
+
+The builder emits `:root { … }` for light and `.dark { … }` for dark. Apps switch themes by
+toggling the `dark` class on `<html>` (`next-themes` with `attribute="class"` does this).
+
+## The Tailwind map
+
+`dist/tokens.css` ends with an `@theme inline { … }` block that exposes tier 2 to Tailwind v4
+utilities: every semantic colour becomes `--color-<name>: var(--<name>)` (so `bg-background`,
+`text-muted-foreground`), the fonts become `--font-sans` / `--font-mono` / `--font-heading`, and the
+radius scale is derived from `--radius` using the multipliers in
+`semantic.json → $extensions["unicron.theme"].radius`.
+
+## How to add a token
+
+1. Decide the tier. A raw value → `global.json`. A role every product shares → `semantic.json`.
+   A knob a core primitive reads → `component.json`. A role only your product has → your app
+   extension file, not this package.
+2. Add the token with `$type` and `$value` (a reference where possible), and a `dark` mode for
+   semantic colours.
+3. Run `pnpm tokens:build && pnpm test`. The check fails if a core semantic name is missing, if a
+   reference does not resolve, or if an app role leaked into the core.
+4. If the token should be a Tailwind utility and is not a semantic colour, add it to the theme
+   extension in `semantic.json` (or extend `scripts/build.mjs`).
+
+## App extension layer
+
+Product-only roles live in the product, after the core import. The documented example is
+`packages/tokens/examples/app-extension.css` (Mailbird's panes, per-area hues, unread marker and
+note tints). Rules: alias `--g-*` or `--*`, swap only in `.dark`, expose to Tailwind with your own
+`@theme inline` block. See [05-consuming.md](05-consuming.md).
+
+## Figma variables
+
+The three tiers map to three Figma variable collections:
+
+| Figma collection | Modes | Source |
+|---|---|---|
+| `global` | one mode | `global.json` |
+| `semantic` | `light`, `dark` | `semantic.json` (`$value` → light, `unicron.modes.dark` → dark) |
+| `component` | one mode (dark overrides as a second mode where present) | `component.json` |
+
+Variable names use `/` where the CSS uses `-` (`neutral/900`, `muted-foreground`, `icon/fill`).
+Aliases in Figma mirror DTCG references, so `semantic/primary` aliases `global/neutral/900` in the
+light mode and `global/neutral/100` in dark. `dist/tokens.json` is the flat form intended for a
+Figma import script; the planned Style Dictionary build will emit a Figma-ready file directly.

@@ -1,0 +1,18 @@
+{
+  "$description": "Tier 3 · Component knobs. Emitted as --c-*. Each aliases a semantic token or holds a per-component size. Only tokens that core @unicron/ui primitives read belong here; app-specific components keep theirs in the app extension layer.",
+  "icon": {
+    "$description": "Material Symbols variable-font axes. The Icon component reads these; a parent can override them (e.g. an active nav item sets --c-icon-fill: 1).",
+    "fill": { "$type": "number", "$value": 0 },
+    "wght": { "$type": "number", "$value": 400 },
+    "grad": { "$type": "number", "$value": 0, "$extensions": { "unicron.modes": { "dark": -25 } }, "$description": "Dark surfaces look heavier, so grade icons down slightly (Material guidance)." },
+    "opsz": { "$type": "number", "$value": 20 }
+  },
+  "sheet": {
+    "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up.",
+    "compact-height": { "$type": "dimension", "$value": "75dvh" },
+    "compact-radius": { "$type": "dimension", "$value": "1.25rem" },
+    "handle": { "$type": "color", "$value": "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" },
+    "close-size": { "$type": "dimension", "$value": "2.5rem" },
+    "regular-width": { "$type": "dimension", "$value": "24rem" }
+  }
+}

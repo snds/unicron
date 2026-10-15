@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+
+# dsa output: scan/pattern reports are regenerated; only the ratchet baseline is tracked.
+.dsa/*
+!.dsa/baseline.json

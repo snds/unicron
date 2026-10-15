@@ -1,0 +1,41 @@
+{
+  "$description": "Tier 2 · Semantic roles. Emitted as --* (no prefix): the shadcn/ui contract plus the sidebar contract. `$value` is light mode; `$extensions[\"unicron.modes\"].dark` is dark mode. Apps add their own roles in an extension layer (see examples/app-extension.css), never here.",
+  "$extensions": {
+    "unicron.theme": {
+      "$description": "Extra entries for the Tailwind v4 `@theme inline` block. Radius steps are multiples of --radius.",
+      "radius": { "sm": 0.6, "md": 0.8, "lg": 1, "xl": 1.4, "2xl": 1.8, "3xl": 2.2, "4xl": 2.6 }
+    }
+  },
+  "background": { "$type": "color", "$value": "{neutral.0}", "$extensions": { "unicron.modes": { "dark": "{neutral.950}" } } },
+  "foreground": { "$type": "color", "$value": "{neutral.950}", "$extensions": { "unicron.modes": { "dark": "{neutral.25}" } } },
+  "card": { "$type": "color", "$value": "{neutral.0}", "$extensions": { "unicron.modes": { "dark": "{neutral.900}" } } },
+  "card-foreground": { "$type": "color", "$value": "{neutral.950}", "$extensions": { "unicron.modes": { "dark": "{neutral.25}" } } },
+  "popover": { "$type": "color", "$value": "{neutral.0}", "$extensions": { "unicron.modes": { "dark": "{neutral.900}" } } },
+  "popover-foreground": { "$type": "color", "$value": "{neutral.950}", "$extensions": { "unicron.modes": { "dark": "{neutral.25}" } } },
+  "primary": { "$type": "color", "$value": "{neutral.900}", "$extensions": { "unicron.modes": { "dark": "{neutral.100}" } } },
+  "primary-foreground": { "$type": "color", "$value": "{neutral.25}", "$extensions": { "unicron.modes": { "dark": "{neutral.900}" } } },
+  "secondary": { "$type": "color", "$value": "{neutral.100}", "$extensions": { "unicron.modes": { "dark": "{neutral.800}" } } },
+  "secondary-foreground": { "$type": "color", "$value": "{neutral.900}", "$extensions": { "unicron.modes": { "dark": "{neutral.25}" } } },
+  "muted": { "$type": "color", "$value": "{neutral.100}", "$extensions": { "unicron.modes": { "dark": "{neutral.800}" } } },
+  "muted-foreground": { "$type": "color", "$value": "{neutral.500}", "$extensions": { "unicron.modes": { "dark": "{neutral.400}" } } },
+  "accent": { "$type": "color", "$value": "{neutral.100}", "$extensions": { "unicron.modes": { "dark": "{neutral.800}" } } },
+  "accent-foreground": { "$type": "color", "$value": "{neutral.900}", "$extensions": { "unicron.modes": { "dark": "{neutral.25}" } } },
+  "destructive": { "$type": "color", "$value": "{red.500}", "$extensions": { "unicron.modes": { "dark": "{red.400}" } } },
+  "border": { "$type": "color", "$value": "{neutral.200}", "$extensions": { "unicron.modes": { "dark": "oklch(1 0 0 / 10%)" } } },
+  "input": { "$type": "color", "$value": "{neutral.200}", "$extensions": { "unicron.modes": { "dark": "oklch(1 0 0 / 15%)" } } },
+  "ring": { "$type": "color", "$value": "{neutral.400}", "$extensions": { "unicron.modes": { "dark": "{neutral.500}" } } },
+  "radius": { "$type": "dimension", "$value": "{radius.base}" },
+
+  "sidebar": { "$type": "color", "$value": "{neutral.50}", "$extensions": { "unicron.modes": { "dark": "{neutral.900}" } } },
+  "sidebar-foreground": { "$type": "color", "$value": "{foreground}" },
+  "sidebar-primary": { "$type": "color", "$value": "{primary}" },
+  "sidebar-primary-foreground": { "$type": "color", "$value": "{primary-foreground}" },
+  "sidebar-accent": { "$type": "color", "$value": "{accent}" },
+  "sidebar-accent-foreground": { "$type": "color", "$value": "{accent-foreground}" },
+  "sidebar-border": { "$type": "color", "$value": "{border}" },
+  "sidebar-ring": { "$type": "color", "$value": "{ring}" },
+
+  "font-sans": { "$type": "fontFamily", "$value": "{font.sans}" },
+  "font-mono": { "$type": "fontFamily", "$value": "{font.mono}" },
+  "font-heading": { "$type": "fontFamily", "$value": "{font-sans}" }
+}

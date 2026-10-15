@@ -1,0 +1,7 @@
+unicron
+Copyright 2026 Sean Sands
+
+Portions derived from snds/mailbird, Apache-2.0, and shadcn/ui, MIT.
+
+This product also depends on Base UI (MIT) and Google Material Symbols
+(Apache-2.0), installed as packages and not redistributed here.

@@ -1,0 +1,46 @@
+/*
+ * @unicron/ui stylesheet. Import once from the app's CSS entry:
+ *   @import "@unicron/ui/styles";
+ * Then add the app's own extension layer (see @unicron/tokens/examples/app-extension.css).
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "material-symbols/rounded.css";
+@import "@unicron/tokens/dist/tokens.css";
+
+/* The primitives' classes live in this package, not the consuming app, so Tailwind must scan them. */
+@source "../components";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Registered so the icon axes interpolate. Without @property, custom properties
+ * flip discretely and an icon would snap from outline to filled.
+ */
+@property --c-icon-fill {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --c-icon-wght {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 400;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
