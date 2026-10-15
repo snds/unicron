@@ -12,7 +12,7 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       '@snds/dsa':
-        specifier: github:snds/dsa#main
+        specifier: git+https://github.com/snds/dsa.git#cc4cb051cf6097f7810eacc770ebaaba3feb97ea
         version: https://codeload.github.com/snds/dsa/tar.gz/cc4cb051cf6097f7810eacc770ebaaba3feb97ea
       oxlint:
         specifier: ^1.88.0

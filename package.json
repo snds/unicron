@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",
-    "@snds/dsa": "github:snds/dsa#main",
+    "@snds/dsa": "git+https://github.com/snds/dsa.git#cc4cb051cf6097f7810eacc770ebaaba3feb97ea",
     "oxlint": "^1.88.0",
     "typescript": "~5.9.3"
   }
