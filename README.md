@@ -42,11 +42,11 @@ pnpm ds:ratchet          # fail if correct-use violations grew vs .dsa/baseline.
 pnpm ds:ratchet --init   # write the first baseline (commit .dsa/baseline.json)
 ```
 
-`.dsa/` is gitignored except `baseline.json`. CI runs `pnpm ds:ratchet` with `continue-on-error`
-until a baseline exists. Until `snds/dsa` has a `main` branch, `pnpm install` cannot resolve the
-dependency: install with it temporarily removed from `package.json` (and put it back), or wait for
-the push. CI uses `--no-frozen-lockfile` for the same reason; switch back to `--frozen-lockfile`
-once the lockfile carries `@snds/dsa`.
+`.dsa/` is gitignored except `baseline.json`, which is committed; it freezes today's correct-use
+counts (13 `className` overrides on DS components, 0 style overrides, 0 spread props, 0 look-alikes
+as of the first scan) and CI fails when any count grows. Lower it with `pnpm ds:ratchet --update`
+as files are cleaned up. Pass flags straight through (`pnpm ds:patterns --all`), without a `--`
+separator: pnpm 10 forwards `--` literally and dsa then reads it as the directory.
 
 ## Regenerating components
 

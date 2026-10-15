@@ -1,3 +1,7 @@
 packages:
   - "packages/*"
   - "apps/*"
+
+# @snds/dsa is a git dependency; its `prepare` script compiles TypeScript on install.
+onlyBuiltDependencies:
+  - "@snds/dsa"

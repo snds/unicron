@@ -15,15 +15,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      # --no-frozen-lockfile until snds/dsa has a main branch and the lockfile carries @snds/dsa;
-      # then switch back to --frozen-lockfile.
-      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --frozen-lockfile
       - run: pnpm tokens:build
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm test
-      # Design-system analytics ratchet: fails when correct-use violations grow.
-      # Allowed to fail until `pnpm ds:ratchet --init` has written .dsa/baseline.json.
+      # Design-system analytics ratchet: fails when correct-use violations grow
+      # beyond .dsa/baseline.json (sense and gate with the same code).
       - run: pnpm ds:ratchet
-        continue-on-error: true
