@@ -14,14 +14,20 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "oxlint",
+    "lint:tokens": "node packages/tokens/scripts/lint.mjs",
     "test": "pnpm -r test",
     "tokens:build": "pnpm --filter @unicron/tokens build",
-    "dev": "pnpm --filter playground dev",
+    "dev": "pnpm --filter @unicron/ui... build && pnpm --filter playground dev",
     "ds:scan": "dsa scan",
     "ds:patterns": "dsa patterns",
-    "ds:ratchet": "dsa ratchet"
+    "ds:ratchet": "dsa ratchet",
+    "pack:packages": "pnpm -r --filter \"@unicron/*\" pack --pack-destination artifacts",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@snds/dsa": "github:snds/dsa#main",
     "oxlint": "^1.88.0",
     "typescript": "~5.9.3"

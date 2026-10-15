@@ -38,6 +38,11 @@
     "500": { "$type": "color", "$value": "oklch(0.577 0.245 27.3)" },
     "400": { "$type": "color", "$value": "oklch(0.704 0.191 22.2)" }
   },
+  "white-alpha": {
+    "$description": "Translucent white, for hairlines on dark surfaces (shadcn's dark border/input). Alpha in the name is a percentage.",
+    "10": { "$type": "color", "$value": "oklch(1 0 0 / 10%)" },
+    "15": { "$type": "color", "$value": "oklch(1 0 0 / 15%)" }
+  },
   "hue": {
     "$description": "Bare hue angles for tinted surfaces. Lightness and chroma are semantic, so one hue gives a pastel wash in light mode and a deep one in dark.",
     "red": { "$type": "number", "$value": 25 },

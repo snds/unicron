@@ -56,8 +56,11 @@ radius scale is derived from `--radius` using the multipliers in
    extension file, not this package.
 2. Add the token with `$type` and `$value` (a reference where possible), and a `dark` mode for
    semantic colours.
-3. Run `pnpm tokens:build && pnpm test`. The check fails if a core semantic name is missing, if a
-   reference does not resolve, or if an app role leaked into the core.
+3. Run `pnpm tokens:build && pnpm test && pnpm lint:tokens`. The check fails if a core semantic
+   name is missing, if a reference does not resolve, or if an app role leaked into the core. The
+   lint fails if a tier-2 or tier-3 colour is a raw value instead of a `{reference}` (tier 3 may
+   hold literal sizes and axis numbers), or if a primitive in `packages/ui/src` carries a colour
+   literal.
 4. If the token should be a Tailwind utility and is not a semantic colour, add it to the theme
    extension in `semantic.json` (or extend `scripts/build.mjs`).
 

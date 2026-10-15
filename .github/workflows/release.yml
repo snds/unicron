@@ -1,0 +1,184 @@
+# Release: docs/06-contributing.md → Releasing.
+#
+#   changeset per PR  →  "Version Packages" PR (this workflow, mode=version)
+#                     →  merge it  →  tags + GitHub Releases with tarballs (mode=publish)
+#                                  →  npm publish, only when NPM_TOKEN (or trusted publishing) is set.
+#
+# Consumers can always install from the GitHub Release tarballs; npm is additive.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# One release run at a time per branch; a second push queues instead of racing for tags.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  mode:
+    name: Select mode
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # "version": changesets are pending → open/update the Version Packages PR.
+      # "publish": none pending and a package version has no tag yet → release it.
+      # "none": nothing to do.
+      - id: mode
+        uses: changesets/action/select-mode@v2
+
+  version:
+    name: Version Packages PR
+    needs: mode
+    if: needs.mode.outputs.mode == 'version'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Needs "Allow GitHub Actions to create and approve pull requests" (Settings → Actions → General).
+      # A PR opened with GITHUB_TOKEN does not trigger CI; pass a PAT or app token as `github-token`
+      # if you want CI to run on the Version Packages PR.
+      - uses: changesets/action/version@v2
+        with:
+          script: pnpm run version
+          commit-message: "Version Packages"
+          pr-title: "Version Packages"
+
+  release:
+    name: Tag, GitHub Release, npm
+    needs: mode
+    if: needs.mode.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # tags, releases, release assets
+      id-token: write # npm provenance / trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Is npm publishing configured?
+        id: npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TRUSTED_PUBLISHING: ${{ vars.NPM_TRUSTED_PUBLISHING }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "auth=token" >> "$GITHUB_OUTPUT"
+            echo "npm publish: enabled (NPM_TOKEN)"
+          elif [ "$NPM_TRUSTED_PUBLISHING" = "true" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "auth=oidc" >> "$GITHUB_OUTPUT"
+            echo "npm publish: enabled (trusted publishing)"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "auth=none" >> "$GITHUB_OUTPUT"
+            echo "::notice title=npm publish skipped::NPM_TOKEN is not set and NPM_TRUSTED_PUBLISHING is not 'true'. Tagging and creating GitHub Releases only."
+          fi
+
+      # Without npm, select-mode says "publish" on every push to main (nothing is ever on the
+      # registry), so check the tags ourselves and stop early when every version is tagged.
+      - name: Anything to release?
+        id: todo
+        env:
+          NPM: ${{ steps.npm.outputs.publish }}
+        run: |
+          work=false
+          if [ "$NPM" = "true" ]; then
+            work=true
+          else
+            for dir in packages/*; do
+              tag="$(node -p 'const p=require("./'"$dir"'/package.json"); `${p.name}@${p.version}`')"
+              if [ -z "$(git ls-remote --tags origin "refs/tags/$tag")" ]; then
+                echo "untagged: $tag"; work=true
+              else
+                echo "already tagged: $tag"
+              fi
+            done
+          fi
+          echo "work=$work" >> "$GITHUB_OUTPUT"
+
+      - if: steps.todo.outputs.work == 'true'
+        run: pnpm build
+
+      - name: Pack @unicron/* tarballs
+        if: steps.todo.outputs.work == 'true'
+        run: pnpm pack:packages && ls -la artifacts
+
+      - name: Configure npm auth
+        if: steps.todo.outputs.work == 'true' && steps.npm.outputs.auth == 'token'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Kept out of the repo .npmrc so a laptop publish is not forced through CI settings.
+          printf '//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n' > "$RUNNER_TEMP/.npmrc"
+          echo "NPM_CONFIG_USERCONFIG=$RUNNER_TEMP/.npmrc" >> "$GITHUB_ENV"
+
+      - name: Upgrade npm for trusted publishing
+        if: steps.todo.outputs.work == 'true' && steps.npm.outputs.auth == 'oidc'
+        run: npm install -g npm@latest && npm --version
+
+      # With npm configured: `pnpm run release` = build + `changeset publish` (npm publish + git tags).
+      # Without: `changeset git-tag` only creates the tags. Either way the action reads the
+      # CHANGESETS_OUTPUT report, pushes the tags and creates one GitHub Release per tag from
+      # the package CHANGELOG. Never fails for lack of an npm token.
+      - name: Tag and create GitHub Releases (publish to npm when enabled)
+        id: publish
+        if: steps.todo.outputs.work == 'true'
+        uses: changesets/action/publish@v2
+        with:
+          script: ${{ steps.npm.outputs.publish == 'true' && 'pnpm run release' || 'pnpm changeset git-tag' }}
+          create-github-releases: true
+          push-git-tags: true
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: ${{ steps.npm.outputs.publish == 'true' && 'true' || 'false' }}
+
+      - name: Attach tarballs to the GitHub Releases
+        if: steps.publish.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISHED: ${{ steps.publish.outputs.published-packages }}
+        run: |
+          # [{"name":"@unicron/ui","version":"0.1.0"}] → tag "@unicron/ui@0.1.0", file "unicron-ui-0.1.0.tgz"
+          echo "$PUBLISHED" | jq -r '.[] | "\(.name)@\(.version) \(.name | ltrimstr("@") | gsub("/"; "-"))-\(.version).tgz"' |
+          while read -r tag file; do
+            echo "→ $tag ← artifacts/$file"
+            gh release upload "$tag" "artifacts/$file" --clobber
+          done
+
+      - name: Summary
+        if: always()
+        env:
+          PUBLISHED: ${{ steps.publish.outputs.published-packages }}
+          NPM: ${{ steps.npm.outputs.publish }}
+        run: |
+          {
+            echo "## Release"
+            echo "- npm publish: ${NPM:-false}"
+            echo "- released: ${PUBLISHED:-none}"
+          } >> "$GITHUB_STEP_SUMMARY"
