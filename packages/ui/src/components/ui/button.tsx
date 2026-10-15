@@ -15,6 +15,10 @@ const buttonVariants = cva(
         ghost: "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground",
         destructive: "bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive focus-visible:border-destructive/40 dark:hover:bg-destructive/30",
         link: "text-primary underline-offset-4 hover:underline",
+        // Quiet secondary actions ("Add holidays and more"): ghost, in muted ink until hovered.
+        "ghost-muted": "text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground",
+        // A destructive action that shouldn't shout (Delete in a dialog footer): ghost, in destructive ink.
+        "ghost-destructive": "text-destructive hover:bg-muted hover:text-destructive dark:hover:bg-muted/50 aria-expanded:bg-muted",
       },
       size: {
         default: "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
@@ -26,10 +30,20 @@ const buttonVariants = cva(
         "icon-sm": "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
       },
+      // Pill: fully rounded, for chips and filter rows. Text pills get a little more
+      // side padding, because the round ends eat into it.
+      shape: {
+        default: "",
+        pill: "rounded-full",
+      },
     },
+    compoundVariants: [
+      { shape: "pill", size: ["xs", "sm"], className: "px-3" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
+      shape: "default",
     },
   }
 )
@@ -38,12 +52,13 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  shape = "default",
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, shape, className }))}
       {...props}
     />
   )

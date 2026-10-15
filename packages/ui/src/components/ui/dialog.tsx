@@ -119,7 +119,8 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-base leading-none font-medium", className)}
+      // A leading Back button sits inline with the title (a dialog with steps).
+      className={cn("text-base leading-none font-medium has-[>[data-slot=button]]:flex has-[>[data-slot=button]]:items-center has-[>[data-slot=button]]:gap-2", className)}
       {...props}
     />
   )
