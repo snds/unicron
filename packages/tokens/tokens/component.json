@@ -13,6 +13,7 @@
     "compact-radius": { "$type": "dimension", "$value": "1.25rem" },
     "handle": { "$type": "color", "$value": "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" },
     "close-size": { "$type": "dimension", "$value": "2.5rem" },
-    "regular-width": { "$type": "dimension", "$value": "24rem" }
+    "regular-width": { "$type": "dimension", "$value": "24rem" },
+    "wide-width": { "$type": "dimension", "$value": "36rem", "$description": "The wide variant (AdaptiveSheetContent wide), for a photo or other content that needs room." }
   }
 }
