@@ -24,17 +24,20 @@ pnpm add https://github.com/snds/unicron/releases/download/%40unicron%2Fui%400.1
 The tag is part of the URL, URL-encoded (`@` → `%40`, `/` → `%2F`); the file is
 `unicron-<package>-<version>.tgz`. `@unicron/ui` declares `@unicron/tokens` as an exact-version
 dependency. From npm that resolves on its own; from tarballs the registry does not have it, so
-pin it in your `package.json` with an override so pnpm resolves the dependency to the same tarball:
+pin it with an override so pnpm resolves the dependency to the same tarball. In a pnpm workspace
+the override lives in `pnpm-workspace.yaml`:
 
-```json
-"pnpm": {
-  "overrides": {
-    "@unicron/tokens": "https://github.com/snds/unicron/releases/download/%40unicron%2Ftokens%400.1.0/unicron-tokens-0.1.0.tgz"
-  }
-}
+```yaml
+overrides:
+  "@unicron/tokens": https://github.com/snds/unicron/releases/download/%40unicron%2Ftokens%400.1.0/unicron-tokens-0.1.0.tgz
 ```
 
-Bumping is then editing the two URLs (and the override). Pin exact versions and bump inside the
+In a single-package repo, the same entry goes under `"pnpm": { "overrides": { … } }` in
+`package.json`. Without it, pnpm looks for `@unicron/tokens@0.1.0` on the registry and the install
+fails. One override means one copy of the tokens, so the app and `@unicron/ui` read the same CSS.
+
+Bumping is then editing the two URLs (and the override, when tokens moved too). The lockfile
+records each tarball's hash, so a later install cannot pick up different bytes. Pin exact versions and bump inside the
 support window (current and previous minor); a `major` ships with a codemod linked from its PR.
 
 Peer dependencies: `react@19`, `react-dom@19`. The app also needs `tailwindcss@4` and
@@ -113,7 +116,9 @@ week one. The versioned packages replace it; nothing in `src/` changes.
 2. **Replace the links.** In the app's `package.json`, change
    `"@unicron/ui": "workspace:*"` and `"@unicron/tokens": "workspace:*"` to the versioned
    dependencies from step 1 above (npm ranges, or the two release-tarball URLs plus the
-   `pnpm.overrides` entry for `@unicron/tokens`). Run `pnpm install` so the lockfile re-resolves.
+   `@unicron/tokens` override in `pnpm-workspace.yaml`, which the `workspace:*` link used to make
+   unnecessary). Run `pnpm install` so the lockfile re-resolves. Mailbird's move is ADR-0052 in
+   its repo: 68 screens and 133 tokens identical before and after.
 3. **Keep your extension layer.** `src/styles/app-extension.css` stays exactly where it is and
    keeps importing after `@unicron/ui/styles`; the core never ships your roles. Remove any
    `@source` that pointed into `vendor/unicron`, and any `paths` alias in `tsconfig.json` that did.
