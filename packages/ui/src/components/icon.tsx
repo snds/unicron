@@ -1,3 +1,4 @@
+// Promoted from: Seeded from snds/mailbird; tone: snds/mailbird · PR snds/unicron#2 · DSA none (raised from correct-use override counts)
 import type { CSSProperties, SVGProps } from "react"
 import type { MaterialSymbol } from "material-symbols"
 
@@ -18,6 +19,15 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name" | "fill"
   opticalSize?: number
   /** Accessible name. Without it the icon is decorative (aria-hidden). */
   label?: string
+  /** Ink. Omit to inherit the surrounding text color (the usual case inside a control). */
+  tone?: IconTone
+}
+
+/** Semantic inks an icon can take on its own, outside a control that colors it. */
+export type IconTone = "muted" | "destructive"
+const TONES: Record<IconTone, string> = {
+  muted: "text-muted-foreground",
+  destructive: "text-destructive",
 }
 
 /**
@@ -37,6 +47,7 @@ export function Icon({
   grade,
   opticalSize,
   label,
+  tone,
   className,
   style,
   ...props
@@ -62,7 +73,7 @@ export function Icon({
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
-      className={cn("shrink-0 select-none", className)}
+      className={cn("shrink-0 select-none", tone && TONES[tone], className)}
       style={{ ...axes, ...style }}
       {...props}
     >

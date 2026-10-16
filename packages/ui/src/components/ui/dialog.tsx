@@ -1,5 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
+// Promoted from: snds/mailbird · PR snds/unicron#2 · DSA 17b338c6dfd5 (DialogActions / DialogAction); none (DialogTitle's Back-button layout, hand-raised)
 "use client"
 
 import * as React from "react"
@@ -7,7 +8,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "../../lib/utils"
 
 import { Button } from "./button"
-import { Icon } from "../icon"
+import { Icon, type IconName } from "../icon"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -64,7 +65,8 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-2 right-2"
+                // On phones a DialogActions row with a Cancel is the one way out; one × is enough.
+                className="absolute top-2 right-2 max-sm:in-[[data-slot=dialog-content]:has([data-kind=cancel])]:hidden"
                 size="icon-sm"
               />
             }
@@ -119,7 +121,8 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-base leading-none font-medium", className)}
+      // A leading Back button sits inline with the title (a dialog with steps).
+      className={cn("text-base leading-none font-medium has-[>[data-slot=button]]:flex has-[>[data-slot=button]]:items-center has-[>[data-slot=button]]:gap-2", className)}
       {...props}
     />
   )
@@ -138,8 +141,45 @@ function DialogDescription({
   )
 }
 
+/**
+ * A dialog's actions as one row, everywhere. On a phone each action becomes a round 40px
+ * icon button (Apple's sheet controls: × to dismiss, ✓ to confirm, a destructive action on
+ * the far left), and its words stay as its accessible name. From `sm` up they're the usual
+ * text buttons, right-aligned.
+ */
+function DialogActions({ className, ...props }: React.ComponentProps<"div">) {
+  return <DialogFooter className={cn("flex-row items-center justify-end", className)} {...props} />
+}
+
+type DialogActionKind = "confirm" | "cancel" | "destructive"
+const ACTION: Record<DialogActionKind, { variant: "default" | "outline" | "ghost-destructive"; icon: IconName; className?: string }> = {
+  confirm: { variant: "default", icon: "check" },
+  cancel: { variant: "outline", icon: "close" },
+  // Leads the row, apart from the others; tinted on phones so the icon reads as a control.
+  destructive: { variant: "ghost-destructive", icon: "delete", className: "mr-auto max-sm:bg-destructive/10" },
+}
+
+/** One action in `DialogActions`. `kind` sets its look and its phone icon; `icon` overrides the icon. */
+function DialogAction({
+  kind = "confirm",
+  icon,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof Button> & { kind?: DialogActionKind; icon?: IconName }) {
+  const a = ACTION[kind]
+  return (
+    <Button data-kind={kind} variant={a.variant} className={cn("max-sm:size-10 max-sm:rounded-full max-sm:p-0", a.className, className)} {...props}>
+      <Icon name={icon ?? a.icon} className="size-5 sm:hidden" />
+      <span className="max-sm:sr-only">{children}</span>
+    </Button>
+  )
+}
+
 export {
   Dialog,
+  DialogAction,
+  DialogActions,
   DialogClose,
   DialogContent,
   DialogDescription,

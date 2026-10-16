@@ -21,6 +21,8 @@ import {
   CommandList,
   CommandShortcut,
   Dialog,
+  DialogAction,
+  DialogActions,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -49,6 +51,7 @@ import {
   FieldLegend,
   FieldSet,
   Icon,
+  IconButton,
   Input,
   InputGroup,
   InputGroupAddon,
@@ -111,6 +114,30 @@ export function Showcase() {
         <Button variant="ghost">Ghost</Button>
         <Button variant="destructive">Destructive</Button>
         <Button variant="link">Link</Button>
+        <Button variant="ghost-muted">
+          <Icon name="add" data-icon="inline-start" /> Ghost muted
+        </Button>
+        <Button variant="ghost-destructive">Ghost destructive</Button>
+        <Button size="xs" shape="pill" variant="secondary" aria-pressed>
+          Pill · on <span className="text-muted-foreground tabular-nums">12</span>
+        </Button>
+        <Button size="xs" shape="pill" variant="ghost" aria-pressed={false}>
+          Pill · off
+        </Button>
+        <IconButton icon="archive" label="Archive" shortcut="E" />
+        <IconButton label="Pin" render={<Toggle size="sm" defaultPressed />}>
+          <Icon name="keep" fill />
+        </IconButton>
+        <div className="w-full max-w-md rounded-xl border p-4 pb-0">
+          <p className="mb-4 text-sm">DialogActions (narrow the window to see the phone row)</p>
+          <DialogActions>
+            <DialogAction kind="destructive">Delete split</DialogAction>
+            <DialogAction kind="cancel">Cancel</DialogAction>
+            <DialogAction>Save</DialogAction>
+          </DialogActions>
+        </div>
+        <Icon name="schedule" tone="muted" />
+        <Icon name="error" tone="destructive" />
         <Button size="icon" aria-label="Add">
           <Icon name="add" />
         </Button>

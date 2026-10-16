@@ -47,3 +47,18 @@ becomes interactive); toast → alert → banner → alert dialog (urgency rises
 4. If it earns a component (repeats in three products or needs its own behaviour), generate or
    write it in `packages/ui`, add it to [03-components.md](03-components.md), and let the next
    `ds:scan` count it as system usage.
+
+## Promotion log
+
+| Date | Candidate (dsa record) | Evidence | Decision |
+|---|---|---|---|
+| 2026-10-15 | Tooltip-wrapped icon button (`ToolButton`, `TooltipRecipe`) | Mailbird: 13 tooltip triggers, rebuilt as 3 local wrappers (`ToolbarButton`, `ToolButton`, `Mark`) | **Component**: `IconButton`. It has its own behavior: one label is both the accessible name and the tooltip. |
+| 2026-10-15 | Pill chips (`Fab5`, filter rows) | Mailbird: 18 `rounded-full` overrides on Button, in 3 filter rows (splits, smart groups, note folders) | **Variant**: `Button shape="pill"` |
+| 2026-10-15 | Muted and destructive ghost buttons | Mailbird: 11 `ghost` + muted ink, 5 `ghost` + destructive ink (dialog-footer Delete) | **Variants**: `ghost-muted`, `ghost-destructive` |
+| 2026-10-15 | Muted / destructive icons | Mailbird: 30+ `text-muted-foreground` and 2 `text-destructive` on a standalone Icon | **Prop**: `Icon tone` |
+| 2026-10-15 | Full-screen phone sheet | Mailbird: the same 4-class override on 3 bottom sheets (composer, editor frame, event) | **Prop**: `SheetContent fullscreen` |
+| 2026-10-15 | `DialogHeader` → title + description (19× / 18 files) | The standard composition, used as designed | **Dismissed**: correct use, nothing to promote |
+| 2026-10-15 | `DropdownMenuItem` + `Icon` (`DropdownMenuRecipe`, 17×) | The standard composition | **Dismissed**: correct use |
+| 2026-10-15 | One-off `Fab` (floating compose on phones) | 1 use | **Parked**: below the threshold. Revisit if a second product needs a floating action. |
+| 2026-10-15 | Dialog footers that keep Delete, Cancel, and Save in one row on phones (`ActionDialog`, 4 dialogs) | Mailbird: 4 `flex-row` overrides on `DialogFooter`; 11 footers pair a dismiss with a confirm | **Component**: `DialogActions` + `DialogAction`. Decided by Sean: on phones, a row of icon buttons, laid out like Apple's sheet controls (not the glass look) |
+| 2026-10-15 | Solid menus (`bg-popover` over the frosted default, 7 menus) | Mailbird: the menus with the most text | **Decided by Sean: glass.** Menus stay frosted, and the overrides go. |

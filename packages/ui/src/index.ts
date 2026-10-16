@@ -1,6 +1,7 @@
 // Public surface of @unicron/ui. One line per primitive module; add new modules here.
 export { cn } from "./lib/utils"
-export { Icon, type IconName, type IconProps } from "./components/icon"
+export { Icon, type IconName, type IconProps, type IconTone } from "./components/icon"
+export { IconButton, type IconButtonProps } from "./components/icon-button"
 export * from "./components/ui/avatar"
 export * from "./components/ui/badge"
 export * from "./components/ui/button-group"
