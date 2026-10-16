@@ -23,6 +23,7 @@
     "ds:ratchet": "dsa ratchet",
     "pack:packages": "pnpm -r --filter \"@unicron/*\" pack --pack-destination artifacts",
     "changeset": "changeset",
+    "regen": "node tools/shadcn-material/transform.mjs",
     "version": "changeset version",
     "release": "pnpm build && changeset publish"
   },
