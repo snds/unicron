@@ -42,9 +42,18 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   warnings?: CodeDisplayWarning[]
   /** Seconds until the host clears the clipboard. As SecretField. */
   clipboardTimer?: number
-  /** Receives what was copied: the current code, or the next one in the last seconds. */
+  /**
+   * The person copied. `which` says which code: the current one, or the next one in the last
+   * seconds. `value` is that code as passed in `code` or `next` (the component draws it, so handing
+   * it back exposes nothing new); a host that copies inside its own process by id may ignore it and
+   * act on `which` alone. The countdown starts when this resolves; a rejection starts nothing.
+   */
   onCopy?: (value: string, which: "code" | "next") => void | Promise<void>
-  /** HOTP: advance the counter. The "Next code" button is disabled while it is pending. */
+  /**
+   * HOTP: advance the counter. Resolve once the host has the new code, and pass it as `code` (and
+   * `counter`). "Next code" and copy are disabled while it is pending. Without it "Next code" is
+   * disabled.
+   */
   onAdvance?: () => void | Promise<void>
   /** HOTP: the counter, shown beside "Next code". */
   counter?: number
@@ -278,23 +287,6 @@ export function CodeDisplay({
     ? `Code for ${who}, hidden. Press Enter to show it.`
     : `Code for ${who}: ${spellCode(display)}.${timed ? ` ${labelSeconds} seconds left.` : ""}`
 
-  // ── Copy. ──
-  const [copied, setCopied] = React.useState<"code" | "next" | null>(null)
-  const copy = async () => {
-    if (!code || loading || error) return
-    if (crown.gated && !(await crown.requestProof("use"))) return
-    const which: "code" | "next" = copyNext && nextDisplay ? "next" : "code"
-    const value = which === "next" ? (nextDisplay as string) : display
-    await onCopy?.(value, which)
-    copiedAt.current = now
-    setCopied(which)
-    countdown.start()
-    announce(`${which === "next" ? "Copied the next code" : "Copied"}. Clipboard clears in ${clipboardTimer} seconds.`)
-  }
-  React.useEffect(() => {
-    if (countdown.state === "idle") setCopied(null)
-  }, [countdown.state])
-
   // ── HOTP advance. ──
   const [advancing, setAdvancing] = React.useState(false)
   const advance = async () => {
@@ -306,6 +298,29 @@ export function CodeDisplay({
       setAdvancing(false)
     }
   }
+
+  // ── Copy. ──
+  const [copied, setCopied] = React.useState<"code" | "next" | null>(null)
+  const copy = async () => {
+    // While an HOTP advance is pending the code drawn is about to be replaced; a host that copies by
+    // id would copy the new one while the old one shows, so copy waits for the advance to land.
+    if (!code || loading || error || advancing) return
+    if (crown.gated && !(await crown.requestProof("use"))) return
+    const which: "code" | "next" = copyNext && nextDisplay ? "next" : "code"
+    const value = which === "next" ? (nextDisplay as string) : display
+    try {
+      await onCopy?.(value, which)
+    } catch {
+      return // the host reports its own failure; nothing was copied, so no countdown
+    }
+    copiedAt.current = now
+    setCopied(which)
+    countdown.start()
+    announce(`${which === "next" ? "Copied the next code" : "Copied"}. Clipboard clears in ${clipboardTimer} seconds.`)
+  }
+  React.useEffect(() => {
+    if (countdown.state === "idle") setCopied(null)
+  }, [countdown.state])
 
   const activate = () => {
     if (hidden) {
@@ -476,7 +491,7 @@ export function CodeDisplay({
             label={copyNext ? "Copy the next code" : "Copy code"}
             tooltip={copyTooltip}
             size={density === "compact" ? "icon-sm" : "icon"}
-            disabled={loading || !code}
+            disabled={loading || !code || advancing}
             onClick={(e) => {
               e.stopPropagation()
               void copy()

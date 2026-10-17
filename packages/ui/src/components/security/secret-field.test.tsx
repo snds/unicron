@@ -1,7 +1,15 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 
 import { CrownJewelSurface } from "./crown-jewel"
-import { SecretField, secretFieldAnnouncements, spellSecret, type SecretFieldHost } from "./secret-field"
+import {
+  SecretField,
+  secretFieldAnnouncements,
+  secretFieldErrors,
+  spellSecret,
+  type SecretFieldAction,
+  type SecretFieldHost,
+  type SecretFieldReferenceHost,
+} from "./secret-field"
 
 const SECRET = "Tr4-ck3t"
 const bytes = () => new TextEncoder().encode(SECRET)
@@ -300,7 +308,8 @@ describe("SecretField gate: the field asks, it never decides", () => {
     fireEvent.click(copyButton())
     await settle()
     expect(requestProof).toHaveBeenCalledWith("use")
-    fireEvent.pointerDown(revealButton(), { button: 0 })
+    // Gated, so the default hold reveals as a toggle (a hold cannot outlive the gate's dialog).
+    fireEvent.click(revealButton())
     await settle()
     expect(requestProof).toHaveBeenCalledWith("reveal")
     expect(hostGate).not.toHaveBeenCalled()
@@ -377,5 +386,153 @@ describe("SecretField states: reduced motion, high contrast, edit mode", () => {
     rerender(<SecretField mode="edit" label="New password" value="abc" onChange={onChange} strength="strong" disabled />)
     expect(input).toBeDisabled()
     expect(container.querySelector('[data-slot="secret-field-meter"]')).toHaveTextContent("Strong")
+  })
+})
+
+describe("SecretField host contract: copy by reference", () => {
+  it("with copyRef, never fetches the bytes for a copy, and asks clipboardHolds about the host's hash", async () => {
+    const getSecret = vi.fn(() => Promise.resolve(bytes()))
+    const clipboardHolds = vi.fn((_hash: string) => Promise.resolve(true))
+    const host = fakeHost({ copyRef: vi.fn(() => Promise.resolve({ hash: "host-record-7" })), clipboardHolds })
+    const onCopy = vi.fn()
+    render(<SecretField label="Password" getSecret={getSecret} host={host} onCopy={onCopy} clipboardTimer={10} />)
+    fireEvent.click(copyButton())
+    await settle()
+    expect(host.copyRef).toHaveBeenCalledTimes(1)
+    expect(getSecret).not.toHaveBeenCalled()
+    expect(host.copy).not.toHaveBeenCalled()
+    expect(onCopy).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.copied(10))
+
+    await advance(10_000)
+    await settle()
+    expect(clipboardHolds).toHaveBeenCalledWith("host-record-7")
+    expect(host.clear).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.cleared)
+  })
+
+  it("a reference host without copy compiles; with no hash back, clipboardHolds is skipped and the clear is unconditional", async () => {
+    const clipboardHolds = vi.fn((_hash: string) => Promise.resolve(false))
+    const host: SecretFieldReferenceHost = {
+      copyRef: vi.fn(() => Promise.resolve()),
+      clear: vi.fn(() => Promise.resolve()),
+      clipboardHolds,
+    }
+    const getSecret = vi.fn(() => Promise.resolve(bytes()))
+    render(<SecretField label="Password" getSecret={getSecret} host={host} clipboardTimer={10} />)
+    fireEvent.click(copyButton())
+    await settle()
+    expect(getSecret).not.toHaveBeenCalled()
+    await advance(10_000)
+    await settle()
+    expect(clipboardHolds).not.toHaveBeenCalled()
+    expect(host.clear).toHaveBeenCalledTimes(1)
+  })
+
+  it("inside a CrownJewelSurface, copy by reference runs after the use proof and still fetches nothing", async () => {
+    const calls: string[] = []
+    const requestProof = vi.fn(async (kind: string) => {
+      calls.push(`proof:${kind}`)
+      return true
+    })
+    const getSecret = vi.fn(() => Promise.resolve(bytes()))
+    const host = fakeHost({
+      copyRef: vi.fn(async () => {
+        calls.push("copyRef")
+      }),
+    })
+    render(
+      <CrownJewelSurface host="app" title="Seed phrase" requestProof={requestProof}>
+        <SecretField label="Password" getSecret={getSecret} host={host} />
+      </CrownJewelSurface>
+    )
+    fireEvent.click(copyButton())
+    await settle()
+    expect(calls).toEqual(["proof:use", "copyRef"])
+    expect(getSecret).not.toHaveBeenCalled()
+  })
+})
+
+describe("SecretField host contract: the host's error words", () => {
+  it("errorText as a string replaces the generic words; Retry still works", async () => {
+    const getSecret = vi.fn<() => Promise<Uint8Array>>(() => Promise.reject(new Error("vault locked")))
+    const { container } = render(
+      <SecretField label="Password" getSecret={getSecret} host={fakeHost()} revealMode="toggle" errorText="The vault locked before this field was read." />
+    )
+    fireEvent.click(revealButton())
+    await settle()
+    expect(screen.getByRole("alert")).toHaveTextContent("The vault locked before this field was read.")
+    expect(screen.getByRole("alert")).not.toHaveTextContent(secretFieldErrors.read)
+    getSecret.mockImplementation(() => Promise.resolve(bytes()))
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }))
+    await settle()
+    expect(container.textContent).toContain(SECRET)
+  })
+
+  it("errorText as a function gets the rejection and the action, and falls back when it returns undefined", async () => {
+    const errorText = vi.fn((error: unknown, action: SecretFieldAction) =>
+      action === "copy" && error instanceof Error ? `${error.message}.` : undefined
+    )
+    const host = fakeHost({ copyRef: vi.fn(() => Promise.reject(new Error("The clipboard is in use by another app"))) })
+    render(<SecretField label="Password" getSecret={() => Promise.reject(new Error("no"))} host={host} revealMode="toggle" errorText={errorText} />)
+    fireEvent.click(copyButton())
+    await settle()
+    expect(errorText).toHaveBeenLastCalledWith(expect.any(Error), "copy")
+    expect(screen.getByRole("alert")).toHaveTextContent("The clipboard is in use by another app.")
+  })
+
+  it("errorText as a function returning undefined keeps the default words", async () => {
+    render(<SecretField label="Password" getSecret={() => Promise.reject(new Error("no"))} host={fakeHost()} revealMode="toggle" errorText={() => undefined} />)
+    fireEvent.click(revealButton())
+    await settle()
+    expect(screen.getByRole("alert")).toHaveTextContent(secretFieldErrors.read)
+  })
+})
+
+describe("SecretField host contract: a gated reveal is a toggle", () => {
+  it("gate set and hold asked for: the button is a tap, the reveal survives the gate taking focus, and the live region says how it hides", async () => {
+    let button!: HTMLElement
+    // A gate that takes focus, as a dialog or an OS prompt does: the reveal control blurs while it runs.
+    const gate = vi.fn(async () => {
+      fireEvent.blur(button)
+      return true
+    })
+    const { container } = render(<SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={fakeHost({ gate })} gate="password" />)
+    button = screen.getByRole("button", { name: "Show Password" })
+    expect(screen.queryByRole("button", { name: "Hold to show Password" })).toBeNull()
+    expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-reveal-mode", "toggle")
+    fireEvent.click(button)
+    await settle()
+    expect(gate).toHaveBeenCalledWith("password")
+    expect(valueOf(container)).toHaveTextContent(SECRET)
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.shownUntilHidden("Password", 30))
+    fireEvent.click(revealButton())
+    expect(container.textContent).not.toContain(SECRET)
+  })
+
+  it("inside a CrownJewelSurface the hold becomes a tap with the 20 s lifetime, with no revealMode or revealLifetime from the host", async () => {
+    const requestProof = vi.fn(() => Promise.resolve(true))
+    const { container } = render(
+      <CrownJewelSurface host="app" title="Seed phrase" requestProof={requestProof}>
+        <SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={fakeHost()} revealMode="hold" />
+      </CrownJewelSurface>
+    )
+    fireEvent.click(revealButton())
+    await settle()
+    expect(requestProof).toHaveBeenCalledWith("reveal")
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.shownUntilHidden("Password", 20))
+    await advance(20_000)
+    expect(container.textContent).not.toContain(SECRET)
+  })
+
+  it("an ungated field keeps the hold, and an explicit toggle keeps its own announcement", async () => {
+    const { container, unmount } = render(<SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={fakeHost()} />)
+    expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-reveal-mode", "hold")
+    expect(screen.getByRole("button", { name: "Hold to show Password" })).toBeInTheDocument()
+    unmount()
+    render(<SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={fakeHost({ gate: () => Promise.resolve(true) })} gate="password" revealMode="toggle" />)
+    fireEvent.click(revealButton())
+    await settle()
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.shown("Password", 30))
   })
 })

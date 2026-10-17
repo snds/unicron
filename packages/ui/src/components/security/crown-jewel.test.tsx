@@ -4,7 +4,17 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { CodeDisplay } from "./code-display"
-import { CrownJewelGate, CrownJewelMark, CrownJewelSurface, useCrownJewel, type CrownJewelProof } from "./crown-jewel"
+import * as React from "react"
+
+import {
+  CrownJewelGate,
+  CrownJewelMark,
+  CrownJewelSurface,
+  crownJewelGateErrors,
+  useCrownJewel,
+  type CrownJewelProof,
+  type CrownJewelProofKind,
+} from "./crown-jewel"
 
 const surface = () => document.querySelector('[data-slot="crown-jewel-surface"]') as HTMLElement
 const code = { issuer: "Ledger", code: "482917", next: "330558", period: 30, expiresAt: 1000, now: 980 }
@@ -234,5 +244,122 @@ describe("the standalone gate and the mark", () => {
     expect(mark).toHaveAttribute("data-size", "sm")
     expect(mark.querySelector("svg")).toHaveAttribute("aria-hidden", "true")
     expect(mark).toHaveTextContent("Crown jewel")
+  })
+})
+
+describe("no biometric on this device (biometricName={null})", () => {
+  it("the announcement and the explain copy name only the account password", () => {
+    render(
+      <CrownJewelSurface host="app" title="Seed phrase" biometricName={null}>
+        <button>inside</button>
+      </CrownJewelSurface>
+    )
+    fireEvent.focus(screen.getByRole("button", { name: "inside" }))
+    const live = surface().querySelector("[aria-live]") as HTMLElement
+    expect(live).toHaveTextContent("Crown jewel. Using it or showing it needs your account password.")
+    expect(live).not.toHaveTextContent("Touch ID")
+    fireEvent.click(screen.getByRole("button", { name: "What crown jewel means" }))
+    const explain = document.querySelector('[data-slot="crown-jewel-explain-dialog"]') as HTMLElement
+    expect(explain).toHaveTextContent("To use it, show it in full or export it, you type your account password, every time.")
+    expect(explain).not.toHaveTextContent("Touch ID")
+    expect(explain).not.toHaveTextContent("null")
+  })
+
+  it("the built-in gate asks for the password for use, even when onBiometric is passed", async () => {
+    const onBiometric = vi.fn().mockResolvedValue("token")
+    render(
+      <CrownJewelSurface host="app" title="Ledger recovery phrase" biometricName={null} onBiometric={onBiometric} onConfirm={() => true}>
+        <CodeDisplay {...code} onCopy={() => {}} />
+      </CrownJewelSurface>
+    )
+    await act(async () => {
+      fireEvent.click(document.querySelector('[data-slot="code-display-copy"]') as HTMLElement)
+    })
+    expect(screen.getByRole("dialog", { name: "Confirm it's you" })).toHaveAttribute("data-level", "password")
+    expect(onBiometric).not.toHaveBeenCalled()
+  })
+
+  it("the standalone gate at the biometric level says the device has none", () => {
+    render(<CrownJewelGate open level="biometric" reason="To use the Ledger key" biometricName={null} onConfirm={() => {}} />)
+    expect(screen.getByText("This device has no biometric check; use your account password instead.")).toBeInTheDocument()
+  })
+})
+
+describe("a host whose core judges the proof at call time", () => {
+  /**
+   * The pattern the spec documents: the surface takes the host's `requestProof`, which only collects
+   * the password through the standalone gate. The gated call carries it; when the core says it was
+   * wrong, the host re-opens the gate with `attemptsLeft` and `crownJewelGateErrors.wrongPassword`,
+   * and locks after the last try.
+   */
+  function CallTimeHost({ core, onLock }: { core: (password: string) => Promise<boolean>; onLock: () => void }) {
+    const [ask, setAsk] = React.useState<{ attemptsLeft: number; error?: string; resolve: (p: string | null) => void } | null>(null)
+    const collect = (attemptsLeft: number, error?: string) =>
+      new Promise<string | null>((resolve) => setAsk({ attemptsLeft, error, resolve }))
+    const close = (p: string | null) => {
+      ask?.resolve(p)
+      setAsk(null)
+    }
+    // The gated call: collect, call, re-ask on a wrong password.
+    const gatedCopy = async () => {
+      let left = 3
+      let password = await collect(left)
+      while (password !== null) {
+        if (await core(password)) return
+        left -= 1
+        if (left === 0) {
+          onLock()
+          throw new Error("locked") // nothing was copied, so CodeDisplay starts no countdown
+        }
+        password = await collect(left, crownJewelGateErrors.wrongPassword(left))
+      }
+      throw new Error("cancelled")
+    }
+    const requestProof = async (_kind: CrownJewelProofKind) => true // nothing to judge yet; the call carries the proof
+    return (
+      <>
+        <CrownJewelSurface host="app" title="Ledger recovery phrase" requestProof={requestProof}>
+          <CodeDisplay {...code} onCopy={gatedCopy} />
+        </CrownJewelSurface>
+        <CrownJewelGate
+          open={ask !== null}
+          level="password"
+          reason="To use Ledger recovery phrase"
+          attemptsLeft={ask?.attemptsLeft}
+          error={ask?.error}
+          biometricName={null}
+          onConfirm={(p) => close(p.level === "password" ? p.password : null)}
+          onCancel={() => close(null)}
+        />
+      </>
+    )
+  }
+
+  it("re-asks with the tries left in the gate's own words, and locks after the third wrong password", async () => {
+    vi.useFakeTimers()
+    const core = vi.fn(async (password: string) => password === "right")
+    const onLock = vi.fn()
+    render(<CallTimeHost core={core} onLock={onLock} />)
+    await act(async () => {
+      fireEvent.click(document.querySelector('[data-slot="code-display-copy"]') as HTMLElement)
+    })
+    const typeAndConfirm = async (password: string) => {
+      await act(async () => {
+        vi.advanceTimersByTime(600)
+      })
+      fireEvent.change(screen.getByLabelText("Account password"), { target: { value: password } })
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Confirm" }))
+      })
+    }
+    await typeAndConfirm("wrong")
+    expect(screen.getByText(crownJewelGateErrors.wrongPassword(2))).toBeInTheDocument()
+    expect(crownJewelGateErrors.wrongPassword(2)).toBe("Password incorrect. 2 tries left.")
+    await typeAndConfirm("wrong")
+    expect(screen.getByText("Password incorrect. 1 try left.")).toBeInTheDocument()
+    await typeAndConfirm("wrong")
+    expect(core).toHaveBeenCalledTimes(3)
+    expect(onLock).toHaveBeenCalledTimes(1)
+    expect(document.querySelector('[data-slot="code-display"]')).not.toHaveAttribute("data-copied")
   })
 })
