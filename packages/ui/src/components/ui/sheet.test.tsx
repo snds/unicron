@@ -1,0 +1,61 @@
+import { fireEvent, render, screen } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
+
+import { AdaptiveSheetContent, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "./sheet"
+
+// The strip a desktop app renders so its window stays draggable while a sheet is open (issue #7).
+const strip = <div aria-hidden data-testid="drag-strip" className="fixed inset-x-0 top-0 z-50 h-13" data-tauri-drag-region="deep" />
+
+const overlay = () => document.querySelector('[data-slot="sheet-overlay"]') as HTMLElement
+const popup = () => document.querySelector('[data-slot="sheet-content"]') as HTMLElement
+
+const header = (
+  <SheetHeader>
+    <SheetTitle>Details</SheetTitle>
+    <SheetDescription>A side panel for secondary content.</SheetDescription>
+  </SheetHeader>
+)
+
+function expectBetweenBackdropAndPopup() {
+  const slot = screen.getByTestId("drag-strip")
+  expect(overlay().compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(slot.compareDocumentPosition(popup()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(popup().contains(slot)).toBe(false)
+  expect(slot.parentElement).toBe(popup().parentElement)
+}
+
+describe("SheetContent beforeContent", () => {
+  it("renders the slot between the backdrop and the popup, in document order", () => {
+    render(
+      <Sheet open>
+        <SheetContent beforeContent={strip}>{header}</SheetContent>
+      </Sheet>
+    )
+    expectBetweenBackdropAndPopup()
+  })
+
+  it("a press on the slot does not dismiss; a press on the backdrop does", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <Sheet open onOpenChange={onOpenChange}>
+        <SheetContent beforeContent={strip}>{header}</SheetContent>
+      </Sheet>
+    )
+    fireEvent.click(screen.getByTestId("drag-strip"))
+    expect(onOpenChange).not.toHaveBeenCalled()
+    fireEvent.click(overlay())
+    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+  })
+
+  it("AdaptiveSheetContent takes the same slot", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <Sheet open onOpenChange={onOpenChange}>
+        <AdaptiveSheetContent beforeContent={strip}>{header}</AdaptiveSheetContent>
+      </Sheet>
+    )
+    expectBetweenBackdropAndPopup()
+    fireEvent.click(screen.getByTestId("drag-strip"))
+    expect(onOpenChange).not.toHaveBeenCalled()
+  })
+})

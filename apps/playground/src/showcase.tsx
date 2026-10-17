@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { SecurityShowcase } from "./security"
+import { SecurityApprovalsShowcase } from "./security-approvals"
 import { toast } from "sonner"
 import {
   Avatar,
@@ -469,6 +471,9 @@ export function Showcase() {
         <Icon name="favorite" fill weight={600} className="text-destructive" />
         <Icon name="settings" className="size-6" label="Settings" />
       </Section>
+
+      <SecurityShowcase />
+      <SecurityApprovalsShowcase />
     </div>
   )
 }

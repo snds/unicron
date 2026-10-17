@@ -27,9 +27,13 @@ Then:
 
 The primitives are owned source, so many carry edits on top of the generated code: unicron's variants, `AdaptiveSheetContent`, `DialogActions`, and the `Promoted from:` lines. Regenerating over them would drop those edits. Generate to a scratch folder and carry upstream changes over by hand.
 
+## Overrides that survive a regen
+
+`overrides.json` holds the edits the transform applies after inlining the style, keyed by output file: a list of exact substring replacements and a `why`, which the transform writes as a third header line of the file. Put a change to a generated primitive there when it should survive `pnpm regen` (the pressed state of `toggle.tsx` is one). The transform stops if a `from` string is no longer in the upstream source, so upstream drift shows up instead of silently dropping the edit.
+
 ## Check that it still reproduces the package
 
-On an unedited primitive, the output matches the committed file byte for byte. Today that's `button` (on main), `dialog`, `kbd`, `separator`, and `tooltip`:
+On an unedited primitive (and one whose only edits are in `overrides.json`), the output matches the committed file byte for byte. Today that's `button` (on main), `kbd`, `separator`, `toggle`, `toggle-group`, and `tooltip` (`dialog` left the list with `DialogActions` and the `beforeContent` slot):
 
 ```bash
 pnpm regen /tmp/shadcn /tmp/check kbd separator tooltip && diff -r /tmp/check packages/ui/src/components/ui --include='*.tsx' -q | grep -v 'Only in packages'

@@ -1,6 +1,6 @@
 # SecretField
 
-_Spec v0.1 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5 `hidden` kind; `03-architecture.md` §8) · Status: proposed_
+_Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5 `hidden` kind; `03-architecture.md` §8) · Status: built in `@unicron/ui` 0.4.0 (PR #16); this spec describes the build_
 
 ## Purpose and the user job
 
@@ -8,69 +8,74 @@ A person needs to use a hidden value (password, key, CVC, PIN, Secret Key, recov
 
 ## Uniqueness check
 
-Composes `Field` → `FieldLabel`, `InputGroup` → `InputGroupInput`, `InputGroupButton`, `IconButton`, `Tooltip`, and `FieldError`. It is not an `Input type="password"` variant: that control keeps the value in the DOM and only toggles visibility. This component owns a one-shot fetch of the value through a handle, a reveal lifetime, hide-on-blur, copy with a countdown and a conditional clear, a gate hook for crown jewels, and native screen-capture flags. Those are behaviors, not styles, so it is a component.
+Composes `Field`, `InputGroup` → `InputGroupAddon` (and `InputGroupInput` in edit mode), `IconButton`, `Skeleton`, `Spinner`. It is not an `Input type="password"` variant: that control keeps the value in the DOM and only toggles visibility. This component owns a one-shot fetch through a handle, a reveal lifetime, hide-on-blur, copy with a countdown and a conditional clear, and a gate hook. Those are behaviors, not styles.
 
 ## Anatomy
 
 ```
-secret-field                      Field, data-mode="read|edit"
-├─ secret-field-label             FieldLabel
+secret-field                      div, data-mode="read|edit", data-state="masked|loading|revealed|error", data-gate
+├─ FieldLabel                     the `label` prop
 ├─ secret-field-control           InputGroup
-│  ├─ secret-field-value          read: masked span (fixed dot count) or revealed mono text; edit: InputGroupInput
-│  ├─ secret-field-reveal         IconButton visibility / visibility_off, aria-pressed
-│  ├─ secret-field-copy           IconButton content_copy → countdown ring → check → "Cleared"
-│  └─ secret-field-more           optional slot: large type, generate, history
-├─ secret-field-meter             edit only: strength bar + word
-└─ secret-field-description       FieldDescription / FieldError
+│  ├─ secret-field-value          read: role="textbox" aria-readonly; dot mask, or secret-field-revealed written imperatively; edit: InputGroupInput
+│  ├─ secret-field-reveal         IconButton visibility / visibility_off, aria-pressed; secret-field-gate lock glyph when gated
+│  ├─ secret-field-copy           IconButton content_copy → secret-field-copy-countdown (ring, or "28 s") → check + sr-only "Cleared"
+│  └─ secret-field-more           `children`: large type, generate, history
+├─ secret-field-meter             edit only: three segments + word, data-strength
+├─ FieldDescription / FieldError
+└─ (sr-only)                      role="status" polite live region (read mode)
 ```
 
 ## Props and variants
 
-| Prop | Values | Notes |
-|---|---|---|
-| `mode` | `read` · `edit` | |
-| `getSecret` | `() => Promise<Uint8Array>` | One-shot; the component zeroes its copy after use. Read mode only |
-| `revealMode` | `hold` (default) · `toggle` | `hold` reveals on pointer down or Space held and masks on release (Lockdown D97); `toggle` is the per-person setting for those who cannot hold a pointer still, with the 30-second auto-hide |
-| `revealLifetime` | seconds, default `30` | Also hides on blur, lock, and leaving the viewport |
-| `clipboardTimer` | seconds, `10`–`90`, default `30` | Host-configured; no "never" |
-| `gate` | `none` · `biometric` · `password` | Crown-jewel surfaces set `password` through context |
-| `format` | `plain` · `groups-of-4` · `words` | Cards, recovery codes, word lists |
-| `mono` | boolean, default `true` | |
-| `onReveal`, `onCopy` | callbacks | For the audit log |
-| `value`, `onChange`, `strength` | edit mode | `strength` is computed by the host's core |
+`SecretFieldProps` is a union on `mode`. Common: `label` (required; names the field and the live-region texts), `mono` (default `true`), `description`, `children` (the `more` slot), `id`, `className`.
 
-**Mask length.** Read mode shows a fixed `--c-secret-field-mask-count` dots, never the true length, so a shoulder-surfer learns nothing. Edit mode follows what is typed.
+| Prop | Mode | Values | Notes |
+|---|---|---|---|
+| `getSecret` | read | `() => Promise<Uint8Array>` | One-shot; the field zeroes the buffer after use |
+| `host` | read | `SecretFieldHost` | `copy(bytes)`, `clear()`, optional `clipboardHolds(hash)` and `gate(kind)`; see below |
+| `revealMode` | read | `hold` (default) · `toggle` | `hold` reveals while the pointer or Space is held (Lockdown D97); `toggle` is the per-person setting with the auto-hide |
+| `revealLifetime` | read | seconds | Default `--c-secret-field-reveal-lifetime` (30), or `--c-crown-jewel-reveal-lifetime` (20) inside a `CrownJewelSurface`; read from the element when a reveal starts, so a surface can re-map it |
+| `clipboardTimer` | read | seconds, clamped `10`–`90` | Default `--c-secret-field-clipboard-timer` (30), read from `:root` once; no "never" |
+| `gate` | read | `none` (default) · `biometric` · `password` | Runs `host.gate(kind)` first. Inside a `CrownJewelSurface` the surface gates the field whatever this says |
+| `format` | read | `plain` · `groups-of-4` · `words` | Display only; the spelled name uses the raw value |
+| `locked` | read | boolean | The vault locked: the field masks at once |
+| `onReveal`, `onCopy` | read | callbacks | For the audit log |
+| `value`, `onChange`, `strength`, `disabled`, `error` | edit | | `strength` (`weak` · `fair` · `strong`) is computed by the host's core |
+
+**`SecretFieldHost`.** `copy(bytes)` puts the bytes on the clipboard (the core on Tauri and native; `navigator.clipboard` only in the pure web vault); the timer starts when it resolves. `clear()` runs at expiry. `clipboardHolds(hash)` answers whether the clipboard still holds our value; `hash` is hex SHA-256 of the copied bytes (FNV-1a where SubtleCrypto is missing). Omit it where the platform cannot read the clipboard, and the clear runs unconditionally. `gate(kind)` resolves `true` when the person passed; the field asks, it never decides.
+
+**Mask length.** Read mode shows `--c-secret-field-mask-count` dots (12, read from `:root` once), never the true length. Edit mode follows what is typed.
+
+Exports: `spellSecret`, `secretFieldAnnouncements`, `secretFieldErrors`, and the types.
 
 ## States
 
 | State | What changes |
 |---|---|
-| masked | Dots in `muted-foreground`; value not selectable; reveal `aria-pressed=false` |
-| revealed | Mono text; faint `warning` tint behind the value so exposure is visible; reveal `aria-pressed=true`; lifetime running |
-| copying | Ring counts down on the copy button; tooltip "Copied · clears in 28 s" |
-| cleared | Button shows check then "Cleared" for 2 s, then `content_copy` |
-| gated | Reveal and copy carry a lock glyph; activating runs the gate first; `busy` while it runs |
-| loading | Skeleton bar the height of the control |
-| error | "Couldn't read this field" in `destructive`, with Retry; no value shown |
-| disabled | Edit mode only; read mode is never disabled, it is gated |
-| edit | Input with strength meter: weak `destructive`, fair `warning`, strong `primary`, always with the word |
-| reduced motion | Ring becomes numeric text "28 s"; no tint fade |
-| high contrast | Dots become text glyphs in `foreground`; solid borders; tint dropped, "Shown" word added |
+| masked | Dots in `muted-foreground`; not selectable; `aria-pressed=false`; name "Password, hidden" |
+| loading | Skeleton in place of the value while `getSecret` runs |
+| revealed | Mono text with `warning` tint; `aria-pressed=true`; lifetime running; one revealed field per document |
+| copying | Ring drains on the copy button; tooltip "Copied · clears in 28 s" (plus ", even if you copy something else" without `clipboardHolds`) |
+| cleared | Check plus sr-only "Cleared" for 2 s; not shown when the clipboard held something else |
+| gated | Reveal and copy carry a lock glyph; the waiting control shows a Spinner; tooltip "Copy Password (confirm it's you first)" |
+| error | "Couldn't read this field" or "Couldn't copy this field" in `destructive` with Retry; no value |
+| disabled | Edit mode only; read mode is gated or `locked`, never disabled |
+| edit | `InputGroupInput` with its own show toggle; meter weak `destructive`, fair `warning`, strong `primary`, always with the word |
+| reduced motion | Ring becomes text "28 s"; no tint transition |
+| high contrast and forced colors | Dots become the word "Hidden"; "Shown" is added while revealed; tint dropped |
 
 ## Behavior and timing
 
-- **Reveal.** Fetch through `getSecret`, render, start the lifetime. One revealed field per document: revealing another masks the first. Hide on window blur, `visibilitychange`, lock, or the element leaving the viewport. `hold` mode masks on pointer up or Space release, which also satisfies pointer cancellation (WCAG 2.5.2).
-- **Copy.** Fetch, hand the buffer to the host's copy function (the core on Tauri and native; `navigator.clipboard` only in the pure web vault), start the timer. At expiry, clear **only if the clipboard still holds our value** (compare a hash); where the platform cannot read the clipboard, clear unconditionally and say so in the tooltip.
-- **Gate.** `biometric` for use (copy), `password` for reveal, per `04-security.md` §10. The field asks the host; it never decides.
-- **Edit.** `autocomplete="new-password"`, no spellcheck, no autocorrect, the generator slot on the right.
+- **Reveal.** Gate, then `getSecret`, then one imperative DOM write of the text and its spelled name; React state holds only a phase. One revealed field per document: revealing another masks the first. Mask on window blur, `visibilitychange`, leaving the viewport (`IntersectionObserver`), `locked`, and unmount. `hold` masks on pointer up, cancel, leave, blur, or Space release; a release while the gate or fetch is pending drops the buffer unshown.
+- **Copy.** Gate, `getSecret`, hash, `host.copy`, zero the buffer, start the countdown. At expiry: if `clipboardHolds` answers `false`, stop silently; otherwise `host.clear()` and "Clipboard cleared."
+- **Gate.** `biometric` for use (copy), `password` for reveal, per `04-security.md` §10. Inside a `CrownJewelSurface`, `useCrownJewel().requestProof("use" | "reveal")` is called instead of `host.gate`.
+- **Edit.** `autocomplete="new-password"`, no spellcheck, autocorrect, or autocapitalize; the generator goes in `children`.
 
 ## Tokens
 
-Tier 2 used today: `input`, `border`, `foreground`, `muted-foreground`, `ring`, `primary`, `destructive`, `font-mono`.
+Tier 2: `input`, `border`, `foreground`, `muted-foreground`, `ring`, `primary`, `destructive`, `warning` (shipped in `@unicron/tokens` 0.2.0), `font-mono`.
 
-New tier 2 role needed: **`warning`** (shared; the revealed tint and the fair strength step).
-
-Tier 3 to add under `secret-field`:
+Tier 3 under `secret-field`:
 
 | Token | Aliases | Purpose |
 |---|---|---|
@@ -87,18 +92,18 @@ Tier 3 to add under `secret-field`:
 
 ## Keyboard and screen reader
 
-- Read mode value: `aria-label="Password, hidden"` while masked. When revealed, the text node is spelled per character with case ("capital T, r, 4, dash") so a screen-reader user can move through it; it is **not** announced automatically.
-- Live region, polite: "Password shown. Hides in 30 seconds." · "Copied. Clipboard clears in 30 seconds." · "Clipboard cleared." · "Confirm it's you to show this."
-- Reveal: in the default `hold` mode, Space held reveals and release hides (Enter does nothing, so a stray Enter never reveals). In `toggle` mode Tab, then Space or Enter toggles; `aria-pressed` reflects state.
-- Copy: Tab, then Enter. Cmd/Ctrl+C while the control has focus runs the same timed copy, because the masked value is not selectable and the revealed value has `user-select: none`.
-- Edit mode: ordinary input semantics; the strength word is `aria-describedby`.
+- Read value: `role="textbox" aria-readonly`, focusable, named "Password, hidden" while masked. When revealed its name is the value spelled per character with case and symbol names ("capital t, r, 4, dash"); it is **not** announced automatically.
+- Live region (`secretFieldAnnouncements`): "Password shown. Hides in 30 seconds." · "Copied. Clipboard clears in 30 seconds." · "Clipboard cleared." · "Confirm it's you to show this." · "Confirm it's you to copy this."
+- Reveal button named "Hold to show Password" · "Show Password" · "Hide Password". `hold`: Space held reveals, release hides, Enter does nothing, a bare click never reveals. `toggle`: Space or Enter toggles; `aria-pressed` reflects state.
+- Copy: Enter on the button, or Cmd/Ctrl+C anywhere in the control runs the same timed copy; the value is `user-select: none`.
+- Edit mode: ordinary input semantics; the meter is `aria-describedby` with sr-only "Strength: " before the word.
 
 ## Platform notes
 
 | Platform | Native | Spec still requires |
 |---|---|---|
-| Web and Tauri | Tauri: copy via a command into the core, which sets `org.nspasteboard.ConcealedType` (macOS) and `ExcludeClipboardContentFromMonitorProcessing` + `CanIncludeInClipboardHistory=0` (Windows); Linux Wayland copies only with focus, say so | Lifetime, one-revealed rule, conditional clear |
-| SwiftUI | `SecureField` for edit; `.privacySensitive()`; `UIPasteboard.setItems(_, options: [.expirationDate, .localOnly])` | Fixed mask count in read mode; gate hook |
+| Web and Tauri | Tauri: `host.copy` runs a command into the core, which sets `org.nspasteboard.ConcealedType` (macOS) and `ExcludeClipboardContentFromMonitorProcessing` + `CanIncludeInClipboardHistory=0` (Windows); Linux Wayland copies only with focus, say so | Lifetime, one-revealed rule, conditional clear |
+| SwiftUI | `SecureField` for edit; `.privacySensitive()`; `UIPasteboard.setItems(_, options: [.expirationDate, .localOnly])` | Fixed mask count; the host interface; the gate hook |
 | Compose | `PasswordVisualTransformation`; `FLAG_SECURE`; `ClipData` with `EXTRA_IS_SENSITIVE`; `clearPrimaryClip()` at expiry | Same |
 
 ## Security notes
@@ -106,21 +111,22 @@ Tier 3 to add under `secret-field`:
 - The value never enters React state as a string, never sits in the DOM while masked, and is zeroed after reveal or copy. Buffers come from and return to the core (`03-architecture.md` §8).
 - Masked and revealed values are not selectable; copy goes through the timed path only.
 - Never rendered inside web content; the extension's top-layer frame shows read mode without reveal for gated items.
-- Opaque; icon buttons are 32 px (above the 24 px minimum target size).
+- Opaque; icon buttons are 32 px, which is why the countdown and the "Cleared" word live in the tooltip and live region.
 
 ## Provenance and release
 
 - DSA record: none: first principles, Lockdown brief §5.7.
-- changeset: minor (`@unicron/ui`; `@unicron/tokens` for `secret-field.*` and `warning`).
+- Shipped: `@unicron/ui` 0.4.0, `@unicron/tokens` 0.2.0; subpath `@unicron/ui/security/secret-field`.
 
 ## Acceptance tests
 
-**Screenshot (light and dark, each web engine):** masked; revealed; copying at 28 s; cleared; gated; error; edit with each strength step; `prefers-reduced-motion`; `prefers-contrast: more`; forced colors.
+**Vitest (jsdom, `secret-field.test.tsx`, 18 tests):** the six below, plus the 12-dot mask, buffer zeroing, `hold` by pointer and Space, mask on tab hidden and on `locked`, `groups-of-4`, error with Retry, the unconditional clear and its tooltip, the 10–90 s clamp, reduced-motion text, high-contrast hooks, edit mode.
 
-**Playwright:**
 1. The DOM contains no text node equal to the secret until reveal; after the lifetime it is gone again.
 2. Revealing field B masks field A.
-3. Window blur masks within one frame.
-4. Copy starts a timer; with a fake clock at expiry, the host's clear is called once when the clipboard hash matches and not when it differs.
-5. Cmd/Ctrl+C on the focused control calls `onCopy`; selecting the value with the pointer yields an empty selection.
-6. `gate="password"` calls the gate before `getSecret`, and never calls `getSecret` when the gate rejects.
+3. Window blur masks.
+4. At expiry the host's clear is called once when the clipboard hash matches and not when it differs.
+5. Cmd/Ctrl+C on the focused control runs the copy; the value is not selectable.
+6. `gate="password"` runs the gate before `getSecret` and never fetches when it rejects; inside a `CrownJewelSurface` it asks the surface (`use` for copy, `reveal` for show).
+
+**Still needs a browser:** screenshots of every state in light and dark; blur within one frame; leaving the viewport (jsdom has no `IntersectionObserver`); an empty pointer selection; the real clipboard on each platform.

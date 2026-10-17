@@ -49,6 +49,18 @@ utilities: every semantic colour becomes `--color-<name>: var(--<name>)` (so `bg
 radius scale is derived from `--radius` using the multipliers in
 `semantic.json → $extensions["unicron.theme"].radius`.
 
+## Contrast
+
+Contrast is judged by APCA first; WCAG 2.x is the fallback floor, reported alongside but not gated
+on. Floors: Lc 60 for body text, Lc 45 for large or bold text, Lc 30 for non-text UI (the focus
+ring, a pressed state); Lc 75 is the Bronze mark for text under 16px. A failing pair is fixed at the
+semantic role, by pointing it at a different ramp step, never by changing the tier-1 primitive.
+`packages/tokens/scripts/contrast.mjs` (run by `pnpm --filter @unicron/tokens test`, so in CI)
+resolves every role from `dist/tokens.css`, measures a table of foreground/surface pairs in both
+modes with the ring at the 50% the primitives draw it, prints Lc and the WCAG ratio for each, and
+fails on an APCA miss. Waived pairs are listed in the script with the reason; `border` and `input`
+are hairlines and are reported only.
+
 ## How to add a token
 
 1. Decide the tier. A raw value → `global.json`. A role every product shares → `semantic.json`.
@@ -57,7 +69,8 @@ radius scale is derived from `--radius` using the multipliers in
 2. Add the token with `$type` and `$value` (a reference where possible), and a `dark` mode for
    semantic colours.
 3. Run `pnpm tokens:build && pnpm test && pnpm lint:tokens`. The check fails if a core semantic
-   name is missing, if a reference does not resolve, or if an app role leaked into the core. The
+   name is missing, if a reference does not resolve, if an app role leaked into the core, or if a
+   role pair in the contrast table is under its APCA floor (see [Contrast](#contrast)). The
    lint fails if a tier-2 or tier-3 colour is a raw value instead of a `{reference}` (tier 3 may
    hold literal sizes and axis numbers), or if a primitive in `packages/ui/src` carries a colour
    literal.

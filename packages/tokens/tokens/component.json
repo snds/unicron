@@ -7,6 +7,10 @@
     "grad": { "$type": "number", "$value": 0, "$extensions": { "unicron.modes": { "dark": -25 } }, "$description": "Dark surfaces look heavier, so grade icons down slightly (Material guidance)." },
     "opsz": { "$type": "number", "$value": 20 }
   },
+  "dialog": {
+    "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent).",
+    "titlebar-inset": { "$type": "dimension", "$value": "0px", "$description": "Height of the app's own title bar at the top of the window (a desktop app with the native title bar hidden). The popups keep clear of it: a dialog centres in the area below it; a side or top sheet starts under it. 0px for a web page or a window with a native title bar. Set it with beforeContent, the slot that holds the app's drag strip." }
+  },
   "sheet": {
     "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up.",
     "compact-height": { "$type": "dimension", "$value": "75dvh" },
@@ -15,5 +19,82 @@
     "close-size": { "$type": "dimension", "$value": "2.5rem" },
     "regular-width": { "$type": "dimension", "$value": "24rem" },
     "wide-width": { "$type": "dimension", "$value": "36rem", "$description": "The wide variant (AdaptiveSheetContent wide), for a photo or other content that needs room." }
+  },
+  "code": {
+    "$description": "CodeDisplay (docs/specs/security/code-display.md): one-time codes grouped for reading, with a time-remaining ring.",
+    "size-detail": {"$type": "dimension", "$value": "2.25rem"},
+    "size-list": {"$type": "dimension", "$value": "1.25rem"},
+    "size-compact": {"$type": "dimension", "$value": "1rem"},
+    "group-gap": {"$type": "dimension", "$value": "0.75em"},
+    "letter-spacing": {"$type": "dimension", "$value": "0.08em"},
+    "ring-track": {"$type": "color", "$value": "{border}"},
+    "ring-progress": {"$type": "color", "$value": "{foreground}"},
+    "ring-expiring": {"$type": "color", "$value": "{warning}"},
+    "next-ink": {"$type": "color", "$value": "{muted-foreground}"},
+    "expiring-at": {"$type": "duration", "$value": "5s", "$description": "Seconds left at which the code turns to the expiring state."},
+    "next-at": {"$type": "duration", "$value": "10s", "$description": "Seconds left at which the next code appears beneath the current one."},
+    "copy-next-at": {"$type": "duration", "$value": "3s", "$description": "Seconds left under which copy takes the next code instead."},
+    "rollover-duration": {"$type": "duration", "$value": "200ms", "$description": "Literal; tier 2 has no duration role."}
+  },
+  "large-type": {
+    "$description": "LargeTypeView (docs/specs/security/large-type-view.md): a secret full screen, grouped in threes, for reading across a room.",
+    "min-size": {"$type": "dimension", "$value": "2.5rem"},
+    "max-size": {"$type": "dimension", "$value": "6rem"},
+    "group-gap": {"$type": "dimension", "$value": "1.5em"},
+    "char-gap": {"$type": "dimension", "$value": "0.1em"},
+    "digit-ink": {"$type": "color", "$value": "{info}"},
+    "letter-ink": {"$type": "color", "$value": "{foreground}"},
+    "symbol-ink": {"$type": "color", "$value": "{warning}"},
+    "caption-ink": {"$type": "color", "$value": "{muted-foreground}"},
+    "caption-size": {"$type": "dimension", "$value": "0.75rem"},
+    "lifetime": {"$type": "duration", "$value": "120s"}
+  },
+  "crown-jewel": {
+    "$description": "CrownJewel treatment (docs/specs/security/crown-jewel-treatment.md): the surface re-maps the semantic roles for its subtree onto these, the way .dark does.",
+    "surface": {"$type": "color", "$value": "{protected}", "$description": "Assigned to --background and --card inside the surface."},
+    "ink": {"$type": "color", "$value": "{protected-foreground}", "$description": "Assigned to --foreground inside."},
+    "muted": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 12%, transparent)", "$description": "Assigned to --muted inside."},
+    "muted-ink": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 72%, transparent)", "$description": "Assigned to --muted-foreground inside (not in the spec's table; needed so hints keep contrast on the inverted surface)."},
+    "border": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 24%, transparent)", "$description": "Assigned to --border inside."},
+    "icon-fill": {"$type": "number", "$value": 1, "$description": "Via --c-icon-fill."},
+    "icon-wght": {"$type": "number", "$value": 500, "$description": "Via --c-icon-wght."},
+    "reveal-lifetime": {"$type": "duration", "$value": "20s", "$description": "Shorter than SecretField's default."},
+    "gate-attempts": {"$type": "number", "$value": 3, "$description": "Default attemptsLeft."}
+  },
+  "risk-tier": {
+    "$description": "RiskTierBadge (docs/specs/security/risk-tier-badge.md): one word, one icon, one colour per trust tier.",
+    "standard-ink": { "$type": "color", "$value": "{muted-foreground}", "$description": "Icon and text." },
+    "standard-bg": { "$type": "color", "$value": "{secondary}" },
+    "official-ink": { "$type": "color", "$value": "{info}" },
+    "official-bg": { "$type": "color", "$value": "color-mix(in oklab, {info} 14%, transparent)", "$description": "Text stays {foreground} for contrast; only the icon takes the ink." },
+    "tolerated-ink": { "$type": "color", "$value": "{warning}" },
+    "tolerated-bg": { "$type": "color", "$value": "color-mix(in oklab, {warning} 18%, transparent)" },
+    "unverified-ink": { "$type": "color", "$value": "{destructive}", "$description": "Outline, no fill." },
+    "height-sm": { "$type": "dimension", "$value": "1.25rem" },
+    "height-md": { "$type": "dimension", "$value": "1.5rem" }
+  },
+  "secret-field": {
+    "$description": "SecretField (docs/specs/security/secret-field.md): a hidden value with a bounded reveal and a timed copy.",
+    "mask-count": { "$type": "number", "$value": 12, "$description": "Dots in read mode, never the true length." },
+    "reveal-lifetime": { "$type": "duration", "$value": "30s" },
+    "clipboard-timer": { "$type": "duration", "$value": "30s", "$description": "Default; a host may override within 10–90 s." },
+    "revealed-bg": { "$type": "color", "$value": "color-mix(in oklab, {warning} 10%, transparent)", "$description": "Exposure cue." },
+    "copy-track": { "$type": "color", "$value": "{border}" },
+    "copy-progress": { "$type": "color", "$value": "{foreground}" },
+    "meter-weak": { "$type": "color", "$value": "{destructive}" },
+    "meter-fair": { "$type": "color", "$value": "{warning}" },
+    "meter-strong": { "$type": "color", "$value": "{primary}" },
+    "letter-spacing": { "$type": "dimension", "$value": "0.04em", "$description": "Revealed mono text." }
+  },
+  "approval": {
+    "$description": "ApprovalSheet (docs/specs/security/approval-sheet.md): approve or deny a request from another device, with number matching, an arming delay, and a timeout that denies.",
+    "min-width": { "$type": "dimension", "$value": "20rem", "$description": "Never smaller than this at any breakpoint." },
+    "digit-size": { "$type": "dimension", "$value": "2rem", "$description": "Digit cell type size." },
+    "digit-gap": { "$type": "dimension", "$value": "0.5rem" },
+    "timer-track": { "$type": "color", "$value": "{border}" },
+    "timer-progress": { "$type": "color", "$value": "{foreground}" },
+    "timer-urgent": { "$type": "color", "$value": "{warning}", "$description": "Under 10 s." },
+    "arm-delay": { "$type": "duration", "$value": "500ms", "$description": "Inert window after open. The component reads it at runtime and falls back to 500ms without the stylesheet." },
+    "lifetime": { "$type": "duration", "$value": "60s", "$description": "Default expiresAt offset." }
   }
 }

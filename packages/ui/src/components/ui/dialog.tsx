@@ -59,20 +59,31 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  beforeContent,
   size = "sm",
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
   size?: DialogSize
+  /**
+   * Rendered in the portal between the backdrop and the popup, so it paints above the
+   * backdrop and below the popup. A desktop app puts its window drag strip here
+   * (`data-tauri-drag-region`) so the window still moves while the dialog is open. A press
+   * on it does not dismiss the dialog: only a press on the backdrop does.
+   */
+  beforeContent?: React.ReactNode
 }) {
   return (
     <DialogPortal>
       <DialogOverlay />
+      {beforeContent}
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          // A dialog taller than the screen scrolls inside itself instead of running off it.
-          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/10 grid max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] gap-4 overflow-y-auto rounded-xl p-4 text-sm ring-1 duration-100 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
+          // Centred in the area below --c-dialog-titlebar-inset (0px by default), so an app's
+          // title bar strip never overlaps the popup. A dialog taller than that area scrolls
+          // inside itself instead of running off it.
+          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/10 grid max-h-[calc(100dvh-2rem-var(--c-dialog-titlebar-inset))] max-w-[calc(100%-2rem)] gap-4 overflow-y-auto rounded-xl p-4 text-sm ring-1 duration-100 fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
           DIALOG_SIZES[size],
           className
         )}

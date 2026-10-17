@@ -8,7 +8,7 @@
   },
   "overrides": [
     {
-      "files": ["packages/ui/src/components/ui/**", "packages/ui/src/index.ts"],
+      "files": ["packages/ui/src/components/ui/**", "packages/ui/src/components/security/**", "packages/ui/src/index.ts"],
       "rules": { "react/only-export-components": "off" }
     }
   ]
