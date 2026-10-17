@@ -1,5 +1,5 @@
 // Promoted from: snds/mailbird · PR snds/unicron#2 · DSA 503c2fad12b5, b6400588fc4c
-import type * as React from "react"
+import * as React from "react"
 import type { VariantProps } from "class-variance-authority"
 
 import { Icon, type IconName } from "./icon"
@@ -44,11 +44,17 @@ export function IconButton({
   variant = "ghost",
   size = "icon",
   children,
+  disabled,
   ...props
 }: IconButtonProps) {
+  // TooltipTrigger's own `disabled` only stops the tooltip opening; it never reaches the element.
+  // So the control gets it through `render`, and the tooltip stays shut while it is disabled.
+  const control = render
+    ? React.cloneElement(render as React.ReactElement<{ disabled?: boolean }>, { disabled })
+    : <Button variant={variant} size={size} disabled={disabled} />
   return (
     <Tooltip>
-      <TooltipTrigger aria-label={label} render={render ?? <Button variant={variant} size={size} />} {...props}>
+      <TooltipTrigger aria-label={label} render={control} disabled={disabled} {...props}>
         {children ?? (icon && <Icon name={icon} fill={fill} />)}
       </TooltipTrigger>
       <TooltipContent>
