@@ -1,6 +1,6 @@
 # SecretField
 
-_Spec v0.3 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5 `hidden` kind; `03-architecture.md` §8) · Status: built in `@unicron/ui` 0.4.0 (PR #16); v0.3 adds the host-contract items a desktop host found (copy by reference, the host's error words, a gated reveal is a toggle); this spec describes the build_
+_Spec v0.4 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5 `hidden` kind; `03-architecture.md` §8) · Status: built in `@unicron/ui` 0.4.0 (PR #16); v0.3 adds the host-contract items a desktop host found (copy by reference, the host's error words, a gated reveal is a toggle); v0.4 adds edit mode over several lines, `name` / `required` / `onBlur`, and the shared strength mapping; this spec describes the build_
 
 ## Purpose and the user job
 
@@ -8,15 +8,15 @@ A person needs to use a hidden value (password, key, CVC, PIN, Secret Key, recov
 
 ## Uniqueness check
 
-Composes `Field`, `InputGroup` → `InputGroupAddon` (and `InputGroupInput` in edit mode), `IconButton`, `Skeleton`, `Spinner`. It is not an `Input type="password"` variant: that control keeps the value in the DOM and only toggles visibility. This component owns a one-shot fetch through a handle, a reveal lifetime, hide-on-blur, copy with a countdown and a conditional clear, and a gate hook. Those are behaviors, not styles.
+Composes `Field`, `InputGroup` → `InputGroupAddon` (and `InputGroupInput`, or `InputGroupTextarea` with `multiline`, in edit mode), `IconButton`, `Skeleton`, `Spinner`. It is not an `Input type="password"` variant: that control keeps the value in the DOM and only toggles visibility. This component owns a one-shot fetch through a handle, a reveal lifetime, hide-on-blur, copy with a countdown and a conditional clear, and a gate hook. Those are behaviors, not styles.
 
 ## Anatomy
 
 ```
-secret-field                      div, data-mode="read|edit", data-state="masked|loading|revealed|error", data-gate
+secret-field                      div, data-mode="read|edit", data-state="masked|loading|revealed|error", data-gate, data-multiline (edit)
 ├─ FieldLabel                     the `label` prop
 ├─ secret-field-control           InputGroup
-│  ├─ secret-field-value          read: role="textbox" aria-readonly; dot mask, or secret-field-revealed written imperatively; edit: InputGroupInput
+│  ├─ secret-field-value          read: role="textbox" aria-readonly; dot mask, or secret-field-revealed written imperatively; edit: InputGroupInput, or InputGroupTextarea data-masked with multiline
 │  ├─ secret-field-reveal         IconButton visibility / visibility_off, aria-pressed; secret-field-gate lock glyph when gated
 │  ├─ secret-field-copy           IconButton content_copy → secret-field-copy-countdown (ring, or "28 s") → check + sr-only "Cleared"
 │  └─ secret-field-more           `children`: large type, generate, history
@@ -41,7 +41,11 @@ secret-field                      div, data-mode="read|edit", data-state="masked
 | `locked` | read | boolean | The vault locked: the field masks at once |
 | `onReveal`, `onCopy` | read | callbacks | For the audit log |
 | `errorText` | read | string · `(error, action) => string \| undefined` | The host's own words for a failed reveal or copy, in place of the defaults. A string is shown for either action; a function gets what `getSecret`, `copy` or `copyRef` rejected with and `"read"` or `"copy"`, and returns `undefined` to keep the default words. Shown only in the error state, with Retry |
-| `value`, `onChange`, `strength`, `disabled`, `error` | edit | | `strength` (`weak` · `fair` · `strong`) is computed by the host's core |
+| `value`, `onChange`, `strength`, `disabled`, `error` | edit | | `strength` (`weak` · `fair` · `strong`) is computed by the host's core; see **Strength** |
+| `multiline` | edit | boolean | A textarea for a secret over several lines (a private key, a recovery phrase). It keeps line breaks; see **Edit** under Behavior |
+| `rows` | edit | number, default `4` | Visible lines with `multiline`; the box grows with what is typed |
+| `name`, `required` | edit | string · boolean | On the control. `required` is native (the browser's form check and `:invalid`) and also sets `aria-required` |
+| `onBlur` | edit | `(event) => void` | For a form library that tracks touched fields |
 
 **`SecretFieldHost`.** `copy(bytes)` puts the bytes on the clipboard (the core on Tauri and native; `navigator.clipboard` only in the pure web vault); the timer starts when it resolves. `clear()` runs at expiry. `clipboardHolds(hash)` answers whether the clipboard still holds our value; `hash` is hex SHA-256 of the copied bytes (FNV-1a where SubtleCrypto is missing). Omit it where the platform cannot read the clipboard, and the clear runs unconditionally. `gate(kind)` resolves `true` when the person passed; the field asks, it never decides.
 
@@ -49,7 +53,9 @@ secret-field                      div, data-mode="read|edit", data-state="masked
 
 **Mask length.** Read mode shows `--c-secret-field-mask-count` dots (12, read from `:root` once), never the true length. Edit mode follows what is typed.
 
-Exports: `spellSecret`, `secretFieldAnnouncements`, `secretFieldErrors`, and the types (`SecretFieldHost`, `SecretFieldReferenceHost`, `SecretFieldCopyRef`, `SecretFieldAction`, …).
+**Strength.** The field never estimates. A useful estimate needs dictionaries and pattern matching (zxcvbn and its ports: about 400 kB gzipped for the JavaScript build with its word lists, MIT), which is too much weight for a UI kit every product imports, and a small character-class entropy count would call "P@ssw0rd1" strong, which is worse than no meter. The estimate belongs in the host's core, where one implementation serves web, desktop and native alike (on a Rust core, the `zxcvbn` crate, MIT). What the field shares is the mapping: `secretStrengthFromScore(score)` turns zxcvbn's 0–4 guess score into the three words, 0–2 (under 10^8 guesses) `weak`, 3 (under 10^10) `fair`, 4 `strong`, so every host says the same word for the same secret. A host with no estimator leaves `strength` off and the meter is not drawn.
+
+Exports: `spellSecret`, `secretStrengthFromScore`, `secretFieldAnnouncements`, `secretFieldErrors`, and the types (`SecretFieldHost`, `SecretFieldReferenceHost`, `SecretFieldCopyRef`, `SecretFieldAction`, …).
 
 ## States
 
@@ -64,6 +70,7 @@ Exports: `spellSecret`, `secretFieldAnnouncements`, `secretFieldErrors`, and the
 | error | "Couldn't read this field" or "Couldn't copy this field", or the host's `errorText`, in `destructive` with Retry; no value |
 | disabled | Edit mode only; read mode is gated or `locked`, never disabled |
 | edit | `InputGroupInput` with its own show toggle; meter weak `destructive`, fair `warning`, strong `primary`, always with the word |
+| edit, several lines | `multiline`: `InputGroupTextarea` (`data-multiline` on the root), `data-masked` until Show, so it draws as dots; the Show control sits at the top right |
 | reduced motion | Ring becomes text "28 s"; no tint transition |
 | high contrast and forced colors | Dots become the word "Hidden"; "Shown" is added while revealed; tint dropped |
 
@@ -73,7 +80,8 @@ Exports: `spellSecret`, `secretFieldAnnouncements`, `secretFieldErrors`, and the
 - **Copy.** Gate, `getSecret`, hash, `host.copy`, zero the buffer, start the countdown. With `copyRef`: gate, `host.copyRef()`, start the countdown; no bytes are fetched. At expiry: if `clipboardHolds` answers `false`, stop silently; otherwise `host.clear()` and "Clipboard cleared." A reference copy with no hash skips `clipboardHolds`.
 - **Gate.** `biometric` for use (copy), `password` for reveal, per `04-security.md` §10. Inside a `CrownJewelSurface`, `useCrownJewel().requestProof("use" | "reveal")` is called instead of `host.gate`.
 - **A gated reveal is a toggle.** A hold cannot survive a gate: the check opens a dialog or an OS prompt, which takes focus, and losing focus ends a hold. So when the reveal is gated (`gate` is not `none`, or the field is inside a `CrownJewelSurface`) the field reveals as `toggle` whatever `revealMode` says: one tap runs the gate and shows the value for the lifetime (20 s inside a crown jewel), Hide or the usual triggers mask it. When the host asked for `hold`, the live region says so on reveal: "Password shown. Hides in 20 seconds, or when you select Hide." The rule is automatic, not a prop, because a gated hold cannot work on any host: before 0.6.0 such a field dropped the reveal when the gate took focus. An ungated field keeps `hold`.
-- **Edit.** `autocomplete="new-password"`, no spellcheck, autocorrect, or autocapitalize; the generator goes in `children`.
+- **Edit.** `autocomplete="new-password"`, no spellcheck, autocorrect, or autocapitalize; the generator goes in `children`. `name` and `required` reach the control, so a form submits and checks it like any input. Edit mode is a controlled input: the host holds the typed value, as it must to save it, and the field keeps no copy.
+- **Edit, several lines.** `multiline` swaps the input for a textarea, because a one-line password input drops the line breaks a key needs. A textarea has no `type="password"`, so the field marks it `data-masked` until Show and the stylesheet masks it: `-webkit-text-security: disc` in Chromium and WebKit (the desktop webviews included: WebView2, WKWebView, WebKitGTK); an engine without it draws the text transparent with the caret still visible, so nothing reads either way. While masked, copy, cut and drag out are blocked, as a password input blocks them. The Show control is the same toggle as one line (`aria-pressed`, "Show Private key" / "Hide Private key"); `autocomplete="off"` instead of `new-password`, since no browser generates a key.
 
 ## Tokens
 
@@ -100,7 +108,7 @@ Tier 3 under `secret-field`:
 - Live region (`secretFieldAnnouncements`): "Password shown. Hides in 30 seconds." · "Password shown. Hides in 20 seconds, or when you select Hide." (`shownUntilHidden`: a hold that went through a gate) · "Copied. Clipboard clears in 30 seconds." · "Clipboard cleared." · "Confirm it's you to show this." · "Confirm it's you to copy this."
 - Reveal button named "Hold to show Password" · "Show Password" · "Hide Password". A gated field is never "Hold to show". `hold`: Space held reveals, release hides, Enter does nothing, a bare click never reveals. `toggle`: Space or Enter toggles; `aria-pressed` reflects state.
 - Copy: Enter on the button, or Cmd/Ctrl+C anywhere in the control runs the same timed copy; the value is `user-select: none`.
-- Edit mode: ordinary input semantics; the meter is `aria-describedby` with sr-only "Strength: " before the word.
+- Edit mode: ordinary input semantics (a textarea with `multiline`, so Enter is a new line); `required` sets `aria-required`; the meter is `aria-describedby` with sr-only "Strength: " before the word.
 
 ## Platform notes
 
@@ -112,7 +120,7 @@ Tier 3 under `secret-field`:
 
 ## Security notes
 
-- The value never enters React state as a string, never sits in the DOM while masked, and is zeroed after reveal or copy. Buffers come from and return to the core (`03-architecture.md` §8).
+- In read mode the value never enters React state as a string, never sits in the DOM while masked, and is zeroed after reveal or copy. Edit mode is where the person types it, so the host's form holds it; the field adds no copy, and a masked several-line value cannot be copied out. Buffers come from and return to the core (`03-architecture.md` §8).
 - Masked and revealed values are not selectable; copy goes through the timed path only.
 - Never rendered inside web content; the extension's top-layer frame shows read mode without reveal for gated items.
 - Opaque; icon buttons are 32 px, which is why the countdown and the "Cleared" word live in the tooltip and live region.
@@ -124,7 +132,7 @@ Tier 3 under `secret-field`:
 
 ## Acceptance tests
 
-**Vitest (jsdom, `secret-field.test.tsx`, 29 tests):** the nine below, plus the 12-dot mask, buffer zeroing, a slow reveal landing, `hold` by pointer and Space, mask on tab hidden and on `locked`, `groups-of-4`, error with Retry, the unconditional clear, the 10–90 s clamp, the crown-jewel lifetime, reduced-motion text, high-contrast hooks, edit mode, a reference copy inside a crown jewel, `errorText` falling back to the defaults.
+**Vitest (jsdom, `secret-field.test.tsx`, 34 tests):** the eleven below, plus the 12-dot mask, buffer zeroing, a slow reveal landing, `hold` by pointer and Space, mask on tab hidden and on `locked`, `groups-of-4`, error with Retry, the unconditional clear, the 10–90 s clamp, the crown-jewel lifetime, reduced-motion text, high-contrast hooks, edit mode, a reference copy inside a crown jewel, `errorText` falling back to the defaults.
 
 1. The DOM contains no text node equal to the secret until reveal; after the lifetime it is gone again.
 2. Revealing field B masks field A.
@@ -135,5 +143,7 @@ Tier 3 under `secret-field`:
 7. With `copyRef`, a copy never calls `getSecret` or `copy`; the hash it resolves with reaches `clipboardHolds`; with no hash `clipboardHolds` is skipped and the clear runs.
 8. `errorText` (a string, or a function given the rejection and the action) replaces the default error words.
 9. A gated field with `revealMode="hold"` is named "Show Password", reveals on a tap that survives the gate taking focus, and announces `shownUntilHidden`; an ungated field keeps the hold.
+10. `multiline` renders a textarea that keeps line breaks, is `data-masked` until Show, and blocks copy, cut and drag while masked.
+11. `name`, `required` and `aria-required` reach the control, one line or several: an empty required field fails `form.checkValidity()`, a filled one submits its value under `name`; without them the control is unchanged. `secretStrengthFromScore` maps 0–4 to weak, weak, weak, fair, strong.
 
-**Still needs a browser:** screenshots of every state in light and dark; blur within one frame; leaving the viewport (jsdom has no `IntersectionObserver`); an empty pointer selection; the real clipboard on each platform.
+**Still needs a browser:** screenshots of every state in light and dark; the masked textarea in each engine (dots where `-webkit-text-security` exists, transparent ink where it doesn't); blur within one frame; leaving the viewport (jsdom has no `IntersectionObserver`); an empty pointer selection; the real clipboard on each platform.

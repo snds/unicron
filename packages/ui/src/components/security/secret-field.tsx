@@ -13,7 +13,7 @@ import { Icon } from "../icon"
 import { IconButton, type IconButtonProps } from "../icon-button"
 import { Button } from "../ui/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupTextarea } from "../ui/input-group"
 import { Skeleton } from "../ui/skeleton"
 import { Spinner } from "../ui/spinner"
 import { readSecondsToken, useCopyCountdown, useReducedMotion } from "./copy-countdown"
@@ -131,10 +131,26 @@ export interface SecretFieldEditProps extends CommonProps {
   mode: "edit"
   value: string
   onChange: (value: string) => void
-  /** Computed by the host's core. Always shown with its word. */
+  /**
+   * Computed by the host's core, never by the field (see `secretStrengthFromScore` for the
+   * shared mapping from a 0–4 guess score). Always shown with its word.
+   */
   strength?: SecretStrength
   disabled?: boolean
   error?: string
+  /**
+   * Several lines (a private key, a recovery phrase): a textarea that keeps line breaks, drawn
+   * masked until Show, with the same Show control and the same edit rules as one line.
+   */
+  multiline?: boolean
+  /** Visible lines when `multiline`. Default 4; the box grows with what is typed. */
+  rows?: number
+  /** The control's `name`, for a form and a form library. */
+  name?: string
+  /** Native `required` and `aria-required`, so the browser's form check and a form library see it. */
+  required?: boolean
+  /** For a form library that tracks touched fields. */
+  onBlur?: (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
 }
 
 export type SecretFieldProps = SecretFieldReadProps | SecretFieldEditProps
@@ -728,33 +744,89 @@ const STRENGTH: Record<SecretStrength, { word: string; segments: number; classNa
   strong: { word: "Strong", segments: 3, className: "bg-(--c-secret-field-meter-strong)" },
 }
 
-function SecretFieldEdit({ label, value, onChange, strength, disabled = false, error, mono = true, description, children, id: idProp, className }: SecretFieldEditProps) {
+/**
+ * zxcvbn's 0–4 guess score (the scale its ports share: the Rust `zxcvbn` crate, `@zxcvbn-ts/core`,
+ * Swift and Kotlin ports) as the field's three words, so every host says the same word for the
+ * same secret: 0–2 (under 10^8 guesses) weak, 3 (under 10^10) fair, 4 strong. A score outside
+ * 0–4 reads as weak. The field never estimates: estimating needs the dictionaries, which belong
+ * in the core.
+ */
+export function secretStrengthFromScore(score: number): SecretStrength {
+  if (score >= 4) return "strong"
+  if (score >= 3) return "fair"
+  return "weak"
+}
+
+function SecretFieldEdit({
+  label,
+  value,
+  onChange,
+  strength,
+  disabled = false,
+  error,
+  mono = true,
+  description,
+  children,
+  id: idProp,
+  className,
+  multiline = false,
+  rows = 4,
+  name,
+  required,
+  onBlur,
+}: SecretFieldEditProps) {
   const autoId = React.useId()
   const id = idProp ?? autoId
   const meterId = `${id}-strength`
   const [shown, setShown] = React.useState(false)
   const meter = strength ? STRENGTH[strength] : null
+  const shared = {
+    id,
+    name,
+    value,
+    required,
+    "aria-required": required || undefined,
+    spellCheck: false,
+    autoCorrect: "off",
+    autoCapitalize: "off",
+    disabled,
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": meter ? meterId : undefined,
+    onBlur,
+  } as const
+  // A masked textarea copies like a password input: not at all.
+  const blockWhileMasked = (e: React.SyntheticEvent) => {
+    if (!shown) e.preventDefault()
+  }
 
   return (
-    <div data-slot="secret-field" data-mode="edit" data-state={shown ? "revealed" : "masked"} className={className}>
+    <div data-slot="secret-field" data-mode="edit" data-multiline={multiline ? "true" : undefined} data-state={shown ? "revealed" : "masked"} className={className}>
       <Field data-invalid={error ? "true" : undefined} data-disabled={disabled ? "true" : undefined}>
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
         <div data-slot="secret-field-control" className={cn(mono && "font-mono")}>
           <InputGroup>
-            <InputGroupInput
-              id={id}
-              type={shown ? "text" : "password"}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              autoComplete="new-password"
-              spellCheck={false}
-              autoCorrect="off"
-              autoCapitalize="off"
-              disabled={disabled}
-              aria-invalid={error ? true : undefined}
-              aria-describedby={meter ? meterId : undefined}
-            />
-            <InputGroupAddon align="inline-end">
+            {multiline ? (
+              <InputGroupTextarea
+                {...shared}
+                rows={rows}
+                // A textarea has no type="password": the stylesheet masks it (-webkit-text-security,
+                // or transparent ink where an engine lacks that), and lifts the mask on Show.
+                data-masked={shown ? undefined : ""}
+                onChange={(e) => onChange(e.target.value)}
+                autoComplete="off"
+                onCopy={blockWhileMasked}
+                onCut={blockWhileMasked}
+                onDragStart={blockWhileMasked}
+              />
+            ) : (
+              <InputGroupInput
+                {...shared}
+                type={shown ? "text" : "password"}
+                onChange={(e) => onChange(e.target.value)}
+                autoComplete="new-password"
+              />
+            )}
+            <InputGroupAddon align="inline-end" className={cn(multiline && "self-start")}>
               <IconButton
                 data-slot="secret-field-reveal"
                 label={shown ? `Hide ${label}` : `Show ${label}`}

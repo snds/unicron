@@ -29,7 +29,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `tabs` | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`, `tabsListVariants` | Navigation | Base UI Tabs |
 | `dropdown-menu` | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | Navigation | Base UI Menu |
 | `spinner` | `Spinner` | Feedback | Icon (`progress_activity`) |
-| `skeleton` | `Skeleton` | Feedback | div |
+| `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
 | `empty` | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | Feedback | div |
 | `sonner` | `Toaster` | Feedback | sonner (+ next-themes) |
 | `avatar` | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount` | Data Display | Base UI Avatar |
@@ -41,7 +41,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `tooltip` | `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider` | Overlay | Base UI Tooltip |
 | `dialog` | `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogActions`, `DialogAction`, `DialogTitle`, `DialogDescription`, `DialogClose`, `DialogOverlay`, `DialogPortal` | Overlay | Base UI Dialog |
 | `sheet` | `Sheet`, `SheetTrigger`, `SheetContent`, `AdaptiveSheetContent`, `SheetHeader`, `SheetFooter`, `SheetTitle`, `SheetDescription`, `SheetClose` | Overlay | Base UI Dialog |
-| `command` | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandShortcut`, `CommandSeparator` | Overlay (command palette; a known gap in the canonical 62, composed from Dialog + InputGroup + cmdk) | cmdk |
+| `command` | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandItemAction`, `CommandShortcut`, `CommandSeparator`, `commandItemActionShortcut`, `CommandMatch`, `CommandItemActionProps` | Overlay (command palette; a known gap in the canonical 62, composed from Dialog + InputGroup + cmdk) | cmdk |
 | `icon` | `Icon`, `IconName`, `IconProps`, `IconTone` | Content | svg + Material Symbols Rounded |
 | `icon-button` | `IconButton`, `IconButtonProps` | Action | Tooltip + Button (or any `render`) |
 | `chip` | `Chip`, `ChipAction`, `ChipRemove`, `ChipRemoveProps` | Data Display | span (useRender) + Base UI Button + IconButton |
@@ -50,7 +50,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `security/crown-jewel` | `CrownJewelSurface`, `CrownJewelMark`, `CrownJewelGate`, `useCrownJewel`, `CrownJewelProof` | Layout | section with a re-mapped tier + Icon + Badge + IconButton + Dialog (spec: [crown-jewel-treatment](specs/security/crown-jewel-treatment.md)) |
 | `security/approval-sheet` | `ApprovalSheet`, `approvalSheetCopy`, `approvalSheetOriginCopy`, `approvalSheetAnnouncements`, `ApprovalSheetProps`, `ApprovalKind`, `ApprovalOrigin`, `ApprovalDenyReason`, `ApprovalMatching`, `ApprovalContextRow` | Overlay (security) | Sheet → AdaptiveSheetContent + Item + Input + DialogActions + RiskTierBadge |
 | `security/risk-tier-badge` | `RiskTierBadge`, `riskTierCopy`, `riskTiers`, `riskTierUnverifiedAnnouncement`, `RiskTierBadgeProps`, `RiskTier`, `RiskTierState`, `RiskTierCopy` | Data Display (security) | `badgeVariants` + Icon + IconButton → Tooltip |
-| `security/secret-field` | `SecretField`, `secretFieldAnnouncements`, `secretFieldErrors`, `spellSecret`, `SecretFieldProps`, `SecretFieldReadProps`, `SecretFieldEditProps`, `SecretFieldHost`, `SecretGate`, `SecretRevealMode`, `SecretFormat`, `SecretStrength` | Form (security) | Field + InputGroup + IconButton + Skeleton + Spinner |
+| `security/secret-field` | `SecretField`, `secretFieldAnnouncements`, `secretFieldErrors`, `secretStrengthFromScore`, `spellSecret`, `SecretFieldProps`, `SecretFieldReadProps`, `SecretFieldEditProps`, `SecretFieldHost`, `SecretGate`, `SecretRevealMode`, `SecretFormat`, `SecretStrength` | Form (security) | Field + InputGroup + IconButton + Skeleton + Spinner |
 
 Also exported: `cn` (clsx + tailwind-merge).
 
@@ -90,7 +90,40 @@ components) rather than hand-writing.
   - Use it when a dialog has a way to back out. A dialog with one action keeps a plain `DialogFooter` with a text button, because a lone ✓ says less than the words.
 - **Menus are frosted glass** (`bg-popover/70` with a backdrop blur), by decision (2026-10-15). Don't override them to solid.
 - **DialogContent `size`** sets how wide a dialog grows from `sm` up: `sm` (the default, 24rem) for a question, `md` (28rem) for a short form, `lg` (32rem) for settings, `xl` (42rem) for a composer, and `2xl` (48rem) for a preview. Every dialog scrolls inside itself when it's taller than the screen, so no dialog sets its own width or scrolling. A dialog with its own layout (a composer's header, body, and footer) still sets its height and padding.
+  - The names are product sizes, not Tailwind's `max-w-*` steps. They match Tailwind's up to `lg`, then skip one:
+
+    | `size` | Max width | Tailwind class | For |
+    |---|---|---|---|
+    | `sm` (default) | 24rem | `max-w-sm` | a question |
+    | `md` | 28rem | `max-w-md` | a short form |
+    | `lg` | 32rem | `max-w-lg` | settings |
+    | `xl` | 42rem | `max-w-2xl` | a composer |
+    | `2xl` | 48rem | `max-w-3xl` | a preview |
+
+  - Tailwind's `max-w-xl` (36rem) has no size, on purpose. A dialog that was `max-w-xl` before moving to `size` takes `lg` (narrower) or `xl` (wider), whichever its content fits. The mapping is fixed: renaming or remapping a size would move every dialog an app already has.
 - **DialogTitle** lays a leading Back button out inline with the text, for dialogs with steps.
+- **Skeleton** is sized by `className` (an avatar, a line of text), or by `variant="row"` for one list row: full width and `--c-skeleton-row-height` tall (2.5rem, an `Item size="sm"` with one line), so a list skeleton is `<Skeleton variant="row" />` three times with no `className`. An app with a density setting re-maps `--c-skeleton-row-height` once, in its extension layer, to its own row height (`--c-skeleton-row-height: var(--c-row-height)`), and every row skeleton follows the density.
+- **Command** is cmdk under unicron's styles. Three things it adds:
+  - *Search text.* `CommandItem`'s `value` is its key: what `onSelect` and `Command`'s `value` / `onValueChange` hand back. By default it is also what a search matches, together with the item's `keywords` (cmdk's filter ranks `value` and `keywords` joined). So an item keyed by an id (`value={item.id}`) matches the id's letters. Pass the words it should be found by as `keywords` (a title, a username, a host) and set `Command match="keywords"`: an item that has keywords is then matched on those alone, and one without on its `value`, with cmdk's own ranking. A `filter` you pass still wins, for a different matching rule.
+  - *Give an item with icons or an action an explicit `value`.* Without one cmdk takes the item's text, and every `Icon`'s glyph name is text (the trailing check adds "check").
+  - *A second action.* `CommandItemAction` (`label`, `icon`, `onAction`, `disabled`) is a small icon button at the end of a `CommandItem`, beside its main action (`onSelect`): copy a password, open in a new window. One per item. An item is a `role="option"` and focus stays in the search field (`aria-activedescendant`), so a button inside it can't be tabbed to or announced as a button. The action is reached three ways instead:
+    - A pointer clicks the button. The press is out of the item's selection: it never runs `onSelect`, and focus and the highlight stay in the search field.
+    - The keyboard presses ⌘↵ on Apple platforms, Ctrl+Enter elsewhere, while the item is highlighted. `Command` runs the action; plain Enter still selects. An item without an action keeps cmdk's behaviour (Ctrl+Enter selects, as before). A disabled action swallows the keys. A host that handles the keys itself calls `preventDefault` in its `onKeyDown`, and `Command` steps aside.
+    - A screen reader hears it with the item. The item is described by "Copy password, Command Enter" and carries `aria-keyshortcuts`; the button itself is `aria-hidden` and out of the tab order, since the description says it. The tooltip shows the label and the key. `commandItemActionShortcut()` gives the key's label for your own hint text (the dialog's description, say).
+
+    ```tsx
+    <Command match="keywords">
+      <CommandInput placeholder="Search" />
+      <CommandList>
+        {items.map((it) => (
+          <CommandItem key={it.id} value={it.id} keywords={[it.title, it.username]} onSelect={() => open(it.id)}>
+            {it.title}
+            <CommandItemAction label="Copy password" icon="content_copy" onAction={() => copy(it.id)} />
+          </CommandItem>
+        ))}
+      </CommandList>
+    </Command>
+    ```
 - **SheetContent `fullscreen`** covers the whole screen edge to edge and clears the status bar: a phone editor, like Mail's compose. An app can still move its bottom edge, for example above the keyboard.
 - **`beforeContent`** on `DialogContent`, `SheetContent`, `AdaptiveSheetContent` and `CommandDialog` renders in the portal between the backdrop and the popup, so it paints above the backdrop and below the popup. A desktop app with the native title bar hidden puts its window drag strip there; a press on it does not dismiss (only a press on the backdrop does). The popups keep clear of `--c-dialog-titlebar-inset` (0px by default): a dialog centres in the area below it, a side or top sheet starts under it. Recipe: [05 · Consuming → Desktop title bar](05-consuming.md#9-desktop-title-bar).
 - **Security components** live in `components/security/` and are also importable as `@unicron/ui/security/<name>`. Each follows its one-page spec under `docs/specs/security/`; the host's core does the cryptography and the component only ever receives short strings or a one-shot handle.
@@ -156,7 +189,13 @@ surface, or the extension's top-layer frame, never in web content; every tier, s
     r, 4, dash") and not announced automatically; Cmd/Ctrl+C on the control runs the timed copy; the value is never
     selectable. Live region: "Password shown. Hides in 30 seconds." · "Copied. Clipboard clears in 30 seconds." ·
     "Clipboard cleared." · "Confirm it's you to show this."
+  - *Edit mode:* `value` / `onChange` (controlled), `name`, `required` (native, plus `aria-required`), `onBlur`,
+    `disabled`, `error`, `strength`. `multiline` (with `rows`, default 4) is a textarea for a secret over several lines
+    (a private key, a recovery phrase): it keeps line breaks, is masked until Show (`-webkit-text-security`, or
+    transparent ink where an engine lacks it), and blocks copy, cut and drag while masked. `strength` comes from the
+    host's core; `secretStrengthFromScore(0–4)` maps a zxcvbn-style score to the three words, so every host says the
+    same word.
   - *Host contract:* `getSecret(): Promise<Uint8Array>` (one-shot, zeroed after use) and `host.copy(bytes)` /
-    `host.clear()` / `host.clipboardHolds?(hash)` / `host.gate?(kind)`. The value never enters React state as a string.
+    `host.clear()` / `host.clipboardHolds?(hash)` / `host.gate?(kind)`. In read mode the value never enters React state as a string.
   - *Tokens:* `input`, `border`, `foreground`, `muted-foreground`, `ring`, `primary`, `destructive`, `warning`,
     `font-mono`; `--c-secret-field-{mask-count,reveal-lifetime,clipboard-timer,revealed-bg,copy-track,copy-progress,meter-weak,meter-fair,meter-strong,letter-spacing}`.

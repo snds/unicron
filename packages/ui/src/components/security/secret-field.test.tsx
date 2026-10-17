@@ -5,6 +5,7 @@ import {
   SecretField,
   secretFieldAnnouncements,
   secretFieldErrors,
+  secretStrengthFromScore,
   spellSecret,
   type SecretFieldAction,
   type SecretFieldHost,
@@ -534,5 +535,95 @@ describe("SecretField host contract: a gated reveal is a toggle", () => {
     fireEvent.click(revealButton())
     await settle()
     expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.shown("Password", 30))
+  })
+})
+
+describe("SecretField edit mode: several lines, form attributes, strength mapping", () => {
+  const KEY = "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAA\n-----END OPENSSH PRIVATE KEY-----"
+
+  it("multiline: a masked textarea that keeps line breaks, lifted by Show", () => {
+    const onChange = vi.fn()
+    const { container } = render(<SecretField mode="edit" multiline label="Private key" value="" onChange={onChange} />)
+    const box = screen.getByLabelText("Private key") as HTMLTextAreaElement
+    expect(box.tagName).toBe("TEXTAREA")
+    expect(box).toHaveAttribute("rows", "4")
+    expect(box).toHaveAttribute("data-masked")
+    expect(box).toHaveAttribute("autocomplete", "off")
+    expect(box).toHaveAttribute("spellcheck", "false")
+    expect(box).toHaveAttribute("autocorrect", "off")
+    expect(box).toHaveAttribute("autocapitalize", "off")
+    expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-multiline", "true")
+    expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-state", "masked")
+    fireEvent.change(box, { target: { value: KEY } })
+    expect(onChange).toHaveBeenCalledWith(KEY)
+    const show = screen.getByRole("button", { name: "Show Private key" })
+    expect(show).toHaveAttribute("aria-pressed", "false")
+    fireEvent.click(show)
+    expect(box).not.toHaveAttribute("data-masked")
+    expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-state", "revealed")
+    expect(screen.getByRole("button", { name: "Hide Private key" })).toHaveAttribute("aria-pressed", "true")
+  })
+
+  it("multiline: copy, cut and drag are blocked while masked, and allowed once shown", () => {
+    render(<SecretField mode="edit" multiline rows={6} label="Recovery phrase" value="abandon ability able" onChange={() => {}} />)
+    const box = screen.getByLabelText("Recovery phrase")
+    expect(box).toHaveAttribute("rows", "6")
+    expect(fireEvent.copy(box)).toBe(false)
+    expect(fireEvent.cut(box)).toBe(false)
+    expect(fireEvent.dragStart(box)).toBe(false)
+    fireEvent.click(screen.getByRole("button", { name: "Show Recovery phrase" }))
+    expect(fireEvent.copy(box)).toBe(true)
+  })
+
+  it("name, required and aria-required reach the control, one line or several, and the form check sees them", () => {
+    const onBlur = vi.fn()
+    const { container, rerender } = render(
+      <form>
+        <SecretField mode="edit" label="Password" name="password" required value="" onChange={() => {}} onBlur={onBlur} />
+      </form>
+    )
+    const form = container.querySelector("form")!
+    const input = screen.getByLabelText("Password") as HTMLInputElement
+    expect(input).toHaveAttribute("name", "password")
+    expect(input).toBeRequired()
+    expect(input).toHaveAttribute("aria-required", "true")
+    expect(form.checkValidity()).toBe(false)
+    expect(input.validity.valueMissing).toBe(true)
+    fireEvent.blur(input)
+    expect(onBlur).toHaveBeenCalledTimes(1)
+
+    rerender(
+      <form>
+        <SecretField mode="edit" multiline label="Password" name="key" required value="" onChange={() => {}} />
+      </form>
+    )
+    const box = screen.getByLabelText("Password") as HTMLTextAreaElement
+    expect(box).toHaveAttribute("name", "key")
+    expect(box).toBeRequired()
+    expect(box).toHaveAttribute("aria-required", "true")
+    expect(form.checkValidity()).toBe(false)
+    rerender(
+      <form>
+        <SecretField mode="edit" multiline label="Password" name="key" required value={"line one\nline two"} onChange={() => {}} />
+      </form>
+    )
+    expect(form.checkValidity()).toBe(true)
+    expect(new FormData(form).get("key")).toBe("line one\nline two")
+  })
+
+  it("without the new props the one-line control is unchanged: no name, not required", () => {
+    render(<SecretField mode="edit" label="Password" value="" onChange={() => {}} />)
+    const input = screen.getByLabelText("Password")
+    expect(input.tagName).toBe("INPUT")
+    expect(input).not.toHaveAttribute("name")
+    expect(input).not.toBeRequired()
+    expect(input).not.toHaveAttribute("aria-required")
+  })
+
+  it("secretStrengthFromScore maps a 0–4 guess score to the three words", () => {
+    expect([0, 1, 2, 3, 4].map(secretStrengthFromScore)).toEqual(["weak", "weak", "weak", "fair", "strong"])
+    expect(secretStrengthFromScore(-1)).toBe("weak")
+    expect(secretStrengthFromScore(Number.NaN)).toBe("weak")
+    expect(secretStrengthFromScore(5)).toBe("strong")
   })
 })
