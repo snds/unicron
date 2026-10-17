@@ -73,6 +73,22 @@ describe("SecretField read mode: the value never sits in the DOM while masked", 
     expect(revealButton()).toHaveAttribute("aria-pressed", "false")
   })
 
+  it("reveals a secret whose fetch resolves after the loading render (a bridge call), not only a microtask later", async () => {
+    // Regression: the loading branch used to unmount the value span, so `reveal` found a null ref after the await
+    // and silently fell back to masked for every host whose `getSecret` takes real time.
+    const getSecret = vi.fn(() => new Promise<Uint8Array>((resolve) => setTimeout(() => resolve(bytes()), 30)))
+    const { container } = render(<SecretField label="Password" getSecret={getSecret} host={fakeHost()} revealMode="toggle" />)
+    fireEvent.click(revealButton())
+    await settle()
+    expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-state", "loading")
+    expect(container.querySelector('[data-slot="secret-field-loading"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="secret-field-value"]')).toBeInTheDocument()
+    await advance(30)
+    await settle()
+    expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-state", "revealed")
+    expect(valueOf(container)).toHaveTextContent(SECRET)
+  })
+
   it("zeroes the buffer it was handed after the reveal ends", async () => {
     const buf = bytes()
     render(<SecretField label="Password" getSecret={() => Promise.resolve(buf)} host={fakeHost()} revealMode="toggle" />)

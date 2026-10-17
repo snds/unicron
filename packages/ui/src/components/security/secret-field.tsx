@@ -507,9 +507,7 @@ function SecretFieldRead({
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
         <div data-slot="secret-field-control" className={cn(mono && "font-mono")}>
           <InputGroup onKeyDown={onControlKeyDown}>
-            {phase === "loading" ? (
-              <Skeleton data-slot="secret-field-loading" className="mx-2.5 h-5 flex-1" />
-            ) : phase === "error" ? (
+            {phase === "error" ? (
               <span data-slot="secret-field-error" role="alert" className="text-destructive flex flex-1 items-center gap-2 px-2.5 text-sm">
                 {errorText}
                 <Button variant="link" size="inline" onClick={retry}>
@@ -532,13 +530,16 @@ function SecretFieldRead({
                 )}
                 style={{ userSelect: "none", WebkitUserSelect: "none" }}
               >
-                {/* Revealed: the text node and its spelled name are written imperatively, never through React state. */}
+                {/* Revealed: the text node and its spelled name are written imperatively, never through React state.
+                    The span stays mounted while loading: `reveal` writes into it after `getSecret` resolves, and a
+                    host whose fetch crosses a bridge (any IPC call) resolves after the loading render has committed. */}
                 <span ref={valueEl} data-slot="secret-field-revealed" className="truncate" />
                 <span id={hiddenNameId} className="sr-only">
                   {label}, hidden
                 </span>
                 <span id={spelledNameId} ref={spelledEl} className="sr-only" />
-                {!isRevealed && (
+                {phase === "loading" && <Skeleton data-slot="secret-field-loading" className="h-4 flex-1" />}
+                {!isRevealed && phase !== "loading" && (
                   <>
                     <span aria-hidden className="tracking-[0.2em] contrast-more:hidden forced-colors:hidden">
                       {"•".repeat(maskCount)}
