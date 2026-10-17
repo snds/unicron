@@ -51,15 +51,37 @@ radius scale is derived from `--radius` using the multipliers in
 
 ## Contrast
 
-Contrast is judged by APCA first; WCAG 2.x is the fallback floor, reported alongside but not gated
-on. Floors: Lc 60 for body text, Lc 45 for large or bold text, Lc 30 for non-text UI (the focus
-ring, a pressed state); Lc 75 is the Bronze mark for text under 16px. A failing pair is fixed at the
-semantic role, by pointing it at a different ramp step, never by changing the tier-1 primitive.
+Contrast is judged by APCA first; WCAG 2.x is the fallback, printed beside every pair. The method
+comes from [Emphasis Engine](https://github.com/snds/emphasis-engine) (`docs/architecture.md`):
+**measure outcomes, not variables.**
+
+- **A recipe is a pair as a component paints it,** through the component's own opacity modifiers
+  and mixes (`bg-input/30`, `ring-ring/50`, `hover:bg-primary/80`, `bg-destructive/10`), over the
+  stack it sits on. A role painted by five components is measured five ways.
+- **Its element kind sets its floor,** not the role or the system:
+
+  | Element kind | Floor | Examples |
+  |---|---|---|
+  | Reading text (primary, secondary) | APCA Lc 75, Bronze's mark for text under 16px (Lc 60 at 16px+) | body, descriptions, placeholders, shortcut keys, inactive tabs |
+  | A label on a fill or tint | APCA Lc 60; Lc 75 reported (★) as the target | buttons, badges, status fills, destructive labels |
+  | Solid | APCA Lc 30 against the page | `bg-primary` |
+  | Control border | 3:1 (WCAG 1.4.11): a field has to be findable | `border-input` |
+  | Focus | 3:1 as drawn, the ring at 50% | `ring-ring/50` |
+  | Surface, state, separator | reported as OKLCH ΔL | cards, hovers, `border-border` |
+
+  Non-text keeps the WCAG ratio because APCA has no calibrated target for 1px lines and rings.
+- **A role points at the weakest ramp step that clears every recipe it paints.** When no step
+  does, a tier-1 step is added beside the ramp (`neutral.450`, `red.300`, `red.600`,
+  `white-alpha.35`); existing tier-1 values never change.
+- **One job per role.** When a role serves two jobs that want different values, the component is
+  pointed at the role that matches the second job: disabled fields fill with `muted`, not
+  `input/50`; the button-group divider is a `border`, not an `input`.
+
 `packages/tokens/scripts/contrast.mjs` (run by `pnpm --filter @unicron/tokens test`, so in CI)
-resolves every role from `dist/tokens.css`, measures a table of foreground/surface pairs in both
-modes with the ring at the 50% the primitives draw it, prints Lc and the WCAG ratio for each, and
-fails on an APCA miss. Waived pairs are listed in the script with the reason; `border` and `input`
-are hairlines and are reported only.
+resolves every role from `dist/tokens.css`, measures each recipe in both modes, prints the measure,
+its floor, the WCAG ratio and the APCA Lc, and fails on a miss. A waived recipe is listed in the
+script with its reason, and a waiver that starts passing fails the run. A new component recipe goes
+in the table when the component lands.
 
 ## How to add a token
 

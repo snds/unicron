@@ -56,8 +56,11 @@ point is Apple's first-party productivity apps rendered with shadcn's restraint.
   the strongest text, never a brand colour.
 - Accent hues (blue, coral, green, amber) exist in tier 1 but are not semantic roles. Apps assign
   them (one hue per area for wayfinding). `destructive` is the only chromatic role in the core.
-- Dark mode swaps only tier 2. Borders and inputs become translucent white (10% / 15%) so they
-  sit on any dark surface. Accents step one stop lighter (500 → 400) to keep contrast.
+- Dark mode swaps only tier 2. Separators and control borders become translucent white (10% / 35%)
+  so they sit on any dark surface. Accents step one stop lighter (500 → 400) to keep contrast.
+- Control borders are strong enough to find a field (3:1, `neutral.450` in light); separators stay
+  quiet (`neutral.200`). Every pair a component paints is held to its element kind's contrast floor,
+  APCA first (docs/02-tokens.md → Contrast).
 
 ## Typography
 
