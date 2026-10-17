@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [7d1fdf4]
+  - @unicron/tokens@0.5.0
+
 ## 0.7.0
 
 ### Minor Changes
