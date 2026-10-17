@@ -48,6 +48,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `security/code-display` | `CodeDisplay`, `CodeDisplayList`, `groupCode`, `spellCode`, `CodeDisplayProps` | Data Display | Item + IconButton + Badge + Button (spec: [code-display](specs/security/code-display.md)) |
 | `security/large-type-view` | `LargeTypeView`, `classifyChar`, `nameChar`, `captionFor`, `spellValue`, `LargeTypeViewProps` | Overlay | SheetContent fullscreen + IconButton + Switch + Kbd (spec: [large-type-view](specs/security/large-type-view.md)) |
 | `security/crown-jewel` | `CrownJewelSurface`, `CrownJewelMark`, `CrownJewelGate`, `useCrownJewel`, `CrownJewelProof` | Layout | section with a re-mapped tier + Icon + Badge + IconButton + Dialog (spec: [crown-jewel-treatment](specs/security/crown-jewel-treatment.md)) |
+| `security/approval-sheet` | `ApprovalSheet`, `approvalSheetCopy`, `approvalSheetOriginCopy`, `approvalSheetAnnouncements`, `ApprovalSheetProps`, `ApprovalKind`, `ApprovalOrigin`, `ApprovalDenyReason`, `ApprovalMatching`, `ApprovalContextRow` | Overlay (security) | Sheet → AdaptiveSheetContent + Item + Input + DialogActions + RiskTierBadge |
 | `security/risk-tier-badge` | `RiskTierBadge`, `riskTierCopy`, `riskTiers`, `riskTierUnverifiedAnnouncement`, `RiskTierBadgeProps`, `RiskTier`, `RiskTierState`, `RiskTierCopy` | Data Display (security) | `badgeVariants` + Icon + IconButton → Tooltip |
 | `security/secret-field` | `SecretField`, `secretFieldAnnouncements`, `secretFieldErrors`, `spellSecret`, `SecretFieldProps`, `SecretFieldReadProps`, `SecretFieldEditProps`, `SecretFieldHost`, `SecretGate`, `SecretRevealMode`, `SecretFormat`, `SecretStrength` | Form (security) | Field + InputGroup + IconButton + Skeleton + Spinner |
 
@@ -106,6 +107,23 @@ Three of the six from Lockdown's brief §5.7 (specs under [`docs/specs/security/
 components, not variants, because each owns behaviour no parent has. Every one renders only in the app, an OS
 surface, or the extension's top-layer frame, never in web content; every tier, state and warning carries a word.
 
+- **ApprovalSheet** ([spec](specs/security/approval-sheet.md)). Approve or deny a request from another device, agent,
+  TV, or contact.
+  - *Anatomy:* `approval-sheet` (AdaptiveSheetContent, modal) → header (Icon · SheetTitle · RiskTierBadge) · context
+    (`Item` rows, `aria-describedby` of the dialog) · match (prompt + one `Input` cell per digit, or three pill Buttons
+    in `choose` mode) · timer (ring + "58 s left") · notice (origin line, or the error) · actions (`DialogActions`:
+    Approve · Deny · This wasn't me).
+  - *Variants:* `kind` = `device` · `agent` · `device-code` · `contact-request` · `bridge` (icon, title, default tier);
+    `origin` = `scan` · `pairing` · `push`; `matching.mode` = `enter` · `choose`, `digits` 2 or 3.
+  - *States:* default (Approve disabled, inert for the 500 ms arming delay) · matched · wrong (cells clear, "1 try
+    left") · busy · error · expired (Approve removed, Deny becomes Close, `onDeny("timeout")` fired) · denied / reported
+    (one line, then `onOpenChange(false)`) · refused (`device-code` not from `scan`: no approve control in the DOM) ·
+    reduced motion (ring in 5 s steps) · forced colors (track becomes a border, disabled Approve says "Locked").
+  - *A11y:* `role="dialog"`, labelled by the title, described by the context list and the prompt. Tab order digits →
+    Approve → Deny → This wasn't me. Escape denies (`user`). Enter never approves. Polite live region for "Number
+    matches", "That number does not match, one try left", "10 seconds left", "Request expired. Nothing was approved."
+  - *Tokens:* `popover`, `foreground`, `muted-foreground`, `border`, `primary`, `destructive`, `warning`, `font-mono`;
+    `--c-approval-{min-width,digit-size,digit-gap,timer-track,timer-progress,timer-urgent,arm-delay,lifetime}`.
 - **RiskTierBadge** ([spec](specs/security/risk-tier-badge.md)). One word for how much trust a path carries.
   - *Anatomy:* `risk-tier-badge` → pill (`badgeVariants`, `data-tier`) → icon (`aria-hidden`) · label (never omitted)
     · optional explain `IconButton` (help) whose tooltip and `aria-describedby` carry one sentence plus the manifest's

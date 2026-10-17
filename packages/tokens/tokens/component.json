@@ -81,5 +81,16 @@
     "meter-fair": { "$type": "color", "$value": "{warning}" },
     "meter-strong": { "$type": "color", "$value": "{primary}" },
     "letter-spacing": { "$type": "dimension", "$value": "0.04em", "$description": "Revealed mono text." }
+  },
+  "approval": {
+    "$description": "ApprovalSheet (docs/specs/security/approval-sheet.md): approve or deny a request from another device, with number matching, an arming delay, and a timeout that denies.",
+    "min-width": { "$type": "dimension", "$value": "20rem", "$description": "Never smaller than this at any breakpoint." },
+    "digit-size": { "$type": "dimension", "$value": "2rem", "$description": "Digit cell type size." },
+    "digit-gap": { "$type": "dimension", "$value": "0.5rem" },
+    "timer-track": { "$type": "color", "$value": "{border}" },
+    "timer-progress": { "$type": "color", "$value": "{foreground}" },
+    "timer-urgent": { "$type": "color", "$value": "{warning}", "$description": "Under 10 s." },
+    "arm-delay": { "$type": "duration", "$value": "500ms", "$description": "Inert window after open. The component reads it at runtime and falls back to 500ms without the stylesheet." },
+    "lifetime": { "$type": "duration", "$value": "60s", "$description": "Default expiresAt offset." }
   }
 }

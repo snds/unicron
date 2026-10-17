@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { SecurityShowcase } from "./security"
+import { SecurityApprovalsShowcase } from "./security-approvals"
 import { toast } from "sonner"
 import {
   Avatar,
@@ -441,6 +442,7 @@ export function Showcase() {
       </Section>
 
       <SecurityShowcase />
+      <SecurityApprovalsShowcase />
     </div>
   )
 }
