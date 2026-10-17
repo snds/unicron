@@ -329,26 +329,29 @@ export function Showcase() {
             </Button>
           </ItemActions>
         </Item>
-        <Item variant="outline" className="w-full max-w-sm" render={<button type="button" onClick={() => toast("Opening signatures")} />}>
-          <ItemMedia variant="icon">
-            <Icon name="signature" />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Signatures and templates</ItemTitle>
-            <ItemDescription>A row that is one button: hover, focus, selected, disabled</ItemDescription>
-          </ItemContent>
-        </Item>
-        <Item variant="muted" className="w-full max-w-sm" render={<button type="button" data-selected="true" />}>
-          <ItemContent>
-            <ItemTitle>Selected</ItemTitle>
-          </ItemContent>
-        </Item>
-        <Item variant="outline" className="w-full max-w-sm" render={<button type="button" disabled />}>
-          <ItemContent>
-            <ItemTitle>Disabled</ItemTitle>
-            <ItemDescription>Not available here</ItemDescription>
-          </ItemContent>
-        </Item>
+        {/* Rows that are one button each: hover, selected, disabled. */}
+        <div className="flex w-full max-w-sm flex-col gap-2">
+          <Item variant="outline" render={<button type="button" onClick={() => toast("Opening signatures")} />}>
+            <ItemMedia variant="icon">
+              <Icon name="signature" />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>Signatures and templates</ItemTitle>
+              <ItemDescription>A row that is one button: hover, focus, selected, disabled</ItemDescription>
+            </ItemContent>
+          </Item>
+          <Item variant="muted" render={<button type="button" data-selected="true" />}>
+            <ItemContent>
+              <ItemTitle>Selected</ItemTitle>
+            </ItemContent>
+          </Item>
+          <Item variant="outline" render={<button type="button" disabled />}>
+            <ItemContent>
+              <ItemTitle>Disabled</ItemTitle>
+              <ItemDescription>Not available here</ItemDescription>
+            </ItemContent>
+          </Item>
+        </div>
         <Chip variant="secondary">
           #trip
           <ChipRemove label="Remove tag trip" onClick={() => toast("Removed")} />
