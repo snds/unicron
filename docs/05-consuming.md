@@ -76,11 +76,32 @@ components. Alias core tokens, swap only in `.dark`, expose to Tailwind with you
 
 ## 4. Switch themes
 
-Toggle the `dark` class on `<html>`. With `next-themes`:
+Toggle the `dark` class on `<html>`. That is all the tokens need. In a client-only app (Vite,
+Tauri) a few lines do it, and `Toaster` takes the same setting as a prop:
+
+```tsx
+const [theme, setTheme] = useState<"light" | "dark" | "system">("system")
+useEffect(() => {
+  const mq = window.matchMedia("(prefers-color-scheme: dark)")
+  const apply = () => document.documentElement.classList.toggle("dark", theme === "dark" || (theme === "system" && mq.matches))
+  apply()
+  mq.addEventListener("change", apply)
+  return () => mq.removeEventListener("change", apply)
+}, [theme])
+
+<Toaster theme={theme} />
+```
+
+`next-themes` is optional. It fits a server-rendered app, where its inline script prevents a
+flash of the wrong theme on load:
 
 ```tsx
 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 ```
+
+In a client-only React 19 app that same script makes React log, in development only,
+"Encountered a script tag while rendering React component". It is harmless in production, but
+it breaks a "no console errors" bar; prefer the hook above there.
 
 ## 5. Use the components
 
