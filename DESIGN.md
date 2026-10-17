@@ -60,7 +60,8 @@ point is Apple's first-party productivity apps rendered with shadcn's restraint.
   so they sit on any dark surface. Accents step one stop lighter (500 → 400) to keep contrast.
 - An accent hue drawn as text (an area's name, a status word, a link) uses its text step: `600` in
   light, `300` in dark (`blue`, `coral`, `green`, `amber`). They read Lc 75 or more on the page, the
-  chrome and a selected row. `500` and `400` are fills: as text they read Lc 32-67.
+  chrome and a selected row. `500` and `400` are fills: as text they read Lc 32-67. Red's text
+  steps are `700` and `200` (`--destructive`), because red is drawn at more chroma.
 - Control borders are strong enough to find a field (3:1, `neutral.450` in light); separators stay
   quiet (`neutral.200`). Every pair a component paints is held to its element kind's contrast floor,
   APCA first (docs/02-tokens.md → Contrast).

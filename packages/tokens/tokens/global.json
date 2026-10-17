@@ -40,14 +40,17 @@
   "amber": {
     "600": { "$type": "color", "$value": "oklch(0.44 0.092 75)", "$description": "Amber as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.75 0.16 75)" },
+    "450": { "$type": "color", "$value": "oklch(0.77 0.155 76)", "$description": "The light-mode warning fill: its label (neutral.950) Lc 62, the fill Lc 31 or more against the page, the sidebar and a selected row." },
     "400": { "$type": "color", "$value": "oklch(0.82 0.14 80)" },
     "300": { "$type": "color", "$value": "oklch(0.87 0.105 75)", "$description": "Amber as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
   },
   "red": {
-    "600": { "$type": "color", "$value": "oklch(0.47 0.16 27.3)", "$description": "Destructive text in light mode: Lc 84 on white, 73 on its own 10% tint, 62 on 20%." },
+    "700": { "$type": "color", "$value": "oklch(0.45 0.16 27.3)", "$description": "Destructive text in light mode: Lc 76 or more on neutral.0, .50 and .100 (a selected row), 75 on its own 10% tint." },
+    "600": { "$type": "color", "$value": "oklch(0.47 0.16 27.3)", "$description": "Destructive text in light mode for tokens 0.4-0.6 (Lc 84 on white, 74 on a selected row). --destructive now uses red.700; kept unchanged for anything that points here." },
     "500": { "$type": "color", "$value": "oklch(0.577 0.245 27.3)" },
     "400": { "$type": "color", "$value": "oklch(0.704 0.191 22.2)" },
-    "300": { "$type": "color", "$value": "oklch(0.86 0.06 22.2)", "$description": "Destructive text in dark mode: Lc 76 on neutral.900, 70 on its own 20% tint." }
+    "300": { "$type": "color", "$value": "oklch(0.86 0.06 22.2)", "$description": "Destructive text in dark mode for tokens 0.4-0.6 (Lc 76 on neutral.900, 74 on a selected row). --destructive now uses red.200; kept unchanged for anything that points here." },
+    "200": { "$type": "color", "$value": "oklch(0.87 0.06 22.2)", "$description": "Destructive text in dark mode: Lc 76 or more on neutral.950, .900 and .800 (a selected row), 72 on its own 20% tint." }
   },
   "white-alpha": {
     "$description": "Translucent white, for hairlines on dark surfaces (shadcn's dark border/input). Alpha in the name is a percentage.",
