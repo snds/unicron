@@ -162,6 +162,63 @@ describe("HOTP (test 5)", () => {
   })
 })
 
+describe("host contract: copy by id, HOTP advance", () => {
+  it("a host that copies by id may ignore the value and act on which alone", async () => {
+    const copiedById: string[] = []
+    const onCopy = async (_value: string, which: "code" | "next") => {
+      copiedById.push(which)
+    }
+    const { rerender } = render(<CodeDisplay {...at(20)} onCopy={onCopy} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }))
+    })
+    rerender(<CodeDisplay {...at(2)} onCopy={onCopy} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy the next code" }))
+    })
+    expect(copiedById).toEqual(["code", "next"])
+    expect(root()).toHaveAttribute("data-copied", "next")
+  })
+
+  it("a rejected onCopy starts no countdown and says nothing", async () => {
+    const onCopy = vi.fn(() => Promise.reject(new Error("clipboard busy")))
+    render(<CodeDisplay {...at(20)} onCopy={onCopy} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }))
+    })
+    expect(onCopy).toHaveBeenCalledTimes(1)
+    expect(root()).not.toHaveAttribute("data-copied")
+    expect(live()).toHaveTextContent("")
+  })
+
+  it("HOTP: copy waits while an advance is pending, so the code copied is the code drawn", async () => {
+    let resolve!: () => void
+    const onAdvance = vi.fn(() => new Promise<void>((r) => (resolve = r)))
+    const onCopy = vi.fn()
+    const { rerender } = render(<CodeDisplay variant="hotp" issuer="Router" counter={41} code="482917" onAdvance={onAdvance} onCopy={onCopy} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Next code" }))
+    })
+    const copy = screen.getByRole("button", { name: "Copy code" })
+    await act(async () => {
+      fireEvent.click(copy)
+    })
+    await act(async () => {
+      fireEvent.keyDown(root(), { key: "Enter" })
+    })
+    expect(onCopy).not.toHaveBeenCalled()
+    rerender(<CodeDisplay variant="hotp" issuer="Router" counter={42} code="105263" onAdvance={onAdvance} onCopy={onCopy} />)
+    await act(async () => {
+      resolve()
+    })
+    await act(async () => {
+      fireEvent.click(copy)
+    })
+    expect(onCopy).toHaveBeenCalledTimes(1)
+    expect(onCopy).toHaveBeenCalledWith("105263", "code")
+  })
+})
+
 describe("states", () => {
   it("concealed shows dots and the first Enter reveals for this code", () => {
     render(<CodeDisplay {...at(20)} concealed />)

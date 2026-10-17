@@ -1,6 +1,6 @@
 # CrownJewel treatment
 
-_Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §2.9 point 5, §5.7; `02-model.md` §3; `04-security.md` §10) · Status: built in `@unicron/ui` 0.4.0 (PR #15); this spec describes the build_
+_Spec v0.3 · 2026-10-17 · Proposed by Lockdown (brief §2.9 point 5, §5.7; `02-model.md` §3; `04-security.md` §10) · Status: built in `@unicron/ui` 0.4.0 (PR #15); v0.3 adds `biometricName={null}`, `crownJewelGateErrors`, and the call-time judging pattern; this spec describes the build_
 
 ## Purpose and the user job
 
@@ -42,7 +42,7 @@ crown-jewel-gate                    DialogContent, data-level, data-armed
 | Surface | `deviceOnly` | boolean | Badge, and the sync rule in the explain copy |
 | Surface | `loading`, `error` | boolean, string | Banner stays; content shows a Skeleton or the error |
 | Surface | `appName` | string | "the Lockdown app" in the explain copy; "the app" without it |
-| Surface | `biometricName` | string, default `"Touch ID"` | The platform's word in copy and announcements |
+| Surface | `biometricName` | string, default `"Touch ID"`, or `null` | The platform's word in copy and announcements. `null`: this device has no biometric. The announcement reads "Crown jewel. Using it or showing it needs your account password.", the explain list's first two rules become "To use it, show it in full or export it, you type your account password, every time.", and the built-in gate asks for the password for use too (`onBiometric` is ignored) |
 | Surface | `requestProof` | `(kind) => Promise<boolean>` | Host-owned gate; the host shows its own prompt |
 | Surface | `onConfirm` | `(proof, kind) => boolean \| Promise<boolean>` | Built-in gate: hand the proof to the core; `true` accepts. Nothing is cached |
 | Surface | `onBiometric` | `() => Promise<unknown>` | Built-in gate: ask the OS; a token, or `null` when backed out. Omit where there is none (Linux); use then gates on the password |
@@ -51,7 +51,9 @@ crown-jewel-gate                    DialogContent, data-level, data-armed
 | Gate | `open`, `onOpenChange`, `onCancel` | | The standalone gate is controlled |
 | Gate | `level`, `reason` | `biometric` · `password`; string | The reason is always shown, never generic |
 | Gate | `onConfirm(proof)` | `{ level: "biometric", token }` · `{ level: "password", password }` | Opaque to the component |
-| Gate | `onBiometric`, `attemptsLeft`, `error`, `busy`, `biometricName` | | Host-driven |
+| Gate | `onBiometric`, `attemptsLeft`, `error`, `busy`, `biometricName` | | Host-driven. `biometricName={null}` at the biometric level says "This device has no biometric check; use your account password instead." |
+
+Exports beyond the parts: `crownJewelGateErrors.wrongPassword(attemptsLeft)` ("Password incorrect. 2 tries left.") and `crownJewelGateErrors.biometricRefused(name)`, the built-in gate's own sentences, for a host that runs the re-ask itself.
 
 ## States
 
@@ -73,6 +75,7 @@ crown-jewel-gate                    DialogContent, data-level, data-armed
 
 - **Gate levels.** `requestProof("use")` opens the built-in gate at `biometric` when `onBiometric` is given, else `password`; `requestProof("reveal")` always opens it at `password`. A new request settles any open gate as `false`; no proof is cached (`04-security.md` §10).
 - **Attempts.** `--c-crown-jewel-gate-attempts` (3), read from the surface. The last wrong password calls `onLock`.
+- **A host whose core judges the proof at call time.** The built-in gate judges in `onConfirm`, while the gate is open. Some cores keep no proof cache and judge the proof only when the gated call arrives (the call carries the password). For those the current props are enough, and the component does not grow a second flow: the verdict arrives after `requestProof` has resolved and the gate has closed, from a call the nested field makes, so an `onConfirm` that returned `{ ok: false, attemptsLeft }` would have nothing to report. The pattern: pass the surface a host `requestProof` that collects the proof (the standalone `CrownJewelGate`, controlled) and resolves `true`; send the proof with the gated call; when the core says the password was wrong, open the gate again with `attemptsLeft` one lower and `error={crownJewelGateErrors.wrongPassword(left)}`; after the last try lock the vault and reject the call. A rejection from a nested component's call (SecretField's `getSecret`, `copy` or `copyRef`; CodeDisplay's `onCopy`) shows nothing as copied or shown. `crown-jewel.test.tsx` runs this pattern end to end.
 - **Arming delay.** Cancel and Confirm are inert for `--c-approval-arm-delay` (500 ms); closing disarms and forgets the typed password.
 - **Explain copy** ends with "You will only ever see this frame inside the Lockdown app or a system prompt, never on a web page." That sentence is how a person learns to distrust a page-drawn imitation.
 - **Reveal lifetime.** A SecretField inside the surface reads `--c-crown-jewel-reveal-lifetime` (20 s) at reveal time instead of its own `--c-secret-field-reveal-lifetime` (30 s); an explicit `revealLifetime` prop wins over both. The announcement says the shorter number.
@@ -99,7 +102,7 @@ The re-mapping is the trick `.dark` uses, so nested primitives invert without an
 
 ## Keyboard and screen reader
 
-- Surface: `role="region"`, `aria-label="Crown jewel: Ledger recovery phrase"`. On first focus inside, once: "Crown jewel. Using it needs Touch ID. Showing it needs your account password." (`biometricName` swaps the word.)
+- Surface: `role="region"`, `aria-label="Crown jewel: Ledger recovery phrase"`. On first focus inside, once: "Crown jewel. Using it needs Touch ID. Showing it needs your account password." (`biometricName` swaps the word; with `null`: "Crown jewel. Using it or showing it needs your account password.")
 - Mark: icon `aria-hidden`, sr-only "Crown jewel".
 - Gate: `role="dialog"`, `aria-modal`, no close button; focus in the password field; Enter submits; Escape cancels; the error reads through an `aria-live="polite"` line. The biometric step asks the OS on open and takes focus back on return.
 - Explain: a Dialog with the rules as a list and a "Got it" button.
@@ -126,12 +129,14 @@ The re-mapping is the trick `.dark` uses, so nested primitives invert without an
 
 ## Acceptance tests
 
-**Vitest (jsdom, `crown-jewel.test.tsx`, 11 tests; the SecretField case is in `secret-field.test.tsx`):** the five below, plus the banner parts, the first-focus announcement, `useCrownJewel()` outside a surface, the standalone gate (reason, arming delay, password proof, biometric on open), and the mark.
+**Vitest (jsdom, `crown-jewel.test.tsx`, 15 tests; the SecretField case is in `secret-field.test.tsx`):** the seven below, plus the banner parts, the first-focus announcement, `useCrownJewel()` outside a surface, the standalone gate (reason, arming delay, password proof, biometric on open, no biometric at the biometric level), and the mark.
 
 1. Inside the surface the inline `--background` points at `--c-crown-jewel-surface` (the tokens map it to `protected`).
 2. A CodeDisplay or SecretField inside asks for proof before copying or `getSecret`; one outside does not.
 3. `host="page"` renders nothing and logs a development error.
 4. Two confirmed uses in a row open the gate twice.
 5. After the attempts reach 0 `onLock` fires and the dialog closes.
+6. `biometricName={null}`: the announcement and the explain copy name only the account password, and the built-in gate asks for the password for use even with `onBiometric`.
+7. A call-time host re-asks through the standalone gate with the tries left in `crownJewelGateErrors` words and locks after the third wrong password.
 
 **Still needs a browser:** the computed `--background` equalling `--protected` and a nested `Button variant="secondary"` drawn with the re-mapped roles; screenshots of the surface with a SecretField and a CodeDisplay, the preview row, device-only, the gate at both levels, denied, `prefers-contrast: more`, forced colors.

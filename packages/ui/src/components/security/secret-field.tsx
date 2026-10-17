@@ -30,23 +30,48 @@ export type SecretStrength = "weak" | "fair" | "strong"
  * zeroes its copy, and at expiry the host clears the clipboard, conditionally where it can read it.
  */
 export interface SecretFieldHost {
-  /** Put these bytes on the clipboard. The field starts the timer when this resolves. */
+  /** Put these bytes on the clipboard. The field starts the timer when this resolves. Not called when `copyRef` is given. */
   copy(bytes: Uint8Array): Promise<void>
+  /**
+   * Copy by reference: the host puts the value on the clipboard inside its own process (the core
+   * on Tauri and native), so no bytes cross to the UI for a copy. When present, the field never
+   * calls `getSecret` or `copy` to copy. Resolve with `{ hash }` and the field hands that string
+   * back to `clipboardHolds` at expiry (it is opaque to the field: a digest, or the host's own
+   * record of the copy). Resolve with nothing and the clear runs unconditionally, and the tooltip
+   * says so.
+   */
+  copyRef?(): Promise<SecretFieldCopyRef | void>
   /** Clear the clipboard. Called at expiry, once, when the clipboard still holds our value (or always, see below). */
   clear(): Promise<void>
   /**
    * Does the clipboard still hold what we copied? `hash` is a hex SHA-256 of the bytes the field
-   * handed to `copy`. Omit it where the platform cannot read the clipboard: the clear then runs
-   * unconditionally and the tooltip says so.
+   * handed to `copy`, or the `hash` that `copyRef` resolved with. Omit it where the platform cannot
+   * read the clipboard: the clear then runs unconditionally and the tooltip says so.
    */
   clipboardHolds?(hash: string): Promise<boolean>
   /** Run a gate; resolve `true` when the person passed. The field asks, it never decides. Inside a `CrownJewelSurface` the surface's `requestProof` is used instead. */
   gate?(gate: Exclude<SecretGate, "none">): Promise<boolean>
 }
 
+/** What `copyRef` may resolve with: the string `clipboardHolds` is asked about at expiry. */
+export interface SecretFieldCopyRef {
+  hash?: string
+}
+
+/** A host that only copies by reference: `copyRef` is required and `copy` may be left out. */
+export type SecretFieldReferenceHost = Omit<SecretFieldHost, "copy" | "copyRef"> & {
+  copyRef(): Promise<SecretFieldCopyRef | void>
+  copy?: SecretFieldHost["copy"]
+}
+
+/** What failed, for `errorText` as a function. */
+export type SecretFieldAction = "read" | "copy"
+
 /** The texts the field speaks through its polite live region, verbatim from the spec. */
 export const secretFieldAnnouncements = {
   shown: (label: string, seconds: number) => `${label} shown. Hides in ${seconds} seconds.`,
+  /** A hold reveal that went through a gate: the check took focus, so the value stays until Hide or the lifetime. */
+  shownUntilHidden: (label: string, seconds: number) => `${label} shown. Hides in ${seconds} seconds, or when you select Hide.`,
   copied: (seconds: number) => `Copied. Clipboard clears in ${seconds} seconds.`,
   cleared: "Clipboard cleared.",
   gateReveal: "Confirm it's you to show this.",
@@ -74,8 +99,12 @@ export interface SecretFieldReadProps extends CommonProps {
   mode?: "read"
   /** One-shot: the field consumes the buffer and zeroes it after use. */
   getSecret: () => Promise<Uint8Array>
-  host: SecretFieldHost
-  /** `hold` reveals while the pointer or Space is held (Lockdown D97); `toggle` is the per-person setting, with the auto-hide. */
+  host: SecretFieldHost | SecretFieldReferenceHost
+  /**
+   * `hold` reveals while the pointer or Space is held (Lockdown D97); `toggle` is the per-person
+   * setting, with the auto-hide. A gated field (a `gate`, or inside a `CrownJewelSurface`) always
+   * reveals as `toggle`: the check opens a dialog or an OS prompt, which ends any hold.
+   */
   revealMode?: SecretRevealMode
   /** Seconds. Default from `--c-secret-field-reveal-lifetime` (30), or `--c-crown-jewel-reveal-lifetime` (20) inside a `CrownJewelSurface`. Also hides on blur, lock, and leaving the viewport. */
   revealLifetime?: number
@@ -89,6 +118,13 @@ export interface SecretFieldReadProps extends CommonProps {
   /** For the audit log. */
   onReveal?: () => void
   onCopy?: () => void
+  /**
+   * The host's own words for a failed reveal or copy, in place of "Couldn't read this field" /
+   * "Couldn't copy this field". A string is shown for either; a function gets what `getSecret`,
+   * `copy` or `copyRef` rejected with, and which action failed, and may return `undefined` for the
+   * default words.
+   */
+  errorText?: string | ((error: unknown, action: SecretFieldAction) => string | undefined)
 }
 
 export interface SecretFieldEditProps extends CommonProps {
@@ -220,7 +256,7 @@ function SecretFieldRead({
   label,
   getSecret,
   host,
-  revealMode = "hold",
+  revealMode: revealModeProp = "hold",
   revealLifetime,
   clipboardTimer,
   gate: gateProp,
@@ -229,6 +265,7 @@ function SecretFieldRead({
   locked = false,
   onReveal,
   onCopy,
+  errorText: errorTextProp,
   description,
   children,
   id: idProp,
@@ -241,6 +278,10 @@ function SecretFieldRead({
   const crown = useCrownJewel()
   const gate: SecretGate = crown.gated ? "password" : (gateProp ?? "none")
   const gated = crown.gated || gate !== "none"
+  // A hold cannot outlive a gate: the check takes focus (a dialog, an OS prompt), and losing focus ends the hold.
+  // So a gated field reveals as a toggle, with the lifetime, and says so when it shows.
+  const revealMode: SecretRevealMode = gated ? "toggle" : revealModeProp
+  const holdFellBack = gated && revealModeProp === "hold"
   const reducedMotion = useReducedMotion()
 
   const root = React.useRef<HTMLDivElement>(null)
@@ -258,7 +299,21 @@ function SecretFieldRead({
   const [gateFor, setGateFor] = React.useState<"reveal" | "copy" | null>(null)
 
   const [phase, setPhase] = React.useState<Phase>("masked")
-  const [errorText, setErrorText] = React.useState<string>(secretFieldErrors.read)
+  const [failure, setFailure] = React.useState<{ action: SecretFieldAction; words?: string }>({ action: "read" })
+  const fail = (action: SecretFieldAction, error: unknown) => {
+    let words: string | undefined
+    if (typeof errorTextProp === "function") {
+      try {
+        words = errorTextProp(error, action)
+      } catch {
+        words = undefined
+      }
+    }
+    setFailure({ action, words })
+    setPhase("error")
+  }
+  const errorWords =
+    failure.words ?? (typeof errorTextProp === "string" && errorTextProp ? errorTextProp : undefined) ?? secretFieldErrors[failure.action]
   const [gateBusy, setGateBusy] = React.useState(false)
   const [live, setLive] = React.useState("")
   // Knobs: the mask count and the clipboard default are rendered, so they are read from :root once;
@@ -280,14 +335,18 @@ function SecretFieldRead({
     )
 
   // The shared clipboard countdown. At expiry: clear only if the clipboard still holds our value.
-  const lastHash = React.useRef("")
+  /** What `clipboardHolds` is asked about at expiry; `null` when the clear is unconditional (a reference copy with no hash). */
+  const lastHash = React.useRef<string | null>("")
+  /** Whether the running countdown ends in a conditional clear: drawn in the tooltip. */
+  const [conditionalClear, setConditionalClear] = React.useState(Boolean(host.clipboardHolds))
   const cancelCountdown = React.useRef<() => void>(() => {})
   const countdown = useCopyCountdown(clipboardSeconds, () => {
     void (async () => {
       let holds = true
-      if (host.clipboardHolds) {
+      const hash = lastHash.current
+      if (host.clipboardHolds && hash !== null) {
         try {
-          holds = await host.clipboardHolds(lastHash.current)
+          holds = await host.clipboardHolds(hash)
         } catch {
           holds = false
         }
@@ -375,9 +434,8 @@ function SecretFieldRead({
     let buf: Uint8Array
     try {
       buf = await getSecret()
-    } catch {
-      setErrorText(secretFieldErrors.read)
-      setPhase("error")
+    } catch (error) {
+      fail("read", error)
       return
     }
     // Masked meanwhile (blur, lock, pointer released): drop the buffer, never show it.
@@ -394,7 +452,7 @@ function SecretFieldRead({
     claimReveal(mask)
     setPhase("revealed")
     const seconds = lifetimeSeconds()
-    setLive(secretFieldAnnouncements.shown(label, seconds))
+    setLive(holdFellBack ? secretFieldAnnouncements.shownUntilHidden(label, seconds) : secretFieldAnnouncements.shown(label, seconds))
     onReveal?.()
     lifetimeTimer.current = setTimeout(mask, seconds * 1000)
   }
@@ -403,21 +461,33 @@ function SecretFieldRead({
     if (gateBusy || locked) return
     lastAction.current = "copy"
     if (!(await runGate("copy"))) return
-    let buf: Uint8Array | undefined
-    let hash = ""
-    try {
-      buf = await getSecret()
-      hash = await hashBytes(buf)
-      await host.copy(buf)
-    } catch {
-      setErrorText(secretFieldErrors.copy)
-      setPhase("error")
-      return
-    } finally {
-      // Whatever happened, our copy of the bytes is gone.
-      wipe(buf)
+    let hash: string | null = ""
+    if (host.copyRef) {
+      // By reference: the host copies inside its own process; no bytes come to the UI.
+      try {
+        const ref = await host.copyRef()
+        hash = typeof ref?.hash === "string" ? ref.hash : null
+      } catch (error) {
+        fail("copy", error)
+        return
+      }
+    } else {
+      let buf: Uint8Array | undefined
+      try {
+        if (!host.copy) throw new Error("SecretField: the host has neither copy nor copyRef")
+        buf = await getSecret()
+        hash = await hashBytes(buf)
+        await host.copy(buf)
+      } catch (error) {
+        fail("copy", error)
+        return
+      } finally {
+        // Whatever happened, our copy of the bytes is gone.
+        wipe(buf)
+      }
     }
     lastHash.current = hash
+    setConditionalClear(Boolean(host.clipboardHolds) && hash !== null)
     onCopy?.()
     countdown.start()
     setLive(secretFieldAnnouncements.copied(clipboardSeconds))
@@ -487,7 +557,7 @@ function SecretFieldRead({
   const revealGlyph = isRevealed ? "visibility_off" : "visibility"
   const copyTooltip =
     copyPhase === "counting"
-      ? `Copied · clears in ${copyLeft} s${host.clipboardHolds ? "" : ", even if you copy something else"}`
+      ? `Copied · clears in ${copyLeft} s${conditionalClear ? "" : ", even if you copy something else"}`
       : copyPhase === "cleared"
         ? "Cleared"
         : gated
@@ -502,14 +572,14 @@ function SecretFieldRead({
   }
 
   return (
-    <div ref={root} data-slot="secret-field" data-mode="read" data-state={phase} data-gate={crown.gated ? "crown-jewel" : gate} className={className}>
+    <div ref={root} data-slot="secret-field" data-mode="read" data-state={phase} data-gate={crown.gated ? "crown-jewel" : gate} data-reveal-mode={revealMode} className={className}>
       <Field>
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
         <div data-slot="secret-field-control" className={cn(mono && "font-mono")}>
           <InputGroup onKeyDown={onControlKeyDown}>
             {phase === "error" ? (
               <span data-slot="secret-field-error" role="alert" className="text-destructive flex flex-1 items-center gap-2 px-2.5 text-sm">
-                {errorText}
+                {errorWords}
                 <Button variant="link" size="inline" onClick={retry}>
                   Retry
                 </Button>

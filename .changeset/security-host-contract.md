@@ -1,0 +1,5 @@
+---
+"@unicron/ui": minor
+---
+
+Security components close the host-contract gaps a desktop host found, all additive. `SecretField`: `host.copyRef()` copies by reference, so a host that copies in its own process never gets the bytes for a copy (its `{ hash }` goes to `clipboardHolds`; no hash means an unconditional clear, and the tooltip says so); `SecretFieldReferenceHost` lets such a host leave out `copy`; `errorText` (a string, or a function given the rejection and `"read"` / `"copy"`) replaces "Couldn't read this field"; a gated reveal (a `gate`, or inside a `CrownJewelSurface`) is always a tap with the lifetime, because the check takes focus and ends any hold, so drop any `revealMode="toggle"` you forced inside a crown jewel. `CrownJewelSurface` and `CrownJewelGate` take `biometricName={null}` for a device with no biometric; `crownJewelGateErrors` exports the gate's sentences for a host whose core judges the proof at call time (pattern in the spec). `CodeDisplay`: a rejected `onCopy` starts no countdown, copy waits while an HOTP advance is pending, and a host that copies by id may ignore `onCopy`'s `value`.

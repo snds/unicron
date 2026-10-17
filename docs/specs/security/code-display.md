@@ -41,8 +41,8 @@ code-display                       Item, role="group", tabIndex=0; data-variant,
 | `warnings` | `("issuer-equals-login")[]` | From `02-model.md` §4 |
 | `issuer`, `account`, `media` | string, string, node | "GitHub", "sean", an Avatar or Icon |
 | `clipboardTimer` | seconds, default `30` | As SecretField |
-| `onCopy(value, which)` | callback | `which` is `code` or `next` |
-| `onAdvance`, `counter` | HOTP | "Next code" is disabled while `onAdvance` is pending |
+| `onCopy(value, which)` | callback | `which` is `code` or `next`. `value` is that code as the host passed it in `code` or `next`; the component draws it, so handing it back exposes nothing new. A host that copies inside its own process by id may ignore `value` and act on `which` alone. The countdown starts when it resolves; a rejection starts nothing and announces nothing (the host reports its own failure) |
+| `onAdvance`, `counter` | HOTP | "Next code" is disabled while `onAdvance` is pending, and when it is absent. Resolve once the host has the new code and passes it as `code` and `counter`; copy waits while it is pending, so a host that copies by id never copies the new code while the old one is drawn. The host's core needs one command for it: advance this item's counter and return the new code |
 | `onHaptic` | callback | Once per code at the expiring threshold; mobile hosts vibrate |
 | `onFixClock`, `onClipboardClear` | callbacks | The skew notice's action; the countdown ran out |
 | `loading`, `error` | boolean, string | |
@@ -74,7 +74,7 @@ Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`. Other 
 | Haptic | once per code at 5 s | Aegis; desktop hosts leave `onHaptic` out |
 | Copy near expiry | ≤ 3 s left copies `next`; the button is named "Copy the next code" and the region says so | A copied code that dies before paste is the top support complaint. Differs from 1Password; still flagged for Sean |
 | Rollover announcement | only while the row has focus or was copied within the last period, never while concealed | Lists of twenty codes must not chatter |
-| HOTP | no timer; "Next code" calls `onAdvance` once per activation | RFC 4226 |
+| HOTP | no timer; "Next code" calls `onAdvance` once per activation; copy waits while it is pending | RFC 4226 |
 | Skew | notice past ±15 s with "Fix clock" calling `onFixClock` | Ente does clock correction |
 
 Thresholds and the rollover duration are read from the tier 3 knobs once after mount, with the spec values as fallback when the stylesheet is absent. Inside a `CrownJewelSurface`, copy first awaits `requestProof("use")` and the copy glyph carries a lock. Steam codes render uppercase; 8-digit codes set `font-feature-settings: "zero"`.
@@ -129,12 +129,13 @@ Tier 3 under `code`:
 
 ## Acceptance tests
 
-**Vitest (jsdom, fake timers, `code-display.test.tsx`, 15 tests):** the five below, plus the helpers, `onHaptic` once, Enter copies and the countdown clears once, the label refresh rule, concealed reveal per code, the skew notice, error and loading, Steam and 8-digit rendering, reduced motion skipping the crossfade.
+**Vitest (jsdom, fake timers, `code-display.test.tsx`, 18 tests):** the six below, plus the helpers, `onHaptic` once, Enter copies and the countdown clears once, the label refresh rule, concealed reveal per code, the skew notice, error and loading, Steam and 8-digit rendering, reduced motion skipping the crossfade, a by-id host that ignores `value`.
 
 1. At 10 s left `code-display-next` is visible; at 5 s `data-state="expiring"`; at 0 the next code is current and `next` is hidden.
 2. Copy at 4 s left copies `code`; at 2 s it copies `next` and the tooltip says so.
 3. The label contains each digit separated by spaces and never the contiguous code.
 4. In a `CodeDisplayList` of ten with none focused, the live region stays empty across a rollover; with one focused, it announces that one only.
-5. HOTP renders no ring; "Next code" calls `onAdvance` once per activation and is disabled while pending.
+5. HOTP renders no ring; "Next code" calls `onAdvance` once per activation and is disabled while pending; copy waits for the advance and then copies the new code.
+6. A rejected `onCopy` starts no countdown and announces nothing.
 
 **Still needs a browser:** screenshots of 6, 8, and Steam at three densities, expiring, next shown, HOTP, concealed, skew, error, reduced motion, `prefers-contrast: more`; the ring's drain and the crossfade; the 44 px row height.

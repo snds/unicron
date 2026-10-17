@@ -58,6 +58,16 @@ const DEFAULT_ATTEMPTS = 3
 const DEFAULT_ARM_DELAY_S = 0.5
 const DEFAULT_BIOMETRIC = "Touch ID"
 
+/**
+ * The gate's own sentences, exported so a host that runs the re-ask itself (its core judges the
+ * proof when the gated call arrives, not in `onConfirm`) says the same words as the built-in gate.
+ */
+export const crownJewelGateErrors = {
+  wrongPassword: (attemptsLeft: number) =>
+    `Password incorrect. ${attemptsLeft} ${attemptsLeft === 1 ? "try" : "tries"} left.`,
+  biometricRefused: (biometricName: string) => `${biometricName} didn't confirm it's you. Use your account password instead.`,
+} as const
+
 function isDevelopment(): boolean {
   const env = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env
   return env?.NODE_ENV !== "production"
@@ -102,8 +112,8 @@ export interface CrownJewelGateProps {
   /** Host-driven: "Password incorrect. 2 tries left." Read through the dialog's live region. */
   error?: string
   busy?: boolean
-  /** The platform's word for the biometric step; defaults to "Touch ID". */
-  biometricName?: string
+  /** The platform's word for the biometric step; defaults to "Touch ID". `null`: this device has no biometric. */
+  biometricName?: string | null
 }
 
 /**
@@ -223,11 +233,13 @@ export function CrownJewelGate({
               </Field>
             ) : (
               <p className="text-muted-foreground text-sm">
-                {waiting || busy
-                  ? `Waiting for ${biometricName}…`
-                  : onBiometric
-                    ? `${biometricName} confirms it's you. No password is needed for this.`
-                    : `This device cannot use ${biometricName}; use your account password instead.`}
+                {biometricName === null
+                  ? "This device has no biometric check; use your account password instead."
+                  : waiting || busy
+                    ? `Waiting for ${biometricName}…`
+                    : onBiometric
+                      ? `${biometricName} confirms it's you. No password is needed for this.`
+                      : `This device cannot use ${biometricName}; use your account password instead.`}
               </p>
             )}
             <p aria-live="polite" className="text-destructive min-h-5 text-sm">
@@ -271,8 +283,12 @@ export interface CrownJewelSurfaceProps extends Omit<React.ComponentProps<"secti
   error?: string
   /** The product's name in the explain copy; without it the sentence says "the app". */
   appName?: string
-  /** The platform's word for the biometric step; defaults to "Touch ID". */
-  biometricName?: string
+  /**
+   * The platform's word for the biometric step; defaults to "Touch ID". `null` says this device has
+   * no biometric: the explain copy and the announcement name only the account password, and the
+   * built-in gate asks for the password for use too (`onBiometric` is ignored).
+   */
+  biometricName?: string | null
   /**
    * Host-owned gate. When given, nested components call this instead of the built-in gate, and the
    * host shows its own prompt. Otherwise the surface opens `CrownJewelGate` and uses `onConfirm`.
@@ -341,7 +357,7 @@ export function CrownJewelSurface({
       new Promise<boolean>((resolve) => {
         // Settle any gate still open; a new request never reuses an old one (no cached proof).
         gateRef.current?.resolve(false)
-        const wantsBiometric = kind === "use" && Boolean(onBiometric)
+        const wantsBiometric = kind === "use" && Boolean(onBiometric) && biometricName !== null
         const attempts = Math.max(
           1,
           Math.round(readSecondsToken(sectionRef.current, "--c-crown-jewel-gate-attempts", DEFAULT_ATTEMPTS))
@@ -354,7 +370,7 @@ export function CrownJewelSurface({
           resolve,
         })
       }),
-    [onBiometric]
+    [onBiometric, biometricName]
   )
 
   const context = React.useMemo<CrownJewelContextValue>(
@@ -388,7 +404,7 @@ export function CrownJewelSurface({
         ...g,
         busy: false,
         level: "password",
-        error: `${biometricName} didn't confirm it's you. Use your account password instead.`,
+        error: crownJewelGateErrors.biometricRefused(biometricName ?? "The biometric check"),
       })
       return
     }
@@ -398,13 +414,16 @@ export function CrownJewelSurface({
       onLock?.()
       return
     }
-    setGate({ ...g, busy: false, attemptsLeft: left, error: `Password incorrect. ${left} ${left === 1 ? "try" : "tries"} left.` })
+    setGate({ ...g, busy: false, attemptsLeft: left, error: crownJewelGateErrors.wrongPassword(left) })
   }
 
   if (!hostOk) return null
 
   const reason = `To ${gate?.kind === "use" ? "use" : "show"} ${title}`
-  const announcement = `Crown jewel. Using it needs ${biometricName}. Showing it needs your account password.`
+  const announcement =
+    biometricName === null
+      ? "Crown jewel. Using it or showing it needs your account password."
+      : `Crown jewel. Using it needs ${biometricName}. Showing it needs your account password.`
 
   const remap = {
     "--background": "var(--c-crown-jewel-surface)",
@@ -497,8 +516,14 @@ export function CrownJewelSurface({
             <DialogDescription>A secret that could unlock everything else, so it follows stricter rules.</DialogDescription>
           </DialogHeader>
           <ul className="flex list-disc flex-col gap-1.5 pl-5">
-            <li>To use it, {biometricName} confirms it's you, every time.</li>
-            <li>To show it in full or to export it, you type your account password.</li>
+            {biometricName === null ? (
+              <li>To use it, show it in full or export it, you type your account password, every time.</li>
+            ) : (
+              <>
+                <li>To use it, {biometricName} confirms it's you, every time.</li>
+                <li>To show it in full or to export it, you type your account password.</li>
+              </>
+            )}
             <li>It never fills in on its own, never appears in search previews, and is never handed to agents.</li>
             {deviceOnly && <li>It stays on this device and is not synced.</li>}
           </ul>
