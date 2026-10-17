@@ -30,7 +30,11 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "lint": "node scripts/lint.mjs",
-    "test": "node scripts/build.mjs && node scripts/check.mjs",
-    "typecheck": "node --check scripts/build.mjs && node --check scripts/check.mjs && node --check scripts/lint.mjs"
+    "test": "node scripts/build.mjs && node scripts/check.mjs && node scripts/contrast.mjs",
+    "contrast": "node scripts/contrast.mjs",
+    "typecheck": "node --check scripts/build.mjs && node --check scripts/check.mjs && node --check scripts/lint.mjs && node --check scripts/contrast.mjs"
+  },
+  "devDependencies": {
+    "apca-w3": "^0.1.9"
   }
 }
