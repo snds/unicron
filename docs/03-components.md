@@ -49,6 +49,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `security/large-type-view` | `LargeTypeView`, `classifyChar`, `nameChar`, `captionFor`, `spellValue`, `LargeTypeViewProps` | Overlay | SheetContent fullscreen + IconButton + Switch + Kbd (spec: [large-type-view](specs/security/large-type-view.md)) |
 | `security/crown-jewel` | `CrownJewelSurface`, `CrownJewelMark`, `CrownJewelGate`, `useCrownJewel`, `CrownJewelProof` | Layout | section with a re-mapped tier + Icon + Badge + IconButton + Dialog (spec: [crown-jewel-treatment](specs/security/crown-jewel-treatment.md)) |
 | `security/risk-tier-badge` | `RiskTierBadge`, `riskTierCopy`, `riskTiers`, `riskTierUnverifiedAnnouncement`, `RiskTierBadgeProps`, `RiskTier`, `RiskTierState`, `RiskTierCopy` | Data Display (security) | `badgeVariants` + Icon + IconButton → Tooltip |
+| `security/secret-field` | `SecretField`, `secretFieldAnnouncements`, `secretFieldErrors`, `spellSecret`, `SecretFieldProps`, `SecretFieldReadProps`, `SecretFieldEditProps`, `SecretFieldHost`, `SecretGate`, `SecretRevealMode`, `SecretFormat`, `SecretStrength` | Form (security) | Field + InputGroup + IconButton + Skeleton + Spinner |
 
 Also exported: `cn` (clsx + tailwind-merge).
 
@@ -118,3 +119,23 @@ surface, or the extension's top-layer frame, never in web content; every tier, s
     control is a button named "What does Use with care mean?".
   - *Tokens:* `secondary`, `muted-foreground`, `foreground`, `info`, `warning`, `destructive`;
     `--c-risk-tier-{standard,official,tolerated}-{ink,bg}`, `--c-risk-tier-unverified-ink`, `--c-risk-tier-height-{sm,md}`.
+- **SecretField** ([spec](specs/security/secret-field.md)). Use a hidden value without exposing it longer than the job
+  takes.
+  - *Anatomy:* `secret-field` (`data-mode="read|edit"`) → `Field` → `FieldLabel` · control (`InputGroup`: masked span
+    with a fixed 12-dot mask or the revealed mono text, written to the DOM imperatively; `IconButton` reveal with
+    `aria-pressed`; `IconButton` copy → countdown ring → check; `more` slot) · meter (edit only) · description / error.
+  - *Variants:* `mode` = `read` · `edit`; `revealMode` = `hold` (default: pointer or Space held) · `toggle` (30 s
+    auto-hide); `format` = `plain` · `groups-of-4` · `words`; `gate` = `none` · `biometric` · `password` (inside a
+    `CrownJewelSurface` the surface's `requestProof` gates use and reveal instead); `mono`.
+  - *States:* masked · loading · revealed (`warning` tint, lifetime running, one per document) · copying · cleared ·
+    gated (lock glyph, busy while the host's gate runs) · error ("Couldn't read this field" + Retry) · edit (strength
+    weak / fair / strong, always with the word) · disabled (edit only) · reduced motion (ring becomes "28 s") · high
+    contrast (dots become the word "Hidden", "Shown" added, tint dropped).
+  - *A11y:* `role="textbox" aria-readonly` named "Password, hidden"; revealed text spelled per character ("capital t,
+    r, 4, dash") and not announced automatically; Cmd/Ctrl+C on the control runs the timed copy; the value is never
+    selectable. Live region: "Password shown. Hides in 30 seconds." · "Copied. Clipboard clears in 30 seconds." ·
+    "Clipboard cleared." · "Confirm it's you to show this."
+  - *Host contract:* `getSecret(): Promise<Uint8Array>` (one-shot, zeroed after use) and `host.copy(bytes)` /
+    `host.clear()` / `host.clipboardHolds?(hash)` / `host.gate?(kind)`. The value never enters React state as a string.
+  - *Tokens:* `input`, `border`, `foreground`, `muted-foreground`, `ring`, `primary`, `destructive`, `warning`,
+    `font-mono`; `--c-secret-field-{mask-count,reveal-lifetime,clipboard-timer,revealed-bg,copy-track,copy-progress,meter-weak,meter-fair,meter-strong,letter-spacing}`.

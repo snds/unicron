@@ -68,5 +68,18 @@
     "unverified-ink": { "$type": "color", "$value": "{destructive}", "$description": "Outline, no fill." },
     "height-sm": { "$type": "dimension", "$value": "1.25rem" },
     "height-md": { "$type": "dimension", "$value": "1.5rem" }
+  },
+  "secret-field": {
+    "$description": "SecretField (docs/specs/security/secret-field.md): a hidden value with a bounded reveal and a timed copy.",
+    "mask-count": { "$type": "number", "$value": 12, "$description": "Dots in read mode, never the true length." },
+    "reveal-lifetime": { "$type": "duration", "$value": "30s" },
+    "clipboard-timer": { "$type": "duration", "$value": "30s", "$description": "Default; a host may override within 10–90 s." },
+    "revealed-bg": { "$type": "color", "$value": "color-mix(in oklab, {warning} 10%, transparent)", "$description": "Exposure cue." },
+    "copy-track": { "$type": "color", "$value": "{border}" },
+    "copy-progress": { "$type": "color", "$value": "{foreground}" },
+    "meter-weak": { "$type": "color", "$value": "{destructive}" },
+    "meter-fair": { "$type": "color", "$value": "{warning}" },
+    "meter-strong": { "$type": "color", "$value": "{primary}" },
+    "letter-spacing": { "$type": "dimension", "$value": "0.04em", "$description": "Revealed mono text." }
   }
 }
