@@ -46,22 +46,33 @@ function SheetContent({
   side = "right",
   showCloseButton = true,
   fullscreen = false,
+  beforeContent,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
   /** Cover the whole screen, edge to edge, clear of the status bar (a phone editor, like Mail's compose). */
   fullscreen?: boolean
+  /**
+   * Rendered in the portal between the backdrop and the popup, so it paints above the
+   * backdrop and below the popup. A desktop app puts its window drag strip here
+   * (`data-tauri-drag-region`) so the window still moves while the sheet is open. A press
+   * on it does not dismiss the sheet: only a press on the backdrop does.
+   */
+  beforeContent?: React.ReactNode
 }) {
   return (
     <SheetPortal>
       <SheetOverlay />
+      {beforeContent}
       <SheetPrimitive.Popup
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "bg-popover text-popover-foreground fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
-          fullscreen && "gap-0 rounded-none border-0 pt-[env(safe-area-inset-top)] data-[side=bottom]:h-dvh",
+          // A side or top sheet starts below --c-dialog-titlebar-inset (0px by default), so an
+          // app's title bar strip never overlaps the panel.
+          "bg-popover text-popover-foreground fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:top-(--c-dialog-titlebar-inset) data-[side=left]:bottom-0 data-[side=left]:left-0 data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
+          fullscreen && "gap-0 rounded-none border-0 pt-[env(safe-area-inset-top)] data-[side=bottom]:h-[calc(100dvh-var(--c-dialog-titlebar-inset))]",
           className
         )}
         {...props}
@@ -102,7 +113,17 @@ const DISMISS_SHARE = 0.3
  * scrolling content area, not the frame.
  */
 /** `wide`: a wider side panel from `sm` up, for content like a photo; on phones it's the same bottom sheet. */
-function AdaptiveSheetContent({ className, children, wide = false, ...props }: SheetPrimitive.Popup.Props & { wide?: boolean }) {
+function AdaptiveSheetContent({
+  className,
+  children,
+  wide = false,
+  beforeContent,
+  ...props
+}: SheetPrimitive.Popup.Props & {
+  wide?: boolean
+  /** As on `SheetContent`: rendered between the backdrop and the popup (a desktop app's drag strip). */
+  beforeContent?: React.ReactNode
+}) {
   const popup = React.useRef<HTMLDivElement>(null)
   const close = React.useRef<HTMLButtonElement>(null)
   const drag = React.useRef<{ y: number; dy: number } | null>(null)
@@ -131,6 +152,7 @@ function AdaptiveSheetContent({ className, children, wide = false, ...props }: S
   return (
     <SheetPortal>
       <SheetOverlay />
+      {beforeContent}
       <SheetPrimitive.Popup
         ref={popup}
         data-slot="sheet-content"
@@ -139,8 +161,8 @@ function AdaptiveSheetContent({ className, children, wide = false, ...props }: S
           "bg-popover text-popover-foreground fixed z-50 flex flex-col overflow-hidden bg-clip-padding text-sm shadow-lg transition duration-200 ease-out data-ending-style:opacity-0 data-starting-style:opacity-0",
           // Compact: anchored to the bottom edge, rounded on top, short of the top.
           "max-sm:inset-x-0 max-sm:bottom-0 max-sm:h-(--c-sheet-compact-height) max-sm:rounded-t-(--c-sheet-compact-radius) max-sm:data-ending-style:translate-y-full max-sm:data-starting-style:translate-y-full",
-          // Regular: a panel on the right.
-          "sm:inset-y-0 sm:right-0 sm:h-full sm:max-w-full sm:border-l sm:data-ending-style:translate-x-[2.5rem] sm:data-starting-style:translate-x-[2.5rem]",
+          // Regular: a panel on the right, starting below --c-dialog-titlebar-inset (0px by default).
+          "sm:top-(--c-dialog-titlebar-inset) sm:bottom-0 sm:right-0 sm:max-w-full sm:border-l sm:data-ending-style:translate-x-[2.5rem] sm:data-starting-style:translate-x-[2.5rem]",
           wide ? "sm:w-(--c-sheet-wide-width)" : "sm:w-(--c-sheet-regular-width)"
         )}
         {...props}

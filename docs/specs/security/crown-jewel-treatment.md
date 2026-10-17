@@ -75,7 +75,7 @@ crown-jewel-gate                    DialogContent, data-level, data-armed
 - **Attempts.** `--c-crown-jewel-gate-attempts` (3), read from the surface. The last wrong password calls `onLock`.
 - **Arming delay.** Cancel and Confirm are inert for `--c-approval-arm-delay` (500 ms); closing disarms and forgets the typed password.
 - **Explain copy** ends with "You will only ever see this frame inside the Lockdown app or a system prompt, never on a web page." That sentence is how a person learns to distrust a page-drawn imitation.
-- **Reveal lifetime.** The `--c-crown-jewel-reveal-lifetime` knob (20 s) ships but nothing reads it yet: a SecretField inside the surface uses its own 30 s unless the host passes `revealLifetime={20}` or sets `--c-secret-field-reveal-lifetime` on the surface. Open item.
+- **Reveal lifetime.** A SecretField inside the surface reads `--c-crown-jewel-reveal-lifetime` (20 s) at reveal time instead of its own `--c-secret-field-reveal-lifetime` (30 s); an explicit `revealLifetime` prop wins over both. The announcement says the shorter number.
 
 ## Tokens
 
@@ -92,7 +92,7 @@ Tier 3 under `crown-jewel`; the surface assigns each to the roles listed, inline
 | `--c-crown-jewel-border` | `color-mix(in oklab, {protected-foreground} 24%, transparent)` | `--border`, `--input` |
 | `--c-crown-jewel-icon-fill` | `1` | `--c-icon-fill` |
 | `--c-crown-jewel-icon-wght` | `500` | `--c-icon-wght` |
-| `--c-crown-jewel-reveal-lifetime` | `20s` | Not yet wired (above) |
+| `--c-crown-jewel-reveal-lifetime` | `20s` | Read by nested SecretFields (above) |
 | `--c-crown-jewel-gate-attempts` | `3` | Default attempts |
 
 The re-mapping is the trick `.dark` uses, so nested primitives invert without any override.

@@ -77,7 +77,7 @@ export interface SecretFieldReadProps extends CommonProps {
   host: SecretFieldHost
   /** `hold` reveals while the pointer or Space is held (Lockdown D97); `toggle` is the per-person setting, with the auto-hide. */
   revealMode?: SecretRevealMode
-  /** Seconds. Default from `--c-secret-field-reveal-lifetime` (30). Also hides on blur, lock, and leaving the viewport. */
+  /** Seconds. Default from `--c-secret-field-reveal-lifetime` (30), or `--c-crown-jewel-reveal-lifetime` (20) inside a `CrownJewelSurface`. Also hides on blur, lock, and leaving the viewport. */
   revealLifetime?: number
   /** Seconds, 10–90. Default from `--c-secret-field-clipboard-timer` (30). No "never". */
   clipboardTimer?: number
@@ -267,7 +267,17 @@ function SecretFieldRead({
   const [maskCount] = React.useState(readMaskCount)
   const [clipboardDefault] = React.useState(() => readSecondsToken(rootEl(), "--c-secret-field-clipboard-timer", 30))
   const clipboardSeconds = Math.min(CLIPBOARD_MAX, Math.max(CLIPBOARD_MIN, Math.round(clipboardTimer ?? clipboardDefault)))
-  const lifetimeSeconds = () => Math.max(1, Math.round(revealLifetime ?? readSecondsToken(root.current, "--c-secret-field-reveal-lifetime", 30)))
+  // Inside a CrownJewelSurface the shorter crown-jewel knob (20 s) wins over the field's own (30 s); an explicit prop wins over both.
+  const lifetimeSeconds = () =>
+    Math.max(
+      1,
+      Math.round(
+        revealLifetime ??
+          (crown.gated
+            ? readSecondsToken(root.current, "--c-crown-jewel-reveal-lifetime", 20)
+            : readSecondsToken(root.current, "--c-secret-field-reveal-lifetime", 30))
+      )
+    )
 
   // The shared clipboard countdown. At expiry: clear only if the clipboard still holds our value.
   const lastHash = React.useRef("")
