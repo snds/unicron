@@ -1,6 +1,7 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
 // Promoted from: snds/mailbird · PR snds/unicron#2 · DSA 17b338c6dfd5 (DialogActions / DialogAction); none (DialogTitle's Back-button layout, hand-raised)
+// Promoted from: snds/mailbird · PR snds/unicron#14 · DSA none (DialogContent size and scrolling: ~20 width overrides, hand-raised in Mailbird ADR-0059)
 "use client"
 
 import * as React from "react"
@@ -39,14 +40,31 @@ function DialogOverlay({
   )
 }
 
+/**
+ * How wide the dialog may grow from `sm` up (on phones it's the screen less
+ * 1rem each side). `sm` suits a question; `md` a short form; `lg` a settings
+ * page; `xl` and `2xl` a composer or a preview.
+ */
+const DIALOG_SIZES = {
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-2xl",
+  "2xl": "sm:max-w-3xl",
+} as const
+
+export type DialogSize = keyof typeof DIALOG_SIZES
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
   beforeContent,
+  size = "sm",
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
+  size?: DialogSize
   /**
    * Rendered in the portal between the backdrop and the popup, so it paints above the
    * backdrop and below the popup. A desktop app puts its window drag strip here
@@ -63,8 +81,10 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           // Centred in the area below --c-dialog-titlebar-inset (0px by default), so an app's
-          // title bar strip never overlaps the popup.
-          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/10 grid max-w-[calc(100%-2rem)] gap-4 rounded-xl p-4 text-sm ring-1 duration-100 sm:max-w-sm fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
+          // title bar strip never overlaps the popup. A dialog taller than that area scrolls
+          // inside itself instead of running off it.
+          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/10 grid max-h-[calc(100dvh-2rem-var(--c-dialog-titlebar-inset))] max-w-[calc(100%-2rem)] gap-4 overflow-y-auto rounded-xl p-4 text-sm ring-1 duration-100 fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
+          DIALOG_SIZES[size],
           className
         )}
         {...props}

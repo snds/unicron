@@ -34,7 +34,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `sonner` | `Toaster` | Feedback | sonner (+ next-themes) |
 | `avatar` | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount` | Data Display | Base UI Avatar |
 | `badge` | `Badge`, `badgeVariants` | Data Display | span (useRender) |
-| `item` | `Item`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`, `ItemHeader`, `ItemFooter`, `ItemGroup`, `ItemSeparator` | Data Display | div (useRender) |
+| `item` | `Item`, `ItemMain`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`, `ItemHeader`, `ItemFooter`, `ItemGroup`, `ItemSeparator` | Data Display | div (useRender) |
 | `kbd` | `Kbd`, `KbdGroup` | Data Display | kbd |
 | `separator` | `Separator` | Layout | Base UI Separator |
 | `scroll-area` | `ScrollArea`, `ScrollBar` | Layout | Base UI ScrollArea |
@@ -76,6 +76,7 @@ components) rather than hand-writing.
 - **Icon** takes `tone="muted" | "destructive"` when it stands alone, outside a control. Inside a control, it inherits the control's ink, so leave `tone` off. App roles, such as an area's hue, stay in the app's own classes, because the core can't know them.
 - **IconButton** is an icon-only control whose `label` becomes both its accessible name and its tooltip, so the two never drift apart. `tooltip` gives longer text, and `shortcut` adds a `Kbd`. `render` swaps the control: pass a `Toggle` for an on/off tool, or nest the IconButton in `DropdownMenuTrigger render={…}` to open a menu. Pass `icon`, or pass children to size or tint the glyph yourself.
 - **Item** is a row: media, a title, a hint, and actions. Render it as the row's one control with `render={<a href… />}` or `render={<button type="button" />}`. Then it gets hover, `data-selected="true"` for the current row, and `disabled`. A row with separate controls inside stays a `div` and puts them in `ItemActions`.
+  - When that row also has a main action (a booking link that opens, with a Copy beside it), wrap its media and content in `ItemMain`. Its target covers the whole row, so the row clicks, hovers, and shows focus like one button, while the `ItemActions` stay separate controls on top. `ItemMain` takes `render={<a href… />}` for a link.
 - **Chip** is a pill holding a short value: a tag, a label, or a linked thing.
   - `variant` is `muted` (the default, for labels and values in forms), `secondary` (tags), or `outline` (a linked thing, like an event or a person).
   - `ChipAction` is its main action, such as opening what it stands for. It fills the chip edge to edge. Wrap long text in a `<span>` so it truncates.
@@ -88,6 +89,7 @@ components) rather than hand-writing.
   - On phones, each action is a round 40px icon button (✓, ×, trash), the layout of Apple's sheet controls. Its words stay as its accessible name. `icon` overrides the glyph.
   - Use it when a dialog has a way to back out. A dialog with one action keeps a plain `DialogFooter` with a text button, because a lone ✓ says less than the words.
 - **Menus are frosted glass** (`bg-popover/70` with a backdrop blur), by decision (2026-10-15). Don't override them to solid.
+- **DialogContent `size`** sets how wide a dialog grows from `sm` up: `sm` (the default, 24rem) for a question, `md` (28rem) for a short form, `lg` (32rem) for settings, `xl` (42rem) for a composer, and `2xl` (48rem) for a preview. Every dialog scrolls inside itself when it's taller than the screen, so no dialog sets its own width or scrolling. A dialog with its own layout (a composer's header, body, and footer) still sets its height and padding.
 - **DialogTitle** lays a leading Back button out inline with the text, for dialogs with steps.
 - **SheetContent `fullscreen`** covers the whole screen edge to edge and clears the status bar: a phone editor, like Mail's compose. An app can still move its bottom edge, for example above the keyboard.
 - **`beforeContent`** on `DialogContent`, `SheetContent`, `AdaptiveSheetContent` and `CommandDialog` renders in the portal between the backdrop and the popup, so it paints above the backdrop and below the popup. A desktop app with the native title bar hidden puts its window drag strip there; a press on it does not dismiss (only a press on the backdrop does). The popups keep clear of `--c-dialog-titlebar-inset` (0px by default): a dialog centres in the area below it, a side or top sheet starts under it. Recipe: [05 · Consuming → Desktop title bar](05-consuming.md#9-desktop-title-bar).

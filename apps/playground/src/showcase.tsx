@@ -64,6 +64,7 @@ import {
   InputGroupInput,
   Item,
   ItemActions,
+  ItemMain,
   ItemContent,
   ItemDescription,
   ItemMedia,
@@ -333,6 +334,23 @@ export function Showcase() {
         </Item>
         {/* Rows that are one button each: hover, selected, disabled. */}
         <div className="flex w-full max-w-sm flex-col gap-2">
+          {/* A row with a main action and a button of its own: the row opens; Copy copies. */}
+          <Item variant="outline">
+            <ItemMain onClick={() => toast("Opening Intro call")}>
+              <ItemMedia variant="icon">
+                <Icon name="event_available" />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>Intro call</ItemTitle>
+                <ItemDescription>30 minutes · the row opens it</ItemDescription>
+              </ItemContent>
+            </ItemMain>
+            <ItemActions>
+              <Button variant="ghost" size="icon-sm" aria-label="Copy link" onClick={() => toast("Link copied")}>
+                <Icon name="content_copy" />
+              </Button>
+            </ItemActions>
+          </Item>
           <Item variant="outline" render={<button type="button" onClick={() => toast("Opening signatures")} />}>
             <ItemMedia variant="icon">
               <Icon name="signature" />
@@ -404,6 +422,19 @@ export function Showcase() {
             <DialogFooter showCloseButton>
               <Button variant="destructive">Delete</Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* A wider dialog that's taller than the screen scrolls inside itself. */}
+        <Dialog>
+          <DialogTrigger render={<Button variant="outline" size="sm" />}>Open a long settings dialog</DialogTrigger>
+          <DialogContent size="lg">
+            <DialogHeader>
+              <DialogTitle>Advanced settings</DialogTitle>
+              <DialogDescription>size="lg", and it scrolls when it's taller than the screen.</DialogDescription>
+            </DialogHeader>
+            {Array.from({ length: 24 }, (_, i) => (
+              <p key={i} className="text-muted-foreground">Setting {i + 1}</p>
+            ))}
           </DialogContent>
         </Dialog>
         <Sheet>
