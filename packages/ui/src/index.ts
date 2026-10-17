@@ -6,6 +6,7 @@ export { IconButton, type IconButtonProps } from "./components/icon-button"
 // Security components (docs/specs/security/). Also importable as @unicron/ui/security/<name>.
 export * from "./components/security/code-display"
 export * from "./components/security/crown-jewel"
+export * from "./components/security/large-type-view"
 export { useCopyCountdown, type CopyCountdown, type CopyCountdownState } from "./components/security/copy-countdown"
 export * from "./components/ui/avatar"
 export * from "./components/ui/badge"
