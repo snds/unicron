@@ -15,5 +15,17 @@
     "close-size": { "$type": "dimension", "$value": "2.5rem" },
     "regular-width": { "$type": "dimension", "$value": "24rem" },
     "wide-width": { "$type": "dimension", "$value": "36rem", "$description": "The wide variant (AdaptiveSheetContent wide), for a photo or other content that needs room." }
+  },
+  "crown-jewel": {
+    "$description": "CrownJewel treatment (docs/specs/security/crown-jewel-treatment.md): the surface re-maps the semantic roles for its subtree onto these, the way .dark does.",
+    "surface": {"$type": "color", "$value": "{protected}", "$description": "Assigned to --background and --card inside the surface."},
+    "ink": {"$type": "color", "$value": "{protected-foreground}", "$description": "Assigned to --foreground inside."},
+    "muted": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 12%, transparent)", "$description": "Assigned to --muted inside."},
+    "muted-ink": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 72%, transparent)", "$description": "Assigned to --muted-foreground inside (not in the spec's table; needed so hints keep contrast on the inverted surface)."},
+    "border": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 24%, transparent)", "$description": "Assigned to --border inside."},
+    "icon-fill": {"$type": "number", "$value": 1, "$description": "Via --c-icon-fill."},
+    "icon-wght": {"$type": "number", "$value": 500, "$description": "Via --c-icon-wght."},
+    "reveal-lifetime": {"$type": "duration", "$value": "20s", "$description": "Shorter than SecretField's default."},
+    "gate-attempts": {"$type": "number", "$value": 3, "$description": "Default attemptsLeft."}
   }
 }

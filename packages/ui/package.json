@@ -46,6 +46,11 @@
       "import": "./dist/components/icon.js",
       "default": "./dist/components/icon.js"
     },
+    "./security/*": {
+      "types": "./dist/components/security/*.d.ts",
+      "import": "./dist/components/security/*.js",
+      "default": "./dist/components/security/*.js"
+    },
     "./*": {
       "types": "./dist/components/ui/*.d.ts",
       "import": "./dist/components/ui/*.js",
