@@ -1,0 +1,10 @@
+{
+  "$description": "Edits the transform applies after inlining the style, keyed by output file. Each entry replaces one exact substring of the generated source (the transform stops if it is missing, so upstream drift is noticed). `why` is written into the file header so the provenance travels with the component.",
+  "toggle.tsx": {
+    "why": "pressed state is the primary fill, not bg-muted (snds/unicron#6: muted on the page measured about Lc 8 / 1.1:1; primary measures Lc 96+ / 17:1 in both modes against the page and the unpressed item)",
+    "replace": [
+      { "from": "aria-pressed:bg-muted", "to": "aria-pressed:bg-primary aria-pressed:text-primary-foreground" },
+      { "from": "data-[state=on]:bg-muted", "to": "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground" }
+    ]
+  }
+}
