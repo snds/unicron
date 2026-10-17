@@ -15,5 +15,46 @@
     "close-size": { "$type": "dimension", "$value": "2.5rem" },
     "regular-width": { "$type": "dimension", "$value": "24rem" },
     "wide-width": { "$type": "dimension", "$value": "36rem", "$description": "The wide variant (AdaptiveSheetContent wide), for a photo or other content that needs room." }
+  },
+  "code": {
+    "$description": "CodeDisplay (docs/specs/security/code-display.md): one-time codes grouped for reading, with a time-remaining ring.",
+    "size-detail": {"$type": "dimension", "$value": "2.25rem"},
+    "size-list": {"$type": "dimension", "$value": "1.25rem"},
+    "size-compact": {"$type": "dimension", "$value": "1rem"},
+    "group-gap": {"$type": "dimension", "$value": "0.75em"},
+    "letter-spacing": {"$type": "dimension", "$value": "0.08em"},
+    "ring-track": {"$type": "color", "$value": "{border}"},
+    "ring-progress": {"$type": "color", "$value": "{foreground}"},
+    "ring-expiring": {"$type": "color", "$value": "{warning}"},
+    "next-ink": {"$type": "color", "$value": "{muted-foreground}"},
+    "expiring-at": {"$type": "duration", "$value": "5s", "$description": "Seconds left at which the code turns to the expiring state."},
+    "next-at": {"$type": "duration", "$value": "10s", "$description": "Seconds left at which the next code appears beneath the current one."},
+    "copy-next-at": {"$type": "duration", "$value": "3s", "$description": "Seconds left under which copy takes the next code instead."},
+    "rollover-duration": {"$type": "duration", "$value": "200ms", "$description": "Literal; tier 2 has no duration role."}
+  },
+  "large-type": {
+    "$description": "LargeTypeView (docs/specs/security/large-type-view.md): a secret full screen, grouped in threes, for reading across a room.",
+    "min-size": {"$type": "dimension", "$value": "2.5rem"},
+    "max-size": {"$type": "dimension", "$value": "6rem"},
+    "group-gap": {"$type": "dimension", "$value": "1.5em"},
+    "char-gap": {"$type": "dimension", "$value": "0.1em"},
+    "digit-ink": {"$type": "color", "$value": "{info}"},
+    "letter-ink": {"$type": "color", "$value": "{foreground}"},
+    "symbol-ink": {"$type": "color", "$value": "{warning}"},
+    "caption-ink": {"$type": "color", "$value": "{muted-foreground}"},
+    "caption-size": {"$type": "dimension", "$value": "0.75rem"},
+    "lifetime": {"$type": "duration", "$value": "120s"}
+  },
+  "crown-jewel": {
+    "$description": "CrownJewel treatment (docs/specs/security/crown-jewel-treatment.md): the surface re-maps the semantic roles for its subtree onto these, the way .dark does.",
+    "surface": {"$type": "color", "$value": "{protected}", "$description": "Assigned to --background and --card inside the surface."},
+    "ink": {"$type": "color", "$value": "{protected-foreground}", "$description": "Assigned to --foreground inside."},
+    "muted": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 12%, transparent)", "$description": "Assigned to --muted inside."},
+    "muted-ink": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 72%, transparent)", "$description": "Assigned to --muted-foreground inside (not in the spec's table; needed so hints keep contrast on the inverted surface)."},
+    "border": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 24%, transparent)", "$description": "Assigned to --border inside."},
+    "icon-fill": {"$type": "number", "$value": 1, "$description": "Via --c-icon-fill."},
+    "icon-wght": {"$type": "number", "$value": 500, "$description": "Via --c-icon-wght."},
+    "reveal-lifetime": {"$type": "duration", "$value": "20s", "$description": "Shorter than SecretField's default."},
+    "gate-attempts": {"$type": "number", "$value": 3, "$description": "Default attemptsLeft."}
   }
 }
