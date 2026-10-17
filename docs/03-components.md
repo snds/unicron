@@ -48,6 +48,9 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `security/code-display` | `CodeDisplay`, `CodeDisplayList`, `groupCode`, `spellCode`, `CodeDisplayProps` | Data Display | Item + IconButton + Badge + Button (spec: [code-display](specs/security/code-display.md)) |
 | `security/large-type-view` | `LargeTypeView`, `classifyChar`, `nameChar`, `captionFor`, `spellValue`, `LargeTypeViewProps` | Overlay | SheetContent fullscreen + IconButton + Switch + Kbd (spec: [large-type-view](specs/security/large-type-view.md)) |
 | `security/crown-jewel` | `CrownJewelSurface`, `CrownJewelMark`, `CrownJewelGate`, `useCrownJewel`, `CrownJewelProof` | Layout | section with a re-mapped tier + Icon + Badge + IconButton + Dialog (spec: [crown-jewel-treatment](specs/security/crown-jewel-treatment.md)) |
+| `security/approval-sheet` | `ApprovalSheet`, `approvalSheetCopy`, `approvalSheetOriginCopy`, `approvalSheetAnnouncements`, `ApprovalSheetProps`, `ApprovalKind`, `ApprovalOrigin`, `ApprovalDenyReason`, `ApprovalMatching`, `ApprovalContextRow` | Overlay (security) | Sheet → AdaptiveSheetContent + Item + Input + DialogActions + RiskTierBadge |
+| `security/risk-tier-badge` | `RiskTierBadge`, `riskTierCopy`, `riskTiers`, `riskTierUnverifiedAnnouncement`, `RiskTierBadgeProps`, `RiskTier`, `RiskTierState`, `RiskTierCopy` | Data Display (security) | `badgeVariants` + Icon + IconButton → Tooltip |
+| `security/secret-field` | `SecretField`, `secretFieldAnnouncements`, `secretFieldErrors`, `spellSecret`, `SecretFieldProps`, `SecretFieldReadProps`, `SecretFieldEditProps`, `SecretFieldHost`, `SecretGate`, `SecretRevealMode`, `SecretFormat`, `SecretStrength` | Form (security) | Field + InputGroup + IconButton + Skeleton + Spinner |
 
 Also exported: `cn` (clsx + tailwind-merge).
 
@@ -97,3 +100,60 @@ components) rather than hand-writing.
   Its `wide` prop widens the side panel (`--c-sheet-wide-width`, 36rem) for content like a
   photo or a drawing; on phones it's the same bottom sheet. The panel never exceeds the
   viewport (`max-w-full`). Its `className` styles the inner scroll area, not the panel.
+
+## Security components
+
+Three of the six from Lockdown's brief §5.7 (specs under [`docs/specs/security/`](specs/security/README.md)). They are
+components, not variants, because each owns behaviour no parent has. Every one renders only in the app, an OS
+surface, or the extension's top-layer frame, never in web content; every tier, state and warning carries a word.
+
+- **ApprovalSheet** ([spec](specs/security/approval-sheet.md)). Approve or deny a request from another device, agent,
+  TV, or contact.
+  - *Anatomy:* `approval-sheet` (AdaptiveSheetContent, modal) → header (Icon · SheetTitle · RiskTierBadge) · context
+    (`Item` rows, `aria-describedby` of the dialog) · match (prompt + one `Input` cell per digit, or three pill Buttons
+    in `choose` mode) · timer (ring + "58 s left") · notice (origin line, or the error) · actions (`DialogActions`:
+    Approve · Deny · This wasn't me).
+  - *Variants:* `kind` = `device` · `agent` · `device-code` · `contact-request` · `bridge` (icon, title, default tier);
+    `origin` = `scan` · `pairing` · `push`; `matching.mode` = `enter` · `choose`, `digits` 2 or 3.
+  - *States:* default (Approve disabled, inert for the 500 ms arming delay) · matched · wrong (cells clear, "1 try
+    left") · busy · error · expired (Approve removed, Deny becomes Close, `onDeny("timeout")` fired) · denied / reported
+    (one line, then `onOpenChange(false)`) · refused (`device-code` not from `scan`: no approve control in the DOM) ·
+    reduced motion (ring in 5 s steps) · forced colors (track becomes a border, disabled Approve says "Locked").
+  - *A11y:* `role="dialog"`, labelled by the title, described by the context list and the prompt. Tab order digits →
+    Approve → Deny → This wasn't me. Escape denies (`user`). Enter never approves. Polite live region for "Number
+    matches", "That number does not match, one try left", "10 seconds left", "Request expired. Nothing was approved."
+  - *Tokens:* `popover`, `foreground`, `muted-foreground`, `border`, `primary`, `destructive`, `warning`, `font-mono`;
+    `--c-approval-{min-width,digit-size,digit-gap,timer-track,timer-progress,timer-urgent,arm-delay,lifetime}`.
+- **RiskTierBadge** ([spec](specs/security/risk-tier-badge.md)). One word for how much trust a path carries.
+  - *Anatomy:* `risk-tier-badge` → pill (`badgeVariants`, `data-tier`) → icon (`aria-hidden`) · label (never omitted)
+    · optional explain `IconButton` (help) whose tooltip and `aria-describedby` carry one sentence plus the manifest's
+    `disclosures`.
+  - *Variants:* `tier` = `standard` · `official` · `tolerated` (a closed union; people see **Built in** · **Verified** ·
+    **Use with care** from the component-owned `riskTierCopy`); `size` = `sm` · `md`; `explain`.
+  - *States:* default · explain open · loading (`verified` omitted: "Checking") · unverified (`verified={false}` or an
+    unknown tier: `destructive` outline, "Unverified"; announced only when it appears after a check) · reduced motion
+    (icon fill does not animate) · high contrast (1 px border in the tier ink, tint dropped, icon weight 600).
+  - *A11y:* static text "Risk tier: Use with care. Our own bridge, opt-in." (visible word + sr-only parts); the explain
+    control is a button named "What does Use with care mean?".
+  - *Tokens:* `secondary`, `muted-foreground`, `foreground`, `info`, `warning`, `destructive`;
+    `--c-risk-tier-{standard,official,tolerated}-{ink,bg}`, `--c-risk-tier-unverified-ink`, `--c-risk-tier-height-{sm,md}`.
+- **SecretField** ([spec](specs/security/secret-field.md)). Use a hidden value without exposing it longer than the job
+  takes.
+  - *Anatomy:* `secret-field` (`data-mode="read|edit"`) → `Field` → `FieldLabel` · control (`InputGroup`: masked span
+    with a fixed 12-dot mask or the revealed mono text, written to the DOM imperatively; `IconButton` reveal with
+    `aria-pressed`; `IconButton` copy → countdown ring → check; `more` slot) · meter (edit only) · description / error.
+  - *Variants:* `mode` = `read` · `edit`; `revealMode` = `hold` (default: pointer or Space held) · `toggle` (30 s
+    auto-hide); `format` = `plain` · `groups-of-4` · `words`; `gate` = `none` · `biometric` · `password` (inside a
+    `CrownJewelSurface` the surface's `requestProof` gates use and reveal instead); `mono`.
+  - *States:* masked · loading · revealed (`warning` tint, lifetime running, one per document) · copying · cleared ·
+    gated (lock glyph, busy while the host's gate runs) · error ("Couldn't read this field" + Retry) · edit (strength
+    weak / fair / strong, always with the word) · disabled (edit only) · reduced motion (ring becomes "28 s") · high
+    contrast (dots become the word "Hidden", "Shown" added, tint dropped).
+  - *A11y:* `role="textbox" aria-readonly` named "Password, hidden"; revealed text spelled per character ("capital t,
+    r, 4, dash") and not announced automatically; Cmd/Ctrl+C on the control runs the timed copy; the value is never
+    selectable. Live region: "Password shown. Hides in 30 seconds." · "Copied. Clipboard clears in 30 seconds." ·
+    "Clipboard cleared." · "Confirm it's you to show this."
+  - *Host contract:* `getSecret(): Promise<Uint8Array>` (one-shot, zeroed after use) and `host.copy(bytes)` /
+    `host.clear()` / `host.clipboardHolds?(hash)` / `host.gate?(kind)`. The value never enters React state as a string.
+  - *Tokens:* `input`, `border`, `foreground`, `muted-foreground`, `ring`, `primary`, `destructive`, `warning`,
+    `font-mono`; `--c-secret-field-{mask-count,reveal-lifetime,clipboard-timer,revealed-bg,copy-track,copy-progress,meter-weak,meter-fair,meter-strong,letter-spacing}`.
