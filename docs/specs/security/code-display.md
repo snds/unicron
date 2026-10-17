@@ -1,6 +1,6 @@
 # CodeDisplay
 
-_Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §4 Code type) · Status: built in `@unicron/ui` 0.4.0 (PR #15); this spec describes the build_
+_Spec v0.3 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §4 Code type) · Status: built in `@unicron/ui` 0.4.0 (PR #15); v0.3 adds the copy reference a desktop host found it needed (`onCopy` may resolve with `{ hash }`, `clipboardHolds`, `onClipboardClear(ref)` that may say whether it cleared, and "Cleared" only after a real clear), the same contract SecretField has; this spec describes the build_
 
 ## Purpose and the user job
 
@@ -41,13 +41,15 @@ code-display                       Item, role="group", tabIndex=0; data-variant,
 | `warnings` | `("issuer-equals-login")[]` | From `02-model.md` §4 |
 | `issuer`, `account`, `media` | string, string, node | "GitHub", "sean", an Avatar or Icon |
 | `clipboardTimer` | seconds, default `30` | As SecretField |
-| `onCopy(value, which)` | callback | `which` is `code` or `next`. `value` is that code as the host passed it in `code` or `next`; the component draws it, so handing it back exposes nothing new. A host that copies inside its own process by id may ignore `value` and act on `which` alone. The countdown starts when it resolves; a rejection starts nothing and announces nothing (the host reports its own failure) |
+| `onCopy(value, which)` | callback → `void` · `{ hash?: string }` | `which` is `code` or `next`. `value` is that code as the host passed it in `code` or `next`; the component draws it, so handing it back exposes nothing new. A host that copies inside its own process by id may ignore `value` and act on `which` alone. The countdown starts when it resolves; a rejection starts nothing and announces nothing (the host reports its own failure). It may resolve with a `CodeDisplayCopyRef` (`{ hash }`, the same shape as `SecretFieldCopyRef`): the component keeps it for that copy and hands it back at the countdown's end; resolving with nothing still works as before |
+| `clipboardHolds(hash)` | `(hash) => Promise<boolean>` | Optional, the same signature as `SecretFieldHost.clipboardHolds`, so one host function serves both. Asked once at the countdown's end with the `hash` of the copy whose countdown ended; not asked for a copy that resolved without one. `false` or a rejection skips the clear |
 | `onAdvance`, `counter` | HOTP | "Next code" is disabled while `onAdvance` is pending, and when it is absent. Resolve once the host has the new code and passes it as `code` and `counter`; copy waits while it is pending, so a host that copies by id never copies the new code while the old one is drawn. The host's core needs one command for it: advance this item's counter and return the new code |
 | `onHaptic` | callback | Once per code at the expiring threshold; mobile hosts vibrate |
-| `onFixClock`, `onClipboardClear` | callbacks | The skew notice's action; the countdown ran out |
+| `onFixClock` | callback | The skew notice's action |
+| `onClipboardClear(ref?)` | callback → `void` · `boolean` | The countdown ran out. `ref` is what `onCopy` resolved with for that copy (`undefined` when it resolved with nothing). Not called when `clipboardHolds` answered `false`. Resolve `true` when the clear ran, `false` when the host left the clipboard alone; a callback that takes no argument and returns nothing still works |
 | `loading`, `error` | boolean, string | |
 
-Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`. Other `div` props pass through to the `Item`.
+Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`, `CodeDisplayCopyRef`, `codeDisplayAnnouncements` (the live-region texts). Other `div` props pass through to the `Item`.
 
 ## States
 
@@ -60,7 +62,8 @@ Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`. Other 
 | `error` | "Can't make a code: reason" in `destructive`; no digits, no copy button |
 | next shown | From `--c-code-next-at` (10 s): next code beneath in `--c-code-next-ink` |
 | rollover | `--c-code-rollover-duration` (200 ms) fade-in; instant under reduced motion |
-| copied (`data-copied`) | Seconds on the copy button; tooltip "Copied · clears in 30 s" or "Copied the next code · …"; then "Cleared" |
+| copied (`data-copied`) | Seconds on the copy button; tooltip "Copied · clears in 30 s" or "Copied the next code · …" |
+| cleared | Check plus sr-only "Cleared", tooltip "Cleared", for 2 s, as SecretField; only when the clear is known to have run (below). Otherwise the countdown ends silently and the button goes back to copy |
 | HOTP busy | "Next code" disabled while `onAdvance` is pending, or when it is absent |
 | reduced motion | Ring in 5 s steps; no crossfade |
 | high contrast and forced colors | Ring hidden, "N s" text shown; expiring adds an underline |
@@ -76,6 +79,10 @@ Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`. Other 
 | Rollover announcement | only while the row has focus or was copied within the last period, never while concealed | Lists of twenty codes must not chatter |
 | HOTP | no timer; "Next code" calls `onAdvance` once per activation; copy waits while it is pending | RFC 4226 |
 | Skew | notice past ±15 s with "Fix clock" calling `onFixClock` | Ente does clock correction |
+| Clear at the countdown's end | `clipboardHolds(hash)` first when there is one and the copy has a `hash`; `false` stops silently. Then `onClipboardClear(ref)`. "Cleared" is said only when `clipboardHolds` answered `true` or `onClipboardClear` resolved `true`, and never when it resolved `false` or rejected | A host that declined to clear (the person copied something else since) must not hear "Cleared". SecretField's rule |
+| A second copy | restarts the countdown and supersedes the first copy's reference; only the latest copy's end runs, and an end still waiting on `clipboardHolds` when a new copy lands neither cancels the new countdown nor says "Cleared" | One clear per clipboard write, for the copy that is on it |
+
+Unlike SecretField, the counting tooltip never adds ", even if you copy something else": `onClipboardClear` has always been the host's conditional clear ("if it still holds the code"), so the component cannot know the clear is unconditional. A host with no way to tell whether it cleared resolves nothing and the countdown ends without "Cleared", which is the honest default.
 
 Thresholds and the rollover duration are read from the tier 3 knobs once after mount, with the spec values as fallback when the stylesheet is absent. Inside a `CrownJewelSurface`, copy first awaits `requestProof("use")` and the copy glyph carries a lock. Steam codes render uppercase; 8-digit codes set `font-feature-settings: "zero"`.
 
@@ -105,7 +112,7 @@ Tier 3 under `code`:
 
 - The row is `role="group"` with `aria-label="Code for GitHub, sean: 4 8 2, 9 1 7. 18 seconds left."` (`spellCode`: space-separated digits, a comma at the group break, never the number as a quantity). Without an issuer the label says "this account". HOTP omits the seconds.
 - The label's seconds refresh on rollover and at the expiring threshold, not every second. The visible code is `aria-hidden`.
-- Polite live region, one per row or one per `CodeDisplayList`: "New code for GitHub: 3 3 0, 5 5 8" under the rule above; "Copied. Clipboard clears in 30 seconds." or "Copied the next code. …" on copy.
+- Polite live region, one per row or one per `CodeDisplayList` (`codeDisplayAnnouncements`): "New code for GitHub: 3 3 0, 5 5 8" under the rule above; "Copied. Clipboard clears in 30 seconds." or "Copied the next code. …" on copy; "Clipboard cleared." (SecretField's words) only after a real clear. In a list each row keeps its own copy reference and calls its own `clipboardHolds` and `onClipboardClear`; only the text goes through the shared region.
 - Row focusable; Enter or Space copies; in `concealed` the first Enter, Space, or click reveals. The copy button, "Next code", and "Fix clock" are named controls.
 
 ## Platform notes
@@ -129,7 +136,7 @@ Tier 3 under `code`:
 
 ## Acceptance tests
 
-**Vitest (jsdom, fake timers, `code-display.test.tsx`, 18 tests):** the six below, plus the helpers, `onHaptic` once, Enter copies and the countdown clears once, the label refresh rule, concealed reveal per code, the skew notice, error and loading, Steam and 8-digit rendering, reduced motion skipping the crossfade, a by-id host that ignores `value`.
+**Vitest (jsdom, fake timers, `code-display.test.tsx`, 26 tests):** the eight below, plus the helpers, `onHaptic` once, Enter copies and the countdown clears once, the label refresh rule, concealed reveal per code, the skew notice, error and loading, Steam and 8-digit rendering, reduced motion skipping the crossfade, a by-id host that ignores `value`, `onClipboardClear` resolving `true` or `false`, a `clipboardHolds` yes overruled by a clear that resolves `false` or rejects, and a copy landing while the last end's `clipboardHolds` is pending.
 
 1. At 10 s left `code-display-next` is visible; at 5 s `data-state="expiring"`; at 0 the next code is current and `next` is hidden.
 2. Copy at 4 s left copies `code`; at 2 s it copies `next` and the tooltip says so.
@@ -137,5 +144,7 @@ Tier 3 under `code`:
 4. In a `CodeDisplayList` of ten with none focused, the live region stays empty across a rollover; with one focused, it announces that one only.
 5. HOTP renders no ring; "Next code" calls `onAdvance` once per activation and is disabled while pending; copy waits for the advance and then copies the new code.
 6. A rejected `onCopy` starts no countdown and announces nothing.
+7. A `void` `onCopy` still copies and counts down, and `onClipboardClear` gets nothing and says no "Cleared"; a `{ hash }` reaches `clipboardHolds` and `onClipboardClear`, a yes says "Clipboard cleared." and a no skips the clear silently.
+8. A second copy supersedes the first's countdown: one end, for the second copy's reference; in a `CodeDisplayList` each row's reference reaches its own callbacks through the one live region.
 
 **Still needs a browser:** screenshots of 6, 8, and Steam at three densities, expiring, next shown, HOTP, concealed, skew, error, reduced motion, `prefers-contrast: more`; the ring's drain and the crossfade; the 44 px row height.
