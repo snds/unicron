@@ -138,6 +138,20 @@ const RECIPES = [
   { id: "destr-tint", source: "bg-destructive/10 (dark /20)", kind: "state", paint: r("destructive", 0.1), over: [r("card")] },
   { id: "item-highlight", source: "data-highlighted:bg-foreground/10", kind: "state", paint: r("foreground", 0.1), over: [r("popover")] },
 
+  // Accent hues as text. Apps assign the hues (tier 1, not roles) and also draw them as text: an
+  // area's name, a status word, a link. 500 and 400 are fills; text uses 600 in light and 300 in
+  // dark, held to reading text on every neutral surface an app puts it on.
+  // (Red is the destructive role, held by its own recipes above; red.600 and red.300 read Lc 74 on
+  // a selected row, so destructive text there is a case to watch, not an accent to assign.)
+  ...["blue", "coral", "green", "amber"].flatMap((hue) => [
+    ...["0", "50", "100"].map((step) => ({
+      id: `${hue}-text-on-${step}`, source: `${hue}.600 as text on neutral.${step}`, kind: "text-secondary", modes: ["light"], paint: r(`g-${hue}-600`), over: [r(`g-neutral-${step}`)],
+    })),
+    ...["950", "900", "800"].map((step) => ({
+      id: `${hue}-text-on-${step}`, source: `${hue}.300 as text on neutral.${step}`, kind: "text-secondary", modes: ["dark"], paint: r(`g-${hue}-300`), over: [r(`g-neutral-${step}`)],
+    })),
+  ]),
+
   // Separators (reported)
   { id: "border-card", source: "border-border", kind: "border-decorative", paint: r("border"), over: [r("card")] },
   { id: "border-page", source: "border-border", kind: "border-decorative", paint: r("border"), over: [r("background")] },

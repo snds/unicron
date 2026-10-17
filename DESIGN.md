@@ -58,6 +58,9 @@ point is Apple's first-party productivity apps rendered with shadcn's restraint.
   them (one hue per area for wayfinding). `destructive` is the only chromatic role in the core.
 - Dark mode swaps only tier 2. Separators and control borders become translucent white (10% / 35%)
   so they sit on any dark surface. Accents step one stop lighter (500 → 400) to keep contrast.
+- An accent hue drawn as text (an area's name, a status word, a link) uses its text step: `600` in
+  light, `300` in dark (`blue`, `coral`, `green`, `amber`). They read Lc 75 or more on the page, the
+  chrome and a selected row. `500` and `400` are fills: as text they read Lc 32-67.
 - Control borders are strong enough to find a field (3:1, `neutral.450` in light); separators stay
   quiet (`neutral.200`). Every pair a component paints is held to its element kind's contrast floor,
   APCA first (docs/02-tokens.md → Contrast).

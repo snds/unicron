@@ -73,6 +73,10 @@ comes from [Emphasis Engine](https://github.com/snds/emphasis-engine) (`docs/arc
 - **A role points at the weakest ramp step that clears every recipe it paints.** When no step
   does, a tier-1 step is added beside the ramp (`neutral.450`, `red.300`, `red.600`,
   `white-alpha.35`); existing tier-1 values never change.
+- **Accent hues have text steps.** Apps assign the accent hues and draw them as text too, so each
+  hue has a `600` (light) and a `300` (dark) held to reading text on `neutral.0`, `.50` and `.100`,
+  and on `.950`, `.900` and `.800`. Point an app's text role at those, and its fills and dots at
+  `500` / `400`.
 - **One job per role.** When a role serves two jobs that want different values, the component is
   pointed at the role that matches the second job: disabled fields fill with `muted`, not
   `input/50`; the button-group divider is a `border`, not an `input`.

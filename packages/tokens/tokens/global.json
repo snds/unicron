@@ -20,20 +20,28 @@
   },
   "blue": {
     "$description": "Accent hues. 500 is the light-mode step, 400 the dark-mode step (lighter, so it keeps contrast on dark surfaces).",
+    "600": { "$type": "color", "$value": "oklch(0.44 0.145 255)", "$description": "Blue as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.6 0.19 255)" },
-    "400": { "$type": "color", "$value": "oklch(0.7 0.15 255)" }
+    "400": { "$type": "color", "$value": "oklch(0.7 0.15 255)" },
+    "300": { "$type": "color", "$value": "oklch(0.87 0.07 255)", "$description": "Blue as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
   },
   "coral": {
+    "600": { "$type": "color", "$value": "oklch(0.44 0.178 25)", "$description": "Coral as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.63 0.2 25)" },
-    "400": { "$type": "color", "$value": "oklch(0.72 0.16 25)" }
+    "400": { "$type": "color", "$value": "oklch(0.72 0.16 25)" },
+    "300": { "$type": "color", "$value": "oklch(0.88 0.07 25)", "$description": "Coral as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
   },
   "green": {
+    "600": { "$type": "color", "$value": "oklch(0.43 0.096 160)", "$description": "Green as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.62 0.15 160)" },
-    "400": { "$type": "color", "$value": "oklch(0.72 0.13 160)" }
+    "400": { "$type": "color", "$value": "oklch(0.72 0.13 160)" },
+    "300": { "$type": "color", "$value": "oklch(0.85 0.15 160)", "$description": "Green as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
   },
   "amber": {
+    "600": { "$type": "color", "$value": "oklch(0.44 0.092 75)", "$description": "Amber as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.75 0.16 75)" },
-    "400": { "$type": "color", "$value": "oklch(0.82 0.14 80)" }
+    "400": { "$type": "color", "$value": "oklch(0.82 0.14 80)" },
+    "300": { "$type": "color", "$value": "oklch(0.87 0.105 75)", "$description": "Amber as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
   },
   "red": {
     "600": { "$type": "color", "$value": "oklch(0.47 0.16 27.3)", "$description": "Destructive text in light mode: Lc 84 on white, 73 on its own 10% tint, 62 on 20%." },
