@@ -1,5 +1,7 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
+// Promoted from: Seeded from snds/mailbird (initial copy)
+// Promoted from: snds/mailbird · PR snds/unicron#9 · DSA none (hover, selected, and disabled as a link or a button; hand-raised in Mailbird ADR-0057)
 import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"

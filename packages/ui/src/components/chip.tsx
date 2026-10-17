@@ -1,6 +1,6 @@
 // Owned component (not generated): a compact pill for a tag, a label, or a linked thing, with an
 // optional main action and an optional remove.
-// Promoted from: snds/mailbird · hand-raised (ADR-0057 raw-button sweep) · DSA none
+// Promoted from: snds/mailbird · PR snds/unicron#9 · DSA none (hand-raised in Mailbird ADR-0057)
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
