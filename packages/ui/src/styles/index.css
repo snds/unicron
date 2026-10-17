@@ -44,3 +44,22 @@
     display: none;
   }
 }
+
+/*
+ * SecretField edit mode over several lines (docs/specs/security/secret-field.md): a textarea has
+ * no type="password", so the field marks it data-masked until Show. -webkit-text-security draws
+ * it as dots in Chromium and WebKit, the desktop webviews included (WebView2, WKWebView,
+ * WebKitGTK). An engine without it draws the text transparent instead, so nothing reads while
+ * the caret still shows; the field blocks copy, cut and drag while masked either way.
+ */
+@layer components {
+  [data-slot="secret-field"] textarea[data-masked] {
+    -webkit-text-security: disc;
+  }
+  @supports not (-webkit-text-security: disc) {
+    [data-slot="secret-field"] textarea[data-masked] {
+      color: transparent;
+      caret-color: var(--foreground);
+    }
+  }
+}

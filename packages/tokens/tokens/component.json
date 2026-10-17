@@ -20,6 +20,10 @@
     "regular-width": { "$type": "dimension", "$value": "24rem" },
     "wide-width": { "$type": "dimension", "$value": "36rem", "$description": "The wide variant (AdaptiveSheetContent wide), for a photo or other content that needs room." }
   },
+  "skeleton": {
+    "$description": "Skeleton (packages/ui skeleton.tsx): the placeholder while content loads.",
+    "row-height": { "$type": "dimension", "$value": "2.5rem", "$description": "Skeleton variant=\"row\": one list row, as tall as an Item size=\"sm\" with one line. An app with a density setting re-maps it to its own row height." }
+  },
   "code": {
     "$description": "CodeDisplay (docs/specs/security/code-display.md): one-time codes grouped for reading, with a time-remaining ring.",
     "size-detail": {"$type": "dimension", "$value": "2.25rem"},

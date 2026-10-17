@@ -74,3 +74,24 @@ describe("DialogContent beforeContent", () => {
     expect(popup().contains(slot)).toBe(false)
   })
 })
+
+describe("DialogContent size", () => {
+  // Product sizes, not Tailwind's steps (docs/03-components.md). Pinned: renaming or remapping a
+  // size would move every dialog an app already has (Mailbird's, since PR #14).
+  it.each([
+    ["sm", "sm:max-w-sm"],
+    ["md", "sm:max-w-md"],
+    ["lg", "sm:max-w-lg"],
+    ["xl", "sm:max-w-2xl"],
+    ["2xl", "sm:max-w-3xl"],
+  ] as const)("%s grows to %s", (size, cls) => {
+    render(
+      <Dialog open>
+        <DialogContent size={size}>
+          <DialogTitle>Sized</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(popup().className.split(" ")).toContain(cls)
+  })
+})

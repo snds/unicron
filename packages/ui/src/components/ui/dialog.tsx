@@ -44,6 +44,22 @@ function DialogOverlay({
  * How wide the dialog may grow from `sm` up (on phones it's the screen less
  * 1rem each side). `sm` suits a question; `md` a short form; `lg` a settings
  * page; `xl` and `2xl` a composer or a preview.
+ *
+ * These are product sizes, not Tailwind's `max-w-*` steps: the names match
+ * Tailwind's up to `lg`, then skip one, so `xl` is Tailwind's `max-w-2xl`.
+ *
+ * | size  | max width | Tailwind      | job        |
+ * |-------|-----------|---------------|------------|
+ * | `sm`  | 24rem     | `max-w-sm`    | a question |
+ * | `md`  | 28rem     | `max-w-md`    | a short form |
+ * | `lg`  | 32rem     | `max-w-lg`    | settings   |
+ * | `xl`  | 42rem     | `max-w-2xl`   | a composer |
+ * | `2xl` | 48rem     | `max-w-3xl`   | a preview  |
+ *
+ * Tailwind's `max-w-xl` (36rem) has no size on purpose. The mapping shipped in
+ * 0.6.0 (PR #14) and is kept as it is: renaming or remapping a size would move
+ * every dialog an app already has. A page that was `max-w-xl` before moving to
+ * `size` takes `lg` (narrower) or `xl` (wider), whichever its content fits.
  */
 const DIALOG_SIZES = {
   sm: "sm:max-w-sm",
