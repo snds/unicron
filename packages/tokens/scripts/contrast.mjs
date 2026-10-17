@@ -100,6 +100,8 @@ const RECIPES = [
   { id: "destr-text-card", source: "alert, field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("card")] },
   { id: "destr-text-page", source: "field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("background")] },
   { id: "protected-page", source: "protected value: text-protected", kind: "text-secondary", paint: r("protected"), over: [r("background")] },
+  { id: "destr-text-accent", source: "text-destructive on a selected or highlighted row (bg-accent)", kind: "text-secondary", paint: r("destructive"), over: [r("popover"), r("accent")] },
+  { id: "destr-text-muted", source: "text-destructive on bg-muted", kind: "text-secondary", paint: r("destructive"), over: [r("card"), r("muted")] },
 
   // Text on a tint
   { id: "destr-label-light", source: "button, badge destructive: bg-destructive/10 text-destructive", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("destructive", 0.1)] },
@@ -117,6 +119,12 @@ const RECIPES = [
   // Solids
   { id: "primary-page", source: "bg-primary", kind: "solid", paint: r("primary"), over: [r("background")] },
   { id: "primary-card", source: "bg-primary on a card", kind: "solid", paint: r("primary"), over: [r("card")] },
+  // Status fills are solids too: the fill, not only its label, has to show against what it sits on.
+  ...["warning", "info"].flatMap((fill) =>
+    ["background", "sidebar"].map((bg) => ({
+      id: `${fill}-on-${bg}`, source: `bg-${fill} on bg-${bg}`, kind: "solid", paint: r(fill), over: [r(bg)],
+    })).concat([{ id: `${fill}-on-accent`, source: `bg-${fill} on a selected row`, kind: "solid", paint: r(fill), over: [r("popover"), r("accent")] }])
+  ),
 
   // Control borders: a field has to be findable
   { id: "input-card", source: "input, select, textarea, checkbox: border-input", kind: "border-control", paint: r("input"), over: [r("card")] },
@@ -141,14 +149,14 @@ const RECIPES = [
   // Accent hues as text. Apps assign the hues (tier 1, not roles) and also draw them as text: an
   // area's name, a status word, a link. 500 and 400 are fills; text uses 600 in light and 300 in
   // dark, held to reading text on every neutral surface an app puts it on.
-  // (Red is the destructive role, held by its own recipes above; red.600 and red.300 read Lc 74 on
-  // a selected row, so destructive text there is a case to watch, not an accent to assign.)
-  ...["blue", "coral", "green", "amber"].flatMap((hue) => [
+  // Red's text steps are 700 and 200: drawn at more chroma, its 600 and 300 sit a point short on a
+  // selected row (they stay in tier 1, unchanged, for anything that points at them).
+  ...["blue", "coral", "green", "amber", "red"].flatMap((hue) => [
     ...["0", "50", "100"].map((step) => ({
-      id: `${hue}-text-on-${step}`, source: `${hue}.600 as text on neutral.${step}`, kind: "text-secondary", modes: ["light"], paint: r(`g-${hue}-600`), over: [r(`g-neutral-${step}`)],
+      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 700 : 600} as text on neutral.${step}`, kind: "text-secondary", modes: ["light"], paint: r(`g-${hue}-${hue === "red" ? 700 : 600}`), over: [r(`g-neutral-${step}`)],
     })),
     ...["950", "900", "800"].map((step) => ({
-      id: `${hue}-text-on-${step}`, source: `${hue}.300 as text on neutral.${step}`, kind: "text-secondary", modes: ["dark"], paint: r(`g-${hue}-300`), over: [r(`g-neutral-${step}`)],
+      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 200 : 300} as text on neutral.${step}`, kind: "text-secondary", modes: ["dark"], paint: r(`g-${hue}-${hue === "red" ? 200 : 300}`), over: [r(`g-neutral-${step}`)],
     })),
   ]),
 
