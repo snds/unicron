@@ -19,6 +19,24 @@ export type CodeDisplayVariant = "totp" | "hotp" | "steam"
 export type CodeDisplayDensity = "detail" | "list" | "compact"
 export type CodeDisplayWarning = "issuer-equals-login"
 
+/**
+ * What `onCopy` may resolve with: the string `clipboardHolds` is asked about when the countdown
+ * ends, and what `onClipboardClear` is handed back. The same shape as SecretField's
+ * `SecretFieldCopyRef`, so one host implementation serves both. Opaque to the component: a digest,
+ * or the host's own record of the copy (a generation counter).
+ */
+export interface CodeDisplayCopyRef {
+  hash?: string
+}
+
+/** The texts the component speaks through its polite live region. The copy and clear wording matches SecretField's. */
+export const codeDisplayAnnouncements = {
+  copied: (seconds: number) => `Copied. Clipboard clears in ${seconds} seconds.`,
+  copiedNext: (seconds: number) => `Copied the next code. Clipboard clears in ${seconds} seconds.`,
+  cleared: "Clipboard cleared.",
+  newCode: (issuer: string, spelled: string) => `New code for ${issuer}: ${spelled}`,
+} as const
+
 export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onCopy"> {
   /** `steam`: 5 characters, one group, alphabet `23456789BCDFGHJKMNPQRTVWXY`. */
   variant?: CodeDisplayVariant
@@ -47,8 +65,13 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
    * seconds. `value` is that code as passed in `code` or `next` (the component draws it, so handing
    * it back exposes nothing new); a host that copies inside its own process by id may ignore it and
    * act on `which` alone. The countdown starts when this resolves; a rejection starts nothing.
+   * Resolve with `{ hash }` and the component keeps it for this copy: at the countdown's end it is
+   * handed to `clipboardHolds` and to `onClipboardClear`. Resolve with nothing and both get nothing.
    */
-  onCopy?: (value: string, which: "code" | "next") => void | Promise<void>
+  onCopy?: (
+    value: string,
+    which: "code" | "next"
+  ) => void | CodeDisplayCopyRef | Promise<void | CodeDisplayCopyRef>
   /**
    * HOTP: advance the counter. Resolve once the host has the new code, and pass it as `code` (and
    * `counter`). "Next code" and copy are disabled while it is pending. Without it "Next code" is
@@ -67,8 +90,22 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   onHaptic?: () => void
   /** "Fix clock" in the skew notice. */
   onFixClock?: () => void
-  /** The clipboard timer ran out; the host clears the clipboard if it still holds the code. */
-  onClipboardClear?: () => void
+  /**
+   * Does the clipboard still hold what we copied? `hash` is what `onCopy` resolved with for the copy
+   * whose countdown ended. Asked once, at the end; `false` (or a rejection) skips the clear and ends
+   * the countdown without "Cleared". Not asked for a copy that resolved without a `hash`. The same
+   * signature as `SecretFieldHost.clipboardHolds`.
+   */
+  clipboardHolds?: (hash: string) => Promise<boolean>
+  /**
+   * The clipboard timer ran out; the host clears the clipboard if it still holds the code. `ref` is
+   * what `onCopy` resolved with for the copy whose countdown ended (a later copy restarts the
+   * countdown, so this is always the latest). Not called when `clipboardHolds` answered `false`.
+   * Resolve `true` when the clear ran and `false` when the host left the clipboard alone; the
+   * component says "Cleared" only when `clipboardHolds` answered `true` or this resolved `true`, and
+   * never when this resolved `false` or rejected.
+   */
+  onClipboardClear?: (ref?: CodeDisplayCopyRef) => void | boolean | Promise<void | boolean>
   loading?: boolean
   /** "Can't make a code" with this reason; no digits are drawn. */
   error?: string
@@ -196,6 +233,7 @@ export function CodeDisplay({
   media,
   onHaptic,
   onFixClock,
+  clipboardHolds,
   onClipboardClear,
   loading = false,
   error,
@@ -209,7 +247,67 @@ export function CodeDisplay({
   const highContrast = useHighContrast()
   const rootRef = React.useRef<HTMLDivElement>(null)
   const [announce, liveRegion] = useAnnouncer()
-  const countdown = useCopyCountdown(clipboardTimer, onClipboardClear)
+  // ── The clipboard countdown. Each copy keeps its own reference; a later copy restarts the
+  // countdown and supersedes it. At the end: ask `clipboardHolds` about that copy, then hand it to
+  // `onClipboardClear`, and say "Cleared" only when the clear is known to have run. ──
+  /** The latest copy: its number, and what `onCopy` resolved with (`undefined` for nothing). */
+  const lastCopy = React.useRef<{ seq: number; ref: CodeDisplayCopyRef | undefined }>({ seq: 0, ref: undefined })
+  /** The copy whose clear is known to have run, so the "cleared" phase is drawn for that copy only. */
+  const [clearedSeq, setClearedSeq] = React.useState<number | null>(null)
+  const holdsRef = React.useRef(clipboardHolds)
+  const clearRef = React.useRef(onClipboardClear)
+  React.useEffect(() => {
+    holdsRef.current = clipboardHolds
+    clearRef.current = onClipboardClear
+  })
+  const cancelCountdown = React.useRef<() => void>(() => {})
+  const countdown = useCopyCountdown(clipboardTimer, () => {
+    const { seq, ref } = lastCopy.current
+    const superseded = () => lastCopy.current.seq !== seq
+    void (async () => {
+      const hash = typeof ref?.hash === "string" ? ref.hash : null
+      const holds = holdsRef.current
+      let confirmed = false
+      if (holds && hash !== null) {
+        let held = false
+        try {
+          held = await holds(hash)
+        } catch {
+          held = false
+        }
+        if (superseded()) return // a newer copy owns the clipboard and the countdown now
+        if (!held) {
+          cancelCountdown.current() // someone else's text: leave it, and do not say "Cleared"
+          return
+        }
+        confirmed = true
+      }
+      const clear = clearRef.current
+      if (!clear) {
+        if (!superseded()) cancelCountdown.current() // nothing cleared, so nothing to say
+        return
+      }
+      let ran: boolean
+      try {
+        const result = await clear(ref)
+        ran = result === true || (result !== false && confirmed)
+      } catch {
+        ran = false // the host reports its own failures
+      }
+      if (superseded()) return
+      if (!ran) {
+        cancelCountdown.current()
+        return
+      }
+      setClearedSeq(seq)
+      announce(codeDisplayAnnouncements.cleared)
+    })()
+  })
+  React.useEffect(() => {
+    cancelCountdown.current = countdown.cancel
+  }, [countdown.cancel])
+  /** The countdown as drawn: `cleared` only once the clear is known to have run for the latest copy (a new copy resets it). */
+  const copyPhase = countdown.state === "cleared" ? (clearedSeq !== null ? "cleared" : "idle") : countdown.state
 
   const concealed = concealedProp || crown.gated
   const timed = variant !== "hotp"
@@ -259,7 +357,7 @@ export function CodeDisplay({
     prevCode.current = code
     if (!code) return
     const recentlyCopied = copiedAt.current !== null && now - copiedAt.current <= period
-    if ((focused || recentlyCopied) && !hidden) announce(`New code for ${issuer ?? "this account"}: ${spellCode(display)}`)
+    if ((focused || recentlyCopied) && !hidden) announce(codeDisplayAnnouncements.newCode(issuer ?? "this account", spellCode(display)))
     if (reducedMotion) return
     setRolling(true)
     const t = setTimeout(() => setRolling(false), thresholds.rollover * 1000)
@@ -308,15 +406,18 @@ export function CodeDisplay({
     if (crown.gated && !(await crown.requestProof("use"))) return
     const which: "code" | "next" = copyNext && nextDisplay ? "next" : "code"
     const value = which === "next" ? (nextDisplay as string) : display
+    let result: void | CodeDisplayCopyRef
     try {
-      await onCopy?.(value, which)
+      result = await onCopy?.(value, which)
     } catch {
       return // the host reports its own failure; nothing was copied, so no countdown
     }
+    lastCopy.current = { seq: lastCopy.current.seq + 1, ref: result && typeof result === "object" ? result : undefined }
+    setClearedSeq(null)
     copiedAt.current = now
     setCopied(which)
     countdown.start()
-    announce(`${which === "next" ? "Copied the next code" : "Copied"}. Clipboard clears in ${clipboardTimer} seconds.`)
+    announce(which === "next" ? codeDisplayAnnouncements.copiedNext(clipboardTimer) : codeDisplayAnnouncements.copied(clipboardTimer))
   }
   React.useEffect(() => {
     if (countdown.state === "idle") setCopied(null)
@@ -338,9 +439,9 @@ export function CodeDisplay({
   const skewed = Math.abs(skewSeconds) > SKEW_NOTICE_S
   const itemSize = density === "detail" ? "default" : density === "list" ? "sm" : "xs"
   const copyTooltip =
-    countdown.state === "counting"
+    copyPhase === "counting"
       ? `${copied === "next" ? "Copied the next code" : "Copied"} · clears in ${countdown.secondsLeft} s`
-      : countdown.state === "cleared"
+      : copyPhase === "cleared"
         ? "Cleared"
         : copyNext
           ? "Copy the next code"
@@ -497,10 +598,13 @@ export function CodeDisplay({
               void copy()
             }}
           >
-            {countdown.state === "counting" ? (
+            {copyPhase === "counting" ? (
               <span className="text-xs tabular-nums">{countdown.secondsLeft}</span>
-            ) : countdown.state === "cleared" ? (
-              <Icon name="check" />
+            ) : copyPhase === "cleared" ? (
+              <>
+                <Icon name="check" />
+                <span className="sr-only">Cleared</span>
+              </>
             ) : (
               <>
                 <Icon name="content_copy" />

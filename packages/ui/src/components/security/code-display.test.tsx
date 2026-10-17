@@ -219,6 +219,197 @@ describe("host contract: copy by id, HOTP advance", () => {
   })
 })
 
+describe("copy by reference: the hash, clipboardHolds, and an honest Cleared", () => {
+  const copyButton = () => document.querySelector('[data-slot="code-display-copy"]') as HTMLElement
+  const copyOnce = async () => {
+    await act(async () => {
+      fireEvent.click(copyButton())
+    })
+  }
+  /** Run the countdown out and let the async end (clipboardHolds, then onClipboardClear) settle. */
+  const runOut = async (ms: number) => {
+    await act(async () => {
+      vi.advanceTimersByTime(ms)
+    })
+    await act(async () => {})
+  }
+
+  it("a void onCopy still works: the countdown runs and onClipboardClear is called with nothing", async () => {
+    vi.useFakeTimers()
+    const onCopy = vi.fn(async () => {})
+    const onClear = vi.fn()
+    render(<CodeDisplay {...at(20)} clipboardTimer={10} onCopy={onCopy} onClipboardClear={onClear} />)
+    await copyOnce()
+    expect(copyButton()).toHaveTextContent("10")
+    expect(live()).toHaveTextContent("Copied. Clipboard clears in 10 seconds.")
+    await runOut(10_000)
+    expect(onClear).toHaveBeenCalledTimes(1)
+    expect(onClear).toHaveBeenCalledWith(undefined)
+    // A void clear with nothing to confirm it: the host may have left the clipboard alone, so no "Cleared".
+    expect(live()).not.toHaveTextContent("Clipboard cleared.")
+    expect(copyButton()).not.toHaveTextContent("Cleared")
+  })
+
+  it("the hash onCopy resolves with reaches clipboardHolds and onClipboardClear; a yes says Cleared", async () => {
+    vi.useFakeTimers()
+    const onCopy = vi.fn(async () => ({ hash: "copy-7" }))
+    const clipboardHolds = vi.fn(async () => true)
+    const onClear = vi.fn()
+    render(<CodeDisplay {...at(20)} clipboardTimer={10} onCopy={onCopy} clipboardHolds={clipboardHolds} onClipboardClear={onClear} />)
+    await copyOnce()
+    expect(clipboardHolds).not.toHaveBeenCalled()
+    await runOut(10_000)
+    expect(clipboardHolds).toHaveBeenCalledTimes(1)
+    expect(clipboardHolds).toHaveBeenCalledWith("copy-7")
+    expect(onClear).toHaveBeenCalledTimes(1)
+    expect(onClear).toHaveBeenCalledWith({ hash: "copy-7" })
+    expect(live()).toHaveTextContent("Clipboard cleared.")
+    expect(copyButton()).toHaveTextContent("Cleared")
+  })
+
+  it("clipboardHolds answering no skips the clear and ends the countdown without Cleared", async () => {
+    vi.useFakeTimers()
+    const onCopy = vi.fn(async () => ({ hash: "copy-7" }))
+    const clipboardHolds = vi.fn(async () => false)
+    const onClear = vi.fn(async () => true)
+    render(<CodeDisplay {...at(20)} clipboardTimer={10} onCopy={onCopy} clipboardHolds={clipboardHolds} onClipboardClear={onClear} />)
+    await copyOnce()
+    await runOut(10_000)
+    expect(clipboardHolds).toHaveBeenCalledWith("copy-7")
+    expect(onClear).not.toHaveBeenCalled()
+    expect(live()).not.toHaveTextContent("Clipboard cleared.")
+    expect(copyButton()).not.toHaveTextContent("Cleared")
+    expect(root()).not.toHaveAttribute("data-copied")
+  })
+
+  it("Cleared follows what onClipboardClear resolves: true says it, false does not", async () => {
+    vi.useFakeTimers()
+    const onCopy = vi.fn(async () => ({ hash: "copy-1" }))
+    let ran = false
+    const onClear = vi.fn(async () => ran)
+    render(<CodeDisplay {...at(20)} clipboardTimer={10} onCopy={onCopy} onClipboardClear={onClear} />)
+    await copyOnce()
+    await runOut(10_000)
+    expect(onClear).toHaveBeenLastCalledWith({ hash: "copy-1" })
+    expect(live()).not.toHaveTextContent("Clipboard cleared.")
+    expect(copyButton()).not.toHaveTextContent("Cleared")
+
+    ran = true
+    await runOut(3_000)
+    await copyOnce()
+    await runOut(10_000)
+    expect(onClear).toHaveBeenCalledTimes(2)
+    expect(live()).toHaveTextContent("Clipboard cleared.")
+    expect(copyButton()).toHaveTextContent("Cleared")
+  })
+
+  it("a yes from clipboardHolds is overruled by a clear that resolves false or rejects", async () => {
+    vi.useFakeTimers()
+    const onCopy = vi.fn(async () => ({ hash: "copy-2" }))
+    const clipboardHolds = vi.fn(async () => true)
+    const onClear = vi.fn(async () => false)
+    render(<CodeDisplay {...at(20)} clipboardTimer={10} onCopy={onCopy} clipboardHolds={clipboardHolds} onClipboardClear={onClear} />)
+    await copyOnce()
+    await runOut(10_000)
+    expect(onClear).toHaveBeenCalledTimes(1)
+    expect(live()).not.toHaveTextContent("Clipboard cleared.")
+
+    onClear.mockImplementation(() => Promise.reject(new Error("clipboard busy")))
+    await copyOnce()
+    await runOut(10_000)
+    expect(onClear).toHaveBeenCalledTimes(2)
+    expect(live()).not.toHaveTextContent("Clipboard cleared.")
+    expect(copyButton()).not.toHaveTextContent("Cleared")
+  })
+
+  it("a second copy supersedes the first's countdown: one clear, for the second copy's reference", async () => {
+    vi.useFakeTimers()
+    let n = 0
+    const onCopy = vi.fn(async () => ({ hash: `copy-${++n}` }))
+    const clipboardHolds = vi.fn(async () => true)
+    const onClear = vi.fn(async () => true)
+    render(<CodeDisplay {...at(25)} clipboardTimer={10} onCopy={onCopy} clipboardHolds={clipboardHolds} onClipboardClear={onClear} />)
+    await copyOnce()
+    await runOut(6_000)
+    expect(copyButton()).toHaveTextContent("4")
+    await copyOnce()
+    expect(copyButton()).toHaveTextContent("10")
+    // Where the first copy's countdown would have ended: nothing.
+    await runOut(4_000)
+    expect(clipboardHolds).not.toHaveBeenCalled()
+    expect(onClear).not.toHaveBeenCalled()
+    await runOut(6_000)
+    expect(clipboardHolds).toHaveBeenCalledTimes(1)
+    expect(clipboardHolds).toHaveBeenCalledWith("copy-2")
+    expect(onClear).toHaveBeenCalledTimes(1)
+    expect(onClear).toHaveBeenCalledWith({ hash: "copy-2" })
+    expect(live()).toHaveTextContent("Clipboard cleared.")
+  })
+
+  it("a copy made while the last one's clipboardHolds is pending is not cancelled or called Cleared by it", async () => {
+    vi.useFakeTimers()
+    let n = 0
+    const onCopy = vi.fn(async () => ({ hash: `copy-${++n}` }))
+    let answer!: (held: boolean) => void
+    const clipboardHolds = vi.fn((_hash: string) => new Promise<boolean>((r) => (answer = r)))
+    const onClear = vi.fn(async () => true)
+    render(<CodeDisplay {...at(25)} clipboardTimer={10} onCopy={onCopy} clipboardHolds={clipboardHolds} onClipboardClear={onClear} />)
+    await copyOnce()
+    await runOut(10_000)
+    expect(clipboardHolds).toHaveBeenLastCalledWith("copy-1")
+    await copyOnce()
+    await act(async () => answer(false))
+    expect(copyButton()).toHaveTextContent("10")
+    expect(onClear).not.toHaveBeenCalled()
+    await runOut(10_000)
+    expect(clipboardHolds).toHaveBeenLastCalledWith("copy-2")
+    await act(async () => answer(true))
+    expect(onClear).toHaveBeenCalledTimes(1)
+    expect(onClear).toHaveBeenCalledWith({ hash: "copy-2" })
+    expect(live()).toHaveTextContent("Clipboard cleared.")
+  })
+
+  it("in a CodeDisplayList each row's reference reaches its own callbacks, through the one live region", async () => {
+    vi.useFakeTimers()
+    const holds = vi.fn(async (hash: string) => hash === "row-1") // row 1 copied last; row 0's text is gone
+    const clears = [vi.fn(async () => true), vi.fn(async () => true)]
+    render(
+      <CodeDisplayList>
+        {[0, 1].map((i) => (
+          <CodeDisplay
+            key={i}
+            issuer={`Issuer${i}`}
+            code={String(482910 + i)}
+            period={30}
+            expiresAt={1000}
+            now={975}
+            clipboardTimer={10}
+            onCopy={async () => ({ hash: `row-${i}` })}
+            clipboardHolds={holds}
+            onClipboardClear={clears[i]}
+          />
+        ))}
+      </CodeDisplayList>
+    )
+    const buttons = document.querySelectorAll('[data-slot="code-display-copy"]')
+    await act(async () => {
+      fireEvent.click(buttons[0] as HTMLElement)
+    })
+    await act(async () => {
+      fireEvent.click(buttons[1] as HTMLElement)
+    })
+    await runOut(10_000)
+    expect(holds).toHaveBeenCalledWith("row-0")
+    expect(holds).toHaveBeenCalledWith("row-1")
+    expect(clears[0]).not.toHaveBeenCalled()
+    expect(clears[1]).toHaveBeenCalledWith({ hash: "row-1" })
+    expect(document.querySelectorAll('[data-slot="code-display-live"]')).toHaveLength(1)
+    expect(live()).toHaveTextContent("Clipboard cleared.")
+    expect(buttons[0]).not.toHaveTextContent("Cleared")
+    expect(buttons[1]).toHaveTextContent("Cleared")
+  })
+})
+
 describe("states", () => {
   it("concealed shows dots and the first Enter reveals for this code", () => {
     render(<CodeDisplay {...at(20)} concealed />)
