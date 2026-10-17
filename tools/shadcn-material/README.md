@@ -29,7 +29,7 @@ The primitives are owned source, so many carry edits on top of the generated cod
 
 ## Check that it still reproduces the package
 
-On an unedited primitive, the output matches the committed file byte for byte. Today that's `button` (on main), `dialog`, `kbd`, `separator`, and `tooltip`:
+On an unedited primitive, the output matches the committed file byte for byte. Today that's `button` (on main), `kbd`, `separator`, and `tooltip` (`dialog` left the list with `DialogActions` and the `beforeContent` slot):
 
 ```bash
 pnpm regen /tmp/shadcn /tmp/check kbd separator tooltip && diff -r /tmp/check packages/ui/src/components/ui --include='*.tsx' -q | grep -v 'Only in packages'
