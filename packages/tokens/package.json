@@ -1,6 +1,6 @@
 {
   "name": "@unicron/tokens",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "unicron design tokens: DTCG JSON source, three tiers (global → semantic → component), built to CSS custom properties and a Tailwind v4 theme map.",
   "license": "Apache-2.0",
   "author": "Sean Sands",

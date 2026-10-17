@@ -1,5 +1,28 @@
 # @unicron/ui
 
+## 0.7.0
+
+### Minor Changes
+
+- c77e17b: Contrast is now checked the way Emphasis Engine checks it: every pair a component paints, through its own opacity (`bg-input/30`, `ring-ring/50`, `hover:bg-primary/80`, `bg-destructive/10`), held to its element kind's floor, APCA first. Reading text Lc 75 (APCA Bronze, under 16px); a label on a fill or tint Lc 60; solids Lc 30; control borders and focus 3:1 as drawn. `scripts/contrast.mjs` measures 101 recipes (73 gated, 28 reported) with no waivers left.
+  
+  What moves, so every recipe passes:
+  
+  - `--input` (control borders): `neutral.450` light (new step, 3.4:1), `white-alpha.35` dark (new step, 3.1:1). Was `neutral.200` / 15% white, about 1.3:1 and 1.5:1. Field and switch edges get visibly stronger.
+  - `--muted-foreground` dark: `neutral.200` (Lc 86 on every surface). `neutral.300` read Lc 74 on `--muted` and `--accent`, under Bronze for the 12px `Kbd` and secondary text on selected rows.
+  - `--destructive`: `red.600` light (new, Lc 84 as text, 73 on its 10% tint), `red.300` dark (new, Lc 76 as text, 70 on its 20% tint). Was Lc 47-70.
+  - `--warning` light: `amber.400` (label Lc 71, was 59). `--info` dark: `blue.500` with white `--info-foreground` (Lc 72, was 52).
+  - Components, one job per role: inactive tabs use `text-muted-foreground` in both modes (light used `text-foreground/60`, Lc 69); disabled fields fill with `bg-muted` instead of `bg-input/50`; the command palette's search field fills with `bg-muted`; the button-group divider is `bg-border`.
+  
+  The four contrast waivers from 0.3 are gone: their pairs pass. Expect screenshot baselines to shift for field borders, destructive text, dark muted text and status fills.
+- 698f28a: Security components close the host-contract gaps a desktop host found, all additive. `SecretField`: `host.copyRef()` copies by reference, so a host that copies in its own process never gets the bytes for a copy (its `{ hash }` goes to `clipboardHolds`; no hash means an unconditional clear, and the tooltip says so); `SecretFieldReferenceHost` lets such a host leave out `copy`; `errorText` (a string, or a function given the rejection and `"read"` / `"copy"`) replaces "Couldn't read this field"; a gated reveal (a `gate`, or inside a `CrownJewelSurface`) is always a tap with the lifetime, because the check takes focus and ends any hold, so drop any `revealMode="toggle"` you forced inside a crown jewel. `CrownJewelSurface` and `CrownJewelGate` take `biometricName={null}` for a device with no biometric; `crownJewelGateErrors` exports the gate's sentences for a host whose core judges the proof at call time (pattern in the spec). `CodeDisplay`: a rejected `onCopy` starts no countdown, copy waits while an HOTP advance is pending, and a host that copies by id may ignore `onCopy`'s `value`.
+
+### Patch Changes
+
+- 72116f8: `IconButton`: `disabled` now disables the control itself (the default `Button`, or whatever `render` passes), not only its tooltip. Base UI's `TooltipTrigger` reads `disabled` as "don't open the tooltip" and never sets it on the element, so a disabled `IconButton` used to stay clickable and was drawn enabled.
+- Updated dependencies [c77e17b]
+  - @unicron/tokens@0.4.0
+
 ## 0.6.0
 
 ### Minor Changes
