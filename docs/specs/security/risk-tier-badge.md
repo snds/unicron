@@ -12,6 +12,8 @@ A person deciding whether to use a sign-in path, a bridge, a plug-in, or an agen
 | `official` | The vendor's own documented flow (device-code activation) | On, per use, behind the proximity rule |
 | `tolerated` | Our own bridge, not the vendor's; terms-of-service risk | Off until the person opts in after a disclosure |
 
+**The tier ids above are internal** (they come from the signed bridge manifest and type the `tier` prop). **What people see is plain words**, because the badge must be understood by non-technical, non-security-minded people (Lockdown D96): `standard` → **Built in**, `official` → **Verified**, `tolerated` → **Use with care**. The component owns this copy map (`riskTierCopy`); products pass the id and never the words, so the vocabulary cannot drift and translation happens in one place. The explain popover gives the one-sentence meaning of each.
+
 `closed` (vendor push emulation) is never built, so it is not a value. Crown jewel is an item class with its own treatment, not a tier; the row in `01-principles.md` that lists `low / elevated / crown-jewel` should be corrected to this vocabulary when these specs land.
 
 ## Uniqueness check

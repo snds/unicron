@@ -30,7 +30,7 @@ secret-field                      Field, data-mode="read|edit"
 |---|---|---|
 | `mode` | `read` · `edit` | |
 | `getSecret` | `() => Promise<Uint8Array>` | One-shot; the component zeroes its copy after use. Read mode only |
-| `revealMode` | `toggle` (default) · `hold` | `hold` reveals on pointer down or Space held |
+| `revealMode` | `hold` (default) · `toggle` | `hold` reveals on pointer down or Space held and masks on release (Lockdown D97); `toggle` is the per-person setting for those who cannot hold a pointer still, with the 30-second auto-hide |
 | `revealLifetime` | seconds, default `30` | Also hides on blur, lock, and leaving the viewport |
 | `clipboardTimer` | seconds, `10`–`90`, default `30` | Host-configured; no "never" |
 | `gate` | `none` · `biometric` · `password` | Crown-jewel surfaces set `password` through context |
@@ -89,7 +89,7 @@ Tier 3 to add under `secret-field`:
 
 - Read mode value: `aria-label="Password, hidden"` while masked. When revealed, the text node is spelled per character with case ("capital T, r, 4, dash") so a screen-reader user can move through it; it is **not** announced automatically.
 - Live region, polite: "Password shown. Hides in 30 seconds." · "Copied. Clipboard clears in 30 seconds." · "Clipboard cleared." · "Confirm it's you to show this."
-- Reveal: Tab, then Space or Enter toggles; `aria-pressed` reflects state. In `hold` mode Space held reveals.
+- Reveal: in the default `hold` mode, Space held reveals and release hides (Enter does nothing, so a stray Enter never reveals). In `toggle` mode Tab, then Space or Enter toggles; `aria-pressed` reflects state.
 - Copy: Tab, then Enter. Cmd/Ctrl+C while the control has focus runs the same timed copy, because the masked value is not selectable and the revealed value has `user-select: none`.
 - Edit mode: ordinary input semantics; the strength word is `aria-describedby`.
 
