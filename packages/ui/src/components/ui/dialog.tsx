@@ -1,7 +1,7 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
 // Promoted from: snds/mailbird · PR snds/unicron#2 · DSA 17b338c6dfd5 (DialogActions / DialogAction); none (DialogTitle's Back-button layout, hand-raised)
-// Promoted from: snds/mailbird · PR snds/unicron#13 · DSA none (DialogContent size and scrolling: ~20 width overrides, hand-raised in Mailbird ADR-0059)
+// Promoted from: snds/mailbird · PR snds/unicron#14 · DSA none (DialogContent size and scrolling: ~20 width overrides, hand-raised in Mailbird ADR-0059)
 "use client"
 
 import * as React from "react"
