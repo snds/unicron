@@ -1,5 +1,20 @@
 # @unicron/ui
 
+## 0.5.0
+
+### Minor Changes
+
+- 7536674: `DialogContent`, `SheetContent`, `AdaptiveSheetContent` and `CommandDialog` take `beforeContent`, a slot rendered in the portal between the backdrop and the popup. A desktop app with the native title bar hidden puts its window drag strip there (`<div aria-hidden className="fixed inset-x-0 top-0 z-50 h-13" data-tauri-drag-region="deep" />`), so the window still moves while a dialog, sheet or the command palette is open; a press on the strip does not dismiss. The popups now read `--c-dialog-titlebar-inset` (0px by default, so nothing moves): a dialog centres in the area below it, a side or top sheet starts under it (docs/05-consuming.md → Desktop title bar).
+
+### Patch Changes
+
+- 0cacf00: `Toggle` and `ToggleGroupItem` draw the pressed state as the primary fill (`bg-primary text-primary-foreground`) instead of `bg-muted`, which measured about Lc 8 / 1.1:1 against the page (#6). The pressed item now measures Lc 96+ / 17:1 against the page and the unpressed item in both modes. `aria-pressed` and `data-[state=on]` are unchanged. The change lives in `tools/shadcn-material/overrides.json`, so `pnpm regen` keeps it. Consumers: screenshot baselines shift for pressed toggles; Synapse can drop its `data-pressed:bg-primary data-pressed:text-primary-foreground` override on severity filters.
+- 6711844: `SecretField` inside a `CrownJewelSurface` now reads `--c-crown-jewel-reveal-lifetime` (20 s) for its reveal lifetime instead of its own `--c-secret-field-reveal-lifetime` (30 s). An explicit `revealLifetime` prop still wins. Closes the open item in `docs/specs/security/crown-jewel-treatment.md`.
+- 137bf59: `SecretField`: a reveal whose `getSecret` resolves after the loading render has committed (any host that fetches over a bridge) no longer falls back to masked. The value span stays mounted while loading, with the skeleton drawn inside it. Found by the Lockdown desktop; its pnpm patch can be dropped.
+- Updated dependencies [0cacf00]
+- Updated dependencies [7536674]
+  - @unicron/tokens@0.3.0
+
 ## 0.4.0
 
 ### Minor Changes
