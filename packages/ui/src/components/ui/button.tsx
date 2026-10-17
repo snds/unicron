@@ -30,6 +30,9 @@ const buttonVariants = cva(
         "icon-xs": "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        // A text action inside a line of text ("Sign in again"): no box of its own, so it sits
+        // on the sentence's baseline in its size. Pair with variant="link".
+        inline: "h-auto gap-1 rounded-sm border-0 p-0 align-baseline text-[length:inherit] leading-[inherit] [&_svg:not([class*='size-'])]:size-[1em]",
       },
       // Pill: fully rounded, for chips and filter rows. Text pills get a little more
       // side padding, because the round ends eat into it.

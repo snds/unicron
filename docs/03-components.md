@@ -44,6 +44,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `command` | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandShortcut`, `CommandSeparator` | Overlay (command palette; a known gap in the canonical 62, composed from Dialog + InputGroup + cmdk) | cmdk |
 | `icon` | `Icon`, `IconName`, `IconProps`, `IconTone` | Content | svg + Material Symbols Rounded |
 | `icon-button` | `IconButton`, `IconButtonProps` | Action | Tooltip + Button (or any `render`) |
+| `chip` | `Chip`, `ChipAction`, `ChipRemove`, `ChipRemoveProps` | Data Display | span (useRender) + Base UI Button + IconButton |
 
 Also exported: `cn` (clsx + tailwind-merge).
 
@@ -65,8 +66,16 @@ components) rather than hand-writing.
   - `variant` adds `ghost-muted` and `ghost-destructive` to shadcn's six. `ghost-muted` is a quiet secondary action ("Add holidays and more"). `ghost-destructive` is a destructive action that shouldn't shout, like Delete in a dialog footer. The filled `destructive` is for the one action a dialog exists to confirm.
   - `shape="pill"` rounds the ends fully, for chips and filter rows. Text pills (`xs`, `sm`) get `px-3`, because the round ends eat into the padding.
   - A filter chip is a pill `Button` with `aria-pressed`: `secondary` when on, `ghost` when off, with an optional count in muted ink.
+  - `size="inline"` is for a text action inside a line of text ("Your account needs you to **sign in again**"). It has no height, padding, or border of its own, so it sits on the sentence's baseline in its size. Pair it with `variant="link"`. A standalone text action keeps a normal size.
 - **Icon** takes `tone="muted" | "destructive"` when it stands alone, outside a control. Inside a control, it inherits the control's ink, so leave `tone` off. App roles, such as an area's hue, stay in the app's own classes, because the core can't know them.
 - **IconButton** is an icon-only control whose `label` becomes both its accessible name and its tooltip, so the two never drift apart. `tooltip` gives longer text, and `shortcut` adds a `Kbd`. `render` swaps the control: pass a `Toggle` for an on/off tool, or nest the IconButton in `DropdownMenuTrigger render={…}` to open a menu. Pass `icon`, or pass children to size or tint the glyph yourself.
+- **Item** is a row: media, a title, a hint, and actions. Render it as the row's one control with `render={<a href… />}` or `render={<button type="button" />}`. Then it gets hover, `data-selected="true"` for the current row, and `disabled`. A row with separate controls inside stays a `div` and puts them in `ItemActions`.
+- **Chip** is a pill holding a short value: a tag, a label, or a linked thing.
+  - `variant` is `muted` (the default, for labels and values in forms), `secondary` (tags), or `outline` (a linked thing, like an event or a person).
+  - `ChipAction` is its main action, such as opening what it stands for. It fills the chip edge to edge. Wrap long text in a `<span>` so it truncates.
+  - `ChipRemove` takes it away. It's an `IconButton`: a × whose `label` ("Remove tag trip") is its name and its tooltip.
+  - The chip's padding steps aside for both parts, so text, action, and × line up the same way in every chip.
+  - A chip that filters a list is a pill `Button` (above), not a `Chip`.
 - **DialogActions** is the dialog's actions as one row on every screen.
   - Each `DialogAction` takes a `kind`: `confirm`, `cancel`, or `destructive`.
   - From `sm` up, the actions are text buttons: confirm filled, cancel outlined, destructive a quiet `ghost-destructive` on the far left.

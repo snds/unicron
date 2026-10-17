@@ -34,7 +34,7 @@ assemble from primitives; climb an escalation ladder only on evidence.
 | **Wizard / multi-step** | Sequence a long task | stepper (position) → one form per step → progress → `Toaster` on completion |
 | **The async triad** | Survive every data condition | `Skeleton` or `Spinner` (loading) → content → `Empty` (no data) → alert (error). Every data view needs all three. |
 | **Confirmation** | Prevent costly mistakes | action → `Dialog` with a destructive `Button` (irreversible) *or* toast + undo (reversible); choose by reversibility |
-| **Filtering** | Narrow a large set | `Command` / search `InputGroup` → removable `Badge` chips (active filters) → `ButtonGroup` toolbar → results |
+| **Filtering** | Narrow a large set | `Command` / search `InputGroup` → removable `Chip`s (active filters, each with a `ChipRemove`) → `ButtonGroup` toolbar → results |
 
 Escalation ladders: NativeSelect → Combobox (list grows past ~15); Tooltip → Popover (content
 becomes interactive); toast → alert → banner → alert dialog (urgency rises).
@@ -58,6 +58,9 @@ becomes interactive); toast → alert → banner → alert dialog (urgency rises
 | 2026-10-15 | Muted / destructive icons | Mailbird: 30+ `text-muted-foreground` and 2 `text-destructive` on a standalone Icon | **Prop**: `Icon tone` |
 | 2026-10-15 | Full-screen phone sheet | Mailbird: the same 4-class override on 3 bottom sheets (composer, editor frame, event) | **Prop**: `SheetContent fullscreen` |
 | 2026-10-15 | `DialogHeader` → title + description (19× / 18 files) | The standard composition, used as designed | **Dismissed**: correct use, nothing to promote |
+| 2026-10-17 | Rows drawn as plain `<button>`s (hand-raised; dsa can't see raw elements) | Mailbird ADR-0057: 11 icon + title + hint rows (settings, provider choices, contact history, booking links) that couldn't use `Item`, which only had hover as a link | **States**: `Item` as a button gets hover, `data-selected`, and `disabled` |
+| 2026-10-17 | Text actions inside a sentence (hand-raised) | Mailbird: 6 plain `<button>`s, plus 2 `variant="link"` Buttons overriding `h-auto p-0` / `px-0` | **Size**: `Button size="inline"` |
+| 2026-10-17 | Chips with a × or a main action (hand-raised) | Mailbird: 5 different hand-drawn ×s (two full-height segments, one bare icon, two round 20px targets), and 3 split chips in Notes | **Component**: `Chip` + `ChipAction` + `ChipRemove`. It has its own anatomy: a value with up to two actions. |
 | 2026-10-15 | `DropdownMenuItem` + `Icon` (`DropdownMenuRecipe`, 17×) | The standard composition | **Dismissed**: correct use |
 | 2026-10-15 | One-off `Fab` (floating compose on phones) | 1 use | **Parked**: below the threshold. Revisit if a second product needs a floating action. |
 | 2026-10-15 | Dialog footers that keep Delete, Cancel, and Save in one row on phones (`ActionDialog`, 4 dialogs) | Mailbird: 4 `flex-row` overrides on `DialogFooter`; 11 footers pair a dismiss with a confirm | **Component**: `DialogActions` + `DialogAction`. Decided by Sean: on phones, a row of icon buttons, laid out like Apple's sheet controls (not the glass look) |

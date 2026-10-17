@@ -10,6 +10,9 @@ import {
   Badge,
   Button,
   ButtonGroup,
+  Chip,
+  ChipAction,
+  ChipRemove,
   ButtonGroupSeparator,
   ButtonGroupText,
   Checkbox,
@@ -166,6 +169,13 @@ export function Showcase() {
           </Button>
           <ButtonGroupText>3</ButtonGroupText>
         </ButtonGroup>
+        <p className="text-sm text-muted-foreground">
+          Your Google account needs you to{" "}
+          <Button variant="link" size="inline" onClick={() => toast("Signing in…")}>
+            sign in again
+          </Button>{" "}
+          before mail syncs.
+        </p>
       </Section>
 
       <Section title="Input · Textarea · Checkbox · Switch · NativeSelect · InputGroup · Field (Form)">
@@ -319,6 +329,42 @@ export function Showcase() {
             </Button>
           </ItemActions>
         </Item>
+        <Item variant="outline" className="w-full max-w-sm" render={<button type="button" onClick={() => toast("Opening signatures")} />}>
+          <ItemMedia variant="icon">
+            <Icon name="signature" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Signatures and templates</ItemTitle>
+            <ItemDescription>A row that is one button: hover, focus, selected, disabled</ItemDescription>
+          </ItemContent>
+        </Item>
+        <Item variant="muted" className="w-full max-w-sm" render={<button type="button" data-selected="true" />}>
+          <ItemContent>
+            <ItemTitle>Selected</ItemTitle>
+          </ItemContent>
+        </Item>
+        <Item variant="outline" className="w-full max-w-sm" render={<button type="button" disabled />}>
+          <ItemContent>
+            <ItemTitle>Disabled</ItemTitle>
+            <ItemDescription>Not available here</ItemDescription>
+          </ItemContent>
+        </Item>
+        <Chip variant="secondary">
+          #trip
+          <ChipRemove label="Remove tag trip" onClick={() => toast("Removed")} />
+        </Chip>
+        <Chip variant="outline">
+          <ChipAction onClick={() => toast("Opening the event")}>
+            <Icon name="event" />
+            <span>Design crit</span>
+          </ChipAction>
+          <ChipRemove label="Unlink Design crit" />
+        </Chip>
+        <Chip>
+          10 minutes before
+          <ChipRemove label="Remove reminder 10 minutes before" />
+        </Chip>
+        <Chip>Read only</Chip>
       </Section>
 
       <Section title="Separator · ScrollArea (Layout)">
