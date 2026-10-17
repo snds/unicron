@@ -56,5 +56,17 @@
     "icon-wght": {"$type": "number", "$value": 500, "$description": "Via --c-icon-wght."},
     "reveal-lifetime": {"$type": "duration", "$value": "20s", "$description": "Shorter than SecretField's default."},
     "gate-attempts": {"$type": "number", "$value": 3, "$description": "Default attemptsLeft."}
+  },
+  "risk-tier": {
+    "$description": "RiskTierBadge (docs/specs/security/risk-tier-badge.md): one word, one icon, one colour per trust tier.",
+    "standard-ink": { "$type": "color", "$value": "{muted-foreground}", "$description": "Icon and text." },
+    "standard-bg": { "$type": "color", "$value": "{secondary}" },
+    "official-ink": { "$type": "color", "$value": "{info}" },
+    "official-bg": { "$type": "color", "$value": "color-mix(in oklab, {info} 14%, transparent)", "$description": "Text stays {foreground} for contrast; only the icon takes the ink." },
+    "tolerated-ink": { "$type": "color", "$value": "{warning}" },
+    "tolerated-bg": { "$type": "color", "$value": "color-mix(in oklab, {warning} 18%, transparent)" },
+    "unverified-ink": { "$type": "color", "$value": "{destructive}", "$description": "Outline, no fill." },
+    "height-sm": { "$type": "dimension", "$value": "1.25rem" },
+    "height-md": { "$type": "dimension", "$value": "1.5rem" }
   }
 }

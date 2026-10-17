@@ -48,6 +48,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `security/code-display` | `CodeDisplay`, `CodeDisplayList`, `groupCode`, `spellCode`, `CodeDisplayProps` | Data Display | Item + IconButton + Badge + Button (spec: [code-display](specs/security/code-display.md)) |
 | `security/large-type-view` | `LargeTypeView`, `classifyChar`, `nameChar`, `captionFor`, `spellValue`, `LargeTypeViewProps` | Overlay | SheetContent fullscreen + IconButton + Switch + Kbd (spec: [large-type-view](specs/security/large-type-view.md)) |
 | `security/crown-jewel` | `CrownJewelSurface`, `CrownJewelMark`, `CrownJewelGate`, `useCrownJewel`, `CrownJewelProof` | Layout | section with a re-mapped tier + Icon + Badge + IconButton + Dialog (spec: [crown-jewel-treatment](specs/security/crown-jewel-treatment.md)) |
+| `security/risk-tier-badge` | `RiskTierBadge`, `riskTierCopy`, `riskTiers`, `riskTierUnverifiedAnnouncement`, `RiskTierBadgeProps`, `RiskTier`, `RiskTierState`, `RiskTierCopy` | Data Display (security) | `badgeVariants` + Icon + IconButton → Tooltip |
 
 Also exported: `cn` (clsx + tailwind-merge).
 
@@ -97,3 +98,23 @@ components) rather than hand-writing.
   Its `wide` prop widens the side panel (`--c-sheet-wide-width`, 36rem) for content like a
   photo or a drawing; on phones it's the same bottom sheet. The panel never exceeds the
   viewport (`max-w-full`). Its `className` styles the inner scroll area, not the panel.
+
+## Security components
+
+Three of the six from Lockdown's brief §5.7 (specs under [`docs/specs/security/`](specs/security/README.md)). They are
+components, not variants, because each owns behaviour no parent has. Every one renders only in the app, an OS
+surface, or the extension's top-layer frame, never in web content; every tier, state and warning carries a word.
+
+- **RiskTierBadge** ([spec](specs/security/risk-tier-badge.md)). One word for how much trust a path carries.
+  - *Anatomy:* `risk-tier-badge` → pill (`badgeVariants`, `data-tier`) → icon (`aria-hidden`) · label (never omitted)
+    · optional explain `IconButton` (help) whose tooltip and `aria-describedby` carry one sentence plus the manifest's
+    `disclosures`.
+  - *Variants:* `tier` = `standard` · `official` · `tolerated` (a closed union; people see **Built in** · **Verified** ·
+    **Use with care** from the component-owned `riskTierCopy`); `size` = `sm` · `md`; `explain`.
+  - *States:* default · explain open · loading (`verified` omitted: "Checking") · unverified (`verified={false}` or an
+    unknown tier: `destructive` outline, "Unverified"; announced only when it appears after a check) · reduced motion
+    (icon fill does not animate) · high contrast (1 px border in the tier ink, tint dropped, icon weight 600).
+  - *A11y:* static text "Risk tier: Use with care. Our own bridge, opt-in." (visible word + sr-only parts); the explain
+    control is a button named "What does Use with care mean?".
+  - *Tokens:* `secondary`, `muted-foreground`, `foreground`, `info`, `warning`, `destructive`;
+    `--c-risk-tier-{standard,official,tolerated}-{ink,bg}`, `--c-risk-tier-unverified-ink`, `--c-risk-tier-height-{sm,md}`.

@@ -47,7 +47,7 @@ These are not built yet. They are listed so that nothing product-local grows in 
 | Component | Job |
 |---|---|
 | **Approval sheet with number matching** | Confirm a sign-in or action by picking the matching number shown on the other device; resists approval fatigue. |
-| **Risk-tier badge** | A fixed vocabulary of risk levels (low / elevated / crown-jewel) with one colour and one icon each, never reinterpreted per product. |
+| **Risk-tier badge** | A fixed vocabulary of trust tiers, shown as plain words: **Built in** (`standard`), **Verified** (`official`), **Use with care** (`tolerated`), with one word, one colour and one icon each, never reinterpreted per product. Crown jewel is an item class with its own treatment, not a tier. |
 | **Secret field with clipboard timer** | Reveal-on-hold, copy with an automatic clipboard clear and a visible countdown. |
 | **Code display** | 6- and 8-digit one-time codes and Steam's 5-character codes, grouped for reading, with time-remaining ring and copy. |
 | **Large-type view** | A full-screen, high-contrast rendering of a secret for reading across a room or typing on another device. |
