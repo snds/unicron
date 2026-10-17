@@ -1,6 +1,7 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
 // Promoted from: snds/mailbird · PR snds/unicron#2 · DSA 389e81101949 (shape="pill"); none (ghost-muted, ghost-destructive, raised from correct-use override counts)
+// Promoted from: snds/mailbird · PR snds/unicron#9 · DSA none (size="inline"; hand-raised in Mailbird ADR-0057)
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
@@ -30,6 +31,9 @@ const buttonVariants = cva(
         "icon-xs": "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        // A text action inside a line of text ("Sign in again"): no box of its own, so it sits
+        // on the sentence's baseline in its size. Pair with variant="link".
+        inline: "h-auto gap-1 rounded-sm border-0 p-0 align-baseline text-[length:inherit] leading-[inherit] [&_svg:not([class*='size-'])]:size-[1em]",
       },
       // Pill: fully rounded, for chips and filter rows. Text pills get a little more
       // side padding, because the round ends eat into it.
