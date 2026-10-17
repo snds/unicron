@@ -16,6 +16,22 @@
     "regular-width": { "$type": "dimension", "$value": "24rem" },
     "wide-width": { "$type": "dimension", "$value": "36rem", "$description": "The wide variant (AdaptiveSheetContent wide), for a photo or other content that needs room." }
   },
+  "code": {
+    "$description": "CodeDisplay (docs/specs/security/code-display.md): one-time codes grouped for reading, with a time-remaining ring.",
+    "size-detail": {"$type": "dimension", "$value": "2.25rem"},
+    "size-list": {"$type": "dimension", "$value": "1.25rem"},
+    "size-compact": {"$type": "dimension", "$value": "1rem"},
+    "group-gap": {"$type": "dimension", "$value": "0.75em"},
+    "letter-spacing": {"$type": "dimension", "$value": "0.08em"},
+    "ring-track": {"$type": "color", "$value": "{border}"},
+    "ring-progress": {"$type": "color", "$value": "{foreground}"},
+    "ring-expiring": {"$type": "color", "$value": "{warning}"},
+    "next-ink": {"$type": "color", "$value": "{muted-foreground}"},
+    "expiring-at": {"$type": "duration", "$value": "5s", "$description": "Seconds left at which the code turns to the expiring state."},
+    "next-at": {"$type": "duration", "$value": "10s", "$description": "Seconds left at which the next code appears beneath the current one."},
+    "copy-next-at": {"$type": "duration", "$value": "3s", "$description": "Seconds left under which copy takes the next code instead."},
+    "rollover-duration": {"$type": "duration", "$value": "200ms", "$description": "Literal; tier 2 has no duration role."}
+  },
   "crown-jewel": {
     "$description": "CrownJewel treatment (docs/specs/security/crown-jewel-treatment.md): the surface re-maps the semantic roles for its subtree onto these, the way .dark does.",
     "surface": {"$type": "color", "$value": "{protected}", "$description": "Assigned to --background and --card inside the surface."},

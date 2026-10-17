@@ -45,6 +45,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `icon` | `Icon`, `IconName`, `IconProps`, `IconTone` | Content | svg + Material Symbols Rounded |
 | `icon-button` | `IconButton`, `IconButtonProps` | Action | Tooltip + Button (or any `render`) |
 | `chip` | `Chip`, `ChipAction`, `ChipRemove`, `ChipRemoveProps` | Data Display | span (useRender) + Base UI Button + IconButton |
+| `security/code-display` | `CodeDisplay`, `CodeDisplayList`, `groupCode`, `spellCode`, `CodeDisplayProps` | Data Display | Item + IconButton + Badge + Button (spec: [code-display](specs/security/code-display.md)) |
 | `security/crown-jewel` | `CrownJewelSurface`, `CrownJewelMark`, `CrownJewelGate`, `useCrownJewel`, `CrownJewelProof` | Layout | section with a re-mapped tier + Icon + Badge + IconButton + Dialog (spec: [crown-jewel-treatment](specs/security/crown-jewel-treatment.md)) |
 
 Also exported: `cn` (clsx + tailwind-merge).
@@ -86,6 +87,7 @@ components) rather than hand-writing.
 - **DialogTitle** lays a leading Back button out inline with the text, for dialogs with steps.
 - **SheetContent `fullscreen`** covers the whole screen edge to edge and clears the status bar: a phone editor, like Mail's compose. An app can still move its bottom edge, for example above the keyboard.
 - **Security components** live in `components/security/` and are also importable as `@unicron/ui/security/<name>`. Each follows its one-page spec under `docs/specs/security/`; the host's core does the cryptography and the component only ever receives short strings or a one-shot handle.
+  - **CodeDisplay** shows a one-time code grouped for reading (6 → 3+3, 8 → 4+4, Steam 5 as one group), a ring for the time left, the `warning` state at 5 s, the next code at 10 s, and a copy that takes the next code in the last 3 s. HOTP has no ring; "Next code" calls `onAdvance`. Codes are exposed to assistive tech one character at a time ("4 8 2, 9 1 7"), never as a number. `CodeDisplayList` gives a list one shared live region.
   - **CrownJewel** is three parts: `CrownJewelMark` (inline lock + sr-only word), `CrownJewelSurface` (re-maps `--background`, `--foreground`, `--muted`, `--border`, … onto `protected` for its subtree, the way `.dark` does, and flips nested SecretField, CodeDisplay and LargeTypeView into gated mode through `useCrownJewel()`), and `CrownJewelGate` (the "Confirm it's you" dialog at the `biometric` or `password` level, host-driven). The surface renders only when `host` is `app`, `os` or `extension-top-layer`.
 - No component imports a `--g-*` token. Everything goes through tier 2 or tier 3.
 - `AdaptiveSheetContent` is the one primitive that reads tier-3 knobs directly

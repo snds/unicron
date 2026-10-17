@@ -4,6 +4,7 @@ export { Icon, type IconName, type IconProps, type IconTone } from "./components
 export { Chip, ChipAction, ChipRemove, type ChipRemoveProps } from "./components/chip"
 export { IconButton, type IconButtonProps } from "./components/icon-button"
 // Security components (docs/specs/security/). Also importable as @unicron/ui/security/<name>.
+export * from "./components/security/code-display"
 export * from "./components/security/crown-jewel"
 export { useCopyCountdown, type CopyCountdown, type CopyCountdownState } from "./components/security/copy-countdown"
 export * from "./components/ui/avatar"
