@@ -161,3 +161,45 @@ pnpm dsa scan      # adoption + correct use
 pnpm dsa patterns  # candidate compositions to promote
 pnpm dsa ratchet   # keep violations from growing
 ```
+
+## 9. Desktop title bar
+
+A desktop app (Tauri on macOS, say) often hides the native title bar and uses its own top row as
+the title bar: the window buttons sit there and pressing the row moves the window
+(`data-tauri-drag-region`). A modal `Dialog` or `Sheet` backdrop covers that row, so the window
+can't be moved while a dialog or the command palette is open. The app can't fix that from
+outside: a `fixed` element inside the popup is positioned relative to the popup (it is
+transformed), and one outside the portal sits under the backdrop.
+
+`beforeContent` is the composition point. `DialogContent`, `SheetContent`,
+`AdaptiveSheetContent` and `CommandDialog` render it in the portal after the backdrop and before
+the popup, so it paints above the backdrop and below the popup. A press on it doesn't dismiss:
+Base UI closes a modal dialog only on a press on the backdrop itself.
+
+```tsx
+// One strip for the whole app. It renders only while the app's own row is the title bar:
+// on macOS, in the app, outside full screen. On the web, or with a native title bar, it is null.
+export function TitleBarDragStrip() {
+  const isOwnTitleBar = useIsOwnTitleBar() // platform === "macos" && !isFullscreen, from Tauri
+  if (!isOwnTitleBar) return null
+  return <div aria-hidden className="fixed inset-x-0 top-0 z-50 h-13" data-tauri-drag-region="deep" />
+}
+
+<DialogContent beforeContent={<TitleBarDragStrip />}>…</DialogContent>
+<SheetContent beforeContent={<TitleBarDragStrip />}>…</SheetContent>
+<CommandDialog beforeContent={<TitleBarDragStrip />}>…</CommandDialog>
+```
+
+The popups keep clear of the strip through one knob, `--c-dialog-titlebar-inset` (`0px` by
+default, so nothing moves on the web). A dialog centres in the area below it; a side or top sheet
+starts under it; a `fullscreen` sheet stops short of it. Set it to the strip's height, under the
+same condition the strip renders under, in your app-extension layer:
+
+```css
+/* The app sets a class or attribute on <html> while its own row is the title bar. */
+html[data-own-title-bar] { --c-dialog-titlebar-inset: 3.25rem; } /* h-13 */
+```
+
+A dialog taller than the area below the inset still overflows it, as it overflows the viewport
+today; give such a dialog a scrolling body.
+

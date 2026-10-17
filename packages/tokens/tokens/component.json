@@ -7,6 +7,10 @@
     "grad": { "$type": "number", "$value": 0, "$extensions": { "unicron.modes": { "dark": -25 } }, "$description": "Dark surfaces look heavier, so grade icons down slightly (Material guidance)." },
     "opsz": { "$type": "number", "$value": 20 }
   },
+  "dialog": {
+    "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent).",
+    "titlebar-inset": { "$type": "dimension", "$value": "0px", "$description": "Height of the app's own title bar at the top of the window (a desktop app with the native title bar hidden). The popups keep clear of it: a dialog centres in the area below it; a side or top sheet starts under it. 0px for a web page or a window with a native title bar. Set it with beforeContent, the slot that holds the app's drag strip." }
+  },
   "sheet": {
     "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up.",
     "compact-height": { "$type": "dimension", "$value": "75dvh" },

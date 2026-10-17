@@ -41,22 +41,27 @@ function CommandDialog({
   children,
   className,
   showCloseButton = false,
+  beforeContent,
   ...props
 }: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
   title?: string
   description?: string
   className?: string
   showCloseButton?: boolean
+  /** Passed to `DialogContent`: rendered between the backdrop and the popup (a desktop app's drag strip). */
+  beforeContent?: React.ReactNode
   children: React.ReactNode
 }) {
   return (
     <Dialog {...props}>
       <DialogContent
         className={cn(
-          "rounded-xl! top-1/3 translate-y-0 overflow-hidden p-0",
+          // A third of the way down the area below --c-dialog-titlebar-inset (0px by default).
+          "rounded-xl! top-[calc(var(--c-dialog-titlebar-inset)+(100%-var(--c-dialog-titlebar-inset))/3)] translate-y-0 overflow-hidden p-0",
           className
         )}
         showCloseButton={showCloseButton}
+        beforeContent={beforeContent}
         // Straight to the search field, so typing right after ⌘K isn't lost.
         initialFocus={() => document.querySelector<HTMLElement>("[cmdk-input]") ?? true}
       >
