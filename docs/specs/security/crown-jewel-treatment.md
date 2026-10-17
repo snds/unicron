@@ -1,6 +1,6 @@
 # CrownJewel treatment
 
-_Spec v0.1 · 2026-10-17 · Proposed by Lockdown (brief §2.9 point 5, §5.7; `02-model.md` §3; `04-security.md` §10) · Status: proposed_
+_Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §2.9 point 5, §5.7; `02-model.md` §3; `04-security.md` §10) · Status: built in `@unicron/ui` 0.4.0 (PR #15); this spec describes the build_
 
 ## Purpose and the user job
 
@@ -8,118 +8,130 @@ Some secrets can end a person's digital life if they leak: seed phrases, recover
 
 ## Uniqueness check
 
-Three small parts, one module. `CrownJewelMark` composes `Icon` and sr-only text. `CrownJewelSurface` composes a `section` with a re-mapped semantic tier, `Icon`, `Badge`, and an `IconButton` explain. `CrownJewelGate` composes `Dialog`, `DialogActions`, and `SecretField` in edit mode. It is a component rather than a `Badge` variant plus a class name because it carries behavior: the surface flips every SecretField and CodeDisplay inside it into gated mode through context, hides copy in previews, and refuses to render in web content. On naming: `06-contributing.md` declines app domain nouns, but "crown jewel" is already unicron's own vocabulary (`01-principles.md`) and names an ecosystem class, not one app's feature. If core prefers, the parts rename to `Protected*` with no other change.
+Three parts and one hook, one module. `CrownJewelMark` composes `Icon` and sr-only text. `CrownJewelSurface` composes a `section` with a re-mapped semantic tier, `Icon`, `Badge`, an `IconButton` that opens an explain `Dialog`, and the built-in gate. `CrownJewelGate` composes `Dialog`, `DialogActions`, `Field`, and `Input`. It is a component because it carries behavior: the surface flips every SecretField, CodeDisplay, and LargeTypeView inside it into gated mode through context, and it refuses to render in web content. Core kept the name; `Protected*` was not taken.
 
 ## Anatomy
 
 ```
-crown-jewel-surface                 section, data-protected; re-maps --background/--foreground/--muted/--border for its subtree
+crown-jewel-surface                 section, role="region", data-protected, data-gated, data-device-only; roles re-mapped inline
 ├─ crown-jewel-banner
-│  ├─ crown-jewel-icon              Icon lock, fill 1, weight 500
+│  ├─ crown-jewel-icon              Icon lock (fill and weight from the knobs)
 │  ├─ crown-jewel-label             "Crown jewel"
-│  ├─ crown-jewel-device-only       Badge "This device only" (when set)
-│  └─ crown-jewel-explain           IconButton → the rules in plain words, and where this surface can appear
-└─ crown-jewel-content              children: SecretField gate="password", CodeDisplay concealed, no fill hints
+│  ├─ crown-jewel-device-only       Badge outline "This device only"
+│  └─ crown-jewel-explain           IconButton "What crown jewel means" → crown-jewel-explain-dialog
+├─ crown-jewel-content              children, or Skeleton (loading), or the error (role="alert")
+└─ (sr-only)                        polite live region, first-focus announcement
 
-crown-jewel-mark                    inline: lock icon + sr-only "Crown jewel" (rows, titles, search results)
+crown-jewel-mark                    inline: filled lock + sr-only "Crown jewel"
 
-crown-jewel-gate                    Dialog
-├─ title                            "Confirm it's you"
-├─ reason                           "To show the recovery phrase for Ledger"
-├─ step                             biometric: OS prompt · password: SecretField mode="edit"
-└─ DialogActions                    Cancel · Confirm
+crown-jewel-gate                    DialogContent, data-level, data-armed
+├─ DialogTitle                      "Confirm it's you"
+├─ crown-jewel-gate-reason          "To show Ledger recovery phrase"
+├─ crown-jewel-gate-step            password: Field + Input type="password" · biometric: one sentence; error line aria-live
+└─ DialogActions                    Cancel · Confirm (submit)
 ```
 
-## Props and variants
+## Props and the hook
+
+`useCrownJewel()` returns `{ gated: boolean, requestProof(kind: "use" | "reveal"): Promise<boolean> }`. Outside a surface `gated` is `false` and the proof resolves `true`. `use` (copy, sign) asks for a biometric; `reveal` (show, export) asks for the password.
 
 | Part | Prop | Values | Notes |
 |---|---|---|---|
-| Surface | `host` | `app` · `os` · `extension-top-layer` | Anything else throws in development and renders nothing in production |
-| Surface | `deviceOnly` | boolean | Shows the badge |
-| Surface | `title` | string | For the region's accessible name |
+| Surface | `host` | `app` · `os` · `extension-top-layer` | Anything else logs `console.error` in development and renders `null` in every build; nothing throws |
+| Surface | `title` | string | Names the region and the gate's reason |
+| Surface | `deviceOnly` | boolean | Badge, and the sync rule in the explain copy |
+| Surface | `loading`, `error` | boolean, string | Banner stays; content shows a Skeleton or the error |
+| Surface | `appName` | string | "the Lockdown app" in the explain copy; "the app" without it |
+| Surface | `biometricName` | string, default `"Touch ID"` | The platform's word in copy and announcements |
+| Surface | `requestProof` | `(kind) => Promise<boolean>` | Host-owned gate; the host shows its own prompt |
+| Surface | `onConfirm` | `(proof, kind) => boolean \| Promise<boolean>` | Built-in gate: hand the proof to the core; `true` accepts. Nothing is cached |
+| Surface | `onBiometric` | `() => Promise<unknown>` | Built-in gate: ask the OS; a token, or `null` when backed out. Omit where there is none (Linux); use then gates on the password |
+| Surface | `onLock` | callback | After the last password try the host locks the vault |
 | Mark | `size` | `sm` · `md` | |
-| Gate | `level` | `biometric` · `password` | Use → biometric; reveal or export → password |
-| Gate | `reason` | string | Always shown; never generic |
-| Gate | `onConfirm` | `(proof) => void` | `proof` is an opaque token from the OS or core; the component never judges it |
-| Gate | `attemptsLeft`, `error`, `busy` | | Host-driven |
+| Gate | `open`, `onOpenChange`, `onCancel` | | The standalone gate is controlled |
+| Gate | `level`, `reason` | `biometric` · `password`; string | The reason is always shown, never generic |
+| Gate | `onConfirm(proof)` | `{ level: "biometric", token }` · `{ level: "password", password }` | Opaque to the component |
+| Gate | `onBiometric`, `attemptsLeft`, `error`, `busy`, `biometricName` | | Host-driven |
 
 ## States
 
 | State | What changes |
 |---|---|
-| default | Inverted surface: `protected` behind `protected-foreground`; lock filled |
-| gated | Children masked; reveal and copy controls carry a lock glyph |
-| gate open | Dialog; focus in the password field or the OS prompt |
-| denied | "Password incorrect. 2 tries left." in `destructive`; after the last try the host locks the vault |
-| confirmed | The one action proceeds; the surface stays gated (no cached unlock, `04-security.md` §10) |
-| preview | Rows and search results: mark, title, kind, nothing else |
-| device-only | Badge in the banner; the explain copy adds the sync rule |
-| loading | Skeleton inside the surface, banner already drawn |
-| error | Item failed to decrypt: banner stays, content shows the error |
-| reduced motion | Lock icon fill does not animate on gate |
-| high contrast | The inversion may be lost under forced colors; a 2px solid border, the lock, and the word carry the treatment |
+| default | Inverted surface: `protected` behind `protected-foreground`; lock filled; 20rem minimum width |
+| gated | Nested SecretField, CodeDisplay, and LargeTypeView read `gated`: copy and reveal carry a lock glyph, CodeDisplay is concealed |
+| gate open | Dialog; focus in the password field; at `biometric` the OS is asked as the dialog opens |
+| biometric refused | The built-in gate drops to `password`: "Touch ID didn't confirm it's you. Use your account password instead." |
+| denied | "Password incorrect. 2 tries left." in `destructive`; at 0 the gate closes, the request resolves `false`, `onLock` fires |
+| confirmed | The one action proceeds; the surface stays gated; the next request opens a new gate |
+| preview | Rows and search results: mark, title, kind, nothing else (host layout) |
+| device-only | Badge; the explain copy adds "It stays on this device and is not synced." |
+| loading, error | Skeletons, or the error in `destructive`; banner drawn in both |
+| reduced motion | Lock fill does not animate |
+| high contrast and forced colors | A 2 px border, the lock, and the word carry the treatment when the inversion is lost |
 
 ## Behavior and timing
 
-- **Use** (copy a value, sign a confirmation) opens the gate at `biometric`. **Reveal or export** opens it at `password`. The gate hands the host's proof to the core, which performs the action. No proof is cached; the next use asks again.
-- A reveal inside the surface uses `--c-crown-jewel-reveal-lifetime` (20 s), shorter than SecretField's default.
-- The surface sets context so SecretField, CodeDisplay, and LargeTypeView inside it adopt `gate="password"` for reveal and `gate="biometric"` for copy, and so fill affordances do not render.
-- The explain copy ends with: "You will only ever see this frame inside the Lockdown app or a system prompt, never on a web page." That sentence is how a person learns to distrust a page-drawn imitation.
+- **Gate levels.** `requestProof("use")` opens the built-in gate at `biometric` when `onBiometric` is given, else `password`; `requestProof("reveal")` always opens it at `password`. A new request settles any open gate as `false`; no proof is cached (`04-security.md` §10).
+- **Attempts.** `--c-crown-jewel-gate-attempts` (3), read from the surface. The last wrong password calls `onLock`.
+- **Arming delay.** Cancel and Confirm are inert for `--c-approval-arm-delay` (500 ms); closing disarms and forgets the typed password.
+- **Explain copy** ends with "You will only ever see this frame inside the Lockdown app or a system prompt, never on a web page." That sentence is how a person learns to distrust a page-drawn imitation.
+- **Reveal lifetime.** The `--c-crown-jewel-reveal-lifetime` knob (20 s) ships but nothing reads it yet: a SecretField inside the surface uses its own 30 s unless the host passes `revealLifetime={20}` or sets `--c-secret-field-reveal-lifetime` on the surface. Open item.
 
 ## Tokens
 
-Tier 2 used today: `background`, `foreground`, `muted`, `border`, `destructive`, `radius`.
+Tier 2: `background`, `foreground`, `muted`, `border`, `destructive`, `protected` and `protected-foreground` (shipped in `@unicron/tokens` 0.2.0).
 
-New tier 2 role needed: **`protected` / `protected-foreground`**: light `{neutral.950}` / `{neutral.25}`, dark `{neutral.25}` / `{neutral.950}`. An inverted neutral surface needs no new hue, keeps the one-accent rule, and reads as "different kind of thing" in both modes.
+Tier 3 under `crown-jewel`; the surface assigns each to the roles listed, inline:
 
-Tier 3 to add under `crown-jewel`:
-
-| Token | Aliases | Purpose |
+| Token | Aliases | Assigned to |
 |---|---|---|
-| `--c-crown-jewel-surface` | `{protected}` | Assigned to `--background` and `--card` inside the surface |
-| `--c-crown-jewel-ink` | `{protected-foreground}` | Assigned to `--foreground` inside |
-| `--c-crown-jewel-muted` | `color-mix(in oklab, {protected-foreground} 12%, transparent)` | Assigned to `--muted` inside |
-| `--c-crown-jewel-border` | `color-mix(in oklab, {protected-foreground} 24%, transparent)` | Assigned to `--border` inside |
-| `--c-crown-jewel-icon-fill` | `1` | Via `--c-icon-fill` |
-| `--c-crown-jewel-icon-wght` | `500` | Via `--c-icon-wght` |
-| `--c-crown-jewel-reveal-lifetime` | `20s` | |
-| `--c-crown-jewel-gate-attempts` | `3` | Default `attemptsLeft` |
+| `--c-crown-jewel-surface` | `{protected}` | `--background`, `--card`, `--popover`, `--primary-foreground` |
+| `--c-crown-jewel-ink` | `{protected-foreground}` | `--foreground`, `--card-foreground`, `--popover-foreground`, `--primary`, `--secondary-foreground`, `--accent-foreground` |
+| `--c-crown-jewel-muted` | `color-mix(in oklab, {protected-foreground} 12%, transparent)` | `--muted`, `--secondary`, `--accent` |
+| `--c-crown-jewel-muted-ink` | `color-mix(in oklab, {protected-foreground} 72%, transparent)` | `--muted-foreground`, `--ring`; one knob beyond v0.1 so hints keep contrast |
+| `--c-crown-jewel-border` | `color-mix(in oklab, {protected-foreground} 24%, transparent)` | `--border`, `--input` |
+| `--c-crown-jewel-icon-fill` | `1` | `--c-icon-fill` |
+| `--c-crown-jewel-icon-wght` | `500` | `--c-icon-wght` |
+| `--c-crown-jewel-reveal-lifetime` | `20s` | Not yet wired (above) |
+| `--c-crown-jewel-gate-attempts` | `3` | Default attempts |
 
-The re-mapping trick is the same one `.dark` uses: inside the surface the semantic roles point at the protected values, so nested primitives invert without any override.
+The re-mapping is the trick `.dark` uses, so nested primitives invert without any override.
 
 ## Keyboard and screen reader
 
-- Surface: `role="region"`, `aria-label="Crown jewel: Ledger recovery phrase"`. On first focus inside, a polite announcement: "Crown jewel. Using it needs Touch ID. Showing it needs your account password."
-- Mark: icon `aria-hidden`, sr-only "Crown jewel" after the title.
-- Gate: `role="dialog"`, `aria-modal`, focus in the password field; Enter submits; Escape cancels; "Password incorrect, 2 tries left" through the dialog's live region. The biometric step hands focus to the OS prompt and takes it back on return.
+- Surface: `role="region"`, `aria-label="Crown jewel: Ledger recovery phrase"`. On first focus inside, once: "Crown jewel. Using it needs Touch ID. Showing it needs your account password." (`biometricName` swaps the word.)
+- Mark: icon `aria-hidden`, sr-only "Crown jewel".
+- Gate: `role="dialog"`, `aria-modal`, no close button; focus in the password field; Enter submits; Escape cancels; the error reads through an `aria-live="polite"` line. The biometric step asks the OS on open and takes focus back on return.
+- Explain: a Dialog with the rules as a list and a "Got it" button.
 
 ## Platform notes
 
 | Platform | Native | Spec still requires |
 |---|---|---|
-| Web and Tauri | Context provider; Tauri calls the OS biometric (Touch ID, Windows Hello) through a plug-in; Linux has no biometric, so use also gates on the password | The `host` assertion, no cached proof, re-mapped tier |
-| SwiftUI | `LocalAuthentication` with `.deviceOwnerAuthenticationWithBiometrics` (no passcode fallback at this level); `.privacySensitive()`; `.redacted(reason: .privacy)` in previews | Same; the inverted surface uses the generated `protected` colors |
+| Web and Tauri | Context provider; Tauri calls the OS biometric through `onBiometric`; Linux omits it | The `host` assertion, no cached proof, the re-mapped tier |
+| SwiftUI | `LocalAuthentication` with `.deviceOwnerAuthenticationWithBiometrics` (no passcode fallback); `.privacySensitive()`; `.redacted(reason: .privacy)` in previews | Same; the inverted surface uses the generated `protected` colors |
 | Compose | `BiometricPrompt` with `BIOMETRIC_STRONG` only, no `DEVICE_CREDENTIAL`; `FLAG_SECURE` | Same |
 
 ## Security notes
 
 - Never rendered inside web content. The extension shows "Open Lockdown to use this item" instead, and the OS providers never see crown-jewel items (`02-model.md` §3).
-- The treatment is a cue; the guarantee is placement. Pixels can be imitated, a surface that only exists in the app cannot.
-- The gate's proof is an opaque token from the OS or core; the component never evaluates a password itself.
-- Opaque, minimum 20rem wide, and the gate dialog sits in the top layer with the same arming delay as ApprovalSheet (`--c-approval-arm-delay`).
+- The treatment is a cue; the guarantee is placement. Pixels can be imitated; a surface that only exists in the app cannot.
+- The gate hands an opaque proof to the host; the component never evaluates a password. The password step is `Input type="password"` until SecretField edit mode replaces it (open item: the gate holds a focus ref and its own autocomplete).
+- Opaque, minimum 20rem wide; the gate sits in the top layer with the arming delay.
 
 ## Provenance and release
 
 - DSA record: none: first principles, Lockdown brief §5.7.
-- changeset: minor (`@unicron/ui`; `@unicron/tokens` for `protected` and `crown-jewel.*`).
+- Shipped: `@unicron/ui` 0.4.0, `@unicron/tokens` 0.2.0; subpath `@unicron/ui/security/crown-jewel`.
 
 ## Acceptance tests
 
-**Screenshot (light and dark, each web engine):** surface with a SecretField and a CodeDisplay inside; preview row with the mark; device-only; gate at both levels; denied with one try left; `prefers-contrast: more`; forced colors (border and word survive).
+**Vitest (jsdom, `crown-jewel.test.tsx`, 11 tests; the SecretField case is in `secret-field.test.tsx`):** the five below, plus the banner parts, the first-focus announcement, `useCrownJewel()` outside a surface, the standalone gate (reason, arming delay, password proof, biometric on open), and the mark.
 
-**Playwright:**
-1. Inside the surface, the computed `--background` equals `--protected` and nested `Button variant="secondary"` renders with the re-mapped roles.
-2. A SecretField inside the surface calls the gate before `getSecret`; one outside does not.
+1. Inside the surface the inline `--background` points at `--c-crown-jewel-surface` (the tokens map it to `protected`).
+2. A CodeDisplay or SecretField inside asks for proof before copying or `getSecret`; one outside does not.
 3. `host="page"` renders nothing and logs a development error.
-4. Two confirmed uses in a row call the gate twice.
-5. After `attemptsLeft` reaches 0 the host's lock callback fires and the dialog closes.
+4. Two confirmed uses in a row open the gate twice.
+5. After the attempts reach 0 `onLock` fires and the dialog closes.
+
+**Still needs a browser:** the computed `--background` equalling `--protected` and a nested `Button variant="secondary"` drawn with the re-mapped roles; screenshots of the surface with a SecretField and a CodeDisplay, the preview row, device-only, the gate at both levels, denied, `prefers-contrast: more`, forced colors.

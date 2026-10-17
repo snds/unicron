@@ -1,6 +1,6 @@
 # LargeTypeView
 
-_Spec v0.1 · 2026-10-17 · Proposed by Lockdown (brief §5.7, §2.7 TV activation; D69 kit page) · Status: proposed_
+_Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §5.7, §2.7 TV activation; D69 kit page) · Status: built in `@unicron/ui` 0.4.0 (PR #15); this spec describes the build_
 
 ## Purpose and the user job
 
@@ -8,67 +8,75 @@ A person has to read a secret across a room or type it into something without a 
 
 ## Uniqueness check
 
-Composes `Sheet` → `SheetContent fullscreen`, `IconButton`, `Switch`, `Kbd`, and the copy-with-timer behavior from SecretField. It is not a SecretField variant: it has no field semantics and no edit mode, and its job is transcription rather than use. It owns character classification, grouping, captions, fit-to-width sizing, a lifetime, brightness and wake handling on mobile, and a print layout.
+Composes `Sheet` → `SheetContent fullscreen`, `IconButton`, `Button`, `Switch`, `Label`, `Kbd`, `Skeleton`, and the shared `useCopyCountdown` hook. It is not a SecretField variant: it has no field semantics and no edit mode, and its job is transcription rather than use. It owns character classification, grouping, captions, fit-to-width sizing, a lifetime, brightness and wake hooks, and a print layout.
 
 ## Anatomy
 
 ```
-large-type-view                    SheetContent fullscreen, or a print page
-├─ large-type-view-header          title "Wi-Fi password · Home" · close
-├─ large-type-view-canvas          fit-to-width, wraps by group
-│  └─ large-type-view-group × n    3 characters per group
-│     └─ large-type-view-char      glyph · caption ("zero", "capital O", "dash") · optional index
+large-type-view                    SheetContent fullscreen, data-status; or <article data-variant="print">
+├─ large-type-view-header          SheetTitle · SheetDescription (shoulder notice, then "Shown in large type. Press Escape to hide it.") · Close
+├─ large-type-view-canvas          role="img", aria-label spelled; flex-wrap by group; select-none
+│  └─ large-type-view-group × n    groupSize characters; 1 px border in high contrast
+│     ├─ large-type-view-char      data-class="digit|letter|symbol": glyph (aria-hidden) · large-type-view-caption
+│     └─ large-type-view-index     "1–3" when showIndex
 ├─ large-type-view-legend          swatch + word: digits · letters · symbols
-├─ large-type-view-controls        size − / + · captions Switch · copy · Spell out
-└─ large-type-view-timer           "Hides in 1:58"
+├─ large-type-view-controls        Smaller − · Larger + · Captions Switch · Spell out · large-type-view-copy · large-type-view-timer · Kbd "Esc hides"
+└─ large-type-view-live            polite live region
 ```
 
 ## Props and variants
 
 | Prop | Values | Notes |
 |---|---|---|
-| `getSecret` | `() => Promise<Uint8Array>` | One-shot, as SecretField |
+| `open`, `onOpenChange` | boolean (default `false`), callback | Controlled; Escape and Close go through `onOpenChange` |
+| `getSecret` | `() => Promise<Uint8Array>` | One-shot; decoded, then the buffer is zeroed |
 | `title` | string | What is being shown, never the value |
 | `groupSize` | `3` (default) · `4` | 4 for card numbers and kit codes already grouped by the format |
-| `captions` | `auto` · `always` · `off` | `auto` names only ambiguous glyphs and every symbol |
+| `captions` | `auto` (default) · `always` · `off` | `auto` names only ambiguous glyphs and every symbol |
 | `caseSensitive` | boolean, default `true` | Adds "capital" and "lowercase" to letter captions |
-| `showIndex` | boolean | Position numbers under groups, for long values |
-| `lifetime` | seconds, default `120` | TV transcription takes longer than a reveal |
-| `allowCopy` | boolean | Copy uses the clipboard timer |
-| `print` | boolean | Black on white, captions on, no timer, no controls |
+| `showIndex` | boolean | Position ranges under groups, for long values |
+| `lifetime` | seconds | Default `--c-large-type-lifetime` (120), read from the sheet when the value loads |
+| `allowCopy` | boolean | Shows the copy control and enables `C` |
+| `clipboardTimer` | seconds, default `30` | |
+| `onCopy(bytes)` | `(Uint8Array) => void \| Promise` | The host's copy function; `navigator.clipboard` only in the pure web vault |
+| `onClipboardClear` | callback | The countdown ran out |
+| `onKeepAwake(on)`, `onBrightness(max)` | callbacks | Mobile: `true` on open, `false` on close |
+| `gate` | `() => Promise<boolean>` | Re-run before "Show again"; inside a `CrownJewelSurface` the surface's `requestProof("reveal")` is used when omitted |
+| `onExpire` | callback | The value was hidden: lifetime, blur, or hidden tab |
+| `print` | boolean | Inline article, `foreground` ink only, captions `always`, no timer, no controls, title and date in the header |
 
-**Inks.** Digits in `info`, letters in `foreground`, symbols in `warning`. Color is never the only cue: the mono font carries the slashed zero and distinct `l`/`1`/`I` forms, captions name every symbol and every ambiguous glyph, and the legend spells the mapping. The tradeoff is three inks on one surface against the "one hue per surface" rule; the view is a special surface and the hues carry meaning, not decoration.
+Exports: `classifyChar`, `nameChar`, `captionFor`, `speakChar`, `groupValue`, `spellValue`.
+
+**Inks.** Digits in `info`, letters in `foreground`, symbols in `warning`. Color is never the only cue: the mono font carries the slashed zero (`font-feature-settings: "zero"`) and distinct `l`/`1`/`I` forms, captions name every symbol and every ambiguous glyph, and the legend spells the mapping. Three inks on one surface is a deliberate exception to the one-hue rule; the hues carry meaning.
 
 ## States
 
-| State | What changes |
+| State (`data-status`) | What changes |
 |---|---|
-| default | Canvas filled; timer running |
-| captions on | Caption row under each group |
-| copied | Copy control runs the shared countdown |
-| expired | Canvas cleared; "Hidden. Show again" button (re-runs the gate if there is one) |
-| loading | Skeleton groups |
-| error | "Couldn't read this value" in `destructive`; canvas empty |
-| disabled | n/a; the view is modal and closes |
+| `loading` | Skeleton groups, `aria-busy` |
+| `shown` | Canvas filled; legend; timer "Hides in 1:58" |
+| `expired` | Canvas replaced by "Hidden." and a "Show again" button, which re-runs the gate; timer "Hidden" |
+| `error` | "Couldn't read this value" in `destructive`; canvas empty |
+| captions on | Caption row under each glyph that has one |
+| copied | Copy control shows the seconds; tooltip "Copied · clears in 30 s", then "Cleared" |
 | reduced motion | Nothing to remove; no animation in this view |
-| high contrast | All inks collapse to `foreground`; captions forced on; group boxes get a 1px solid border |
-| print | White page, `foreground` ink only, captions on, title and date in the header |
+| high contrast and forced colors | Inks collapse to `foreground`; captions forced on and the Switch disabled; groups get a 1 px border |
+| print | Inks forced to `foreground`; captions on; 40 px glyphs; the host prints in light mode |
 
 ## Behavior and timing
 
-- **Sizing.** Fit the longest line to the canvas width between `--c-large-type-min-size` and `--c-large-type-max-size`; wrap whole groups, never split one. The − and + controls step through the range; the choice persists per device.
-- **Lifetime.** Hides after `lifetime`, on window blur, and on lock. Showing again re-runs the host's gate for gated values.
-- **Mobile.** Raise screen brightness to maximum and keep the screen awake while shown; restore on close (the Aegis brightness-boost behavior for QR transfer).
-- **Shoulder notice.** For 3 s after open, a line reads "Anyone who can see your screen can read this." The person chose to show it; the notice is the only friction.
+- **Sizing.** Glyph size = canvas width ÷ (0.62 em per character + 0.1 em per in-group gap + 1.5 em per group gap), × 1.15 per size step, clamped between `--c-large-type-min-size` and `--c-large-type-max-size`. The − and + controls step from −4 to +4; the step persists per device in `localStorage` (`unicron:large-type:size-step`). Groups wrap whole through `flex-wrap`; a group is never split.
+- **Lifetime.** Hides after `lifetime`, on window blur, and when the tab is hidden; `onExpire` fires. There is no lock hook: on lock the host sets `open={false}`. "Show again" re-runs the gate before fetching again.
+- **Mobile.** `onBrightness(true)` and `onKeepAwake(true)` on open, `false` on close (the Aegis brightness-boost behavior).
+- **Shoulder notice.** For 3 s after open the description reads "Anyone who can see your screen can read this."
 - **Captions.** `auto` names `0`, `O`, `o`, `1`, `l`, `I`, `5`, `S`, `8`, `B`, `2`, `Z`, and every symbol; `always` names every character.
+- **Copy.** `onCopy` gets the UTF-8 bytes; inside a `CrownJewelSurface` it first awaits `requestProof("use")`.
 
 ## Tokens
 
-Tier 2 used today: `background`, `foreground`, `muted-foreground`, `border`, `destructive`, `font-mono`.
+Tier 2: `background`, `foreground`, `muted-foreground`, `border`, `destructive`, `info`, `warning` (both shipped in `@unicron/tokens` 0.2.0), `font-mono`.
 
-New tier 2 roles needed: **`info`** and **`warning`** (shared with RiskTierBadge, CodeDisplay, ApprovalSheet).
-
-Tier 3 to add under `large-type`:
+Tier 3 under `large-type`:
 
 | Token | Aliases | Purpose |
 |---|---|---|
@@ -85,40 +93,41 @@ Tier 3 to add under `large-type`:
 
 ## Keyboard and screen reader
 
-- `role="dialog"`, `aria-modal`, labelled by the title. Focus lands on the close control, not the canvas, so nothing reads aloud by accident.
-- The canvas is one `aria-label` spelled per character with case and symbol names, grouped with "pause": "capital T, r, 4, pause, dash, 9, lowercase l". It is not a live region.
-- "Spell out" is a button; it reads the value through a polite live region one group at a time, on request only.
-- Keys: Escape closes; `+` and `-` resize; `C` copies when `allowCopy`; the captions Switch is a normal switch.
-- Timer announcements: "Hides in 30 seconds" once, then "Hidden."
+- `role="dialog"`, `aria-modal`, labelled by the title. Focus lands on Close, not the canvas, so nothing reads aloud by accident.
+- The canvas is `role="img"` with one label spelled per character with case and symbol names, "pause" between groups: "capital T, r, 4, pause, dash, 9, lowercase l". Ambiguous digits are spoken as words ("zero"). Not a live region.
+- "Spell out" reads one group every 1.5 s through the polite region, on request only.
+- Keys: Escape closes; `+` or `=` and `-` or `_` resize; `C` copies when `allowCopy`; the captions Switch is a normal switch. Keys are ignored while an input has focus.
+- Announcements: "Hides in 30 seconds" once, "Hidden.", and "Copied. Clipboard clears in 30 seconds."
 
 ## Platform notes
 
 | Platform | Native | Spec still requires |
 |---|---|---|
-| Web and Tauri | `SheetContent fullscreen`; `@media print` stylesheet for the kit page | Fit-to-width, captions, lifetime, blur-hide |
-| SwiftUI | `.fullScreenCover`; `UIScreen.main.brightness`; `isIdleTimerDisabled`; `.privacySensitive()`; `UIPrintInteractionController`. Dynamic Type is not applied to the canvas (it is already large type); `legibilityWeight` is honored | Same |
+| Web and Tauri | `SheetContent fullscreen`; `ResizeObserver` for fit-to-width; `@media print` for the kit page | Fit-to-width, captions, lifetime, blur-hide |
+| SwiftUI | `.fullScreenCover`; `UIScreen.main.brightness`; `isIdleTimerDisabled`; `.privacySensitive()`; `UIPrintInteractionController`. Dynamic Type is not applied to the canvas; `legibilityWeight` is honored | Same |
 | Compose | Full-screen `Dialog`; `screenBrightness`; `FLAG_KEEP_SCREEN_ON`; `FLAG_SECURE`; `PrintManager` | Same |
 
 ## Security notes
 
 - Never rendered inside web content. The browser extension opens the app instead.
 - The canvas text is not selectable; copy goes through the timed path.
-- Screen capture blocked where the OS allows; auto-hide on lifetime, blur, and lock.
-- The value comes from a one-shot handle and is zeroed on close; the title never contains the value.
+- Screen capture blocked where the OS allows; auto-hide on lifetime, blur, and hidden tab; the host closes it on lock.
+- The buffer is zeroed after decoding; the decoded string lives in component state only while `shown` and is dropped on hide and close. The title never contains the value.
 
 ## Provenance and release
 
 - DSA record: none: first principles, Lockdown brief §5.7.
-- changeset: minor (`@unicron/ui`; `@unicron/tokens` for `large-type.*`, `info`, and `warning`).
+- Shipped: `@unicron/ui` 0.4.0, `@unicron/tokens` 0.2.0; subpath `@unicron/ui/security/large-type-view`.
 
 ## Acceptance tests
 
-**Screenshot (light and dark, each web engine):** a mixed value (`Tr4-9lO0_bZ2`) at phone and desktop widths; captions `auto` and `always`; `groupSize` 4; expired; `print`; `prefers-contrast: more`; forced colors.
+**Vitest (jsdom, fake timers, `large-type-view.test.tsx`, 11 tests):** the six below, plus the classifier and namer, the wake and brightness hooks on open and close, the print variant (inline, every caption, no timer or controls), and the error state.
 
-**Playwright:**
-1. Every group contains at most `groupSize` characters, and no group is split across lines at any viewport from 320 px up.
-2. Each digit, letter, and symbol carries `data-class` matching its kind; in `auto`, every symbol and every ambiguous glyph has a caption, and `e` has none.
-3. The canvas `aria-label` spells the value per character with case and symbol names.
-4. With a fake clock past `lifetime`, the canvas is empty and the value is absent from the DOM; "Show again" calls the gate when one is provided.
-5. Window blur hides the value within one frame.
+1. Every group holds at most `groupSize` characters, for 3 and 4. (Wrapping by whole groups is layout; jsdom cannot assert it.)
+2. Each character carries `data-class` for its kind; in `auto`, every symbol and every ambiguous glyph has a caption, and `e` has none.
+3. The canvas label spells the value per character with case and symbol names, pausing between groups.
+4. Past `lifetime` the value is absent from the DOM, "Hidden." is announced, and "Show again" calls the gate when one is provided.
+5. Window blur hides the value.
 6. `C` calls `onCopy` only when `allowCopy`.
+
+**Still needs a browser (Playwright viewport):** no group split across lines from 320 px up; the fit-to-width result and the − / + steps; screenshots of a mixed value (`Tr4-9lO0_bZ2`) at phone and desktop widths, captions `auto` and `always`, `groupSize` 4, expired, `print`, `prefers-contrast: more`, forced colors; blur within one frame.
