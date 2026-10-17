@@ -34,7 +34,7 @@ secret-field                      div, data-mode="read|edit", data-state="masked
 | `getSecret` | read | `() => Promise<Uint8Array>` | One-shot; the field zeroes the buffer after use |
 | `host` | read | `SecretFieldHost` | `copy(bytes)`, `clear()`, optional `clipboardHolds(hash)` and `gate(kind)`; see below |
 | `revealMode` | read | `hold` (default) · `toggle` | `hold` reveals while the pointer or Space is held (Lockdown D97); `toggle` is the per-person setting with the auto-hide |
-| `revealLifetime` | read | seconds | Default `--c-secret-field-reveal-lifetime` (30), read from the element when a reveal starts, so a surface can re-map it |
+| `revealLifetime` | read | seconds | Default `--c-secret-field-reveal-lifetime` (30), or `--c-crown-jewel-reveal-lifetime` (20) inside a `CrownJewelSurface`; read from the element when a reveal starts, so a surface can re-map it |
 | `clipboardTimer` | read | seconds, clamped `10`–`90` | Default `--c-secret-field-clipboard-timer` (30), read from `:root` once; no "never" |
 | `gate` | read | `none` (default) · `biometric` · `password` | Runs `host.gate(kind)` first. Inside a `CrownJewelSurface` the surface gates the field whatever this says |
 | `format` | read | `plain` · `groups-of-4` · `words` | Display only; the spelled name uses the raw value |

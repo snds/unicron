@@ -20,7 +20,7 @@ _The six components Lockdown's brief §5.7 asked unicron to grow, written as the
 | SecretField | Built as specified, plus | `host` interface with `clipboardHolds(hash)`; `label`, `locked`, `description`, `children` as the `more` slot; knobs read from `:root` or the element at runtime |
 | CodeDisplay | Built as specified, plus | `issuer`, `account`, `media`, `counter`, `onHaptic`, `onFixClock`, `onClipboardClear`, `loading`, `error`; `now` and `expiresAt` in Unix seconds; self-ticking when `now` is omitted; `CodeDisplayList` |
 | LargeTypeView | Built as specified, with two gaps | `open` / `onOpenChange`, `onCopy(bytes)`, wake and brightness hooks, `gate`, `onExpire`; the size step persists in `localStorage`. Gaps: no lock hook (the host closes it); `print` relies on the host printing in light mode |
-| CrownJewel | Built as specified, with two open items | `useCrownJewel()` is `{ gated, requestProof(kind) }`; built-in gate with `onConfirm` / `onBiometric` / `onLock`, or a host `requestProof`; `appName`, `biometricName`; `host="page"` logs and renders null. Open: the password step is `Input type="password"` until SecretField edit mode replaces it; `--c-crown-jewel-reveal-lifetime` ships but is not yet read |
+| CrownJewel | Built as specified, with one open item | `useCrownJewel()` is `{ gated, requestProof(kind) }`; built-in gate with `onConfirm` / `onBiometric` / `onLock`, or a host `requestProof`; `appName`, `biometricName`; `host="page"` logs and renders null. Open: the password step is `Input type="password"` until SecretField edit mode replaces it. `--c-crown-jewel-reveal-lifetime` is read by nested SecretFields since 0.4.1 |
 
 ## Shared behaviors
 
@@ -55,4 +55,4 @@ The acceptance tests are split per spec into **Vitest** (what exists) and **stil
 2. ~~RiskTierBadge as a component or a `Badge` variant~~ Done: a component on `badgeVariants` with the exported `riskTierCopy` map.
 3. ~~`CrownJewel*` or `Protected*`~~ Done: the name stays.
 4. CodeDisplay copies the next code in the last 3 s, as proposed. Differs from 1Password; still flagged for Sean.
-5. New: swap `CrownJewelGate`'s password step for `SecretField mode="edit"`; wire `--c-crown-jewel-reveal-lifetime` into nested SecretFields; a `motion-reduce:` rule on `AdaptiveSheetContent`'s travel; the host localization hook for core copy; a browser suite for the screenshot and viewport tests.
+5. New: swap `CrownJewelGate`'s password step for `SecretField mode="edit"`; ~~wire `--c-crown-jewel-reveal-lifetime` into nested SecretFields~~ (done in 0.4.1); a `motion-reduce:` rule on `AdaptiveSheetContent`'s travel; the host localization hook for core copy; a browser suite for the screenshot and viewport tests.
