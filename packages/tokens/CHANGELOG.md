@@ -1,5 +1,15 @@
 # @unicron/tokens
 
+## 0.3.0
+
+### Minor Changes
+
+- 0cacf00: Core contrast fixes for #6, judged by APCA with WCAG 2 as the floor. `--muted-foreground` moves from `neutral.500` to `neutral.600` in light and from `neutral.400` to `neutral.300` in dark (Lc 74–87 on background, card, popover, sidebar, accent and muted; WCAG 6.7:1–12.6:1, was 4.05:1 on accent in light). `--ring` moves from `neutral.400` / `neutral.500` to `neutral.900` light / `neutral.100` dark, so the 50% ring the primitives draw clears Lc 30 (Lc 57–63 light, 33–36 dark; WCAG 3.4:1–4.7:1, was 1.5:1). `--sidebar-ring` follows `--ring`. New `scripts/contrast.mjs` runs in `pnpm test`: it resolves every tier-2 role from `dist/tokens.css`, measures the role pairs in both modes with the reference `apca-w3` package (devDependency), prints Lc and WCAG for each, and fails on an APCA floor miss. Floors are written up in `docs/02-tokens.md → Contrast`. Consumers: screenshot baselines shift wherever muted text or a focus ring is visible. Synapse can drop its `--muted-foreground` and `--ring` overrides.
+
+### Patch Changes
+
+- 7536674: New tier-3 knob `--c-dialog-titlebar-inset` (`dialog.titlebar-inset`, default `0px`): the height of an app's own title bar, which Dialog and Sheet popups keep clear of. No visual change at the default.
+
 ## 0.2.0
 
 ### Minor Changes
