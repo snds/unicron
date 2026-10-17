@@ -290,6 +290,35 @@ describe("SecretField gate: the field asks, it never decides", () => {
     expect(hostGate).not.toHaveBeenCalled()
     expect(getSecret).not.toHaveBeenCalled()
   })
+
+  it("inside a CrownJewelSurface, the reveal lifetime is the crown-jewel knob (20 s), unless the prop says otherwise", async () => {
+    const requestProof = vi.fn(() => Promise.resolve(true))
+    const { container, unmount } = render(
+      <CrownJewelSurface host="app" title="Seed phrase" requestProof={requestProof}>
+        <SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={fakeHost()} revealMode="toggle" />
+      </CrownJewelSurface>
+    )
+    fireEvent.click(revealButton())
+    await settle()
+    expect(valueOf(container)).toHaveTextContent(SECRET)
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.shown("Password", 20))
+    await advance(19_000)
+    expect(valueOf(container)).toHaveTextContent(SECRET)
+    await advance(1_000)
+    expect(container.textContent).not.toContain(SECRET)
+    unmount()
+
+    const explicit = render(
+      <CrownJewelSurface host="app" title="Seed phrase" requestProof={requestProof}>
+        <SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={fakeHost()} revealMode="toggle" revealLifetime={5} />
+      </CrownJewelSurface>
+    )
+    fireEvent.click(revealButton())
+    await settle()
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.shown("Password", 5))
+    await advance(5_000)
+    expect(explicit.container.textContent).not.toContain(SECRET)
+  })
 })
 
 describe("SecretField states: reduced motion, high contrast, edit mode", () => {
