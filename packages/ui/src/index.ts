@@ -39,7 +39,3 @@ export * from "./components/ui/textarea"
 export * from "./components/ui/toggle-group"
 export * from "./components/ui/toggle"
 export * from "./components/ui/tooltip"
-// Security components (docs/specs/security/). Each is also a subpath: @unicron/ui/<name>.
-export * from "./components/security/approval-sheet"
-export * from "./components/security/risk-tier-badge"
-export * from "./components/security/secret-field"
