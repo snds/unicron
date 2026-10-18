@@ -32,9 +32,17 @@ const tabsListVariants = cva(
         default: "bg-muted",
         line: "gap-1 bg-transparent",
       },
+      // `fill`: the list takes its container's full height, as in a toolbar row taller than the
+      // tabs. The line marker then sits on the row's bottom border, and the labels center with
+      // the controls beside them. The container (and the Tabs root) must have that height.
+      size: {
+        default: "",
+        fill: "group-data-horizontal/tabs:h-full",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 )
@@ -42,13 +50,15 @@ const tabsListVariants = cva(
 function TabsList({
   className,
   variant = "default",
+  size = "default",
   ...props
 }: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
       data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
+      data-size={size}
+      className={cn(tabsListVariants({ variant, size }), className)}
       {...props}
     />
   )
