@@ -1,5 +1,15 @@
 # @unicron/ui
 
+## 0.10.0
+
+### Minor Changes
+
+- 6a99aa4: `SheetContent backdrop={false}` leaves the dimming backdrop out, for a detail sheet beside a list. Pair it with `<Sheet modal={false} disablePointerDismissal>`: the list stays visible and clickable, picking another row changes what the sheet shows instead of closing it, and Escape or the close button still close it. The default is unchanged (backdrop drawn).
+
+### Patch Changes
+
+- 9d78100: Orientation styles work again. The generated components style orientation with `data-horizontal:` and `data-vertical:`, as shadcn's own stylesheet defines them, but Unicron's stylesheet never defined those variants and Base UI only sets `data-orientation`. So those classes matched nothing: a line tab's active marker, a separator's 1px size, the scroll area's bars, the button group's separator and the field description's balance all drew at zero size or not at all. `styles/index.css` now maps both to `data-orientation`, exactly as shadcn does, and a test pins it. Line tabs also preview the marker at 40% on hover, so hover reads as more than a text color change. Expect screenshot baselines to shift where these appear.
+
 ## 0.9.0
 
 ### Minor Changes
