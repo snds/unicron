@@ -20,6 +20,14 @@ describe("orientation variants", () => {
     expect(css).toMatch(rule)
   })
 
+  it.each(["open", "closed", "checked", "unchecked", "disabled", "active"])("index.css defines data-%s as shadcn does", (s) => {
+    expect(css).toMatch(new RegExp(`@custom-variant data-${s}\\s*\\{[^}]*\\[data-${s}\\]:not\\(\\[data-${s}="false"\\]\\)`))
+  })
+
+  it("data-selected matches cmdk's \"true\" only, so items it marks \"false\" aren't drawn selected", () => {
+    expect(css).toMatch(/@custom-variant data-selected\s*\{\s*&:where\(\[data-selected="true"\]\)/)
+  })
+
   it("is needed: components use the variants", () => {
     expect(users).toEqual(expect.arrayContaining(["separator.tsx", "tabs.tsx"]))
   })
