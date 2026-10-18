@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import { AdaptiveSheetContent, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "./sheet"
+import { AdaptiveSheetContent, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "./sheet"
 
 // The strip a desktop app renders so its window stays draggable while a sheet is open (issue #7).
 const strip = <div aria-hidden data-testid="drag-strip" className="fixed inset-x-0 top-0 z-50 h-13" data-tauri-drag-region="deep" />
@@ -85,5 +85,53 @@ describe("SheetContent backdrop", () => {
     fireEvent.pointerDown(screen.getByText("Another row"))
     fireEvent.click(screen.getByText("Another row"))
     expect(onOpenChange).not.toHaveBeenCalled()
+  })
+})
+
+describe("SheetContent size and anatomy", () => {
+  it("is sm by default and takes the dialog's sizes", () => {
+    const { rerender } = render(
+      <Sheet open>
+        <SheetContent>{header}</SheetContent>
+      </Sheet>
+    )
+    expect(popup().className).toContain("data-[side=right]:sm:max-w-sm")
+    rerender(
+      <Sheet open>
+        <SheetContent size="xl">{header}</SheetContent>
+      </Sheet>
+    )
+    expect(popup().className).toContain("data-[side=right]:sm:max-w-2xl")
+    expect(popup().className).not.toContain("data-[side=right]:sm:max-w-sm")
+  })
+
+  it("keeps the header clear of the close button, and only when there is one", () => {
+    const { rerender } = render(
+      <Sheet open>
+        <SheetContent>{header}</SheetContent>
+      </Sheet>
+    )
+    expect(popup().className).toContain("[&>[data-slot=sheet-header]]:pr-12")
+    rerender(
+      <Sheet open>
+        <SheetContent showCloseButton={false}>{header}</SheetContent>
+      </Sheet>
+    )
+    expect(popup().className).not.toContain("[&>[data-slot=sheet-header]]:pr-12")
+  })
+
+  it("wraps long titles and puts footer actions in a row from sm up", () => {
+    render(
+      <Sheet open>
+        <SheetContent>
+          {header}
+          <SheetFooter>
+            <button type="button">Accept</button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    )
+    expect(document.querySelector('[data-slot="sheet-title"]')?.className).toContain("break-words")
+    expect(document.querySelector('[data-slot="sheet-footer"]')?.className).toContain("sm:flex-row")
   })
 })
