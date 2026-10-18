@@ -59,3 +59,31 @@ describe("SheetContent beforeContent", () => {
     expect(onOpenChange).not.toHaveBeenCalled()
   })
 })
+
+describe("SheetContent backdrop", () => {
+  it("draws the backdrop by default", () => {
+    render(
+      <Sheet open>
+        <SheetContent>{header}</SheetContent>
+      </Sheet>
+    )
+    expect(overlay()).not.toBeNull()
+  })
+
+  it("a detail sheet beside a list leaves it out, and a press outside keeps it open", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <>
+        <button type="button">Another row</button>
+        <Sheet open modal={false} disablePointerDismissal onOpenChange={onOpenChange}>
+          <SheetContent backdrop={false}>{header}</SheetContent>
+        </Sheet>
+      </>
+    )
+    expect(overlay()).toBeNull()
+    expect(popup()).not.toBeNull()
+    fireEvent.pointerDown(screen.getByText("Another row"))
+    fireEvent.click(screen.getByText("Another row"))
+    expect(onOpenChange).not.toHaveBeenCalled()
+  })
+})
