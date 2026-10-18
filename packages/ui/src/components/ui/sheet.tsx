@@ -40,10 +40,26 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   )
 }
 
+/**
+ * How wide a left or right sheet grows from `sm` up: the same product sizes as `DialogContent`
+ * (`sm` 24rem, `md` 28rem, `lg` 32rem, `xl` 42rem, `2xl` 48rem), so a size means the same width
+ * on both. Top and bottom sheets span the screen and ignore it.
+ */
+const SHEET_SIZES = {
+  sm: "data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm",
+  md: "data-[side=left]:sm:max-w-md data-[side=right]:sm:max-w-md",
+  lg: "data-[side=left]:sm:max-w-lg data-[side=right]:sm:max-w-lg",
+  xl: "data-[side=left]:sm:max-w-2xl data-[side=right]:sm:max-w-2xl",
+  "2xl": "data-[side=left]:sm:max-w-3xl data-[side=right]:sm:max-w-3xl",
+} as const
+
+export type SheetSize = keyof typeof SHEET_SIZES
+
 function SheetContent({
   className,
   children,
   side = "right",
+  size = "sm",
   showCloseButton = true,
   fullscreen = false,
   backdrop = true,
@@ -51,6 +67,8 @@ function SheetContent({
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left"
+  /** A side sheet's width from `sm` up (SHEET_SIZES); `sm` by default, as before. */
+  size?: SheetSize
   showCloseButton?: boolean
   /**
    * Draw the dimming backdrop (the default). A detail sheet beside a list leaves it out, so the
@@ -79,7 +97,10 @@ function SheetContent({
         className={cn(
           // A side or top sheet starts below --c-dialog-titlebar-inset (0px by default), so an
           // app's title bar strip never overlaps the panel.
-          "bg-popover text-popover-foreground fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:top-(--c-dialog-titlebar-inset) data-[side=left]:bottom-0 data-[side=left]:left-0 data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
+          "bg-popover text-popover-foreground fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:top-(--c-dialog-titlebar-inset) data-[side=left]:bottom-0 data-[side=left]:left-0 data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:h-auto data-[side=top]:border-b data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
+          SHEET_SIZES[size],
+          // The header keeps clear of the close button, so a long title wraps before it, not under it.
+          showCloseButton && "[&>[data-slot=sheet-header]]:pr-12",
           fullscreen && "gap-0 rounded-none border-0 pt-[env(safe-area-inset-top)] data-[side=bottom]:h-[calc(100dvh-var(--c-dialog-titlebar-inset))]",
           className
         )}
@@ -234,7 +255,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("gap-2 p-4 mt-auto flex flex-col", className)}
+      className={cn("gap-2 p-4 mt-auto flex flex-col sm:flex-row sm:flex-wrap sm:justify-end", className)}
       {...props}
     />
   )
@@ -244,7 +265,7 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("text-foreground text-base font-medium", className)}
+      className={cn("text-foreground text-base font-medium break-words", className)}
       {...props}
     />
   )
@@ -257,7 +278,7 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn("text-muted-foreground text-sm break-words", className)}
       {...props}
     />
   )
