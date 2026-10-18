@@ -46,11 +46,19 @@ function SheetContent({
   side = "right",
   showCloseButton = true,
   fullscreen = false,
+  backdrop = true,
   beforeContent,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
+  /**
+   * Draw the dimming backdrop (the default). A detail sheet beside a list leaves it out, so the
+   * list stays visible and clickable: pair `backdrop={false}` with
+   * `<Sheet modal={false} disablePointerDismissal>`, and picking another row changes what the
+   * sheet shows instead of closing it. Escape and the close button still close it.
+   */
+  backdrop?: boolean
   /** Cover the whole screen, edge to edge, clear of the status bar (a phone editor, like Mail's compose). */
   fullscreen?: boolean
   /**
@@ -63,7 +71,7 @@ function SheetContent({
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      {backdrop && <SheetOverlay />}
       {beforeContent}
       <SheetPrimitive.Popup
         data-slot="sheet-content"
