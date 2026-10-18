@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { beforeAll, describe, expect, it, vi } from "vitest"
 
-import { Command, CommandInput, CommandItem, CommandItemAction, CommandList } from "./command"
+import { Command, CommandDialog, CommandInput, CommandItem, CommandItemAction, CommandList } from "./command"
 
 // cmdk scrolls the highlighted item into view; jsdom has no layout.
 beforeAll(() => {
@@ -168,14 +168,36 @@ describe("CommandItemAction", () => {
     expect(github).toHaveAttribute("aria-keyshortcuts", "Control+Enter")
     expect(github).toHaveAttribute("data-has-action", "true")
     const button = github!.querySelector('[data-slot="command-item-action"]')!
-    expect(button).toHaveAttribute("tabindex", "-1")
+    // Drawn like an icon button but not one: nothing inside an option may take focus or act as a
+    // control to assistive tech (axe's nested-interactive).
+    expect(button.tagName).toBe("SPAN")
+    expect(button).not.toHaveAttribute("tabindex")
+    expect(github!.querySelector("button, [tabindex], a[href], input")).toBeNull()
     expect(button).toHaveAttribute("aria-hidden", "true")
-    expect(button).toHaveAttribute("aria-label", "Copy password")
+    expect(button).toHaveAttribute("title", "Copy password (Ctrl+Enter)")
     // The description sits outside the item, so its words never join the item's text or search.
     const description = document.getElementById(github!.getAttribute("aria-describedby")!)!
     expect(github!.contains(description)).toBe(false)
     expect(description).not.toBeVisible()
     await search("copy")
     expect(options()).toEqual([])
+  })
+})
+
+describe("CommandDialog size", () => {
+  it("is sm by default and takes the dialog's sizes", () => {
+    const { rerender } = render(
+      <CommandDialog open>
+        <Command><CommandList /></Command>
+      </CommandDialog>
+    )
+    const content = () => document.querySelector('[data-slot="dialog-content"]') as HTMLElement
+    expect(content().className).toContain("sm:max-w-sm")
+    rerender(
+      <CommandDialog open size="lg">
+        <Command><CommandList /></Command>
+      </CommandDialog>
+    )
+    expect(content().className).toContain("sm:max-w-lg")
   })
 })
