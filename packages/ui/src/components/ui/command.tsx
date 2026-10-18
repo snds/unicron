@@ -7,19 +7,20 @@ import * as React from "react"
 import { Command as CommandPrimitive, defaultFilter } from "cmdk"
 import { cn } from "../../lib/utils"
 
+import { buttonVariants } from "./button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  type DialogSize,
 } from "./dialog"
 import {
   InputGroup,
   InputGroupAddon,
 } from "./input-group"
 import { Icon, type IconName } from "../icon"
-import { IconButton } from "../icon-button"
 
 /**
  * What a search is matched against. `value` is cmdk's default: an item's `value` and its
@@ -37,11 +38,11 @@ function keywordsFilter(value: string, search: string, keywords?: string[]) {
 /** The highlighted item's secondary action, if it has one. */
 function selectedItemAction(root: HTMLElement) {
   const item = root.querySelector<HTMLElement>('[cmdk-item][data-selected="true"]:not([data-disabled="true"])')
-  return item?.querySelector<HTMLButtonElement>('[data-slot="command-item-action"]') ?? null
+  return item?.querySelector<HTMLElement>('[data-slot="command-item-action"]') ?? null
 }
 
-function isDisabled(button: HTMLButtonElement) {
-  return button.disabled || button.getAttribute("aria-disabled") === "true" || button.hasAttribute("data-disabled")
+function isDisabled(action: HTMLElement) {
+  return action.getAttribute("aria-disabled") === "true" || action.hasAttribute("data-disabled")
 }
 
 function Command({
@@ -85,6 +86,7 @@ function CommandDialog({
   description = "Search for a command to run...",
   children,
   className,
+  size = "sm",
   showCloseButton = false,
   beforeContent,
   ...props
@@ -92,6 +94,8 @@ function CommandDialog({
   title?: string
   description?: string
   className?: string
+  /** How wide it grows from `sm` up: `DialogContent`'s sizes (`sm` by default, as before). A palette with two-line results reads better at `lg`. */
+  size?: DialogSize
   showCloseButton?: boolean
   /** Passed to `DialogContent`: rendered between the backdrop and the popup (a desktop app's drag strip). */
   beforeContent?: React.ReactNode
@@ -105,6 +109,7 @@ function CommandDialog({
           "rounded-xl! top-[calc(var(--c-dialog-titlebar-inset)+(100%-var(--c-dialog-titlebar-inset))/3)] translate-y-0 overflow-hidden p-0",
           className
         )}
+        size={size}
         showCloseButton={showCloseButton}
         beforeContent={beforeContent}
         // Straight to the search field, so typing right after ⌘K isn't lost.
@@ -274,13 +279,13 @@ export interface CommandItemActionProps {
  *
  * cmdk keeps focus in the search field and moves a highlight through the items
  * (`aria-activedescendant`), and an item is a `role="option"`, whose content is presentational:
- * a button inside it can't be reached by Tab or announced as a button. So the action is reached
- * three ways instead. A pointer clicks the button, which is out of the item's selection: the
- * click never runs the item's `onSelect` and focus stays in the search field. The keyboard
- * presses ⌘↵ (Ctrl+Enter off Apple platforms) while the item is highlighted; `Command` runs it.
- * A screen reader hears it with the item: the item is described by "Copy password, Command
- * Enter" and carries `aria-keyshortcuts`. The button itself is hidden from assistive tech,
- * since the description already says it. One action per item.
+ * nothing inside it may be focusable or interactive to assistive tech (axe's
+ * `nested-interactive`). So the action is drawn like an icon button but isn't one: it takes no
+ * focus and is hidden from assistive tech. It's reached three ways instead. A pointer clicks it;
+ * the click never runs the item's `onSelect`, and focus stays in the search field. The keyboard
+ * presses ⌘↵ (Ctrl+Enter off Apple platforms) while the item is highlighted; `Command` runs it. A
+ * screen reader hears it with the item: the item is described by "Copy password, Command Enter"
+ * and carries `aria-keyshortcuts`. Hovering shows its label and keys. One action per item.
  */
 function CommandItemAction({ label, icon, onAction, disabled, className }: CommandItemActionProps) {
   const register = React.useContext(CommandItemActionContext)
@@ -292,7 +297,7 @@ function CommandItemAction({ label, icon, onAction, disabled, className }: Comma
   }, [register, label, shortcut.spoken, shortcut.aria, disabled])
 
   // Keep focus (and the highlight) in the search field, and keep cmdk from seeing the press or
-  // the click, even a click on the disabled button, which some engines pass to its ancestors.
+  // the click, even a click on a disabled action.
   const hold = (e: React.SyntheticEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -305,19 +310,18 @@ function CommandItemAction({ label, icon, onAction, disabled, className }: Comma
       onMouseDown={hold}
       onClick={(e) => e.stopPropagation()}
     >
-      <IconButton
+      <span
         data-slot="command-item-action"
-        label={label}
-        icon={icon}
-        shortcut={shortcut.label}
-        size="icon-xs"
-        disabled={disabled}
-        tabIndex={-1}
+        data-disabled={disabled ? "" : undefined}
         aria-hidden
+        title={`${label} (${shortcut.label})`}
+        className={cn(buttonVariants({ variant: "ghost", size: "icon-xs" }), "cursor-default", disabled && "pointer-events-none opacity-50")}
         onClick={() => {
           if (!disabled) onAction()
         }}
-      />
+      >
+        <Icon name={icon} />
+      </span>
     </span>
   )
 }
