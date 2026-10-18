@@ -2,14 +2,14 @@ import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { render } from "@testing-library/react"
 
-import { Separator } from "../components/ui/separator"
-import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { Separator } from "./separator"
+import { Tabs, TabsList, TabsTrigger } from "./tabs"
 
 // The generated components style orientation with `data-horizontal:` / `data-vertical:`. Base UI
 // only sets data-orientation, so those classes need the custom variants in index.css; without
 // them the line tab's marker, separators and scroll bars drew at zero size.
-const css = readFileSync(join(__dirname, "index.css"), "utf8")
-const ui = join(__dirname, "../components/ui")
+const css = readFileSync(join(__dirname, "../../styles/index.css"), "utf8")
+const ui = __dirname
 const users = readdirSync(ui)
   .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
   .filter((f) => /data-(horizontal|vertical)\b/.test(readFileSync(join(ui, f), "utf8")))
