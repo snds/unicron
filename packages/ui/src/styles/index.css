@@ -15,6 +15,23 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
+ * Orientation, as shadcn's own stylesheet (shadcn/tailwind.css) defines it. The generated
+ * components write `data-horizontal:` and `data-vertical:`, but Base UI marks orientation as
+ * data-orientation="…", so without these the classes match nothing: the line tab's active
+ * marker, a separator's 1px size and the scroll area's bars all drew at zero size.
+ */
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+
+/*
  * Registered so the icon axes interpolate. Without @property, custom properties
  * flip discretely and an icon would snap from outline to filled.
  */
