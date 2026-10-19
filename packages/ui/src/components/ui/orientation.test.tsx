@@ -50,4 +50,27 @@ describe("orientation variants", () => {
     // Hover previews the line marker; the selected tab keeps it solid.
     expect(trigger?.className).toContain("group-data-[variant=line]/tabs-list:not-data-active:hover:after:opacity-40")
   })
+
+  it("a fill-size list takes its container's height; the default keeps its own", () => {
+    const { container } = render(
+      <>
+        <Tabs defaultValue="a">
+          <TabsList variant="line" size="fill">
+            <TabsTrigger value="a">A</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Tabs defaultValue="a">
+          <TabsList>
+            <TabsTrigger value="a">A</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </>,
+    )
+    const [fill, normal] = container.querySelectorAll('[data-slot="tabs-list"]')
+    expect(fill).toHaveAttribute("data-size", "fill")
+    // tailwind-merge keeps the later height, so fill wins over the default 32px.
+    expect(fill.className).toContain("group-data-horizontal/tabs:h-full")
+    expect(fill.className).not.toContain("group-data-horizontal/tabs:h-8")
+    expect(normal.className).toContain("group-data-horizontal/tabs:h-8")
+  })
 })

@@ -26,7 +26,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `native-select` | `NativeSelect`, `NativeSelectOption`, `NativeSelectOptGroup` | Form | select |
 | `input-group` | `InputGroup`, `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, `InputGroupTextarea` | Form | div |
 | `field` | `Field`, `FieldSet`, `FieldLegend`, `FieldGroup`, `FieldLabel`, `FieldContent`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError` | Form | div / fieldset |
-| `tabs` | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`, `tabsListVariants` | Navigation | Base UI Tabs |
+| `tabs` | `Tabs`, `TabsList` (`variant`: default, line; `size`: default, fill — the list takes its container's height, as in a toolbar row), `TabsTrigger`, `TabsContent`, `tabsListVariants` | Navigation | Base UI Tabs |
 | `dropdown-menu` | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | Navigation | Base UI Menu |
 | `spinner` | `Spinner` | Feedback | Icon (`progress_activity`) |
 | `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
