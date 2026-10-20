@@ -104,6 +104,98 @@
   }
 }
 
+/*
+ * Text roles: every size in a product comes from one of these, never a hand-picked pixel size.
+ * A screen with two sizes (12 and 14px) and hand-made 11 and 13px labels has nothing that reads
+ * as a heading. A step of about 1.2 between sizes makes each level read as a level; weight and ink
+ * do the rest. Titles and body inherit their ink, so a selected row's accent ink still reaches
+ * them; support, meta and overline are muted by default. Muted inks hold APCA Bronze at their
+ * sizes (Lc 75 under 16px). Promoted from snds/synapse (UI review round 2, F14).
+ */
+:root {
+  --type-page-size: 1.25rem;
+  --type-page-leading: 1.75rem;
+  --type-section-size: 1rem;
+  --type-section-leading: 1.5rem;
+  --type-group-size: 0.875rem;
+  --type-group-leading: 1.25rem;
+  --type-body-size: 0.875rem;
+  --type-body-leading: 1.375rem;
+  --type-support-size: 0.8125rem;
+  --type-support-leading: 1.25rem;
+  --type-meta-size: 0.75rem;
+  --type-meta-leading: 1rem;
+  --type-overline-size: 0.6875rem;
+  --type-overline-leading: 1rem;
+  --type-overline-tracking: 0.06em;
+  /* The longest line that reads well; prose wider than this is hard to follow back. */
+  --type-measure: 72ch;
+}
+
+/* The page's own title: the subject of a screen. */
+@utility type-page-title {
+  font-size: var(--type-page-size);
+  line-height: var(--type-page-leading);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+/* A section of a page. */
+@utility type-section-title {
+  font-size: var(--type-section-size);
+  line-height: var(--type-section-leading);
+  font-weight: 600;
+  letter-spacing: -0.006em;
+}
+/* A group or a row's title: a card's heading, a group in a list. */
+@utility type-group-title {
+  font-size: var(--type-group-size);
+  line-height: var(--type-group-leading);
+  font-weight: 600;
+}
+/* Reading text. */
+@utility type-body {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+  font-weight: 400;
+  text-wrap: pretty;
+}
+/* The one phrase that matters in a row: what to do, what happened. */
+@utility type-body-strong {
+  font-size: var(--type-body-size);
+  line-height: var(--type-group-leading);
+  font-weight: 500;
+}
+/* What explains the line above it: a reason, a description. */
+@utility type-support {
+  font-size: var(--type-support-size);
+  line-height: var(--type-support-leading);
+  font-weight: 400;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+/* Facts about a thing: when, how many, where. Numbers line up. */
+@utility type-meta {
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-leading);
+  font-weight: 400;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+/* A label above what it names: a field, a group. Short words only; never a sentence. */
+@utility type-overline {
+  font-size: var(--type-overline-size);
+  line-height: var(--type-overline-leading);
+  font-weight: 600;
+  letter-spacing: var(--type-overline-tracking);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+/* Reading width for prose. */
+@utility type-measure {
+  max-width: var(--type-measure);
+}
+
 @utility no-scrollbar {
   scrollbar-width: none;
   &::-webkit-scrollbar {

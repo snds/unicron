@@ -15,6 +15,19 @@ describe("Icon", () => {
     expect(text?.textContent).toBe("home")
   })
 
+  // A ligature in uppercase or with tracking is letters, not an icon (an icon in an overline).
+  it("never takes the surrounding text's case or tracking", () => {
+    const { container } = render(
+      <p style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <Icon name="link" />
+      </p>
+    )
+    const text = container.querySelector("svg[data-slot=icon] text") as SVGTextElement
+    expect(text.style.textTransform).toBe("none")
+    expect(text.style.letterSpacing).toBe("normal")
+    expect(text.style.fontVariantCaps).toBe("normal")
+  })
+
   it("is decorative without a label, and named with one", () => {
     const { container, rerender } = render(<Icon name="home" />)
     expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true")

@@ -87,9 +87,14 @@ export function Icon({
         y="12"
         dominantBaseline="central"
         fontSize="24"
+        // The glyph is a ligature, so it never takes the text's case or tracking: inside an
+        // uppercase label "link" became "LINK", which isn't an icon, and the letters showed.
         style={{
           fontFamily: '"Material Symbols Rounded"',
           fontFeatureSettings: '"liga"',
+          textTransform: "none",
+          letterSpacing: "normal",
+          fontVariantCaps: "normal",
           fontVariationSettings:
             "'FILL' var(--c-icon-fill), 'wght' var(--c-icon-wght), 'GRAD' var(--c-icon-grad), 'opsz' var(--c-icon-opsz)",
           transition:

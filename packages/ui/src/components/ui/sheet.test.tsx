@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import { AdaptiveSheetContent, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "./sheet"
+import { AdaptiveSheetContent, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetHeaderActions, SheetTitle } from "./sheet"
 
 // The strip a desktop app renders so its window stays draggable while a sheet is open (issue #7).
 const strip = <div aria-hidden data-testid="drag-strip" className="fixed inset-x-0 top-0 z-50 h-13" data-tauri-drag-region="deep" />
@@ -133,5 +133,27 @@ describe("SheetContent size and anatomy", () => {
     )
     expect(document.querySelector('[data-slot="sheet-title"]')?.className).toContain("break-words")
     expect(document.querySelector('[data-slot="sheet-footer"]')?.className).toContain("sm:flex-row")
+  })
+})
+
+// A sheet's own actions sat in the header's flow at a larger size than the close button, so the
+// two icons didn't line up (snds/synapse UI review round 2, F16).
+describe("SheetHeaderActions", () => {
+  it("sits beside the close button at its top, and the header keeps clear of both", () => {
+    render(
+      <Sheet open>
+        <SheetContent>
+          <SheetHeaderActions data-testid="actions" />
+          {header}
+        </SheetContent>
+      </Sheet>
+    )
+    const actions = screen.getByTestId("actions")
+    expect(actions.getAttribute("data-slot")).toBe("sheet-header-actions")
+    expect(actions.className).toContain("top-3")
+    expect(actions.className).toContain("right-11")
+    const close = document.querySelector('[data-slot="sheet-close"]') as HTMLElement
+    expect(close.className).toContain("top-3")
+    expect(popup().className).toContain("has-[[data-slot=sheet-header-actions]]:[&>[data-slot=sheet-header]]:pr-20")
   })
 })

@@ -69,7 +69,24 @@ point is Apple's first-party productivity apps rendered with shadcn's restraint.
 ## Typography
 
 Inter Variable for everything, including headings (`--font-heading` aliases `--font-sans`). Body
-is 14px (`text-sm`); headings use weight, not size jumps. Monospace is the platform stack.
+is 14px. Monospace is the platform stack.
+
+Every size comes from a **text role**, never a hand-picked pixel size (`text-[11px]`). The roles
+step by about 1.2, so each level reads as one; weight and ink do the rest:
+
+| Role | Size / leading | Weight | Ink | For |
+|---|---|---|---|---|
+| `type-page-title` | 20 / 28 | 600 | inherits | a screen's subject |
+| `type-section-title` | 16 / 24 | 600 | inherits | a section of a page |
+| `type-group-title` | 14 / 20 | 600 | inherits | a card's heading, a group |
+| `type-body` | 14 / 22 | 400 | inherits | reading text |
+| `type-body-strong` | 14 / 20 | 500 | inherits | the phrase that matters in a row |
+| `type-support` | 13 / 20 | 400 | muted | what explains the line above |
+| `type-meta` | 12 / 16 | 400, tabular | muted | when, how many, where |
+| `type-overline` | 11 / 16, +0.06em, caps | 600 | muted | a short label above what it names |
+
+`type-measure` caps prose at 72ch. Titles and body inherit their ink so a selected row's accent ink
+reaches them; a single-purpose utility (`text-primary`, `font-medium`) still overrides a role.
 
 ## Layout
 
