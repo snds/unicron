@@ -95,11 +95,14 @@ const RECIPES = [
   ...["background", "card", "popover", "sidebar"].map((bg) => ({
     id: `mfg-${bg}`, source: "text-muted-foreground; placeholder:text-muted-foreground", kind: "text-secondary", paint: r("muted-foreground"), over: [r(bg)],
   })),
-  // On a fill or a tint, secondary text is a short label (a key, a tab's name, a highlighted row's
-  // hint), held to Lc 60 like any label on a tint. Holding it to reading text's Lc 75 on the fill
-  // pushed the role a whole level up everywhere else, until secondary read almost as primary.
-  { id: "mfg-muted", source: "kbd: bg-muted text-muted-foreground; inactive tab on the tabs list", kind: "text-on-tint", paint: r("muted-foreground"), over: [r("card"), r("muted")] },
-  { id: "mfg-accent", source: "item hover: bg-accent with secondary text", kind: "text-on-tint", paint: r("muted-foreground"), over: [r("popover"), r("accent")] },
+  // On a fill, a fill re-points --muted-foreground at --muted-foreground-on-fill for its content
+  // (@unicron/ui's styles), so secondary text there is painted with that role. One role holding
+  // Lc 75 on the page and on every fill had to be strong enough for the fills, and so sat almost
+  // at primary text's level everywhere else.
+  { id: "mfg-muted", source: "kbd: bg-muted text-muted-foreground; inactive tab on the tabs list", kind: "text-secondary", paint: r("muted-foreground-on-fill"), over: [r("card"), r("muted")] },
+  { id: "mfg-accent", source: "item hover: bg-accent with secondary text", kind: "text-secondary", paint: r("muted-foreground-on-fill"), over: [r("popover"), r("accent")] },
+  { id: "mfg-secondary", source: "secondary text on bg-secondary", kind: "text-secondary", paint: r("muted-foreground-on-fill"), over: [r("card"), r("secondary")] },
+  { id: "mfg-input-dark", source: "placeholder:text-muted-foreground on dark:bg-input/30", kind: "text-secondary", modes: ["dark"], paint: r("muted-foreground"), over: [r("background"), r("input", 0.3)] },
   { id: "destr-text-card", source: "alert, field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("card")] },
   { id: "destr-text-page", source: "field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("background")] },
   { id: "protected-page", source: "protected value: text-protected", kind: "text-secondary", paint: r("protected"), over: [r("background")] },

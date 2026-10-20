@@ -63,10 +63,12 @@ point is Apple's first-party productivity apps rendered with shadcn's restraint.
   chrome and a selected row. `500` and `400` are fills: as text they read Lc 32-67. Red's text
   steps are `700` and `200` (`--destructive`), because red is drawn at more chroma.
 - Text has two inks a level apart, placed as Emphasis Engine places them: `foreground` is text
-  level 5, `muted-foreground` level 3. Secondary text reads Lc 75 or more on every page surface
-  and at least Lc 20 under primary text (Lc 81 under 106 on white; Lc 77 under 105 in dark), so it
-  reads as secondary, not as a slightly greyer primary. On a fill (a key, an inactive tab, a
-  highlighted row) it's a label, held to Lc 60.
+  level 5, `muted-foreground` level 3. Secondary text reads Lc 75 or more on every surface and at
+  least Lc 20 under primary text (Lc 81 under 106 on white; Lc 80 under 105 in dark), so it reads
+  as secondary, not as a slightly greyer primary. Inside a fill (`bg-muted`, `bg-accent`,
+  `bg-secondary`, a highlighted or selected item, a key) it takes `muted-foreground-on-fill`, a
+  shade stronger in light mode, so it still reads Lc 75 there; components and apps keep writing
+  `text-muted-foreground`.
 - Control borders are strong enough to find a field (3:1, `neutral.450` in light); separators stay
   quiet (`neutral.200`). Every pair a component paints is held to its element kind's contrast floor,
   APCA first (docs/02-tokens.md → Contrast).

@@ -99,6 +99,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /*
+   * Secondary text on a fill: a fill re-points --muted-foreground for its own content at the
+   * stronger --muted-foreground-on-fill, so text-muted-foreground still reads APCA Lc 75 on it
+   * while secondary text on the page sits a full emphasis level under primary (docs/02-tokens.md
+   * → Contrast). :where() keeps it at zero specificity, so a class still overrides it.
+   */
+  :where(.bg-muted, .bg-accent, .bg-secondary, .bg-sidebar-accent, [data-slot="kbd"], [data-highlighted], [data-selected]) {
+    --muted-foreground: var(--muted-foreground-on-fill);
+  }
   body {
     @apply bg-background text-foreground antialiased;
   }
