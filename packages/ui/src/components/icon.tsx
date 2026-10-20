@@ -77,10 +77,14 @@ export function Icon({
       style={{ ...axes, ...style }}
       {...props}
     >
+      {/* Anchored at the left edge, not centred with text-anchor="middle": WebKit (Safari, and
+          every Mac app's web view) centres SVG text by the width of the unjoined letters ("home"
+          is four glyphs, 96 units) before the font joins them into one icon, so a centred icon
+          lands far off to the left, outside the box. Every Material Symbol is exactly 1em wide,
+          so at x=0 it fills the 24-unit box the same in every engine. */}
       <text
-        x="12"
+        x="0"
         y="12"
-        textAnchor="middle"
         dominantBaseline="central"
         fontSize="24"
         style={{
