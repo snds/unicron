@@ -99,8 +99,9 @@ function SheetContent({
           // app's title bar strip never overlaps the panel.
           "bg-popover text-popover-foreground fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:top-(--c-dialog-titlebar-inset) data-[side=left]:bottom-0 data-[side=left]:left-0 data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:h-auto data-[side=top]:border-b data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
           SHEET_SIZES[size],
-          // The header keeps clear of the close button, so a long title wraps before it, not under it.
-          showCloseButton && "[&>[data-slot=sheet-header]]:pr-12",
+          // The header keeps clear of the close button, so a long title wraps before it, not under
+          // it; and of the header's actions too, when there are some (SheetHeaderActions).
+          showCloseButton && "[&>[data-slot=sheet-header]]:pr-12 has-[[data-slot=sheet-header-actions]]:[&>[data-slot=sheet-header]]:pr-20",
           fullscreen && "gap-0 rounded-none border-0 pt-[env(safe-area-inset-top)] data-[side=bottom]:h-[calc(100dvh-var(--c-dialog-titlebar-inset))]",
           className
         )}
@@ -251,6 +252,22 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * The sheet's own actions (copy a link, pin, open elsewhere), in one row with its close button:
+ * pinned beside it at the same top, for `IconButton size="icon-sm"`, the close button's size, so
+ * the row's icons line up. Put it anywhere inside `SheetContent`. Without a close button
+ * (`showCloseButton={false}`), pass `className="right-3"` to take its place.
+ */
+function SheetHeaderActions({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-header-actions"
+      className={cn("absolute top-3 right-11 flex items-center gap-1", className)}
+      {...props}
+    />
+  )
+}
+
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -291,6 +308,7 @@ export {
   SheetContent,
   AdaptiveSheetContent,
   SheetHeader,
+  SheetHeaderActions,
   SheetFooter,
   SheetTitle,
   SheetDescription,
