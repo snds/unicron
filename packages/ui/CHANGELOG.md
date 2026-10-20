@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 0.13.1
+
+### Patch Changes
+
+- 7895e13: Icon: icons show in WebKit (Safari and Mac app web views). The glyph is anchored at the left edge instead of centred with `text-anchor="middle"`, which WebKit measures before the ligature joins the letters, pushing the icon out of its box. No change in Chromium or Firefox.
+
 ## 0.13.0
 
 ### Minor Changes
