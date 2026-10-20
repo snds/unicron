@@ -70,8 +70,18 @@ comes from [Emphasis Engine](https://github.com/snds/emphasis-engine) (`docs/arc
   | Surface, state, separator | reported as OKLCH ΔL | cards, hovers, `border-border` |
 
   Non-text keeps the WCAG ratio because APCA has no calibrated target for 1px lines and rings.
+- **Text roles sit at emphasis levels, not only above a floor.** Emphasis Engine places primary
+  text at text level 5 and secondary at level 3 (`src/engine/intent.ts`). Floors alone let
+  secondary drift up to the first step that cleared every surface, muted fills included, until it
+  read Lc 87 under primary's 106: one level, not two. So `contrast.mjs` also gates the gap:
+  primary over secondary text, at least Lc 20 apart on each surface they share.
+- **On a fill, an ink re-points for its content.** A fill (`bg-muted`, `bg-accent`, `bg-secondary`,
+  `bg-sidebar-accent`, a highlighted or selected item, a key) sets `--muted-foreground` to
+  `--muted-foreground-on-fill` for what's inside it (`@unicron/ui`'s styles, at zero specificity).
+  Secondary text keeps Lc 75 on the fill without dragging the role up everywhere else, and
+  components and apps keep writing `text-muted-foreground`.
 - **A role points at the weakest ramp step that clears every recipe it paints.** When no step
-  does, a tier-1 step is added beside the ramp (`neutral.450`, `red.300`, `red.600`,
+  does, a tier-1 step is added beside the ramp (`neutral.250`, `neutral.450`, `neutral.550`, `red.300`, `red.600`,
   `white-alpha.35`); existing tier-1 values never change.
 - **Accent hues have text steps.** Apps assign the accent hues and draw them as text too, so each
   hue has a `600` (light) and a `300` (dark) held to reading text on `neutral.0`, `.50` and `.100`,
