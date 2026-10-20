@@ -2,6 +2,9 @@
 
 _Lockdown decision D17, 2026-10-15. Contribution is open. Ownership is not._
 
+> Unicron is a personal project. "Contribution" here means Sean's own apps, the consumers in the
+> table below. Pull requests from outside contributors aren't accepted ([CONTRIBUTING.md](../CONTRIBUTING.md)).
+
 ## Roles
 
 | Role | Who | Owns |
