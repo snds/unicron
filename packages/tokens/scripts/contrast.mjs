@@ -95,8 +95,11 @@ const RECIPES = [
   ...["background", "card", "popover", "sidebar"].map((bg) => ({
     id: `mfg-${bg}`, source: "text-muted-foreground; placeholder:text-muted-foreground", kind: "text-secondary", paint: r("muted-foreground"), over: [r(bg)],
   })),
-  { id: "mfg-muted", source: "kbd: bg-muted text-muted-foreground; inactive tab on the tabs list", kind: "text-secondary", paint: r("muted-foreground"), over: [r("card"), r("muted")] },
-  { id: "mfg-accent", source: "item hover: bg-accent with secondary text", kind: "text-secondary", paint: r("muted-foreground"), over: [r("popover"), r("accent")] },
+  // On a fill or a tint, secondary text is a short label (a key, a tab's name, a highlighted row's
+  // hint), held to Lc 60 like any label on a tint. Holding it to reading text's Lc 75 on the fill
+  // pushed the role a whole level up everywhere else, until secondary read almost as primary.
+  { id: "mfg-muted", source: "kbd: bg-muted text-muted-foreground; inactive tab on the tabs list", kind: "text-on-tint", paint: r("muted-foreground"), over: [r("card"), r("muted")] },
+  { id: "mfg-accent", source: "item hover: bg-accent with secondary text", kind: "text-on-tint", paint: r("muted-foreground"), over: [r("popover"), r("accent")] },
   { id: "destr-text-card", source: "alert, field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("card")] },
   { id: "destr-text-page", source: "field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("background")] },
   { id: "protected-page", source: "protected value: text-protected", kind: "text-secondary", paint: r("protected"), over: [r("background")] },
@@ -406,6 +409,25 @@ for (const mode of ["light", "dark"]) {
   }
 }
 
+// ── Emphasis levels ──────────────────────────────────────────────────────────────────────────
+// A floor only says how faint a role may get. Emphasis Engine also places each text role at a
+// level (src/engine/intent.ts: primary text at text level 5, secondary at level 3), and the levels
+// have to read apart, or secondary text reads as primary and a screen's hierarchy flattens. So
+// primary and secondary text sit at least Lc 20 apart on every surface they share.
+const LEVEL_GAP = 20
+const LEVEL_PAIRS = [["fg-page", "mfg-background"], ["fg-card", "mfg-card"], ["fg-popover", "mfg-popover"], ["fg-sidebar", "mfg-sidebar"]]
+const gaps = []
+for (const mode of ["light", "dark"]) {
+  for (const [hi, lo] of LEVEL_PAIRS) {
+    const a = rows.find((r) => r.mode === mode && r.id === hi)
+    const b = rows.find((r) => r.mode === mode && r.id === lo)
+    if (!a || !b) throw new Error(`levels: ${mode} ${hi} or ${lo} isn't measured`)
+    const gap = a.lc - b.lc
+    if (gap < LEVEL_GAP) failures++
+    gaps.push({ mode, hi, lo, a: a.lc, b: b.lc, gap, meets: gap >= LEVEL_GAP })
+  }
+}
+
 // ── Print ────────────────────────────────────────────────────────────────────────────────────
 const pad = (s, n, right = false) => (right ? String(s).padStart(n) : String(s).padEnd(n))
 const measure = (r) =>
@@ -425,10 +447,15 @@ console.log(
     `solid Lc 30 against the page · control border and focus 3:1 as drawn (WCAG 1.4.11) · surfaces, states, separators: OKLCH ΔL, reported`
 )
 
+console.log(`emphasis levels: primary text over secondary text, at least Lc ${LEVEL_GAP} apart on the same surface`)
+for (const g of gaps) {
+  console.log(`${pad(g.mode, 5)} ${pad(`${g.hi} / ${g.lo}`, 32)} Lc ${g.a.toFixed(1)} over Lc ${g.b.toFixed(1)}: ${g.gap.toFixed(1)} apart  ${g.meets ? "pass" : "FAIL"}`)
+}
+
 const gatedRows = rows.filter((r) => r.status !== "info")
 const waivedRows = rows.filter((r) => r.status === "WAIVED")
 if (failures) {
-  console.error(`✗ contrast: ${failures} of ${gatedRows.length} gated recipes under their floor`)
+  console.error(`✗ contrast: ${failures} misses (recipes under their floor, or emphasis levels too close)`)
   process.exit(1)
 }
 console.log(

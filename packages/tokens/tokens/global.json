@@ -11,6 +11,7 @@
     "400": { "$type": "color", "$value": "oklch(0.71 0.01 260)" },
     "450": { "$type": "color", "$value": "oklch(0.64 0.011 260)", "$description": "Control borders in light mode (--input): 3.4:1 on white, over the 3:1 a field's edge needs (WCAG 1.4.11)." },
     "500": { "$type": "color", "$value": "oklch(0.556 0.012 260)" },
+    "550": { "$type": "color", "$value": "oklch(0.49 0.012 260)", "$description": "Secondary text in light mode (--muted-foreground): Emphasis Engine's text level 3, the weakest step at APCA Lc 75 on every page surface it reads on (Lc 81 on white, 76 on neutral.50). No ramp step sat there: 500 is Lc 73 on white, 600 is 87." },
     "600": { "$type": "color", "$value": "oklch(0.44 0.012 260)" },
     "700": { "$type": "color", "$value": "oklch(0.34 0.012 260)" },
     "800": { "$type": "color", "$value": "oklch(0.26 0.01 260)" },
