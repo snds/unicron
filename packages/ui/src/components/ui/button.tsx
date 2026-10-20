@@ -6,7 +6,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
-const buttonVariants = cva(
+const variants = cva(
   "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 aria-invalid:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
@@ -52,6 +52,17 @@ const buttonVariants = cva(
     },
   }
 )
+
+/**
+ * A button's classes, merged. The base carries `border-transparent` and a variant its own border
+ * colour (`outline`: `border-border`); unmerged, both land in the class list and the stylesheet's
+ * order picks the winner, which was the transparent one in light mode. So a link drawn as a button
+ * (`<Link className={buttonVariants({ variant: "outline" })}>`) had no edge beside a real button.
+ * Merging here makes every caller get what Button gets.
+ */
+function buttonVariants(props?: Parameters<typeof variants>[0]): string {
+  return cn(variants(props))
+}
 
 function Button({
   className,
