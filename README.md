@@ -3,6 +3,11 @@
 Sean Sands' shared design system. One set of tokens and one set of React primitives that
 Mailbird, Synapse and Lockdown build on. Public, personal, Apache-2.0.
 
+> **A personal project.** Unicron is public so that Sean's apps can install it without logging in.
+> It isn't a community project: pull requests from outside contributors aren't accepted, and issues
+> may go unanswered. You're welcome to read it, fork it and use it under Apache-2.0. See
+> [CONTRIBUTING.md](CONTRIBUTING.md).
+
 | Package | What it is |
 |---|---|
 | `@unicron/tokens` (`packages/tokens`) | Design tokens as DTCG JSON in three tiers (global → semantic → component), built to `dist/tokens.css` (CSS custom properties + a Tailwind v4 `@theme inline` map) and `dist/tokens.json` (flat). |
