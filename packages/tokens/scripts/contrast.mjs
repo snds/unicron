@@ -91,6 +91,13 @@ const RECIPES = [
   { id: "fg-sidebar", source: "sidebar: text-sidebar-foreground", kind: "text-primary", paint: r("sidebar-foreground"), over: [r("sidebar")] },
   { id: "fg-sidebar-accent", source: "sidebar item: bg-sidebar-accent", kind: "text-primary", paint: r("sidebar-accent-foreground"), over: [r("sidebar"), r("sidebar-accent")] },
 
+  // Support text: descriptions, an empty state's text (level 4)
+  ...["background", "card", "popover", "sidebar"].map((bg) => ({
+    id: `sfg-${bg}`, source: "text-support-foreground; type-support; dialog, sheet, field, item and empty descriptions", kind: "text-secondary", paint: r("support-foreground"), over: [r(bg)],
+  })),
+  { id: "sfg-muted", source: "support text on bg-muted", kind: "text-secondary", paint: r("support-foreground"), over: [r("card"), r("muted")] },
+  { id: "sfg-accent", source: "support text in a selected or highlighted row (bg-accent)", kind: "text-secondary", paint: r("support-foreground"), over: [r("popover"), r("accent")] },
+
   // Secondary text: descriptions, placeholders, shortcut keys, inactive tabs
   ...["background", "card", "popover", "sidebar"].map((bg) => ({
     id: `mfg-${bg}`, source: "text-muted-foreground; placeholder:text-muted-foreground", kind: "text-secondary", paint: r("muted-foreground"), over: [r(bg)],
@@ -414,11 +421,16 @@ for (const mode of ["light", "dark"]) {
 
 // ── Emphasis levels ──────────────────────────────────────────────────────────────────────────
 // A floor only says how faint a role may get. Emphasis Engine also places each text role at a
-// level (src/engine/intent.ts: primary text at text level 5, secondary at level 3), and the levels
-// have to read apart, or secondary text reads as primary and a screen's hierarchy flattens. So
-// primary and secondary text sit at least Lc 20 apart on every surface they share.
-const LEVEL_GAP = 20
-const LEVEL_PAIRS = [["fg-page", "mfg-background"], ["fg-card", "mfg-card"], ["fg-popover", "mfg-popover"], ["fg-sidebar", "mfg-sidebar"]]
+// level (src/engine/intent.ts; its export carries text levels 1 to 5), and the levels have to read
+// apart, or every lower role reads as one and a screen's hierarchy flattens.
+// Three text levels since the support level: primary (5), support (4), secondary (3), each at least
+// Lc 10 from the next on every surface they share. The coded gap is a stand-in: what the eye gets is
+// the drawn gap, and rendering takes more from 13px support text than from 14px body, so equal
+// drawn steps need uneven coded ones (about 10.5 above support, 14 below in light). Apps check the
+// drawn levels, 12 apart (Synapse: scripts/emphasis-check.sh).
+const LEVEL_GAP = 10
+const SURFACES = [["page", "background"], ["card", "card"], ["popover", "popover"], ["sidebar", "sidebar"]]
+const LEVEL_PAIRS = SURFACES.flatMap(([fg, bg]) => [[`fg-${fg}`, `sfg-${bg}`], [`sfg-${bg}`, `mfg-${bg}`]])
 const gaps = []
 for (const mode of ["light", "dark"]) {
   for (const [hi, lo] of LEVEL_PAIRS) {
@@ -450,7 +462,7 @@ console.log(
     `solid Lc 30 against the page · control border and focus 3:1 as drawn (WCAG 1.4.11) · surfaces, states, separators: OKLCH ΔL, reported`
 )
 
-console.log(`emphasis levels: primary text over secondary text, at least Lc ${LEVEL_GAP} apart on the same surface`)
+console.log(`emphasis levels: primary over support over secondary text, each at least Lc ${LEVEL_GAP} from the next on the same surface`)
 for (const g of gaps) {
   console.log(`${pad(g.mode, 5)} ${pad(`${g.hi} / ${g.lo}`, 32)} Lc ${g.a.toFixed(1)} over Lc ${g.b.toFixed(1)}: ${g.gap.toFixed(1)} apart  ${g.meets ? "pass" : "FAIL"}`)
 }
