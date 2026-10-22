@@ -108,6 +108,14 @@
   :where(.bg-muted, .bg-accent, .bg-secondary, .bg-sidebar-accent, [data-slot="kbd"], [data-highlighted], [data-selected]) {
     --muted-foreground: var(--muted-foreground-on-fill);
   }
+  /*
+   * An icon's weight follows the text level it sits with. Icon strokes are heavier than text's, so
+   * at the default weight a muted icon drew a notch above the muted text beside it. Inside
+   * secondary text (level 3) icons take weight 300 (--c-icon-wght), and draw at the text's level.
+   */
+  :where(.text-muted-foreground, .type-meta, .type-overline, [data-slot="kbd"]) {
+    --c-icon-wght: 300;
+  }
   body {
     @apply bg-background text-foreground antialiased;
   }
@@ -116,7 +124,9 @@
 /*
  * Text roles: every size in a product comes from one of these, never a hand-picked pixel size.
  * A screen with two sizes (12 and 14px) and hand-made 11 and 13px labels has nothing that reads
- * as a heading. A step of about 1.2 between sizes makes each level read as a level; weight and ink
+ * as a heading. Ink follows Emphasis Engine's text levels: titles and body inherit (level 5,
+ * --foreground), support is level 4 (--support-foreground), meta and overline level 3
+ * (--muted-foreground). A step of about 1.2 between sizes makes each level read as a level; weight and ink
  * do the rest. Titles and body inherit their ink, so a selected row's accent ink still reaches
  * them; support, meta and overline are muted by default. Muted inks hold APCA Bronze at their
  * sizes (Lc 75 under 16px). Promoted from snds/synapse (UI review round 2, F14).
@@ -175,12 +185,12 @@
   line-height: var(--type-group-leading);
   font-weight: 500;
 }
-/* What explains the line above it: a reason, a description. */
+/* What explains the line above it: a reason, a description. Text level 4 (--support-foreground). */
 @utility type-support {
   font-size: var(--type-support-size);
   line-height: var(--type-support-leading);
   font-weight: 400;
-  color: var(--muted-foreground);
+  color: var(--support-foreground);
   text-wrap: pretty;
 }
 /* Facts about a thing: when, how many, where. Numbers line up. */
@@ -195,7 +205,8 @@
 @utility type-overline {
   font-size: var(--type-overline-size);
   line-height: var(--type-overline-leading);
-  font-weight: 600;
+  /* 500, not 600: at 600 the smallest label drew as strong as support text a level above it. */
+  font-weight: 500;
   letter-spacing: var(--type-overline-tracking);
   text-transform: uppercase;
   color: var(--muted-foreground);
