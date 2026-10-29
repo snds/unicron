@@ -192,12 +192,12 @@ describe("CommandDialog size", () => {
       </CommandDialog>
     )
     const content = () => document.querySelector('[data-slot="dialog-content"]') as HTMLElement
-    expect(content().className).toContain("sm:max-w-sm")
+    expect(content()).toHaveAttribute("data-size", "sm")
     rerender(
       <CommandDialog open size="lg">
         <Command><CommandList /></Command>
       </CommandDialog>
     )
-    expect(content().className).toContain("sm:max-w-lg")
+    expect(content()).toHaveAttribute("data-size", "lg")
   })
 })

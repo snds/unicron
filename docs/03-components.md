@@ -89,18 +89,44 @@ components) rather than hand-writing.
   - On phones, each action is a round 40px icon button (✓, ×, trash), the layout of Apple's sheet controls. Its words stay as its accessible name. `icon` overrides the glyph.
   - Use it when a dialog has a way to back out. A dialog with one action keeps a plain `DialogFooter` with a text button, because a lone ✓ says less than the words.
 - **Menus are frosted glass** (`bg-popover/70` with a backdrop blur), by decision (2026-10-15). Don't override them to solid.
-- **DialogContent `size`** sets how wide a dialog grows from `sm` up: `sm` (the default, 24rem) for a question, `md` (28rem) for a short form, `lg` (32rem) for settings, `xl` (42rem) for a composer, and `2xl` (48rem) for a preview. Every dialog scrolls inside itself when it's taller than the screen, so no dialog sets its own width or scrolling. A dialog with its own layout (a composer's header, body, and footer) still sets its height and padding.
-  - The names are product sizes, not Tailwind's `max-w-*` steps. They match Tailwind's up to `lg`, then skip one:
+- **DialogContent `size`** sets how wide a dialog is from `sm` up. <a name="dialog-widths"></a>Each size is a range, not one width. The dialog fits its content: short content sits at the size's min width, and a long line, a table or a wide field pushes it out to the max width, where text starts to wrap. A dialog is never wider than the screen less 1rem each side, and on phones it is that wide. Every dialog scrolls inside itself when it's taller than the screen, so no dialog sets its own width or scrolling. A dialog with its own layout (a composer's header, body, and footer) still sets its height and padding.
 
-    | `size` | Max width | Tailwind class | For |
+    | `size` | Min width | Max width | For |
     |---|---|---|---|
-    | `sm` (default) | 24rem | `max-w-sm` | a question |
-    | `md` | 28rem | `max-w-md` | a short form |
-    | `lg` | 32rem | `max-w-lg` | settings |
-    | `xl` | 42rem | `max-w-2xl` | a composer |
-    | `2xl` | 48rem | `max-w-3xl` | a preview |
+    | `xs` | 16rem | 20rem | very narrow; only under the rule below |
+    | `sm` (default) | 24rem | 28rem | a question |
+    | `md` | 28rem | 36rem | a short form |
+    | `lg` | 32rem | 42rem | settings |
+    | `xl` | 42rem | 56rem | a composer |
+    | `2xl` | 48rem | 64rem | a preview |
 
-  - Tailwind's `max-w-xl` (36rem) has no size, on purpose. A dialog that was `max-w-xl` before moving to `size` takes `lg` (narrower) or `xl` (wider), whichever its content fits. The mapping is fixed: renaming or remapping a size would move every dialog an app already has.
+  - The widths are tokens: `--c-dialog-<size>-min-width` and `--c-dialog-<size>-max-width`. An app that needs different ranges re-maps them in its extension layer.
+  - Each min width is the fixed width the size had up to 0.15. So moving to ranges made no dialog narrower; dialogs with more content got wider.
+  - **When a very narrow dialog is allowed.** `xs` is the only narrow size. Use it only when all of these hold:
+    1. At most one short sentence of text.
+    2. At most two actions, each one word ("OK", "Cancel", "Unlock").
+    3. At most one short field: a PIN, a 6-digit code.
+    4. Nothing that can't wrap: no file name, email address, path, URL or table.
+
+    If any one fails, use `sm` or wider. A question that names the thing it acts on ("Delete *Quarterly report final v3.pdf*?") is `sm`, because names run long.
+  - `CommandDialog` keeps a fixed width, its size's min, so the palette doesn't change width as results come and go.
+  - The names are product sizes, not Tailwind's `max-w-*` steps, and they stay fixed: renaming a size would move every dialog an app already has.
+- **Closing on a click outside** (`closeOnOutsideClick` on `Dialog`, `Sheet` and `CommandDialog`). A click or tap outside the popup closes it: on the backdrop, or anywhere else when there is no backdrop. It is on by default. Turn it off (`closeOnOutsideClick={false}`) in three cases:
+  - a form with unsaved work, where a stray click would throw the work away;
+  - a destructive or irreversible step, where closing should be a choice, not an accident;
+  - a detail sheet beside a list (`SheetContent backdrop={false}` with `Sheet modal={false}`), where a click on another row should change the sheet, not close it.
+
+  Escape and the close button still close it, so a dialog with the prop off needs a visible Cancel. Base UI's own `disablePointerDismissal` still works and wins if both are passed. App panels and panes built outside unicron use the same prop name, with the same default.
+- **Sticky footers** (`sticky` on `DialogFooter`, `DialogActions` and `SheetFooter`). The footer stays pinned to the bottom of the container that scrolls around it, so its actions never scroll out of view. Off by default. When on, the footer is opaque, so content scrolls under it, not through it. In a dialog the popup itself scrolls, so `<DialogFooter sticky>` is all it takes. In a `SheetContent`, give the sheet (or the part of it that scrolls) `overflow-y-auto`; `AdaptiveSheetContent` already scrolls its content area. Use it on any footer below content that can grow: settings, filters, long forms.
+- **Menu width** (`width` on `DropdownMenuContent` and `DropdownMenuSubContent`). A list can match the control that opens it or size itself apart from it:
+
+    | `width` | The list is | For |
+    |---|---|---|
+    | `trigger` (default) | exactly as wide as its trigger | a select-style field, where the list lines up under it |
+    | `fit` | as wide as its items, at least as wide as the trigger, at most `--c-menu-max-width` | a small button ("Change") that opens longer choices |
+    | `auto` | as wide as its items, whatever the trigger, at most `--c-menu-max-width` | an icon button; a submenu (its default) |
+
+  Every list is at least `--c-menu-min-width` (8rem) wide. `fit` and `auto` stop at `--c-menu-max-width` (20rem) and at the space left on screen; past that an item's label wraps onto a second line instead of making the list wider. `trigger` follows the trigger, however wide. The tokens are the place to change the limits, not a `className` on one list.
 - **DialogTitle** lays a leading Back button out inline with the text, for dialogs with steps.
 - **Skeleton** is sized by `className` (an avatar, a line of text), or by `variant="row"` for one list row: full width and `--c-skeleton-row-height` tall (2.5rem, an `Item size="sm"` with one line), so a list skeleton is `<Skeleton variant="row" />` three times with no `className`. An app with a density setting re-maps `--c-skeleton-row-height` once, in its extension layer, to its own row height (`--c-skeleton-row-height: var(--c-row-height)`), and every row skeleton follows the density.
 - **Command** is cmdk under unicron's styles. Three things it adds:
