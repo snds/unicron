@@ -42,10 +42,11 @@ function ItemSeparator({
 
 const itemVariants = cva(
   // Interactive when rendered as a link or a button (render={<a />} / render={<button />}):
-  // hover, a selected state (data-selected="true"), and disabled. Left-aligned, since a
+  // hover, a pressed state (the hover fill with 8% foreground), a selected state
+  // (data-selected="true"), and disabled. Left-aligned, since a
   // <button> centres its text by default. A row with an ItemMain gets the same hover
   // and focus ring from it, while its ItemActions stay their own controls.
-  "relative has-[>[data-slot=item-main]:hover]:bg-muted has-[>[data-slot=item-main]:focus-visible]:border-ring has-[>[data-slot=item-main]:focus-visible]:ring-[3px] has-[>[data-slot=item-main]:focus-visible]:ring-ring/50 [a,button]:hover:bg-muted data-[selected=true]:bg-muted rounded-lg border text-left text-sm group/item flex w-full flex-wrap items-center transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a,button]:transition-colors disabled:pointer-events-none disabled:opacity-50",
+  "relative has-[>[data-slot=item-main]:hover]:bg-muted has-[>[data-slot=item-main]:focus-visible]:border-ring has-[>[data-slot=item-main]:focus-visible]:ring-[3px] has-[>[data-slot=item-main]:focus-visible]:ring-ring/50 [a,button]:hover:bg-muted [a,button]:active:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_8%)] has-[>[data-slot=item-main]:active]:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_8%)] data-[selected=true]:bg-muted rounded-lg border text-left text-sm group/item flex w-full flex-wrap items-center transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a,button]:transition-colors disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {

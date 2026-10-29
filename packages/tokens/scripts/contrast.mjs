@@ -9,7 +9,7 @@
 // every recipe it paints; a role with no passing step gets a new tier-1 step.
 //
 // What it reads: dist/tokens.css (run scripts/build.mjs first; `pnpm test` does). It resolves
-// each role's light value from the `:root` blocks and its dark value from the `.dark` blocks,
+// each role's light value from the `:root` (and `:root, .light`) blocks and its dark value from the `.dark` blocks,
 // following var() chains across all three tiers, so the numbers are the ones a browser renders.
 //
 // Colour math is done here: oklch() / oklab() / color-mix(in oklab, …) → OKLab → linear sRGB →
@@ -121,6 +121,20 @@ const RECIPES = [
   { id: "destr-label-hover-light", source: "destructive: hover:bg-destructive/20", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("destructive", 0.2)] },
   { id: "destr-label-dark", source: "destructive: dark:bg-destructive/20", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("destructive", 0.2)] },
 
+  // Pressed (active:) tints differ from hover. A step past hover would sink a destructive label
+  // under Lc 60 (/30 light: Lc 53; /40 dark: Lc 58), so destructive presses to halfway between
+  // rest and hover: /15 in light, /25 in dark. Ghost-destructive hovers on its own tint (/10,
+  // dark /20), so it shows on a muted fill too, and presses the same way.
+  { id: "destr-label-active-light", source: "destructive: active:bg-destructive/15; ghost-destructive: active:bg-destructive/15", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("destructive", 0.15)] },
+  { id: "destr-label-hover-dark", source: "destructive: dark:hover:bg-destructive/30", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("destructive", 0.3)] },
+  { id: "destr-label-active-dark", source: "destructive: dark:active:bg-destructive/25; ghost-destructive: dark:active:bg-destructive/25", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("destructive", 0.25)] },
+  { id: "destr-label-ghost-hover-dark", source: "ghost-destructive: dark:hover:bg-destructive/20 on bg-muted", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("muted"), r("destructive", 0.2)] },
+  { id: "destr-label-ghost-hover-muted-light", source: "ghost-destructive: hover:bg-destructive/10 on bg-muted", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("muted"), r("destructive", 0.1)] },
+  // Primary text on a pressed row or ghost button: the hover fill with 8% foreground mixed in.
+  { id: "fg-pressed", source: "item rows, ghost, outline: active:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_8%)]", kind: "text-primary", paint: r("foreground"), over: [r("card"), mix("muted", "foreground", 0.08)] },
+  // Default presses to /90, between rest and hover (/70 would leave the dark label at Lc 58).
+  { id: "pfg-active", source: "button default: active:bg-primary/90", kind: "on-solid", paint: r("primary-foreground"), over: [r("card"), r("primary", 0.9)] },
+
   // Labels on solids
   { id: "pfg", source: "button default: bg-primary text-primary-foreground", kind: "on-solid", paint: r("primary-foreground"), over: [r("card"), r("primary")] },
   { id: "pfg-hover", source: "button default: hover:bg-primary/80", kind: "on-solid", paint: r("primary-foreground"), over: [r("card"), r("primary", 0.8)] },
@@ -148,6 +162,16 @@ const RECIPES = [
   ...["background", "card", "popover", "sidebar"].map((bg) => ({
     id: `ring-${bg}`, source: "focus-visible:ring-ring/50, outline-ring/50", kind: "focus", paint: r("ring", 0.5), over: [r(bg)],
   })),
+  // The destructive button and badge use the shared ring (they once drew ring-destructive/20, at
+  // 1.43:1 in light); gated here so a variant can't quietly bring its own back.
+  ...["background", "card", "popover"].map((bg) => ({
+    id: `ring-destructive-${bg}`, source: "button, badge destructive: focus-visible:ring-ring/50 (the shared ring)", kind: "focus", paint: r("ring", 0.5), over: [r(bg)],
+  })),
+  // An invalid field's ring is drawn at rest, beside its border, and has to show as much as focus.
+  ...["background", "card", "popover"].flatMap((bg) => [
+    { id: `ring-invalid-${bg}-light`, source: "aria-invalid:ring-destructive/60", kind: "focus", modes: ["light"], paint: r("destructive", 0.6), over: [r(bg)] },
+    { id: `ring-invalid-${bg}-dark`, source: "dark:aria-invalid:ring-destructive/50", kind: "focus", modes: ["dark"], paint: r("destructive", 0.5), over: [r(bg)] },
+  ]),
   { id: "ring-muted", source: "tabs: focus-visible:ring-ring/50 on bg-muted", kind: "focus", paint: r("ring", 0.5), over: [r("card"), r("muted")] },
 
   // States (reported): a hover or a fill has to differ from rest
@@ -156,6 +180,7 @@ const RECIPES = [
   { id: "outline-hover", source: "dark:hover:bg-input/50", kind: "state", modes: ["dark"], paint: r("input", 0.5), over: [r("card")] },
   { id: "switch-off", source: "switch: data-unchecked:bg-input (dark: /80)", kind: "state", paint: r("input"), over: [r("card")] },
   { id: "primary-hover", source: "hover:bg-primary/80 against rest", kind: "state", paint: r("primary", 0.8), over: [r("card")] },
+  { id: "pressed-vs-hover", source: "pressed rows and ghost buttons against hover (bg-muted)", kind: "state", paint: mix("muted", "foreground", 0.08), over: [r("card"), r("muted")] },
   { id: "destr-tint", source: "bg-destructive/10 (dark /20)", kind: "state", paint: r("destructive", 0.1), over: [r("card")] },
   { id: "item-highlight", source: "data-highlighted:bg-foreground/10", kind: "state", paint: r("foreground", 0.1), over: [r("popover")] },
 
@@ -185,7 +210,8 @@ const WAIVED = new Map([])
 // ── Resolve the CSS ──────────────────────────────────────────────────────────────────────────
 function declarations(selector) {
   const map = new Map()
-  const re = new RegExp(`(?:^|\\n)${selector.replace(".", "\\.")} \\{\\n([\\s\\S]*?)\\n\\}`, "g")
+  // A tier with a dark mode emits its light block on `:root, .light`; the others on `:root`.
+  const re = new RegExp(`(?:^|\\n)${selector.replace(".", "\\.")}(?:, \\.light)? \\{\\n([\\s\\S]*?)\\n\\}`, "g")
   for (const block of css.matchAll(re)) {
     for (const line of block[1].split("\n")) {
       const m = line.match(/^\s*(--[\w-]+):\s*(.+);\s*$/)

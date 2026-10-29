@@ -4,6 +4,8 @@
 
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+import { mergeProps } from "@base-ui/react/merge-props"
+import { useRender } from "@base-ui/react/use-render"
 import { cn } from "../../lib/utils"
 
 import { Icon } from "../icon"
@@ -80,22 +82,55 @@ function DropdownMenuContent({
   )
 }
 
+/** Set by a group, so a label inside one can name it (Base UI's GroupLabel needs a group). */
+const InMenuGroup = React.createContext(false)
+
 function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
-  return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+  return (
+    <InMenuGroup.Provider value>
+      <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+    </InMenuGroup.Provider>
+  )
 }
 
+const LABEL = "text-muted-foreground px-1.5 py-1 text-xs font-medium data-inset:pl-7"
+
+/**
+ * A small heading in a menu. Inside a `DropdownMenuGroup` or `DropdownMenuRadioGroup` it names the
+ * group for screen readers (Base UI's `Menu.GroupLabel`). On its own, at the top of a menu, it is
+ * a plain label: Base UI's GroupLabel throws outside a group, which blanked the whole page
+ * (Lockdown #10, and the playground's Options menu).
+ */
 function DropdownMenuLabel({
   className,
   inset,
+  render,
   ...props
 }: MenuPrimitive.GroupLabel.Props & {
   inset?: boolean
 }) {
+  const inGroup = React.useContext(InMenuGroup)
+  const alone = useRender({
+    defaultTagName: "div",
+    render: inGroup ? undefined : (render as useRender.RenderProp | undefined),
+    props: mergeProps<"div">(
+      {
+        "data-slot": "dropdown-menu-label",
+        className: cn(LABEL, typeof className === "string" ? className : undefined),
+        "data-inset": inset ? "" : undefined,
+      } as React.ComponentProps<"div">,
+      props as React.ComponentProps<"div">
+    ),
+    state: { slot: "dropdown-menu-label" },
+    enabled: !inGroup,
+  })
+  if (!inGroup) return alone
   return (
     <MenuPrimitive.GroupLabel
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn("text-muted-foreground px-1.5 py-1 text-xs font-medium data-inset:pl-7", className)}
+      className={cn(LABEL, className)}
+      render={render}
       {...props}
     />
   )
@@ -213,10 +248,12 @@ function DropdownMenuCheckboxItem({
 
 function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   return (
-    <MenuPrimitive.RadioGroup
-      data-slot="dropdown-menu-radio-group"
-      {...props}
-    />
+    <InMenuGroup.Provider value>
+      <MenuPrimitive.RadioGroup
+        data-slot="dropdown-menu-radio-group"
+        {...props}
+      />
+    </InMenuGroup.Provider>
   )
 }
 

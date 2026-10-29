@@ -201,3 +201,21 @@ describe("CommandDialog size", () => {
     expect(content()).toHaveAttribute("data-size", "lg")
   })
 })
+
+describe("Command scrolling (VQA 2026-10-28)", () => {
+  it("keeps the highlighted item in view by scrolling the list alone, never the page", () => {
+    const native = vi.fn()
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = native
+    try {
+      render(<Items />)
+      // On mount cmdk scrolls the first item into view; arrowing down scrolls the next one.
+      fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" })
+      fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" })
+      expect(native).not.toHaveBeenCalled()
+      expect(screen.getAllByRole("option").every((o) => o.scrollIntoView !== native)).toBe(true)
+    } finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+})

@@ -232,3 +232,21 @@ describe("DialogFooter sticky", () => {
     expect(footer()).toHaveAttribute("data-sticky", "true")
   })
 })
+
+describe("Dialog motion (VQA 2026-10-28)", () => {
+  it("enters on --motion-fast (120ms), not Tailwind's 100ms", () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>Timed</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    for (const el of [overlay(), popup()]) {
+      const cls = el.className.split(" ")
+      expect(cls).toContain("duration-(--motion-fast)")
+      expect(cls).toContain("ease-(--motion-ease)")
+      expect(cls).not.toContain("duration-100")
+    }
+  })
+})
