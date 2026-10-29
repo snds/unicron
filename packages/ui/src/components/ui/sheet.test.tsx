@@ -75,7 +75,7 @@ describe("SheetContent backdrop", () => {
     render(
       <>
         <button type="button">Another row</button>
-        <Sheet open modal={false} disablePointerDismissal onOpenChange={onOpenChange}>
+        <Sheet open modal={false} closeOnOutsideClick={false} onOpenChange={onOpenChange}>
           <SheetContent backdrop={false}>{header}</SheetContent>
         </Sheet>
       </>
@@ -155,5 +155,59 @@ describe("SheetHeaderActions", () => {
     const close = document.querySelector('[data-slot="sheet-close"]') as HTMLElement
     expect(close.className).toContain("top-3")
     expect(popup().className).toContain("has-[[data-slot=sheet-header-actions]]:[&>[data-slot=sheet-header]]:pr-20")
+  })
+})
+
+describe("Sheet closeOnOutsideClick", () => {
+  it("closes on a backdrop click by default", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <Sheet open onOpenChange={onOpenChange}>
+        <SheetContent>{header}</SheetContent>
+      </Sheet>
+    )
+    fireEvent.click(overlay())
+    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+  })
+
+  it("stays open on a backdrop click when turned off", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <Sheet open closeOnOutsideClick={false} onOpenChange={onOpenChange}>
+        <SheetContent>{header}</SheetContent>
+      </Sheet>
+    )
+    fireEvent.click(overlay())
+    expect(onOpenChange).not.toHaveBeenCalled()
+  })
+})
+
+describe("SheetFooter sticky", () => {
+  const footer = () => document.querySelector('[data-slot="sheet-footer"]') as HTMLElement
+
+  it("is not sticky by default", () => {
+    render(
+      <Sheet open>
+        <SheetContent>
+          {header}
+          <SheetFooter>Done</SheetFooter>
+        </SheetContent>
+      </Sheet>
+    )
+    expect(footer()).not.toHaveAttribute("data-sticky")
+    expect(footer().className.split(" ")).not.toContain("sticky")
+  })
+
+  it("pins to the bottom of what scrolls around it, and is opaque", () => {
+    render(
+      <Sheet open>
+        <AdaptiveSheetContent>
+          {header}
+          <SheetFooter sticky>Done</SheetFooter>
+        </AdaptiveSheetContent>
+      </Sheet>
+    )
+    expect(footer()).toHaveAttribute("data-sticky", "true")
+    expect(footer().className.split(" ")).toEqual(expect.arrayContaining(["sticky", "bottom-0", "bg-popover"]))
   })
 })

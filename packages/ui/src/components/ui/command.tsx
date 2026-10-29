@@ -107,6 +107,8 @@ function CommandDialog({
         className={cn(
           // A third of the way down the area below --c-dialog-titlebar-inset (0px by default).
           "rounded-xl! top-[calc(var(--c-dialog-titlebar-inset)+(100%-var(--c-dialog-titlebar-inset))/3)] translate-y-0 overflow-hidden p-0",
+          // A fixed width (the size's min), so the palette doesn't resize as results change.
+          "sm:w-(--dialog-min-width)",
           className
         )}
         size={size}

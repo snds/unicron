@@ -8,8 +8,23 @@
     "opsz": { "$type": "number", "$value": 20 }
   },
   "dialog": {
-    "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent).",
-    "titlebar-inset": { "$type": "dimension", "$value": "0px", "$description": "Height of the app's own title bar at the top of the window (a desktop app with the native title bar hidden). The popups keep clear of it: a dialog centres in the area below it; a side or top sheet starts under it. 0px for a web page or a window with a native title bar. Set it with beforeContent, the slot that holds the app's drag strip." }
+    "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent). From the sm breakpoint up a dialog fits its content between its size's min-width and max-width, and never gets wider than the screen less 1rem each side. Each size's min-width is the fixed width it had before, so no dialog got narrower.",
+    "titlebar-inset": { "$type": "dimension", "$value": "0px", "$description": "Height of the app's own title bar at the top of the window (a desktop app with the native title bar hidden). The popups keep clear of it: a dialog centres in the area below it; a side or top sheet starts under it. 0px for a web page or a window with a native title bar. Set it with beforeContent, the slot that holds the app's drag strip." },
+    "xs": {
+      "$description": "Very narrow. Allowed only for one short sentence (or none), at most two one-word actions and at most one short field (a PIN, a 6-digit code). The rule is in docs/03-components.md, Dialog widths.",
+      "min-width": { "$type": "dimension", "$value": "16rem" },
+      "max-width": { "$type": "dimension", "$value": "20rem" }
+    },
+    "sm": { "$description": "A question.", "min-width": { "$type": "dimension", "$value": "24rem" }, "max-width": { "$type": "dimension", "$value": "28rem" } },
+    "md": { "$description": "A short form.", "min-width": { "$type": "dimension", "$value": "28rem" }, "max-width": { "$type": "dimension", "$value": "36rem" } },
+    "lg": { "$description": "Settings.", "min-width": { "$type": "dimension", "$value": "32rem" }, "max-width": { "$type": "dimension", "$value": "42rem" } },
+    "xl": { "$description": "A composer.", "min-width": { "$type": "dimension", "$value": "42rem" }, "max-width": { "$type": "dimension", "$value": "56rem" } },
+    "2xl": { "$description": "A preview.", "min-width": { "$type": "dimension", "$value": "48rem" }, "max-width": { "$type": "dimension", "$value": "64rem" } }
+  },
+  "menu": {
+    "$description": "Popup lists: DropdownMenuContent and DropdownMenuSubContent. A list sized apart from its trigger (width=\"fit\" or \"auto\") stays between these two widths, so it never gets too narrow or too wide; past max-width its items wrap.",
+    "min-width": { "$type": "dimension", "$value": "8rem", "$description": "The narrowest a list gets, whatever its trigger (Tailwind's min-w-32, the floor it always had)." },
+    "max-width": { "$type": "dimension", "$value": "20rem", "$description": "The widest a list sized by its items gets. A list that matches its trigger (width=\"trigger\") follows the trigger instead." }
   },
   "sheet": {
     "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up.",

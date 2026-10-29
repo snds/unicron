@@ -37,6 +37,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -267,6 +268,38 @@ export function Showcase() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        {/* The list's width apart from its trigger: trigger (default), fit, auto. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="outline" className="w-56 justify-between" />}>
+            width="trigger" <Icon name="keyboard_arrow_down" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent width="trigger">
+            <DropdownMenuItem>Matches the field</DropdownMenuItem>
+            <DropdownMenuItem>Every item fits</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>Change</DropdownMenuTrigger>
+          <DropdownMenuContent width="fit" align="end">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>width="fit"</DropdownMenuLabel>
+              <DropdownMenuItem>Follow the system setting</DropdownMenuItem>
+              <DropdownMenuItem>Always use the compact layout, even on a large screen with room to spare</DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="More (width auto)" />}>
+            <Icon name="more_vert" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent width="auto">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>width="auto"</DropdownMenuLabel>
+              <DropdownMenuItem>Rename</DropdownMenuItem>
+              <DropdownMenuItem>Move to another project</DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </Section>
 
       <Section title="Spinner · Skeleton · Empty · Toast (Feedback)">
@@ -424,7 +457,7 @@ export function Showcase() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {/* A wider dialog that's taller than the screen scrolls inside itself. */}
+        {/* A wider dialog that's taller than the screen scrolls inside itself; its footer stays put. */}
         <Dialog>
           <DialogTrigger render={<Button variant="outline" size="sm" />}>Open a long settings dialog</DialogTrigger>
           <DialogContent size="lg">
@@ -435,8 +468,63 @@ export function Showcase() {
             {Array.from({ length: 24 }, (_, i) => (
               <p key={i} className="text-muted-foreground">Setting {i + 1}</p>
             ))}
+            <DialogFooter sticky showCloseButton>
+              <Button>Save</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
+        {/* Each size is a range: short content sits at the min, long content pushes out to the max. */}
+        {(["xs", "sm", "md", "lg", "xl", "2xl"] as const).map((size) => (
+          <Dialog key={size}>
+            <DialogTrigger render={<Button variant="ghost" size="sm" />}>size="{size}"</DialogTrigger>
+            <DialogContent size={size}>
+              <DialogHeader>
+                <DialogTitle>{size === "xs" ? "Enter PIN" : `size="${size}"`}</DialogTitle>
+                <DialogDescription>
+                  {size === "xs"
+                    ? "Four digits."
+                    : "Between this size's min and max width. This sentence runs long on purpose, so the dialog widens to its max and then wraps, instead of staying at its narrowest."}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter showCloseButton>
+                <Button>OK</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        ))}
+        {/* Unsaved work: a stray click outside does not close it. Escape and Cancel still do. */}
+        <Dialog closeOnOutsideClick={false}>
+          <DialogTrigger render={<Button variant="outline" size="sm" />}>Open an editor (no outside close)</DialogTrigger>
+          <DialogContent size="md">
+            <DialogHeader>
+              <DialogTitle>Edit note</DialogTitle>
+              <DialogDescription>closeOnOutsideClick=false: clicking the backdrop keeps your draft.</DialogDescription>
+            </DialogHeader>
+            <Textarea defaultValue="A draft you'd hate to lose." />
+            <DialogActions>
+              <DialogAction kind="cancel">Cancel</DialogAction>
+              <DialogAction>Save</DialogAction>
+            </DialogActions>
+          </DialogContent>
+        </Dialog>
+        <Sheet>
+          <SheetTrigger render={<Button variant="outline" size="sm" />}>Open a long sheet</SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Filters</SheetTitle>
+              <SheetDescription>The list scrolls; SheetFooter sticky keeps Apply in view.</SheetDescription>
+            </SheetHeader>
+            {/* The part of the sheet that scrolls; the sticky footer sits at its end. */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              {Array.from({ length: 30 }, (_, i) => (
+                <p key={i} className="text-muted-foreground px-4 py-1">Filter {i + 1}</p>
+              ))}
+              <SheetFooter sticky>
+                <Button>Apply</Button>
+              </SheetFooter>
+            </div>
+          </SheetContent>
+        </Sheet>
         <Sheet>
           <SheetTrigger render={<Button variant="outline" size="sm" />}>Open sheet</SheetTrigger>
           <SheetContent>

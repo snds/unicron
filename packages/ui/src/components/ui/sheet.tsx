@@ -11,8 +11,27 @@ import { cn } from "../../lib/utils"
 import { Button } from "./button"
 import { Icon } from "../icon"
 
-function Sheet({ ...props }: SheetPrimitive.Root.Props) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+function Sheet({
+  closeOnOutsideClick = true,
+  disablePointerDismissal,
+  ...props
+}: SheetPrimitive.Root.Props & {
+  /**
+   * Close when someone clicks or taps outside the sheet: on the backdrop, or anywhere else when
+   * there is none. On by default, as on `Dialog`. Turn it off for a sheet holding unsaved work or
+   * a destructive step, and for a detail sheet beside a list (`backdrop={false}`), where a click
+   * on another row should change the sheet, not close it. Escape and the close button still close
+   * it. Base UI's `disablePointerDismissal`, if passed, wins.
+   */
+  closeOnOutsideClick?: boolean
+}) {
+  return (
+    <SheetPrimitive.Root
+      data-slot="sheet"
+      disablePointerDismissal={disablePointerDismissal ?? !closeOnOutsideClick}
+      {...props}
+    />
+  )
 }
 
 function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
@@ -41,9 +60,10 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
 }
 
 /**
- * How wide a left or right sheet grows from `sm` up: the same product sizes as `DialogContent`
- * (`sm` 24rem, `md` 28rem, `lg` 32rem, `xl` 42rem, `2xl` 48rem), so a size means the same width
- * on both. Top and bottom sheets span the screen and ignore it.
+ * How wide a left or right sheet grows from `sm` up: `DialogContent`'s size names at each one's
+ * min width (`sm` 24rem, `md` 28rem, `lg` 32rem, `xl` 42rem, `2xl` 48rem). A sheet is a fixed
+ * width, not a range, so its edge doesn't move as content changes. Top and bottom sheets span the
+ * screen and ignore it.
  */
 const SHEET_SIZES = {
   sm: "data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm",
@@ -73,7 +93,7 @@ function SheetContent({
   /**
    * Draw the dimming backdrop (the default). A detail sheet beside a list leaves it out, so the
    * list stays visible and clickable: pair `backdrop={false}` with
-   * `<Sheet modal={false} disablePointerDismissal>`, and picking another row changes what the
+   * `<Sheet modal={false} closeOnOutsideClick={false}>`, and picking another row changes what the
    * sheet shows instead of closing it. Escape and the close button still close it.
    */
   backdrop?: boolean
@@ -268,11 +288,27 @@ function SheetHeaderActions({ className, ...props }: React.ComponentProps<"div">
   )
 }
 
-function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+function SheetFooter({
+  className,
+  sticky = false,
+  ...props
+}: React.ComponentProps<"div"> & {
+  /**
+   * Keep the footer pinned to the bottom of whatever scrolls around it (the sheet, or
+   * `AdaptiveSheetContent`'s content area), so its actions never scroll out of view. Off by
+   * default. The footer is then opaque, so content scrolls under it.
+   */
+  sticky?: boolean
+}) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("gap-2 p-4 mt-auto flex flex-col sm:flex-row sm:flex-wrap sm:justify-end", className)}
+      data-sticky={sticky || undefined}
+      className={cn(
+        "gap-2 p-4 mt-auto flex flex-col sm:flex-row sm:flex-wrap sm:justify-end",
+        sticky && "bg-popover sticky bottom-0 z-10",
+        className
+      )}
       {...props}
     />
   )
