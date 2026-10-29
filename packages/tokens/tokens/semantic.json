@@ -33,6 +33,9 @@
   "input": { "$type": "color", "$value": "{neutral.450}", "$extensions": { "unicron.modes": { "dark": "{white-alpha.35}" } }, "$description": "Control borders (fields, selects, checkboxes, the off switch) and, at 30-80%, the dark field and switch fills. 3:1 on every surface it borders (WCAG 1.4.11), so a field can be found." },
   "ring": { "$type": "color", "$value": "{neutral.900}", "$extensions": { "unicron.modes": { "dark": "{neutral.100}" } }, "$description": "Focus ring. The primitives draw it at 50% (ring-ring/50, outline-ring/50), so the step is dark enough that the half-strength ring still clears APCA Lc 30 on every surface (scripts/contrast.mjs)." },
   "radius": { "$type": "dimension", "$value": "{radius.base}" },
+  "motion-fast": { "$type": "duration", "$value": "{duration.fast}", "$description": "Small state changes and entrances: a hover, a press, a dialog or menu appearing. 120ms, the floor below which a change reads as a jump. Tailwind's default transition duration (`transition`, `transition-colors`) is mapped to it." },
+  "motion-base": { "$type": "duration", "$value": "{duration.base}", "$description": "Larger moves: a sheet sliding in, a toast entering or leaving." },
+  "motion-ease": { "$type": "cubicBezier", "$value": "{ease.standard}", "$description": "The one curve: fast out, gentle settle. Tailwind's default transition curve and `ease-standard` are mapped to it." },
 
   "sidebar": { "$type": "color", "$value": "{neutral.50}", "$extensions": { "unicron.modes": { "dark": "{neutral.900}" } } },
   "sidebar-foreground": { "$type": "color", "$value": "{foreground}" },

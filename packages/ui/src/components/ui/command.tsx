@@ -180,12 +180,41 @@ function CommandEmpty({
   )
 }
 
+/**
+ * cmdk keeps the highlighted item in view with the browser's `scrollIntoView`, which scrolls
+ * every scrolling ancestor, the page included. So an inline Command scrolled the whole window to
+ * its first item on mount, and arrowing through results moved the page. This replaces it, on each
+ * item and group heading, with a scroll of the result list alone ("nearest": only as far as it
+ * takes, so an item already in view, as the first one is on mount, moves nothing).
+ */
+function scrollWithinList(el: HTMLElement | null) {
+  if (!el) return
+  el.scrollIntoView = () => {
+    const list = el.closest<HTMLElement>("[cmdk-list]")
+    if (!list) return
+    const item = el.getBoundingClientRect()
+    const box = list.getBoundingClientRect()
+    if (item.top < box.top) list.scrollTop -= box.top - item.top
+    else if (item.bottom > box.bottom) list.scrollTop += item.bottom - box.bottom
+  }
+}
+
 function CommandGroup({
   className,
+  ref,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Group>) {
+  const groupRef = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      scrollWithinList(el?.querySelector<HTMLElement>("[cmdk-group-heading]") ?? null)
+      if (typeof ref === "function") ref(el)
+      else if (ref) ref.current = el
+    },
+    [ref]
+  )
   return (
     <CommandPrimitive.Group
+      ref={groupRef}
       data-slot="command-group"
       className={cn("text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium", className)}
       {...props}
@@ -218,8 +247,17 @@ const CommandItemActionContext = React.createContext<((action: CommandItemAction
 function CommandItem({
   className,
   children,
+  ref,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Item>) {
+  const itemRef = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      scrollWithinList(el)
+      if (typeof ref === "function") ref(el)
+      else if (ref) ref.current = el
+    },
+    [ref]
+  )
   const descriptionId = React.useId()
   const [action, setAction] = React.useState<CommandItemActionRegistration | null>(null)
   const register = React.useCallback((next: CommandItemActionRegistration) => {
@@ -230,6 +268,7 @@ function CommandItem({
   return (
     <>
       <CommandPrimitive.Item
+        ref={itemRef}
         data-slot="command-item"
         data-has-action={action ? "true" : undefined}
         aria-keyshortcuts={action?.shortcut}

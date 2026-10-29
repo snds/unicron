@@ -8,9 +8,9 @@ export function App() {
 
   return (
     <div className="min-h-dvh">
-      <header className="bg-background/80 sticky top-0 z-40 flex items-center gap-3 border-b px-4 py-2 backdrop-blur">
+      <header className="bg-background sticky top-0 z-40 flex items-center gap-3 border-b px-4 py-2">
         <span className="font-heading text-sm font-semibold">unicron playground</span>
-        <span className="text-muted-foreground text-xs">
+        <span className="text-muted-foreground text-xs max-sm:hidden">
           every primitive, rendered in light and dark side by side
         </span>
         <div className="ml-auto flex items-center gap-2">
@@ -24,7 +24,8 @@ export function App() {
 
       {/* Both columns always render; the page theme swaps which column reads as "native". */}
       <div className="grid grid-cols-1 lg:grid-cols-2">
-        <section className="bg-background text-foreground border-r p-6">
+        {/* `light` keeps this column light when the page is dark, as `dark` does the other way. */}
+        <section className="light bg-background text-foreground border-r p-6">
           <h2 className="text-muted-foreground mb-4 text-xs font-medium tracking-wide uppercase">Light</h2>
           <Showcase />
         </section>

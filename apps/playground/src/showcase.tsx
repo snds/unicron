@@ -109,6 +109,56 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost", "ghost-muted", "destructive", "ghost-destructive", "link"] as const
+const BUTTON_SIZES = ["xs", "sm", "default", "lg"] as const
+const ICON_SIZES = ["icon-xs", "icon-sm", "icon", "icon-lg"] as const
+
+/** Every Button variant × size, then each variant disabled and invalid (aria-invalid). */
+function ButtonMatrix() {
+  return (
+    <section className="mb-8">
+      <h3 className="mb-3 text-sm font-medium">Button matrix (variant × size · disabled · aria-invalid)</h3>
+      <div className="overflow-x-auto">
+        <table className="text-muted-foreground border-separate border-spacing-2 text-xs">
+          <thead>
+            <tr>
+              <th />
+              {[...BUTTON_SIZES, ...ICON_SIZES, "disabled", "aria-invalid"].map((h) => (
+                <th key={h} className="text-left font-medium">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {BUTTON_VARIANTS.map((variant) => (
+              <tr key={variant}>
+                <th className="text-left font-medium">{variant}</th>
+                {BUTTON_SIZES.map((size) => (
+                  <td key={size}>
+                    <Button variant={variant} size={size}>Button</Button>
+                  </td>
+                ))}
+                {ICON_SIZES.map((size) => (
+                  <td key={size}>
+                    <Button variant={variant} size={size} aria-label="Add">
+                      <Icon name="add" />
+                    </Button>
+                  </td>
+                ))}
+                <td>
+                  <Button variant={variant} disabled>Disabled</Button>
+                </td>
+                <td>
+                  <Button variant={variant} aria-invalid>Invalid</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
 export function Showcase() {
   const [checked, setChecked] = useState(true)
 
@@ -135,7 +185,7 @@ export function Showcase() {
         <IconButton label="Pin" render={<Toggle size="sm" defaultPressed />}>
           <Icon name="keep" fill />
         </IconButton>
-        <div className="w-full max-w-md rounded-xl border p-4 pb-0">
+        <div className="w-full max-w-md rounded-xl border p-4">
           <p className="mb-4 text-sm">DialogActions (narrow the window to see the phone row)</p>
           <DialogActions>
             <DialogAction kind="destructive">Delete split</DialogAction>
@@ -181,6 +231,8 @@ export function Showcase() {
           before mail syncs.
         </p>
       </Section>
+
+      <ButtonMatrix />
 
       <Section title="Input · Textarea · Checkbox · Switch · NativeSelect · InputGroup · Field (Form)">
         <div className="w-full max-w-sm">
@@ -254,13 +306,15 @@ export function Showcase() {
             Options <Icon name="keyboard_arrow_down" data-icon="inline-end" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuLabel>Thread</DropdownMenuLabel>
-            <DropdownMenuItem>
-              <Icon name="archive" /> Archive <DropdownMenuShortcut>E</DropdownMenuShortcut>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Icon name="snooze" /> Snooze
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Thread</DropdownMenuLabel>
+              <DropdownMenuItem>
+                <Icon name="archive" /> Archive <DropdownMenuShortcut>E</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Icon name="snooze" /> Snooze
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem checked>Mark as read</DropdownMenuCheckboxItem>
             <DropdownMenuItem variant="destructive">

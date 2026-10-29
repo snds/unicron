@@ -1,10 +1,14 @@
-import { render } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -72,5 +76,52 @@ describe("DropdownMenuContent width", () => {
     )
     const sub = document.querySelector('[data-slot="dropdown-menu-sub-content"]') as HTMLElement
     expect(sub).toHaveAttribute("data-width", "auto")
+  })
+})
+
+describe("DropdownMenuLabel", () => {
+  it("on its own, at the top of a menu, draws a plain label instead of throwing", () => {
+    render(
+      <DropdownMenu open>
+        <DropdownMenuTrigger>Options</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Thread</DropdownMenuLabel>
+          <DropdownMenuItem>Archive</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+    const label = screen.getByText("Thread")
+    expect(label).toHaveAttribute("data-slot", "dropdown-menu-label")
+    expect(screen.getByRole("menuitem", { name: "Archive" })).toBeInTheDocument()
+  })
+
+  it("inside a group, names the group", () => {
+    render(
+      <DropdownMenu open>
+        <DropdownMenuTrigger>Options</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Thread</DropdownMenuLabel>
+            <DropdownMenuItem>Archive</DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+    expect(screen.getByRole("group", { name: "Thread" })).toBeInTheDocument()
+  })
+
+  it("inside a radio group, names it too", () => {
+    render(
+      <DropdownMenu open>
+        <DropdownMenuTrigger>Density</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuRadioGroup value="compact">
+            <DropdownMenuLabel>Density</DropdownMenuLabel>
+            <DropdownMenuRadioItem value="compact">Compact</DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+    expect(screen.getByRole("group", { name: "Density" })).toBeInTheDocument()
   })
 })

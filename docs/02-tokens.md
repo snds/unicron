@@ -38,8 +38,29 @@ Light and dark are modes of the semantic tier, kept on the token itself:
 }
 ```
 
-The builder emits `:root { … }` for light and `.dark { … }` for dark. Apps switch themes by
+The builder emits `:root, .light { … }` for light and `.dark { … }` for dark. Apps switch themes by
 toggling the `dark` class on `<html>` (`next-themes` with `attribute="class"` does this).
+
+A box can hold the other mode inside a page. Put `dark` on it inside a light page, or `light` on it
+inside a dark page (a light preview, the playground's light column). `@unicron/ui`'s `dark:` variant
+stops at the nearest `.light`, so its dark-only styles don't leak in either. One level of nesting is
+supported: a `.dark` box inside a `.light` box inside a dark page is not.
+
+## Motion
+
+Three semantic roles carry motion; components use these, never a raw duration.
+
+| Role | Value | For |
+|---|---|---|
+| `--motion-fast` | 120ms (`duration.fast`) | hover, press, a dialog or menu appearing |
+| `--motion-base` | 200ms (`duration.base`) | a sheet sliding in, a toast entering or leaving |
+| `--motion-ease` | `cubic-bezier(0.2, 0, 0, 1)` (`ease.standard`) | every transition |
+
+120ms is the floor: shorter reads as a jump. The theme map points Tailwind's default transition at
+them (`--default-transition-duration`, `--default-transition-timing-function`), so a bare
+`transition-colors` is on the system. `ease-standard` is the curve as a utility. Where a duration
+must be set by hand, write `duration-(--motion-fast)`. Toasts are moved onto `--motion-base` from
+`@unicron/ui`'s stylesheet, since sonner's own runs 400ms on plain `ease`.
 
 ## The Tailwind map
 
@@ -91,6 +112,16 @@ comes from [Emphasis Engine](https://github.com/snds/emphasis-engine) (`docs/arc
   hue has a `600` (light) and a `300` (dark) held to reading text on `neutral.0`, `.50` and `.100`,
   and on `.950`, `.900` and `.800`. Point an app's text role at those, and its fills and dots at
   `500` / `400`.
+- **Disabled controls are exempt.** WCAG 2 exempts text and borders of disabled controls (1.4.3,
+  1.4.11: "part of an inactive user interface component"). A disabled control here draws at 50%
+  opacity, so its label reads about Lc 35 in dark mode, under every floor above, on purpose: dimming
+  is how it says it can't be used. No recipe in `contrast.mjs` measures a disabled state. Don't
+  leave a control disabled with no other cue; say why near it, or keep it enabled and explain on
+  press.
+- **States differ from each other, not only from rest.** Hover, pressed (`active:`) and selected
+  are three different fills. A pressed fill can't sink a label under its floor, so destructive
+  presses halfway between rest and hover (`/15`, dark `/25`) rather than past it, and the default
+  button presses to `bg-primary/90`. The pressed fills are recipes in the gate.
 - **One job per role.** When a role serves two jobs that want different values, the component is
   pointed at the role that matches the second job: disabled fields fill with `muted`, not
   `input/50`; the button-group divider is a `border`, not an `input`.

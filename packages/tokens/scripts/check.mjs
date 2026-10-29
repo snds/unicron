@@ -20,11 +20,15 @@ const CORE = [
 ]
 const DARK_SWAPPED = CORE.filter((n) => !n.startsWith("sidebar-") && n !== "radius")
 const APP_ONLY = ["--vertical-", "--unread", "--surface-chrome", "--surface-canvas", "--surface-selected", "--tint-"]
-const THEME = ["--font-sans", "--font-heading", "--radius-sm", "--radius-lg", "--radius-4xl"]
+const THEME = [
+  "--font-sans", "--font-heading", "--radius-sm", "--radius-lg", "--radius-4xl",
+  // Tailwind's default transition runs on the motion roles (VQA 2026-10-28).
+  "--default-transition-duration", "--default-transition-timing-function", "--ease-standard",
+]
 
 const [, lightBlock, darkBlock, themeBlock] = [
   null,
-  css.match(/Tier 2[^\n]*light[^\n]*\n:root \{([\s\S]*?)\n\}/)?.[1],
+  css.match(/Tier 2[^\n]*light[^\n]*\n:root, \.light \{([\s\S]*?)\n\}/)?.[1],
   css.match(/Tier 2[^\n]*dark[^\n]*\n\.dark \{([\s\S]*?)\n\}/)?.[1],
   css.match(/@theme inline \{([\s\S]*?)\n\}/)?.[1],
 ]

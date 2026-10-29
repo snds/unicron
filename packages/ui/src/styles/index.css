@@ -12,7 +12,8 @@
 /* The primitives' classes live in this package, not the consuming app, so Tailwind must scan them. */
 @source "../components";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark inside `.dark`, unless a nearer `.light` box sits between (a light preview in a dark page). */
+@custom-variant dark (&:is(.dark *):not(.dark .light *));
 
 /*
  * State, as shadcn's own stylesheet (shadcn/tailwind.css) defines it. Tailwind's built-in
@@ -240,4 +241,15 @@
       caret-color: var(--foreground);
     }
   }
+}
+
+/*
+ * Toasts on the motion roles. sonner's own stylesheet enters and leaves in 400ms on plain `ease`;
+ * these selectors are one step more specific than sonner's, so they win wherever its styles load.
+ */
+:root [data-sonner-toaster][data-sonner-toaster],
+[data-sonner-toaster] [data-sonner-toast],
+[data-sonner-toaster] [data-sonner-toast] > * {
+  transition-duration: var(--motion-base);
+  transition-timing-function: var(--motion-ease);
 }
