@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs"
+import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fireEvent, render, screen } from "@testing-library/react"
 import type * as React from "react"
+import { compile } from "tailwindcss"
 import { describe, expect, it, vi } from "vitest"
 
 import { Command, CommandDialog, CommandInput, CommandList } from "./command"
@@ -215,7 +217,7 @@ describe("DialogFooter sticky", () => {
     )
     const cls = footer().className.split(" ")
     expect(footer()).toHaveAttribute("data-sticky", "true")
-    expect(cls).toEqual(expect.arrayContaining(["sticky", "-bottom-4", "bg-popover"]))
+    expect(cls).toEqual(expect.arrayContaining(["sticky", "-bottom-(--c-dialog-padding)", "bg-popover"]))
   })
 
   it("DialogActions takes it too", () => {
@@ -230,6 +232,73 @@ describe("DialogFooter sticky", () => {
       </Dialog>
     )
     expect(footer()).toHaveAttribute("data-sticky", "true")
+  })
+})
+
+describe("Dialog padding (--c-dialog-padding)", () => {
+  // The footer reaches out by the popup's padding to run edge to edge. Both read one variable, so
+  // a dialog that changes it keeps its footer flush (a p-6 popup with a -mx-4 footer did not).
+  // jsdom applies no Tailwind, so compile each element's classes with Tailwind itself and resolve
+  // the variable the way the browser would: the popup's own override, else the token.
+  const require = createRequire(import.meta.url)
+  const tokens = JSON.parse(
+    readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/component.json"), "utf8")
+  )
+  const utilities = readFileSync(require.resolve("tailwindcss/utilities.css"), "utf8")
+
+  /** The declarations an element's unconditional classes set (no sm:, data-open: and so on). */
+  async function declarations(el: HTMLElement) {
+    const out = new Map<string, string>()
+    for (const c of el.className.split(" ").filter((c) => c && !/^[\w-]+:/.test(c))) {
+      // A fresh compiler per class: build() keeps every class it has seen and returns them all.
+      const tw = await compile('@import "tailwindcss/utilities";', {
+        loadStylesheet: async (_id, base) => ({ path: "utilities.css", base, content: utilities }),
+      })
+      for (const [, prop, value] of tw.build([c]).matchAll(/^\s*([-\w]+): ([^;]+);$/gm)) out.set(prop, value)
+    }
+    return out
+  }
+
+  async function measure(className?: string) {
+    render(
+      <Dialog open>
+        <DialogContent className={className}>
+          <DialogTitle>Padded</DialogTitle>
+          <DialogFooter sticky>Actions</DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+    // The newest popup: the last test's may still be in the portal, closing.
+    const el = Array.from(document.querySelectorAll<HTMLElement>('[data-slot="dialog-content"]')).at(-1)!
+    const popupCss = await declarations(el)
+    const footerCss = await declarations(el.querySelector('[data-slot="dialog-footer"]') as HTMLElement)
+    const pad = popupCss.get("--c-dialog-padding") ?? tokens.dialog.padding.$value
+    const value = (v?: string) => v?.replaceAll("var(--c-dialog-padding)", pad).replace(/^calc\((.+) \* -1\)$/, "-$1")
+    return {
+      pad,
+      popupPadding: value(popupCss.get("padding")),
+      footer: {
+        marginInline: value(footerCss.get("margin-inline")),
+        marginBottom: value(footerCss.get("margin-bottom")),
+        padding: value(footerCss.get("padding")),
+        bottom: value(footerCss.get("bottom")),
+      },
+    }
+  }
+
+  it("is 1rem by default, the p-4 the dialog always had", async () => {
+    expect(tokens.dialog.padding.$value).toBe("1rem")
+    expect(await measure()).toEqual({
+      pad: "1rem",
+      popupPadding: "1rem",
+      footer: { marginInline: "-1rem", marginBottom: "-1rem", padding: "1rem", bottom: "-1rem" },
+    })
+  })
+
+  it.each(["1.5rem", "0px", "2rem"])("an override to %s keeps the footer's bleed equal to the padding", async (pad) => {
+    const m = await measure(`[--c-dialog-padding:${pad}]`)
+    expect(m.popupPadding).toBe(pad)
+    expect(m.footer).toEqual({ marginInline: `-${pad}`, marginBottom: `-${pad}`, padding: pad, bottom: `-${pad}` })
   })
 })
 
