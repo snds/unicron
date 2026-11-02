@@ -123,7 +123,7 @@ function DialogContent({
           // Centred in the area below --c-dialog-titlebar-inset (0px by default), so an app's
           // title bar strip never overlaps the popup. A dialog taller than that area scrolls
           // inside itself instead of running off it.
-          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/10 grid max-h-[calc(100dvh-2rem-var(--c-dialog-titlebar-inset))] max-w-[calc(100%-2rem)] gap-4 overflow-y-auto rounded-xl p-4 text-sm ring-1 duration-(--motion-fast) ease-(--motion-ease) fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
+          "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/10 grid max-h-[calc(100dvh-2rem-var(--c-dialog-titlebar-inset))] max-w-[calc(100%-2rem)] gap-4 overflow-y-auto rounded-xl p-(--c-dialog-padding) text-sm ring-1 duration-(--motion-fast) ease-(--motion-ease) fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
           // From sm up: as wide as its content, between the size's min and max (DIALOG_SIZES).
           "sm:w-max sm:min-w-[min(var(--dialog-min-width),calc(100%-2rem))] sm:max-w-[min(var(--dialog-max-width),calc(100%-2rem))]",
           DIALOG_SIZES[size],
@@ -183,11 +183,14 @@ function DialogFooter({
       data-slot="dialog-footer"
       data-sticky={sticky || undefined}
       className={cn(
-        "bg-muted/50 -mx-4 -mb-4 rounded-b-xl border-t p-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        // Pinned to the popup's bottom edge, over its 1rem padding (a sticky box stops at the
-        // padding otherwise, and content would show under it). The popover colour sits under the
-        // muted tint, so nothing shows through.
-        sticky && "sticky -bottom-4 z-10 bg-popover bg-linear-to-r from-muted/50 to-muted/50",
+        // Reaches out by the popup's padding (--c-dialog-padding) to run edge to edge, and pads by
+        // it so its buttons line up with the content. A dialog that changes that variable keeps
+        // its footer flush; one that sets p-* on DialogContent instead does not.
+        "bg-muted/50 -mx-(--c-dialog-padding) -mb-(--c-dialog-padding) rounded-b-xl border-t p-(--c-dialog-padding) flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        // Pinned to the popup's bottom edge, over its padding (a sticky box stops at the padding
+        // otherwise, and content would show under it). The popover colour sits under the muted
+        // tint, so nothing shows through.
+        sticky && "sticky -bottom-(--c-dialog-padding) z-10 bg-popover bg-linear-to-r from-muted/50 to-muted/50",
         className
       )}
       {...props}
