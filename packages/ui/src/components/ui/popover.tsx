@@ -1,6 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
-// Promoted from: snds/warpcore · PR snds/unicron#PENDING · DSA none
+// Promoted from: snds/warpcore · PR snds/unicron#65 · DSA none
 "use client"
 
 import * as React from "react"
