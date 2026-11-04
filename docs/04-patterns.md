@@ -36,7 +36,7 @@ assemble from primitives; climb an escalation ladder only on evidence.
 | **Confirmation** | Prevent costly mistakes | action → `Dialog` with a destructive `Button` (irreversible) *or* toast + undo (reversible); choose by reversibility |
 | **Filtering** | Narrow a large set | `Command` / search `InputGroup` → removable `Chip`s (active filters, each with a `ChipRemove`) → `ButtonGroup` toolbar → results |
 
-Escalation ladders: NativeSelect → Combobox (list grows past ~15); Tooltip → Popover (content
+Escalation ladders: NativeSelect → Select (an option needs more than plain text) → Combobox (list grows past ~15); Tooltip → Popover (content
 becomes interactive); toast → alert → banner → alert dialog (urgency rises).
 
 ## Promoting a candidate
@@ -73,3 +73,4 @@ becomes interactive); toast → alert → banner → alert dialog (urgency rises
 | 2026-10-17 | ApprovalSheet (from spec, first principles, Lockdown brief §5.7) | `docs/specs/security/approval-sheet.md`; Lockdown's device, agent, TV and contact approvals all reduce to one sheet | **Component**: `ApprovalSheet`. Owns the origin gate, number matching, arming delay, timeout that denies, retry limit, and the report action. DSA none |
 | 2026-10-17 | RiskTierBadge (from spec, first principles, Lockdown brief §5.7) | `docs/specs/security/risk-tier-badge.md`; Lockdown bridges and agent grants, Mailbird plug-ins (D6) | **Component**: `RiskTierBadge`. Owns the closed vocabulary and its copy (`riskTierCopy`); word, icon and colour paired by construction. DSA none |
 | 2026-10-17 | SecretField (from spec, first principles, Lockdown brief §5.7) | `docs/specs/security/secret-field.md`; replaces Lockdown desktop's placeholder `SecretField`; Mailbird locked notes and Synapse tokens next | **Component**: `SecretField`. Owns the one-shot handle, reveal lifetime, hide-on-blur, timed copy with a conditional clear, and the gate hook. DSA none |
+| 2026-11-04 | `Popover` and a styled `Select` (hand-raised) | Warpcore W1 needs both for its chat and model picker, ahead of any local build; both were already next candidates in `03-components.md` | **Components**: generated with the transform ([#65](https://github.com/snds/unicron/pull/65)) |
