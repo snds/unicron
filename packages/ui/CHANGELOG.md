@@ -1,5 +1,37 @@
 # @unicron/ui
 
+## 0.17.0
+
+### Minor Changes
+
+- f7efbba: Dialog footers stay edge to edge when a dialog's padding changes.
+  
+  - **New token `--c-dialog-padding`** (1rem, the `p-4` the dialog always had). `DialogContent` pads by
+    it. `DialogFooter` (and `DialogActions`) reaches out by it to the popup's edges, pads its buttons by
+    it so they line up with the content, and a sticky footer pins by it.
+  - **Before**, the footer's bleed was fixed at `-mx-4 -mb-4`. A dialog with `p-6` got a footer that
+    stopped 0.5rem short of each edge.
+  - **To change one dialog's padding**, set the variable: `className="[--c-dialog-padding:1.5rem]"`.
+    Don't use `p-*` on `DialogContent`; the footer can't follow a class. To change every dialog,
+    re-map the token in the app's extension layer.
+  - Nothing changes for a dialog that keeps the default padding.
+- dd50ba2: Adds `Popover` and `Select`.
+  
+  - **`Popover`** is for content a tooltip can't hold: interactive, or longer than a few words. New token `--c-popover-width` (18rem).
+  - **`Select`** is a styled list for options that need more than plain text. `NativeSelect` stays the default for a form. Pass `items` so the trigger shows an option's label before the list has opened.
+  - `SelectContent` takes the same `width` as `DropdownMenuContent` (`trigger`, `fit`, `auto`), with `fit` as its default. Nothing changes for existing menus.
+- bae6d51: Adds `ResizablePanes`, `ResizablePane` and `ResizableHandle`, for panes a person can drag to resize.
+  
+  - `ResizableHandle` needs a `label`, its screen reader name. `withGrip` adds a visible grip for touch.
+  - `useResizablePanesLayout` remembers a layout between visits, and `useResizablePaneRef` collapses or resizes a pane from code.
+  - Adds one dependency, `react-resizable-panels`.
+
+### Patch Changes
+
+- Updated dependencies [f7efbba]
+- Updated dependencies [dd50ba2]
+  - @unicron/tokens@0.11.0
+
 ## 0.16.0
 
 ### Minor Changes
