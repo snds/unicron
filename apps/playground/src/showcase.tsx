@@ -75,6 +75,21 @@ import {
   Label,
   NativeSelect,
   NativeSelectOption,
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
   ScrollArea,
   Separator,
   Sheet,
@@ -99,6 +114,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@unicron/ui"
+
+const SELECT_ITEMS = {
+  general: "General",
+  code: "Code",
+  deep: "A deep model with a long name that wraps past the trigger",
+  off: "Not connected",
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -282,6 +304,76 @@ export function Showcase() {
             </FieldGroup>
           </FieldSet>
         </div>
+      </Section>
+
+      <Section title="Select · Popover">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pg-select">Model</Label>
+          <Select items={SELECT_ITEMS} defaultValue="general">
+            <SelectTrigger id="pg-select">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Local</SelectLabel>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="code">Code</SelectItem>
+              </SelectGroup>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>Frontier</SelectLabel>
+                <SelectItem value="deep">A deep model with a long name that wraps past the trigger</SelectItem>
+                <SelectItem value="off" disabled>
+                  Not connected
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pg-select-sm">Small</Label>
+          <Select items={SELECT_ITEMS}>
+            <SelectTrigger id="pg-select-sm" size="sm">
+              <SelectValue placeholder="Choose" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="general">General</SelectItem>
+              <SelectItem value="deep">A deep model with a long name that wraps past the trigger</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pg-select-bad">Invalid</Label>
+          <Select items={SELECT_ITEMS}>
+            <SelectTrigger id="pg-select-bad" aria-invalid>
+              <SelectValue placeholder="Choose" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="general">General</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="pg-select-off">Disabled</Label>
+          <Select items={SELECT_ITEMS} defaultValue="code" disabled>
+            <SelectTrigger id="pg-select-off">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="code">Code</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Popover>
+          <PopoverTrigger render={<Button variant="outline" />}>Route details</PopoverTrigger>
+          <PopoverContent>
+            <PopoverHeader>
+              <PopoverTitle>Route</PopoverTitle>
+              <PopoverDescription>Runs locally, and falls back to a frontier model when the desktop is off.</PopoverDescription>
+            </PopoverHeader>
+            <PopoverClose render={<Button variant="outline" size="sm" />}>Done</PopoverClose>
+          </PopoverContent>
+        </Popover>
       </Section>
 
       <Section title="Tabs · DropdownMenu (Navigation)">

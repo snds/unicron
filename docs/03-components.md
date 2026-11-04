@@ -24,9 +24,11 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `checkbox` | `Checkbox` | Form | Base UI Checkbox |
 | `switch` | `Switch` | Form | Base UI Switch |
 | `native-select` | `NativeSelect`, `NativeSelectOption`, `NativeSelectOptGroup` | Form | select |
+| `select` | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` | Form | Base UI Select |
 | `input-group` | `InputGroup`, `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, `InputGroupTextarea` | Form | div |
 | `field` | `Field`, `FieldSet`, `FieldLegend`, `FieldGroup`, `FieldLabel`, `FieldContent`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError` | Form | div / fieldset |
 | `tabs` | `Tabs`, `TabsList` (`variant`: default, line; `size`: default, fill — the list takes its container's height, as in a toolbar row), `TabsTrigger`, `TabsContent`, `tabsListVariants` | Navigation | Base UI Tabs |
+| `popover` | `Popover`, `PopoverTrigger`, `PopoverContent`, `PopoverHeader`, `PopoverTitle`, `PopoverDescription`, `PopoverClose` | Overlay | Base UI Popover |
 | `dropdown-menu` | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | Navigation | Base UI Menu |
 | `spinner` | `Spinner` | Feedback | Icon (`progress_activity`) |
 | `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
@@ -55,7 +57,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 Also exported: `cn` (clsx + tailwind-merge).
 
 Not yet present (next candidates, in order of need across the three products): `card`,
-`popover`, `select`, `combobox`, `radio-group`, `alert`, `alert-dialog`, `progress`, `accordion`,
+`combobox`, `radio-group`, `alert`, `alert-dialog`, `progress`, `accordion`,
 `collapsible`, `table`, `slider`. Generate them with the transform (README → Regenerating
 components) rather than hand-writing.
 
@@ -120,7 +122,9 @@ components) rather than hand-writing.
   Escape and the close button still close it, so a dialog with the prop off needs a visible Cancel. Base UI's own `disablePointerDismissal` still works and wins if both are passed. App panels and panes built outside unicron use the same prop name, with the same default.
 - **Sticky footers** (`sticky` on `DialogFooter`, `DialogActions` and `SheetFooter`). The footer stays pinned to the bottom of the container that scrolls around it, so its actions never scroll out of view. Off by default. When on, the footer is opaque, so content scrolls under it, not through it. In a dialog the popup itself scrolls, so `<DialogFooter sticky>` is all it takes. In a `SheetContent`, give the sheet (or the part of it that scrolls) `overflow-y-auto`; `AdaptiveSheetContent` already scrolls its content area. Use it on any footer below content that can grow: settings, filters, long forms.
 - **Dialog padding** (`--c-dialog-padding`, 1rem). `DialogContent` pads by it, and `DialogFooter` reaches out by it to run edge to edge, pads its buttons by it, and pins by it when sticky. To change one dialog's padding, set the variable: `<DialogContent className="[--c-dialog-padding:1.5rem]">`. Don't put `p-6` on `DialogContent`: the footer can't see a class, so it stops short of the edges. To change every dialog, re-map the token in the app's extension layer.
-- **Menu width** (`width` on `DropdownMenuContent` and `DropdownMenuSubContent`). A list can match the control that opens it or size itself apart from it:
+- **Select or NativeSelect.** `NativeSelect` is the default for a form: the OS draws the list, and on a phone that's the picker people know. Use `Select` when an option needs more than a line of plain text, such as an icon or a second line, or when the list has to match the frosted menus beside it. Past about 15 options, use a combobox. Pass `items` (value → label) to `Select` so the trigger shows the label before the list has opened; without it, the trigger shows the raw value. Label it with `Label htmlFor` pointing at an `id` on `SelectTrigger`.
+- **Popover or Tooltip.** A `Tooltip` holds a few words and takes no focus. Use a `Popover` when the content is interactive or longer than that. It's solid, not frosted, because it holds text and controls. Give it a `PopoverTitle`, which names it for screen readers. `--c-popover-width` (18rem) sets its width, and it never outgrows the space on screen.
+- **Menu width** (`width` on `DropdownMenuContent`, `DropdownMenuSubContent` and `SelectContent`, where the default is `fit`). A list can match the control that opens it or size itself apart from it:
 
     | `width` | The list is | For |
     |---|---|---|

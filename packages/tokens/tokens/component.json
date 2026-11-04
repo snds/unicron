@@ -27,6 +27,10 @@
     "min-width": { "$type": "dimension", "$value": "8rem", "$description": "The narrowest a list gets, whatever its trigger (Tailwind's min-w-32, the floor it always had)." },
     "max-width": { "$type": "dimension", "$value": "20rem", "$description": "The widest a list sized by its items gets. A list that matches its trigger (width=\"trigger\") follows the trigger instead." }
   },
+  "popover": {
+    "$description": "PopoverContent. It never outgrows the space on screen, whatever this says.",
+    "width": { "$type": "dimension", "$value": "18rem", "$description": "Its width (Tailwind's w-72, the shadcn default). For one wider popover, set the variable in its className." }
+  },
   "sheet": {
     "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up.",
     "compact-height": { "$type": "dimension", "$value": "75dvh" },
