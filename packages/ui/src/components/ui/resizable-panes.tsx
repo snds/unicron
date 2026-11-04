@@ -16,9 +16,8 @@ const HANDLE_TARGET = { coarse: 32, fine: 12 }
 /**
  * Panes side by side (`orientation="horizontal"`, the default) or stacked (`"vertical"`). Fills its
  * parent, so give the parent a height. To remember a layout between visits, pass `defaultLayout` and
- * `onLayoutChanged` from
- * `useResizablePanesLayout({ id })` by name (a spread counts against `dsa`'s ratchet), and give each
- * `ResizablePane` an `id`.
+ * `onLayoutChanged` from `useResizablePanesLayout({ id })` by name (a spread counts against `dsa`'s
+ * ratchet), and give each `ResizablePane` an `id`.
  */
 function ResizablePanes({
   className,
