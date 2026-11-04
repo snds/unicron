@@ -90,6 +90,9 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
+  ResizableHandle,
+  ResizablePane,
+  ResizablePanes,
   ScrollArea,
   Separator,
   Sheet,
@@ -374,6 +377,28 @@ export function Showcase() {
             <PopoverClose render={<Button variant="outline" size="sm" />}>Done</PopoverClose>
           </PopoverContent>
         </Popover>
+      </Section>
+
+      <Section title="ResizablePanes (Layout)">
+        <div className="h-48 w-full rounded-lg border">
+          <ResizablePanes>
+            <ResizablePane id="list" defaultSize="30%" minSize="20%">
+              <p className="p-3 text-sm">List: at least 20%</p>
+            </ResizablePane>
+            <ResizableHandle label="Resize the list" />
+            <ResizablePane id="detail" minSize="30%">
+              <ResizablePanes orientation="vertical">
+                <ResizablePane id="detail-top" minSize="20%">
+                  <p className="p-3 text-sm">Detail</p>
+                </ResizablePane>
+                <ResizableHandle label="Resize the log" withGrip />
+                <ResizablePane id="detail-log" defaultSize="35%" minSize="20%">
+                  <p className="p-3 text-sm">Log, with a grip on its handle</p>
+                </ResizablePane>
+              </ResizablePanes>
+            </ResizablePane>
+          </ResizablePanes>
+        </div>
       </Section>
 
       <Section title="Tabs · DropdownMenu (Navigation)">

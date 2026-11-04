@@ -29,7 +29,7 @@ assemble from primitives; climb an escalation ladder only on evidence.
 | Pattern | Job | Composition from `@unicron/ui` |
 |---|---|---|
 | **Form / data entry** | Collect and validate values | `FieldSet` → `Field` + `Input` / `NativeSelect` / `Checkbox` / `Switch` → one primary `Button` → `FieldError` inline |
-| **Master–detail** | Browse a set, inspect one | `Item` list or table (master) → `Sheet` / `AdaptiveSheetContent` or a panel (detail) → `ButtonGroup` toolbar |
+| **Master–detail** | Browse a set, inspect one | `Item` list or table (master) → `Sheet` / `AdaptiveSheetContent`, or `ResizablePanes` when both stay on screen (detail) → `ButtonGroup` toolbar |
 | **Dashboard** | Show status at a glance | card grid → `Badge` / progress → `Skeleton` on load → `Empty` when there is nothing |
 | **Wizard / multi-step** | Sequence a long task | stepper (position) → one form per step → progress → `Toaster` on completion |
 | **The async triad** | Survive every data condition | `Skeleton` or `Spinner` (loading) → content → `Empty` (no data) → alert (error). Every data view needs all three. |
@@ -74,3 +74,4 @@ becomes interactive); toast → alert → banner → alert dialog (urgency rises
 | 2026-10-17 | RiskTierBadge (from spec, first principles, Lockdown brief §5.7) | `docs/specs/security/risk-tier-badge.md`; Lockdown bridges and agent grants, Mailbird plug-ins (D6) | **Component**: `RiskTierBadge`. Owns the closed vocabulary and its copy (`riskTierCopy`); word, icon and colour paired by construction. DSA none |
 | 2026-10-17 | SecretField (from spec, first principles, Lockdown brief §5.7) | `docs/specs/security/secret-field.md`; replaces Lockdown desktop's placeholder `SecretField`; Mailbird locked notes and Synapse tokens next | **Component**: `SecretField`. Owns the one-shot handle, reveal lifetime, hide-on-blur, timed copy with a conditional clear, and the gate hook. DSA none |
 | 2026-11-04 | `Popover` and a styled `Select` (hand-raised) | Warpcore W1 needs both for its chat and model picker, ahead of any local build; both were already next candidates in `03-components.md` | **Components**: generated with the transform ([#65](https://github.com/snds/unicron/pull/65)) |
+| 2026-11-04 | `ResizablePanes` (hand-raised) | Warpcore's shell has fixed CSS grid slots waiting on it; the Warpcore plan expects list-detail use in Synapse and Lockdown too | **Component**: generated with the transform ([#66](https://github.com/snds/unicron/pull/66)) |
