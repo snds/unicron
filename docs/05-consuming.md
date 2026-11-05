@@ -125,11 +125,11 @@ Duo check anywhere in here, and the next foldable needs no new code.
 
 **Width classes** come from `useViewport().widthClass`, and match Tailwind's breakpoints:
 
-| Class | From | Tailwind | Measured devices |
+| Class | From | Tailwind | For example |
 |---|---|---|---|
-| `compact` | 0 | | iPhone 382–440 wide · Duo folded 382 · Duo's two windows 385 |
-| `medium` | 640 | `sm:` | iPhone mini-to-regular sideways · Duo open 669 |
-| `expanded` | 768 | `md:` | iPad · most iPhones sideways · Duo open sideways 951 |
+| `compact` | 0 | | iPhone 390 · Duo folded 382 · Duo's two windows 385 |
+| `medium` | 640 | `sm:` | small iPhone sideways 667 · Duo open 669 · iPad mini 744 |
+| `expanded` | 768 | `md:` | iPad 820 · iPhone sideways 844 · Duo open sideways 951 |
 | `wide` | 1280 | `xl:` | iPad Pro sideways · laptops |
 | `ultrawide` | 2560 | `ultrawide:` | ultrawide monitors |
 
