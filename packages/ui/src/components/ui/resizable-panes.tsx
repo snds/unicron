@@ -59,6 +59,9 @@ function ResizableHandle({
       data-slot="resizable-handle"
       aria-label={label}
       className={cn(
+        // On touch, the handle's own box covers its press area. Otherwise a finger beside the line
+        // lands on the pane, and if anything in there scrolls, the browser takes the drag as a pan.
+        "pointer-coarse:z-10 pointer-coarse:before:absolute pointer-coarse:before:inset-y-0 pointer-coarse:before:-inset-x-4 pointer-coarse:before:content-[''] aria-[orientation=horizontal]:pointer-coarse:before:inset-x-0 aria-[orientation=horizontal]:pointer-coarse:before:-inset-y-4",
         "bg-border data-[separator=hover]:bg-ring data-[separator=active]:bg-ring focus-visible:bg-ring focus-visible:ring-ring/50 relative flex w-px shrink-0 items-center justify-center outline-none transition-colors focus-visible:ring-3 aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full [&[aria-orientation=horizontal]>div]:rotate-90",
         className
       )}
