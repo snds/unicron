@@ -118,6 +118,46 @@ import { Button, Icon, Field, FieldLabel, Input } from "@unicron/ui"
 Prefer a variant prop over a `className` override. `dsa ratchet` counts overrides on system
 components and fails CI when the count grows.
 
+## 5a. Fit every screen
+
+Decide from the space you have, never from the device. WebKit asks for the same: there's no iPhone
+Duo check anywhere in here, and the next foldable needs no new code.
+
+**Width classes** come from `useViewport().widthClass`, and match Tailwind's breakpoints:
+
+| Class | From | Tailwind | Measured devices |
+|---|---|---|---|
+| `compact` | 0 | | iPhone 382–440 wide · Duo folded 382 · Duo's two windows 385 |
+| `medium` | 640 | `sm:` | iPhone mini-to-regular sideways · Duo open 669 |
+| `expanded` | 768 | `md:` | iPad · most iPhones sideways · Duo open sideways 951 |
+| `wide` | 1280 | `xl:` | iPad Pro sideways · laptops |
+| `ultrawide` | 2560 | `ultrawide:` | ultrawide monitors |
+
+Width doesn't tell you a phone from a tablet: an iPhone on its side is as wide as an iPad mini, at a
+third of the height. So check `short` before you add a second pane.
+
+**Short** (`useViewport().short`, or the `short:` variant) means sideways and under 480px tall, so
+height is what's scarce. A phone in landscape, or a folded Duo at 594 × 368. Show one thing at a
+time, and put controls beside the content, not above it. `AppFrameNav`, `Textarea` and `Empty`
+already do their part.
+
+**A keyboard** (`useViewport().keyboardOpen` and `room`, or the `frame-tight:` and `frame-minimal:`
+variants inside an `AppFrame`). `AppFrame` keeps clear of it and drops its bars when `room` is
+`tight`. Under `minimal`, a folded Duo in landscape has about 180px, so drop what you can. The
+layout holds still while someone types: `height`, `short` and `widthClass` ignore the keyboard.
+
+**A fold** (`useViewport().fold`, `fold-book:` and `fold-tabletop:`, and `FoldPanes`). Null when the
+device is flat, including a foldable lying fully open: its crease divides nothing. This is the
+Viewport Segments API, which Android Chrome has and Safari 27.1 has behind a flag, so a fold is
+always an extra. The layout has to work without one.
+
+**Folding and rotating are window resizes.** Nothing reloads, so keep state above whatever the
+layout swaps out: a draft shouldn't live in a component that only exists at one size.
+
+**Touch fields stay at 16px.** iOS zooms the whole page into a focused field under 16px and doesn't
+zoom back out. `Input`, `Textarea`, `NativeSelect` and `CommandInput` only drop to 14px with a
+mouse (`pointer-fine:`). A custom field needs the same.
+
 ## 6. Regenerate or add components
 
 Primitives are owned source in `packages/ui/src/components/ui`. To add one, run the

@@ -82,6 +82,130 @@
 }
 
 /*
+ * The space an app has, as variants. The same lines as useViewport (components/use-viewport.ts):
+ *   short:          sideways and under 480px tall, so height is scarce. A phone in landscape, a folded Duo.
+ *   fold-book:      partly folded along a vertical line. fold-tabletop: along a horizontal line.
+ *   standalone:     opened from a home screen.
+ *   frame-tight:    in an AppFrame, a keyboard leaves too little room for the app's bars.
+ *   frame-minimal:  in an AppFrame, a keyboard leaves almost nothing.
+ */
+@custom-variant short (@media (orientation: landscape) and (max-height: 479.98px));
+@custom-variant fold-book (@media (horizontal-viewport-segments: 2));
+@custom-variant fold-tabletop (@media (vertical-viewport-segments: 2));
+@custom-variant standalone (@media (display-mode: standalone));
+@custom-variant frame-tight (&:where([data-room="tight"] *, [data-room="minimal"] *));
+@custom-variant frame-minimal (&:where([data-room="minimal"] *));
+
+/* Tailwind's sm, md and xl are useViewport's medium, expanded and wide. This is its ultrawide. */
+@theme {
+  --breakpoint-ultrawide: 160rem;
+}
+
+/*
+ * AppFrame (components/ui/app-frame.tsx). The page itself never scrolls: on iOS a scrollable page
+ * keeps its offset through a rotation, leaving the top bar off screen and a gap at the bottom.
+ * :has() so this touches only an app that uses the frame.
+ */
+html:has([data-slot="app-frame"]),
+html:has([data-slot="app-frame"]) body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--c-app-frame-edge);
+}
+
+[data-slot="app-frame"] {
+  --app-frame-height: 100dvh;
+  position: fixed;
+  top: var(--viewport-offset-top, 0px);
+  right: 0;
+  left: 0;
+  height: calc(var(--app-frame-height) - var(--viewport-keyboard-inset, 0px) - var(--viewport-offset-top, 0px));
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "header header"
+    "main main"
+    "nav nav";
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--c-app-frame-edge);
+  /* What sits below the content, for a tabletop fold to measure up from. */
+  --app-frame-below: env(safe-area-inset-bottom, 0px);
+}
+/* From a home screen, iOS takes the safe areas off 100dvh but not off 100vh, and the frame pads them itself. */
+@media (display-mode: standalone) {
+  [data-slot="app-frame"] {
+    --app-frame-height: 100vh;
+  }
+}
+/* A keyboard already covers the home bar. */
+[data-slot="app-frame"][data-keyboard="open"] {
+  padding-bottom: 0;
+}
+[data-slot="app-frame"]:has(> [data-slot="app-frame-nav"]) {
+  --app-frame-below: calc(var(--c-app-frame-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+[data-slot="app-frame-header"] {
+  grid-area: header;
+}
+[data-slot="app-frame-main"] {
+  grid-area: main;
+}
+[data-slot="app-frame-nav"] {
+  grid-area: nav;
+}
+@media (orientation: landscape) and (max-height: 479.98px) {
+  [data-slot="app-frame"] {
+    grid-template-areas:
+      "header header"
+      "nav main"
+      "nav main";
+  }
+}
+
+/* FoldPanes (components/ui/app-frame.tsx). */
+[data-slot="fold-panes"] {
+  display: flex;
+}
+[data-slot="fold-panes"] > * {
+  min-width: 0;
+  min-height: 0;
+}
+[data-slot="fold-panes"][data-split="rows"] {
+  flex-direction: column;
+}
+[data-slot="fold-panes"][data-split="rows"] > :first-child {
+  flex: 1 1 0;
+}
+[data-slot="fold-panes"][data-split="rows"] > :last-child {
+  flex-shrink: 0;
+}
+[data-slot="fold-panes"][data-split="columns"] > * {
+  flex: 1 1 0;
+}
+@media (horizontal-viewport-segments: 2) {
+  [data-slot="fold-panes"][data-split="columns"] {
+    display: grid;
+    grid-template-columns:
+      calc(env(viewport-segment-width 0 0) - env(safe-area-inset-left, 0px))
+      calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0))
+      calc(env(viewport-segment-width 1 0) - env(safe-area-inset-right, 0px));
+  }
+  [data-slot="fold-panes"][data-split="columns"] > :last-child {
+    grid-column: 3;
+  }
+}
+@media (vertical-viewport-segments: 2) {
+  /* Not with a keyboard up: it has taken the bottom part, and the content needs what's left. */
+  :where([data-slot="app-frame"]:not([data-keyboard="open"])) [data-slot="fold-panes"][data-split="rows"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) calc(env(viewport-segment-height 0 1) - var(--app-frame-below, 0px));
+  }
+}
+
+/*
  * Registered so the icon axes interpolate. Without @property, custom properties
  * flip discretely and an icon would snap from outline to filled.
  */
