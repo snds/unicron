@@ -7,6 +7,13 @@
     "grad": { "$type": "number", "$value": 0, "$extensions": { "unicron.modes": { "dark": -25 } }, "$description": "Dark surfaces look heavier, so grade icons down slightly (Material guidance)." },
     "opsz": { "$type": "number", "$value": 20 }
   },
+  "app-frame": {
+    "$description": "AppFrame: the outermost box of an app that fills the screen, with its header, its nav, and the strips beside the notch and home bar.",
+    "edge": { "$type": "color", "$value": "{sidebar}", "$description": "Header, nav and the strips at the screen's edges. One colour, so the bars seem to reach the edges." },
+    "header-height": { "$type": "dimension", "$value": "3rem" },
+    "nav-height": { "$type": "dimension", "$value": "3.5rem", "$description": "The tab bar along the bottom." },
+    "rail-width": { "$type": "dimension", "$value": "3.5rem", "$description": "The same nav down the side of a short screen. Its items are this square." }
+  },
   "dialog": {
     "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent). From the sm breakpoint up a dialog fits its content between its size's min-width and max-width, and never gets wider than the screen less 1rem each side. Each size's min-width is the fixed width it had before, so no dialog got narrower.",
     "titlebar-inset": { "$type": "dimension", "$value": "0px", "$description": "Height of the app's own title bar at the top of the window (a desktop app with the native title bar hidden). The popups keep clear of it: a dialog centres in the area below it; a side or top sheet starts under it. 0px for a web page or a window with a native title bar. Set it with beforeContent, the slot that holds the app's drag strip." },

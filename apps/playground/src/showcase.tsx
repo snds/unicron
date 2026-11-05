@@ -93,6 +93,10 @@ import {
   ResizableHandle,
   ResizablePane,
   ResizablePanes,
+  AppFrameNav,
+  AppFrameNavEnd,
+  AppFrameNavItem,
+  FoldPanes,
   ScrollArea,
   Separator,
   Sheet,
@@ -398,6 +402,26 @@ export function Showcase() {
               </ResizablePanes>
             </ResizablePane>
           </ResizablePanes>
+        </div>
+      </Section>
+
+      <Section title="AppFrameNav · FoldPanes (Layout)">
+        {/* AppFrame itself takes over the page, so it can't sit in a gallery. Narrow or turn this window to see the rail. */}
+        <div className="w-full rounded-lg border">
+          <AppFrameNav aria-label="Example places">
+            <AppFrameNavItem icon="forum" label="Conversation" current />
+            <AppFrameNavItem icon="article" label="Canvas" />
+            <AppFrameNavItem icon="task_alt" label="Tasks" />
+            <AppFrameNavEnd>
+              <p className="type-meta p-1">End</p>
+            </AppFrameNavEnd>
+          </AppFrameNav>
+        </div>
+        <div className="flex h-32 w-full rounded-lg border">
+          <FoldPanes split="columns">
+            <p className="p-3 text-sm">Left of a fold</p>
+            <p className="border-l p-3 text-sm">Right of a fold</p>
+          </FoldPanes>
         </div>
       </Section>
 
