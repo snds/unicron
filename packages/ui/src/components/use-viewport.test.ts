@@ -51,6 +51,41 @@ describe("short screens", () => {
   ])("%s isn't", (_, w, h) => expect(at(w, h).short).toBe(false))
 })
 
+describe("where the nav goes", () => {
+  it.each([
+    ["iPhone", 390, 844, "bar"],
+    ["small iPhone", 375, 667, "bar"],
+    ["iPhone in Safari, with its bars showing", 390, 664, "bar"],
+    ["Android foldable, cover", 344, 882, "bar"],
+    ["iPhone Duo, open", 669, 867, "bar"],
+    ["iPad", 820, 1180, "bar"],
+    ["iPhone in landscape", 844, 390, "rail"],
+    ["iPhone Duo, folded", 382, 580, "rail"],
+    ["iPhone Duo, folded, in landscape", 594, 368, "rail"],
+    ["iPhone Duo, two windows", 385, 571, "rail"],
+  ])("%s: %s", (_, w, h, expected) => expect(at(w, h).navPlacement).toBe(expected))
+
+  it("doesn't move because a keyboard resized the page", () => {
+    expect(at(412, 500, at(412, 915), { typing: true }).navPlacement).toBe("bar")
+  })
+})
+
+describe("the page's height", () => {
+  it("is what's measured", () => expect(at(390, 793).pageHeight).toBe(793))
+
+  it("takes the smaller reading, so nothing is cropped when they disagree", () => {
+    expect(at(390, 852, null, { visualHeight: 793 }).pageHeight).toBe(793)
+  })
+
+  it("ignores a pinch, which shrinks only the visual viewport", () => {
+    expect(at(390, 844, null, { visualHeight: 400, visualScale: 2 }).pageHeight).toBe(844)
+  })
+
+  it("isn't reduced by a keyboard twice: the frame takes the keyboard off separately", () => {
+    expect(at(390, 844, at(390, 844), { typing: true, visualHeight: 508 }).pageHeight).toBe(844)
+  })
+})
+
 describe("a keyboard", () => {
   it("is seen on iOS, where the page stays tall and only the visual viewport shrinks", () => {
     const v = at(390, 844, at(390, 844), { typing: true, visualHeight: 508 })

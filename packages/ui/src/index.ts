@@ -18,6 +18,7 @@ export {
   viewportWidthFor,
   type Viewport,
   type ViewportFold,
+  type ViewportNavPlacement,
   type ViewportRoom,
   type ViewportWidth,
 } from "./components/use-viewport"

@@ -30,6 +30,8 @@ const KEYBOARD_MIN_HEIGHT = 120
 /** With a keyboard up, less room than these leaves no space for an app's bars. */
 const TIGHT_HEIGHT = 560
 const MINIMAL_HEIGHT = 400
+/** Narrow, and taller than wide by less than this: a folded Duo, or a window beside another. Not an iPhone. */
+const RAIL_MAX_RATIO = 1.6
 
 /**
  * - `book`: folded along a vertical line, so there's a left and a right part.
@@ -42,17 +44,29 @@ export type ViewportFold = { kind: "book" | "tabletop"; sizes: number[] } | null
 /** How much room is left around a keyboard. `full` whenever no keyboard is up. */
 export type ViewportRoom = "full" | "tight" | "minimal"
 
+/**
+ * Where controls that would sit along the bottom belong. `rail` puts them down the side, when height
+ * is what's scarce, as iOS does on iPhone Duo everywhere but the inner display in portrait.
+ */
+export type ViewportNavPlacement = "bar" | "rail"
+
 export type Viewport = {
   width: number
   /** The height without any keyboard. Layout decisions use this, so they don't flip while typing. */
   height: number
   /** What can be seen right now: `height`, less any keyboard. */
   visibleHeight: number
+  /**
+   * The page's height as measured, which is what a full-screen box should use. CSS's 100vh and 100lvh
+   * can be taller than the screen in a home-screen app (https://bugs.webkit.org/show_bug.cgi?id=316008).
+   */
+  pageHeight: number
   /** Which width class this is. Decide what to show from this, never from the device. */
   widthClass: ViewportWidth
   landscape: boolean
   /** Sideways and under `SHORT_HEIGHT`: height is what's scarce. A phone in landscape, or a folded Duo. */
   short: boolean
+  navPlacement: ViewportNavPlacement
   keyboardOpen: boolean
   /** How far a keyboard covers the page, for a frame to keep clear of it. */
   keyboardInset: number
@@ -73,6 +87,8 @@ export type ViewportReading = {
   /** visualViewport's height and offsetTop. iOS leaves the page's height alone under a keyboard. */
   visualHeight: number
   visualOffsetTop: number
+  /** visualViewport's scale. Above 1, someone has pinched in and its height says nothing about the page. */
+  visualScale?: number
   /** A touch keyboard could be up: a text field has focus, on a touch screen. */
   typing: boolean
   fold: ViewportFold
@@ -92,6 +108,11 @@ export function classifyViewport(r: ViewportReading, previous: Viewport | null):
   const visibleHeight = keyboardOpen ? Math.min(r.visualHeight, r.height) : height
 
   const landscape = r.width >= height
+  const short = landscape && height < SHORT_HEIGHT
+  const squat = viewportWidthFor(r.width) === "compact" && height / r.width < RAIL_MAX_RATIO
+  // The smaller of the two, when they disagree: a little spare room beats a cropped control.
+  const zoomed = (r.visualScale ?? 1) > 1.01
+  const pageHeight = keyboardOpen || zoomed ? r.height : Math.min(r.height, r.visualHeight + r.visualOffsetTop)
   let room: ViewportRoom = "full"
   if (keyboardOpen) room = visibleHeight < MINIMAL_HEIGHT ? "minimal" : visibleHeight < TIGHT_HEIGHT ? "tight" : "full"
 
@@ -99,9 +120,11 @@ export function classifyViewport(r: ViewportReading, previous: Viewport | null):
     width: r.width,
     height,
     visibleHeight,
+    pageHeight,
     widthClass: viewportWidthFor(r.width),
     landscape,
-    short: landscape && height < SHORT_HEIGHT,
+    short,
+    navPlacement: short || squat ? "rail" : "bar",
     keyboardOpen,
     keyboardInset: keyboardOpen ? covered : 0,
     offsetTop: keyboardOpen ? r.visualOffsetTop : 0,
@@ -134,6 +157,7 @@ function sameViewport(a: Viewport, b: Viewport) {
     a.width === b.width &&
     a.height === b.height &&
     a.visibleHeight === b.visibleHeight &&
+    a.pageHeight === b.pageHeight &&
     a.keyboardOpen === b.keyboardOpen &&
     a.keyboardInset === b.keyboardInset &&
     a.offsetTop === b.offsetTop &&
@@ -152,6 +176,7 @@ function read(): Viewport {
       height: window.innerHeight,
       visualHeight: visual?.height ?? window.innerHeight,
       visualOffsetTop: visual?.offsetTop ?? 0,
+      visualScale: visual?.scale ?? 1,
       typing: isTextField(document.activeElement) && matches("(pointer: coarse)"),
       fold: readFold(),
     },
@@ -166,9 +191,11 @@ const SERVER_VIEWPORT: Viewport = {
   width: 1280,
   height: 800,
   visibleHeight: 800,
+  pageHeight: 0,
   widthClass: "wide",
   landscape: true,
   short: false,
+  navPlacement: "bar",
   keyboardOpen: false,
   keyboardInset: 0,
   offsetTop: 0,

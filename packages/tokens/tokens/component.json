@@ -11,8 +11,10 @@
     "$description": "AppFrame: the outermost box of an app that fills the screen, with its header, its nav, and the strips beside the notch and home bar.",
     "edge": { "$type": "color", "$value": "{sidebar}", "$description": "Header, nav and the strips at the screen's edges. One colour, so the bars seem to reach the edges." },
     "header-height": { "$type": "dimension", "$value": "3rem" },
-    "nav-height": { "$type": "dimension", "$value": "3.5rem", "$description": "The tab bar along the bottom." },
-    "rail-width": { "$type": "dimension", "$value": "3.5rem", "$description": "The same nav down the side of a short screen. Its items are this square." }
+    "nav-height": { "$type": "dimension", "$value": "3.25rem", "$description": "The floating capsule, along the bottom: a 44px item in 4px of padding." },
+    "nav-item-width": { "$type": "dimension", "$value": "4.5rem", "$description": "Each place in the capsule along the bottom." },
+    "nav-gap": { "$type": "dimension", "$value": "0.75rem", "$description": "Around the floating nav, and its least distance from the screen's edge." },
+    "rail-width": { "$type": "dimension", "$value": "3.25rem", "$description": "The same nav as a pill down the side, when height is scarce." }
   },
   "dialog": {
     "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent). From the sm breakpoint up a dialog fits its content between its size's min-width and max-width, and never gets wider than the screen less 1rem each side. Each size's min-width is the fixed width it had before, so no dialog got narrower.",

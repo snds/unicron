@@ -141,6 +141,8 @@ height is what's scarce. A phone in landscape, or a folded Duo at 594 × 368. Sh
 time, and put controls beside the content, not above it. `AppFrameNav`, `Textarea` and `Empty`
 already do their part.
 
+**Where the nav goes** (`useViewport().navPlacement`, the `nav-rail:` variant). A floating capsule along the bottom, or `rail`, a pill at the foot of the right edge, on a short screen or a narrow one less than 1.6 times as tall as it is wide. That's where iOS puts tab bars on iPhone Duo in every pose but the inner display in portrait, and it's what a folded Duo and an iPhone sideways have in common. Don't use `100vh` or `100lvh` for a full-screen box: they can be taller than the screen in a home-screen app. `AppFrame` measures instead.
+
 **A keyboard** (`useViewport().keyboardOpen` and `room`, or the `frame-tight:` and `frame-minimal:`
 variants inside an `AppFrame`). `AppFrame` keeps clear of it and drops its bars when `room` is
 `tight`. Under `minimal`, a folded Duo in landscape has about 180px, so drop what you can. The
