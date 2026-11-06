@@ -14,7 +14,8 @@ import { useViewport } from "../use-viewport"
  * - Header and nav share the screen edge's colour, so they seem to reach the edges.
  * - Under a keyboard, or on a short screen, it gives the height back to the content.
  *
- * Children: `AppFrameHeader` (optional), `AppFrameMain`, `AppFrameNav` (optional).
+ * Children: `AppFrameHeader` (optional), `AppFrameMain`, `AppFrameNav` (optional). With room to spare,
+ * `AppFramePivot` and `AppFrameSidebar` add columns on the left: places, then a list, then the content.
  */
 function AppFrame({ className, style, children, ...props }: React.ComponentProps<"div">) {
   const viewport = useViewport()
@@ -117,7 +118,7 @@ function AppFrameNavItem({
       data-slot="app-frame-nav-item"
       aria-current={current ? "page" : undefined}
       className={cn(
-        "text-foreground hover:bg-muted focus-visible:ring-ring/50 flex size-11 w-(--c-app-frame-nav-item-width) shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-3 focus-visible:ring-inset nav-rail:w-full",
+        "text-foreground hover:bg-muted focus-visible:ring-ring/50 flex size-11 w-(--c-app-frame-nav-item-width) shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-3 focus-visible:ring-inset nav-rail:w-full in-data-[slot=app-frame-pivot]:w-full in-data-[slot=app-frame-pivot]:rounded-lg",
         "aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:[--c-icon-fill:1]",
         className
       )}
@@ -147,6 +148,51 @@ function AppFrameNavEnd({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 /**
+ * The column of top-level places on a large screen, in place of `AppFrameNav`. Holds
+ * `AppFrameNavItem`s, and needs an `aria-label`. Anything for the foot of it goes in `AppFramePivotEnd`.
+ */
+function AppFramePivot({ className, ...props }: React.ComponentProps<"nav">) {
+  return (
+    <nav
+      data-slot="app-frame-pivot"
+      className={cn(
+        "bg-(--c-app-frame-edge) flex w-(--c-app-frame-pivot-width) shrink-0 flex-col items-center gap-1 overflow-y-auto border-r p-1.5",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AppFramePivotEnd({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="app-frame-pivot-end"
+      className={cn("mt-auto flex w-full shrink-0 flex-col items-center gap-1", className)}
+      {...props}
+    />
+  )
+}
+
+/**
+ * A list beside the content, such as conversations. It holds its place in the layout, so it suits a
+ * screen with room for it. On a smaller screen, show the same content in a `SheetContent side="left"`,
+ * which handles focus and dismissal. Render it only while it's open, and it collapses to nothing.
+ */
+function AppFrameSidebar({ className, ...props }: React.ComponentProps<"aside">) {
+  return (
+    <aside
+      data-slot="app-frame-sidebar"
+      className={cn(
+        "bg-(--c-app-frame-edge) flex w-(--c-app-frame-sidebar-width) min-h-0 shrink-0 flex-col border-r",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
  * Two parts that land either side of a fold when the device is partly folded (the Viewport Segments
  * API), and otherwise share the space:
  *
@@ -162,4 +208,15 @@ function FoldPanes({
   return <div data-slot="fold-panes" data-split={split} className={cn("min-h-0 min-w-0 flex-1", className)} {...props} />
 }
 
-export { AppFrame, AppFrameHeader, AppFrameMain, AppFrameNav, AppFrameNavEnd, AppFrameNavItem, FoldPanes }
+export {
+  AppFrame,
+  AppFrameHeader,
+  AppFrameMain,
+  AppFrameNav,
+  AppFrameNavEnd,
+  AppFrameNavItem,
+  AppFramePivot,
+  AppFramePivotEnd,
+  AppFrameSidebar,
+  FoldPanes,
+}

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { act, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { AppFrame, AppFrameHeader, AppFrameMain, AppFrameNav, AppFrameNavItem, FoldPanes } from "./app-frame"
+import { AppFrame, AppFrameHeader, AppFrameMain, AppFrameNav, AppFrameNavItem, AppFramePivot, AppFramePivotEnd, AppFrameSidebar, FoldPanes } from "./app-frame"
 import { Input } from "./input"
 import { Textarea } from "./textarea"
 import { SHORT_HEIGHT } from "../use-viewport"
@@ -64,6 +64,30 @@ describe("AppFrame", () => {
     const frame = screen.getByTestId("frame")
     expect(frame).not.toHaveAttribute("data-keyboard")
     expect(frame).toHaveAttribute("data-room", "full")
+  })
+})
+
+describe("the columns", () => {
+  it("names the pivot, marks where you are, and holds the list beside the content", () => {
+    render(
+      <AppFrame>
+        <AppFramePivot aria-label="Places">
+          <AppFrameNavItem icon="home" label="Home" current />
+          <AppFramePivotEnd>
+            <button type="button">Settings</button>
+          </AppFramePivotEnd>
+        </AppFramePivot>
+        <AppFrameSidebar aria-label="Conversations">List</AppFrameSidebar>
+        <AppFrameMain>Content</AppFrameMain>
+      </AppFrame>
+    )
+    expect(screen.getByRole("navigation", { name: "Places" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Home" })).toHaveAttribute("aria-current", "page")
+    expect(screen.getByRole("complementary", { name: "Conversations" })).toHaveTextContent("List")
+  })
+
+  it("has a place in the frame's grid for each", () => {
+    for (const area of ["pivot", "sidebar", "header", "main"]) expect(css).toContain(`grid-area: ${area};`)
   })
 })
 
