@@ -1,5 +1,11 @@
 # @unicron/tokens
 
+## 0.14.0
+
+### Minor Changes
+
+- bb9b169: `AppFrame` can now hold columns on the left: `AppFramePivot` and `AppFramePivotEnd` for top-level places, and `AppFrameSidebar` for a list beside the content. New tokens: `--c-app-frame-pivot-width` and `--c-app-frame-sidebar-width`. Existing frames are unchanged, because unused columns take no room.
+
 ## 0.13.0
 
 ### Minor Changes
