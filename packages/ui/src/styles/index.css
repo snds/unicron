@@ -127,11 +127,12 @@ html:has([data-slot="app-frame"]) body {
    */
   height: calc(var(--viewport-page-height, 100dvh) - var(--viewport-keyboard-inset, 0px) - var(--viewport-offset-top, 0px));
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  /* The first two columns are empty, and take no room, unless AppFramePivot and AppFrameSidebar are used. */
+  grid-template-columns: auto auto minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
-    "header"
-    "main";
+    "pivot sidebar header"
+    "pivot sidebar main";
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   background: var(--c-app-frame-edge);
   /* How far a floating nav reaches over the content. Content that runs underneath pads by these. */
@@ -161,6 +162,12 @@ html:has([data-slot="app-frame"]) body {
 }
 [data-slot="app-frame-header"] {
   grid-area: header;
+}
+[data-slot="app-frame-pivot"] {
+  grid-area: pivot;
+}
+[data-slot="app-frame-sidebar"] {
+  grid-area: sidebar;
 }
 [data-slot="app-frame-main"] {
   grid-area: main;
