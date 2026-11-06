@@ -30,9 +30,11 @@ function AppFrame({ className, style, children, ...props }: React.ComponentProps
       data-slot="app-frame"
       data-keyboard={viewport.keyboardOpen ? "open" : undefined}
       data-room={viewport.room}
+      data-nav={viewport.navPlacement}
       className={cn("text-foreground", className)}
       style={
         {
+          ...(viewport.pageHeight > 0 && { "--viewport-page-height": `${viewport.pageHeight}px` }),
           "--viewport-keyboard-inset": `${viewport.keyboardInset}px`,
           "--viewport-offset-top": `${viewport.offsetTop}px`,
           ...style,
@@ -59,10 +61,16 @@ function AppFrameHeader({ className, ...props }: React.ComponentProps<"header">)
   )
 }
 
-function AppFrameMain({ className, ...props }: React.ComponentProps<"main">) {
+/**
+ * The content. It keeps clear of a floating nav by itself. `bleed` lets it run underneath the nav, so
+ * the glass has something to show: pad what scrolls by `--app-frame-nav-clearance` and
+ * `--app-frame-nav-clearance-end`, so the end of it can still be reached.
+ */
+function AppFrameMain({ bleed, className, ...props }: React.ComponentProps<"main"> & { bleed?: boolean }) {
   return (
     <main
       data-slot="app-frame-main"
+      data-bleed={bleed ? "" : undefined}
       className={cn("bg-background flex min-h-0 min-w-0 overflow-hidden", className)}
       {...props}
     />
@@ -70,16 +78,17 @@ function AppFrameMain({ className, ...props }: React.ComponentProps<"main">) {
 }
 
 /**
- * Moves between an app's top-level places. A tab bar along the bottom, and a rail down the side on a
- * short screen, where a bar would take height the content needs. Needs an `aria-label`.
+ * Moves between an app's top-level places. A glass capsule floating above the content: along the
+ * bottom, or as a pill at the foot of the right edge when height is scarce (`data-nav="rail"` on the
+ * frame). Needs an `aria-label`. Goes away under a keyboard when it would crowd the content, unless
+ * it's a rail, which costs no height.
  */
 function AppFrameNav({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
       data-slot="app-frame-nav"
       className={cn(
-        "bg-(--c-app-frame-edge) flex h-(--c-app-frame-nav-height) shrink-0 border-t frame-tight:hidden",
-        "short:h-auto short:w-(--c-app-frame-rail-width) short:flex-col short:overflow-y-auto short:border-t-0 short:border-r short:frame-tight:flex",
+        "bg-popover/70 ring-foreground/10 flex gap-0.5 rounded-full p-1 shadow-lg ring-1 backdrop-blur-2xl backdrop-saturate-150",
         className
       )}
       {...props}
@@ -88,8 +97,8 @@ function AppFrameNav({ className, ...props }: React.ComponentProps<"nav">) {
 }
 
 /**
- * One place in the nav. Icon over label on the bar. On the rail the icon stands alone, and the label
- * stays for screen readers. `current` marks where the person is.
+ * One place in the nav: an icon, with the label for screen readers. `current` marks where the person
+ * is. At least 44px each way, so it's easy to hit without a label to aim at.
  */
 function AppFrameNavItem({
   icon,
@@ -108,25 +117,30 @@ function AppFrameNavItem({
       data-slot="app-frame-nav-item"
       aria-current={current ? "page" : undefined}
       className={cn(
-        "text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 outline-none transition-colors focus-visible:ring-3 focus-visible:ring-inset",
+        "text-foreground hover:bg-muted focus-visible:ring-ring/50 flex size-11 w-(--c-app-frame-nav-item-width) shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-3 focus-visible:ring-inset nav-rail:w-full",
         "aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:[--c-icon-fill:1]",
-        "short:w-full short:flex-none short:h-(--c-app-frame-rail-width)",
         className
       )}
       {...props}
     >
       <Icon name={icon} />
-      <span className="type-meta max-w-full truncate px-1 text-inherit short:sr-only">{label}</span>
+      <span className="sr-only">{label}</span>
     </button>
   )
 }
 
-/** Controls that belong in the nav only when the header is gone: at the far end of the rail, and otherwise hidden. */
+/**
+ * Controls that belong in the nav only when the header is gone: at the head of the pill on a short
+ * screen, and otherwise hidden.
+ */
 function AppFrameNavEnd({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="app-frame-nav-end"
-      className={cn("mt-auto hidden shrink-0 flex-col items-center gap-1 py-1 short:flex", className)}
+      className={cn(
+        "order-first hidden shrink-0 flex-col items-center border-b pb-0.5 *:size-11 *:rounded-full short:flex frame-minimal:hidden",
+        className
+      )}
       {...props}
     />
   )

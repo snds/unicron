@@ -45,12 +45,32 @@ describe("AppFrame", () => {
     scrollTo.mockRestore()
   })
 
+  it("uses the measured height, because 100vh can run off the screen in a home-screen app", () => {
+    setViewport(390, 793)
+    render(<AppFrame data-testid="frame" />)
+    expect(screen.getByTestId("frame").style.getPropertyValue("--viewport-page-height")).toBe("793px")
+    expect(css).not.toMatch(/--app-frame-height:\s*100vh/)
+  })
+
+  it("says where the nav goes", () => {
+    setViewport(844, 390)
+    render(<AppFrame data-testid="frame" />)
+    expect(screen.getByTestId("frame")).toHaveAttribute("data-nav", "rail")
+  })
+
   it("has no keyboard state when no keyboard is up", () => {
     setViewport(390, 844)
     render(<AppFrame data-testid="frame" />)
     const frame = screen.getByTestId("frame")
     expect(frame).not.toHaveAttribute("data-keyboard")
     expect(frame).toHaveAttribute("data-room", "full")
+  })
+})
+
+describe("AppFrameMain", () => {
+  it("can let content run under the nav", () => {
+    render(<AppFrameMain bleed data-testid="main" />)
+    expect(screen.getByTestId("main")).toHaveAttribute("data-bleed")
   })
 })
 

@@ -88,6 +88,7 @@
  *   standalone:     opened from a home screen.
  *   frame-tight:    in an AppFrame, a keyboard leaves too little room for the app's bars.
  *   frame-minimal:  in an AppFrame, a keyboard leaves almost nothing.
+ *   nav-rail:       in an AppFrame, the nav is down the side.
  */
 @custom-variant short (@media (orientation: landscape) and (max-height: 479.98px));
 @custom-variant fold-book (@media (horizontal-viewport-segments: 2));
@@ -95,6 +96,7 @@
 @custom-variant standalone (@media (display-mode: standalone));
 @custom-variant frame-tight (&:where([data-room="tight"] *, [data-room="minimal"] *));
 @custom-variant frame-minimal (&:where([data-room="minimal"] *));
+@custom-variant nav-rail (&:where([data-nav="rail"] *));
 
 /* Tailwind's sm, md and xl are useViewport's medium, expanded and wide. This is its ultrawide. */
 @theme {
@@ -115,53 +117,82 @@ html:has([data-slot="app-frame"]) body {
 }
 
 [data-slot="app-frame"] {
-  --app-frame-height: 100dvh;
   position: fixed;
   top: var(--viewport-offset-top, 0px);
   right: 0;
   left: 0;
-  height: calc(var(--app-frame-height) - var(--viewport-keyboard-inset, 0px) - var(--viewport-offset-top, 0px));
+  /*
+   * Measured by useViewport, not 100vh or 100lvh, which can be taller than the screen in a home-screen
+   * app (https://bugs.webkit.org/show_bug.cgi?id=316008). 100dvh only until the first measure.
+   */
+  height: calc(var(--viewport-page-height, 100dvh) - var(--viewport-keyboard-inset, 0px) - var(--viewport-offset-top, 0px));
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
-    "header header"
-    "main main"
-    "nav nav";
+    "header"
+    "main";
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   background: var(--c-app-frame-edge);
+  /* How far a floating nav reaches over the content. Content that runs underneath pads by these. */
+  --app-frame-nav-clearance: 0px;
+  --app-frame-nav-clearance-end: 0px;
+  --app-frame-nav-bottom: max(env(safe-area-inset-bottom, 0px), var(--c-app-frame-nav-gap));
   /* What sits below the content, for a tabletop fold to measure up from. */
   --app-frame-below: env(safe-area-inset-bottom, 0px);
 }
-/* From a home screen, iOS takes the safe areas off 100dvh but not off 100vh, and the frame pads them itself. */
-@media (display-mode: standalone) {
-  [data-slot="app-frame"] {
-    --app-frame-height: 100vh;
-  }
+/* With a floating nav, the content runs to the screen's edge, and its own background shows there. */
+[data-slot="app-frame"]:has(> [data-slot="app-frame-nav"]) {
+  padding-bottom: 0;
+  --app-frame-nav-clearance: calc(var(--app-frame-nav-bottom) + var(--c-app-frame-nav-height) + var(--c-app-frame-nav-gap));
+  --app-frame-below: var(--app-frame-nav-clearance);
+}
+[data-slot="app-frame"][data-nav="rail"]:has(> [data-slot="app-frame-nav"]) {
+  --app-frame-nav-clearance: env(safe-area-inset-bottom, 0px);
+  --app-frame-nav-clearance-end: calc(var(--c-app-frame-rail-width) + 2 * var(--c-app-frame-nav-gap));
 }
 /* A keyboard already covers the home bar. */
 [data-slot="app-frame"][data-keyboard="open"] {
   padding-bottom: 0;
+  --app-frame-nav-bottom: var(--c-app-frame-nav-gap);
 }
-[data-slot="app-frame"]:has(> [data-slot="app-frame-nav"]) {
-  --app-frame-below: calc(var(--c-app-frame-nav-height) + env(safe-area-inset-bottom, 0px));
+[data-slot="app-frame"][data-keyboard="open"]:has(> [data-slot="app-frame-nav"]) {
+  --app-frame-nav-clearance: 0px;
 }
 [data-slot="app-frame-header"] {
   grid-area: header;
 }
 [data-slot="app-frame-main"] {
   grid-area: main;
+  padding-right: var(--app-frame-nav-clearance-end);
+  padding-bottom: var(--app-frame-nav-clearance);
+}
+[data-slot="app-frame-main"][data-bleed] {
+  padding-right: 0;
+  padding-bottom: 0;
 }
 [data-slot="app-frame-nav"] {
-  grid-area: nav;
+  position: absolute;
+  z-index: 20;
+  bottom: var(--app-frame-nav-bottom);
+  left: 50%;
+  translate: -50% 0;
 }
-@media (orientation: landscape) and (max-height: 479.98px) {
-  [data-slot="app-frame"] {
-    grid-template-areas:
-      "header header"
-      "nav main"
-      "nav main";
-  }
+/* A bar would crowd what's left above a keyboard. A rail costs no height, so it stays. */
+[data-slot="app-frame"][data-nav="bar"][data-room="tight"] > [data-slot="app-frame-nav"],
+[data-slot="app-frame"][data-nav="bar"][data-room="minimal"] > [data-slot="app-frame-nav"] {
+  display: none;
+}
+/* As iOS has it on iPhone Duo: down the right edge, with tabs at the foot, never centred. */
+[data-slot="app-frame"][data-nav="rail"] > [data-slot="app-frame-nav"] {
+  right: calc(env(safe-area-inset-right, 0px) + var(--c-app-frame-nav-gap));
+  left: auto;
+  translate: none;
+  width: var(--c-app-frame-rail-width);
+  max-height: calc(100% - env(safe-area-inset-top, 0px) - var(--app-frame-nav-bottom) - var(--c-app-frame-nav-gap));
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
 /* FoldPanes (components/ui/app-frame.tsx). */

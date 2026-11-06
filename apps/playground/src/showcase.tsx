@@ -407,7 +407,7 @@ export function Showcase() {
 
       <Section title="AppFrameNav · FoldPanes (Layout)">
         {/* AppFrame itself takes over the page, so it can't sit in a gallery. Narrow or turn this window to see the rail. */}
-        <div className="w-full rounded-lg border">
+        <div className="relative flex h-16 w-full items-center justify-center rounded-lg border">
           <AppFrameNav aria-label="Example places">
             <AppFrameNavItem icon="forum" label="Conversation" current />
             <AppFrameNavItem icon="article" label="Canvas" />
