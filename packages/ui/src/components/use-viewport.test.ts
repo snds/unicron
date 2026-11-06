@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { classifyViewport, viewportWidthFor, type Viewport, type ViewportReading } from "./use-viewport"
+import { classifyViewport, detailPlacementFor, viewportWidthFor, type Viewport, type ViewportReading } from "./use-viewport"
 
 const reading = (width: number, height: number, more: Partial<ViewportReading> = {}): ViewportReading => ({
   width,
@@ -29,6 +29,31 @@ describe("viewportWidthFor", () => {
     [2559, "wide"],
     [2560, "ultrawide"],
   ])("%i px is %s", (width, expected) => expect(viewportWidthFor(width)).toBe(expected))
+})
+
+describe("where a detail goes", () => {
+  it.each([
+    ["ultrawide", 5120, 2160, "beside"],
+    ["laptop", 1440, 900, "beside"],
+    ["iPad on its side", 1180, 820, "beside"],
+    ["iPhone Duo open, on its side", 951, 585, "beside"],
+    ["iPad upright", 820, 1180, "sheet"],
+    ["iPhone Duo open, upright", 669, 867, "sheet"],
+    ["iPhone", 390, 844, "sheet"],
+    ["iPhone on its side", 844, 390, "sheet"],
+    ["iPhone Duo folded", 382, 580, "sheet"],
+    ["iPhone Duo folded, on its side", 594, 368, "sheet"],
+    ["two windows on an iPhone Duo", 385, 571, "sheet"],
+  ])("%s: %s×%s is %s", (_, w, h, placement) => expect(at(w, h).detailPlacement).toBe(placement))
+
+  it("uses a book-pose fold if each side can hold something", () => {
+    expect(detailPlacementFor({ widthClass: "expanded", landscape: false, short: false, fold: { kind: "book", sizes: [330, 330] } })).toBe("fold")
+    expect(detailPlacementFor({ widthClass: "compact", landscape: false, short: false, fold: { kind: "book", sizes: [300, 300] } })).toBe("sheet")
+  })
+
+  it("doesn't count a tabletop fold, whose parts are one above the other", () => {
+    expect(detailPlacementFor({ widthClass: "expanded", landscape: false, short: false, fold: { kind: "tabletop", sizes: [430, 430] } })).toBe("sheet")
+  })
 })
 
 describe("short screens", () => {

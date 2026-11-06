@@ -4,7 +4,10 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
-import { useViewport } from "../use-viewport"
+import { DETAIL_MIN_WIDTH, useViewport } from "../use-viewport"
+import { Button } from "./button"
+import { ResizableHandle, ResizablePane, ResizablePanes, useResizablePanesLayout } from "./resizable-panes"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./sheet"
 
 /**
  * The outermost box of an app that fills the screen. It owns everything a device can do to one:
@@ -208,8 +211,112 @@ function FoldPanes({
   return <div data-slot="fold-panes" data-split={split} className={cn("min-h-0 min-w-0 flex-1", className)} {...props} />
 }
 
+/**
+ * What belongs to the content, beside the content: a conversation's documents, an email's attachments.
+ * Unlike a pivot it isn't another place, because it changes with what's open. Where it goes follows
+ * `viewport.detailPlacement`:
+ *
+ * - `beside`: shares the width, with a line to drag. `id` remembers where that line was.
+ * - `fold`: takes the far side of a book-pose fold, always, since the content alone would straddle it.
+ *   There's nothing to close, so check the placement before offering a button that opens it.
+ * - `sheet`: slides over, covering the screen on a phone. It takes over focus until dismissed, so an
+ *   app that remembers `open` for `beside` should start this one closed.
+ *
+ * `children` stays mounted while this opens and closes, so a scroll position or a reply survives it.
+ * It does remount when the placement itself changes, as on a rotation, so keep state that matters above.
+ */
+function AppFrameDetail({
+  open,
+  onOpenChange,
+  title,
+  detail,
+  id = "app-frame-detail",
+  children,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  detail: React.ReactNode
+  id?: string
+  children: React.ReactNode
+}) {
+  const { detailPlacement, widthClass, short } = useViewport()
+  const covers = widthClass === "compact" || short
+  const panelIds = React.useMemo(() => (open ? ["main", "detail"] : ["main"]), [open])
+  const { defaultLayout, onLayoutChanged } = useResizablePanesLayout({ id, panelIds })
+
+  const main = (
+    <div data-slot="app-frame-detail-main" className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+      {children}
+    </div>
+  )
+  const body = (
+    <div data-slot="app-frame-detail-body" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+      {detail}
+    </div>
+  )
+
+  if (detailPlacement === "sheet") {
+    return (
+      <>
+        {main}
+        <Sheet open={open} onOpenChange={onOpenChange}>
+          {/* A full-screen sheet rises from the bottom, as a phone's do. */}
+          <SheetContent side={covers ? "bottom" : "right"} size="md" fullscreen={covers} aria-label={title}>
+            <SheetHeader>
+              <SheetTitle>{title}</SheetTitle>
+            </SheetHeader>
+            {body}
+          </SheetContent>
+        </Sheet>
+      </>
+    )
+  }
+
+  const panel = (closable: boolean) => (
+    <aside aria-label={title} data-slot="app-frame-detail" className="bg-background flex h-full min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2">
+        <h2 className="truncate text-sm font-medium">{title}</h2>
+        {closable && (
+          <Button variant="ghost" size="icon" aria-label={`Close ${title}`} onClick={() => onOpenChange(false)}>
+            <Icon name="close" />
+          </Button>
+        )}
+      </div>
+      {body}
+    </aside>
+  )
+
+  if (detailPlacement === "fold") {
+    return (
+      <FoldPanes split="columns">
+        {main}
+        {panel(false)}
+      </FoldPanes>
+    )
+  }
+
+  return (
+    <ResizablePanes defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
+      <ResizablePane id="main" minSize={`${DETAIL_MIN_WIDTH}px`}>
+        {main}
+      </ResizablePane>
+      {open && (
+        <>
+          {/* Nothing hovers on touch, so anything short of a laptop draws a grip to show the line moves. */}
+          <ResizableHandle label={`Resize ${title}`} withGrip={widthClass === "expanded"} />
+          <ResizablePane id="detail" defaultSize="36%" minSize={`${DETAIL_MIN_WIDTH}px`}>
+            {panel(true)}
+          </ResizablePane>
+        </>
+      )}
+    </ResizablePanes>
+  )
+}
+
 export {
   AppFrame,
+  AppFrameDetail,
   AppFrameHeader,
   AppFrameMain,
   AppFrameNav,

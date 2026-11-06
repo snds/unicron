@@ -12,7 +12,9 @@ export * from "./components/security/risk-tier-badge"
 export * from "./components/security/secret-field"
 export { useCopyCountdown, type CopyCountdown, type CopyCountdownState } from "./components/security/copy-countdown"
 export {
+  DETAIL_MIN_WIDTH,
   SHORT_HEIGHT,
+  detailPlacementFor,
   VIEWPORT_WIDTHS,
   useViewport,
   viewportWidthFor,
@@ -21,6 +23,7 @@ export {
   type ViewportNavPlacement,
   type ViewportRoom,
   type ViewportWidth,
+  type ViewportDetailPlacement,
 } from "./components/use-viewport"
 export * from "./components/ui/app-frame"
 export * from "./components/ui/avatar"

@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { act, render, screen } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
-import { AppFrame, AppFrameHeader, AppFrameMain, AppFrameNav, AppFrameNavItem, AppFramePivot, AppFramePivotEnd, AppFrameSidebar, FoldPanes } from "./app-frame"
+import * as React from "react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { AppFrame, AppFrameDetail, AppFrameHeader, AppFrameMain, AppFrameNav, AppFrameNavItem, AppFramePivot, AppFramePivotEnd, AppFrameSidebar, FoldPanes } from "./app-frame"
 import { Input } from "./input"
 import { Textarea } from "./textarea"
 import { SHORT_HEIGHT } from "../use-viewport"
@@ -16,6 +17,81 @@ function setViewport(width: number, height: number) {
     window.dispatchEvent(new Event("resize"))
   })
 }
+
+describe("AppFrameDetail", () => {
+  const stubFold = (matchesBook: boolean, sizes: number[]) => {
+    window.matchMedia = ((query: string) => ({
+      matches: matchesBook && query.includes("horizontal-viewport-segments"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia
+    ;(window as unknown as { viewport?: { segments: { width: number }[] } }).viewport = { segments: sizes.map((width) => ({ width })) }
+  }
+  const mounts = vi.fn()
+  function Content() {
+    React.useEffect(() => {
+      mounts()
+    }, [])
+    return <p>The content</p>
+  }
+  const show = (open: boolean, onOpenChange = () => {}) => (
+    <AppFrame>
+      <AppFrameMain>
+        <AppFrameDetail open={open} onOpenChange={onOpenChange} title="Details" detail={<p>The details</p>}>
+          <Content />
+        </AppFrameDetail>
+      </AppFrameMain>
+    </AppFrame>
+  )
+
+  beforeEach(() => {
+    mounts.mockClear()
+    stubFold(false, [])
+  })
+
+  it("sits beside the content on a laptop, and goes when closed, leaving the content mounted", () => {
+    setViewport(1440, 900)
+    const { rerender } = render(show(false))
+    expect(screen.queryByText("The details")).not.toBeInTheDocument()
+    rerender(show(true))
+    expect(screen.getByRole("complementary", { name: "Details" })).toHaveTextContent("The details")
+    expect(screen.getByRole("separator", { name: "Resize Details" })).toBeInTheDocument()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    rerender(show(false))
+    expect(screen.queryByText("The details")).not.toBeInTheDocument()
+    expect(screen.getByText("The content")).toBeInTheDocument()
+    expect(mounts).toHaveBeenCalledTimes(1)
+  })
+
+  it("closes from its own button", () => {
+    setViewport(1440, 900)
+    const onOpenChange = vi.fn()
+    render(show(true, onOpenChange))
+    fireEvent.click(screen.getByRole("button", { name: "Close Details" }))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it.each([
+    ["a phone", 390, 844],
+    ["a phone on its side", 844, 390],
+    ["an iPad upright", 820, 1180],
+  ])("slides over on %s", (_, width, height) => {
+    setViewport(width, height)
+    render(show(true))
+    expect(screen.getByRole("dialog", { name: "Details" })).toHaveTextContent("The details")
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument()
+  })
+
+  it("takes the far side of a book-pose fold, whether or not it's open, with nothing to close", () => {
+    stubFold(true, [330, 330])
+    setViewport(669, 867)
+    render(show(false))
+    expect(screen.getByRole("complementary", { name: "Details" })).toHaveTextContent("The details")
+    expect(screen.queryByRole("button", { name: "Close Details" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument()
+  })
+})
 
 describe("AppFrame", () => {
   it("names its nav items, and marks only the current one", () => {

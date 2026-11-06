@@ -50,6 +50,16 @@ export type ViewportRoom = "full" | "tight" | "minimal"
  */
 export type ViewportNavPlacement = "bar" | "rail"
 
+/**
+ * Where something that belongs to the content goes, such as a document open beside a conversation.
+ * `beside` shares the width, `fold` takes the far side of a book-pose fold, and `sheet` slides over,
+ * because reading comes first where there's no room for two. `AppFrameDetail` follows this.
+ */
+export type ViewportDetailPlacement = "beside" | "fold" | "sheet"
+
+/** The narrowest either part gets when two share the screen, in pixels. Two fit an iPad in landscape. */
+export const DETAIL_MIN_WIDTH = 320
+
 export type Viewport = {
   width: number
   /** The height without any keyboard. Layout decisions use this, so they don't flip while typing. */
@@ -67,6 +77,7 @@ export type Viewport = {
   /** Sideways and under `SHORT_HEIGHT`: height is what's scarce. A phone in landscape, or a folded Duo. */
   short: boolean
   navPlacement: ViewportNavPlacement
+  detailPlacement: ViewportDetailPlacement
   keyboardOpen: boolean
   /** How far a keyboard covers the page, for a frame to keep clear of it. */
   keyboardInset: number
@@ -79,6 +90,14 @@ export type Viewport = {
 export function viewportWidthFor(width: number): ViewportWidth {
   for (const w of VIEWPORT_WIDTHS) if (width >= w.minWidth) return w.name
   return "compact"
+}
+
+/** A fold decides first, as it already divides the screen, if each part can hold something. */
+export function detailPlacementFor(v: Pick<Viewport, "widthClass" | "landscape" | "short" | "fold">): ViewportDetailPlacement {
+  if (v.fold?.kind === "book" && v.fold.sizes.length === 2 && v.fold.sizes.every((size) => size >= DETAIL_MIN_WIDTH)) return "fold"
+  if (v.short) return "sheet"
+  if (v.widthClass === "ultrawide" || v.widthClass === "wide") return "beside"
+  return v.widthClass === "expanded" && v.landscape ? "beside" : "sheet"
 }
 
 export type ViewportReading = {
@@ -125,6 +144,7 @@ export function classifyViewport(r: ViewportReading, previous: Viewport | null):
     landscape,
     short,
     navPlacement: short || squat ? "rail" : "bar",
+    detailPlacement: detailPlacementFor({ widthClass: viewportWidthFor(r.width), landscape, short, fold: r.fold }),
     keyboardOpen,
     keyboardInset: keyboardOpen ? covered : 0,
     offsetTop: keyboardOpen ? r.visualOffsetTop : 0,
@@ -196,6 +216,7 @@ const SERVER_VIEWPORT: Viewport = {
   landscape: true,
   short: false,
   navPlacement: "bar",
+  detailPlacement: "beside",
   keyboardOpen: false,
   keyboardInset: 0,
   offsetTop: 0,
