@@ -171,6 +171,11 @@ const RECIPES = [
     { id: `${role}-surface`, source: `bg-${role}-surface on a card`, kind: "surface", paint: r(`${role}-surface`), over: [r("card")] },
   ]),
 
+  // Progress fills on their track (bg-muted), on a card: the filled part has to show against the rest.
+  ...["primary", "success", "warning", "destructive"].map((role) => ({
+    id: `progress-${role}`, source: `progress: bg-(--c-progress-*) = ${role} on bg-muted`, kind: "solid", paint: r(role), over: [r("card"), r("muted")],
+  })),
+
   // Control borders: a field has to be findable
   { id: "input-card", source: "input, select, textarea, checkbox: border-input", kind: "border-control", paint: r("input"), over: [r("card")] },
   { id: "input-page", source: "border-input", kind: "border-control", paint: r("input"), over: [r("background")] },

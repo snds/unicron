@@ -34,6 +34,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `spinner` | `Spinner` (`label`, default "Loading"; turns at `--motion-spin`, still under reduced motion) | Feedback | Icon (`progress_activity`) |
 | `status-orb` | `StatusOrb`, `statusOrbCopy`, `statusOrbStates`, `StatusOrbProps`, `StatusOrbState`, `StatusOrbSize` (seven states told apart by shape and motion as well as colour; words only in the tooltip and name) | Feedback | span + Icon + Tooltip |
 | `indicator` | `IndicatorMark`, `indicatorCopy`, `indicatorLabel`, `indicatorCount`, `indicatorsOf`, `Indicator`, `IndicatorProp` (the `indicator` prop on `AppFrameNavItem` and `Item`: attention or unread, a dot or a "9+" badge, the count in the name) | Feedback | span |
+| `progress` | `Progress` (`variant`: bar, segmented; `tone`: default, budget), `ProgressTrack`, `ProgressIndicator`, `ProgressLabel`, `ProgressValue`, `progressBudgetThresholds` | Feedback | Base UI Progress |
 | `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
 | `empty` | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | Feedback | div |
 | `sonner` | `Toaster` | Feedback | sonner (+ next-themes) |
@@ -61,7 +62,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 Also exported: `cn` (clsx + tailwind-merge).
 
 Not yet present (next candidates, in order of need across the three products): `card`,
-`combobox`, `radio-group`, `alert`, `alert-dialog`, `progress`, `accordion`,
+`combobox`, `radio-group`, `alert`, `alert-dialog`, `accordion`,
 `collapsible`, `table`, `slider`. Generate them with the transform (README → Regenerating
 components) rather than hand-writing.
 
