@@ -111,6 +111,7 @@ import {
   ProgressLabel,
   ProgressValue,
   RunTrace,
+  AgentPrompt,
   Spinner,
   StatusOrb,
   statusOrbStates,
@@ -202,6 +203,34 @@ function PlaybackDemo() {
       <div><Button variant="outline" size="sm" onClick={() => setT0(Date.now())}>
         Replay
       </Button></div>
+    </div>
+  )
+}
+
+/** Three prompts: the newest listens for keys; answering one marks it. */
+function PromptDemo() {
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const answer = (key: string) => (id: string) => setAnswers((a) => ({ ...a, [key]: id }))
+  return (
+    <div className="flex w-full max-w-md flex-col gap-3">
+      <AgentPrompt kind="continue" answer={answers.go} onAnswer={answer("go")}>
+        Ten steps done. Keep going?
+      </AgentPrompt>
+      <AgentPrompt
+        kind="choice"
+        answer={answers.fix}
+        onAnswer={answer("fix")}
+        options={[
+          { id: "patch", label: "Patch the import", detail: "The smallest change that fixes the test" },
+          { id: "rewrite", label: "Rewrite the module", detail: "Cleaner, but touches 6 files" },
+          { id: "skip", label: "Skip the test" },
+        ]}
+      >
+        How should I fix the failing test?
+      </AgentPrompt>
+      <AgentPrompt kind="permission" tier="tolerated" verified answer={answers.net} onAnswer={answer("net")}>
+        Download packages from registry.npmjs.org
+      </AgentPrompt>
     </div>
   )
 }
@@ -620,6 +649,10 @@ export function Showcase() {
 
       <Section title="RunTrace · Collapsible (Feedback)">
         <PlaybackDemo />
+      </Section>
+
+      <Section title="AgentPrompt (Security)">
+        <PromptDemo />
       </Section>
 
       <Section title="Spinner · Skeleton · Empty · Toast (Feedback)">
