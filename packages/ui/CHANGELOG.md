@@ -1,5 +1,24 @@
 # @unicron/ui
 
+## 0.23.0
+
+### Minor Changes
+
+- 1399505: Add `AgentPrompt` (security family): an agent's permission, continue or choice question inline in the conversation, with an attention edge, buttons or numbered rows, Y/N and 1-9 keys for the newest prompt, a bottom sheet on a phone, and a "Waiting for you" announcement. New `--c-agent-prompt-*` knobs.
+- 7aac96b: Add `Progress` (Base UI, through the transform): a bar, or `variant="segmented"` for "3 of 7"; the fill turns `success` when complete, and `tone="budget"` warns past 70% and turns destructive past 90%. New `--c-progress-*` knobs.
+- 11d63e2: Add `Collapsible` (Base UI, through the transform) and `RunTrace`: an agent run's steps, open on the current step while live, folded to one line (time, steps, failures) when done; step detail opens in a popover, or a sheet on a phone.
+- 57731d3: Add `StatusOrb` (idle, thinking, working, needs-you, done, failed, offline; told apart by shape and motion as well as colour, its words in the tooltip and name) and an `indicator` prop on `AppFrameNavItem` and `Item` (`{ kind: "attention" | "unread", count }`: a dot on the rail, the pivot and rows, a count badge on the bottom bar). New `--c-status-orb-*` and `--c-indicator-*` knobs.
+- 0a0b34b: Add the `success`, `attention` and `running` status roles (fill, `-foreground`, `-surface`) and the `--motion-spin` and `--motion-pulse` roles. `@unicron/ui` adds a system-wide reduced-motion layer, runs `animate-spin` and `animate-pulse` on the motion roles, and gives `Spinner` a `label` (it now reaches screen readers; it was `aria-hidden`).
+
+### Patch Changes
+
+- af6a948: Docs: pass `useResizablePanesLayout`'s `defaultLayout` and `onLayoutChanged` by name. Spreading them onto `ResizablePanes` counts against a consumer's `dsa` ratchet.
+- Updated dependencies [1399505]
+- Updated dependencies [7aac96b]
+- Updated dependencies [57731d3]
+- Updated dependencies [0a0b34b]
+  - @unicron/tokens@0.15.0
+
 ## 0.22.0
 
 ### Minor Changes
