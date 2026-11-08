@@ -26,6 +26,7 @@ An app-extension layer is the set of tokens and components that belong to one ap
 
 - The **DSA ratchet** in each consumer's CI fails when override counts grow. Promotion is how a consumer lowers its count.
 - **Token lint** (`pnpm lint:tokens`, `packages/tokens/scripts/lint.mjs`) in unicron's CI refuses raw values: every colour in the semantic and component tiers is a `{reference}` to a lower tier, and `packages/ui/src` carries no hex / `rgb()` / `hsl()` / `oklch()` literals (Tailwind arbitrary values that read `var(--…)` are fine).
+- **Design detector, report only.** CI's `design-detect` job runs Impeccable's detector (`impeccable detect --json`, pinned) over `packages/ui/src` and the playground, and writes its findings to the run summary and an `impeccable` artifact. It never fails a build: it is a second opinion for review, not a gate. Its live mode and its skill and hook installs are not used.
 - **Published artifacts.** Consumers depend on a versioned package, not a submodule, so three apps can sit on three versions during a migration. Each release is a git tag, a GitHub Release with the tarball attached, and (when npm is configured) an npm version — see [Releasing](#releasing). The submodule Mailbird used first was the week-one exception; `docs/05-consuming.md` has the recipe for moving off it.
 
 ## Provenance

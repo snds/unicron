@@ -29,3 +29,50 @@ jobs:
       # Every package still packs (files whitelist, exports, workspace:* rewrite) before a release
       # depends on it. Private packages (root, playground) are listed too; only @unicron/* ship.
       - run: pnpm -r pack --dry-run
+
+  # Impeccable's design detector (https://github.com/pbakaus/impeccable), read-only and report-only:
+  # it scans the primitives' source and the playground and writes its findings to the run summary
+  # and a JSON artifact. It never fails the build, and it never runs live mode (URL scans) or
+  # installs its skills or hooks. Pinned, so a new release can't change what CI runs unseen.
+  design-detect:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Detect (report only)
+        run: |
+          set +e
+          npx --yes impeccable@4.8.0 detect --json packages/ui/src apps/playground/src > impeccable.json 2> impeccable.log
+          code=$?
+          set -e
+          # 0: no findings · 2: findings · 1: a target couldn't be scanned. None of them fails CI.
+          echo "impeccable exited $code"
+          cat impeccable.log
+          {
+            echo "## Impeccable detector (report only)"
+            echo
+            if [ "$code" = "1" ] || ! jq -e 'type == "array"' impeccable.json > /dev/null 2>&1; then
+              echo "The scan didn't complete (exit $code). See the job log."
+            else
+              echo "$(jq length impeccable.json) findings. Full list in the \`impeccable\` artifact."
+              echo
+              echo "| Rule | Count |"
+              echo "|---|---|"
+              jq -r 'group_by(.rule // .id // .ruleId // "unknown") | map({r: (.[0].rule // .[0].id // .[0].ruleId // "unknown"), n: length}) | sort_by(-.n) | .[] | "| \(.r) | \(.n) |"' impeccable.json
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: impeccable
+          path: |
+            impeccable.json
+            impeccable.log
+          if-no-files-found: ignore
