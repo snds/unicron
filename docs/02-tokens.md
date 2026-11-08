@@ -55,12 +55,41 @@ Three semantic roles carry motion; components use these, never a raw duration.
 | `--motion-fast` | 120ms (`duration.fast`) | hover, press, a dialog or menu appearing |
 | `--motion-base` | 200ms (`duration.base`) | a sheet sliding in, a toast entering or leaving |
 | `--motion-ease` | `cubic-bezier(0.2, 0, 0, 1)` (`ease.standard`) | every transition |
+| `--motion-spin` | 900ms (`duration.spin`) | one turn of a spinner or a working ring; `animate-spin` runs on it |
+| `--motion-pulse` | 1400ms (`duration.pulse`) | one beat of a pulse or a breathing halo; `animate-pulse` runs on it |
 
 120ms is the floor: shorter reads as a jump. The theme map points Tailwind's default transition at
 them (`--default-transition-duration`, `--default-transition-timing-function`), so a bare
 `transition-colors` is on the system. `ease-standard` is the curve as a utility. Where a duration
 must be set by hand, write `duration-(--motion-fast)`. Toasts are moved onto `--motion-base` from
 `@unicron/ui`'s stylesheet, since sonner's own runs 400ms on plain `ease`.
+
+**Reduced motion.** `@unicron/ui`'s stylesheet ends with one system-wide layer for
+`prefers-reduced-motion: reduce`, unlayered so it wins over utilities: entrances and exits
+(tw-animate-css) fade in place instead of sliding, growing or turning; transitions keep only colour
+and opacity, at `--motion-fast`; `animate-spin`, `animate-pulse`, `animate-ping` and
+`animate-bounce` stop; and `Spinner` stays as a still glyph at reduced opacity, so it still reads as
+busy. A component with its own loop stills it in the same layer, by `data-slot`.
+
+## Status roles
+
+Agent UIs need "done", "waiting on you" and "working" to mean one thing in every app, whatever its
+accent. Three roles, each with three steps:
+
+| Role | Hue | Means | Fill (`bg-*`) | Foreground (`text-*-foreground`) | Surface (`bg-*-surface`) |
+|---|---|---|---|---|---|
+| `success` | green | done, worked | `green.500` / `400` | `green.600` / `300` | `green.50` / `900` |
+| `attention` | amber | waiting on the person | `amber.500` / `400` | `amber.600` / `300` | `amber.50` / `900` |
+| `running` | blue | working now | `blue.500` / `400` | `blue.600` / `300` | `blue.50` / `900` |
+
+- The **fill** is a dot, an orb or a bar, and carries no text: Lc 30 or more against the page, a
+  card, the sidebar, a selected row and its own surface.
+- The **foreground** is ink (a status word, a count, an icon): Lc 75 or more on the page, a card,
+  the sidebar, a selected row and its own surface, in each mode. Unlike `warning-foreground`, it is
+  not a label for the fill.
+- `attention` is not `warning`. `warning` says something is wrong; `attention` says the person is
+  needed. Failed is `destructive`.
+- Colour is never the only cue. A status also differs by shape or motion (`StatusOrb`).
 
 ## The Tailwind map
 

@@ -40,7 +40,15 @@ for (const name of CORE.filter((n) => n !== "radius")) {
   assert.match(themeBlock, new RegExp(`^  --color-${name}: var\\(--${name}\\);`, "m"), `missing --color-${name} in @theme`)
 }
 for (const t of THEME) assert.match(themeBlock, new RegExp(`^  ${t}: `, "m"), `missing ${t} in @theme`)
+// Status roles (agent UIs: done, waiting on you, working) and the live-state motion roles.
+const STATUS = ["success", "attention", "running"].flatMap((r) => [r, `${r}-foreground`, `${r}-surface`])
+for (const name of STATUS) {
+  assert.match(lightBlock, new RegExp(`^  --${name}: `, "m"), `missing --${name} (light)`)
+  assert.match(darkBlock, new RegExp(`^  --${name}: `, "m"), `missing --${name} (dark)`)
+  assert.match(themeBlock, new RegExp(`^  --color-${name}: var\\(--${name}\\);`, "m"), `missing --color-${name} in @theme`)
+}
+for (const name of ["motion-spin", "motion-pulse"]) assert.match(lightBlock, new RegExp(`^  --${name}: `, "m"), `missing --${name}`)
 for (const prefix of APP_ONLY) assert.ok(!css.includes(prefix), `${prefix}* is an app role and must not be in the core`)
 assert.ok(!/\{[a-z][\w.-]*\}/.test(css), "unresolved DTCG reference leaked into CSS")
 
-console.log(`✓ round-trip: ${CORE.length} core semantic tokens present in light, ${DARK_SWAPPED.length} swapped in dark, theme map complete, no app roles`)
+console.log(`✓ round-trip: ${CORE.length} core semantic tokens present in light, ${DARK_SWAPPED.length} swapped in dark, theme map complete, ${STATUS.length} status roles, no app roles`)

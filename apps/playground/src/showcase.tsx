@@ -142,6 +142,27 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+/** A status role as it's drawn: its fill (a dot), its ink on the page, and its ink on its own wash. */
+const STATUS_CLASSES = {
+  success: { fill: "bg-success", ink: "text-success-foreground", surface: "bg-success-surface", icon: "check_circle" },
+  attention: { fill: "bg-attention", ink: "text-attention-foreground", surface: "bg-attention-surface", icon: "front_hand" },
+  running: { fill: "bg-running", ink: "text-running-foreground", surface: "bg-running-surface", icon: "progress_activity" },
+} as const
+
+function StatusSwatch({ role }: { role: keyof typeof STATUS_CLASSES }) {
+  const c = STATUS_CLASSES[role]
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`${c.fill} size-2.5 rounded-full`} />
+      <span className={`${c.ink} type-meta flex items-center gap-1`}>
+        <Icon name={c.icon} />
+        {role}
+      </span>
+      <span className={`${c.surface} ${c.ink} type-meta rounded-md px-2 py-0.5`}>{role}</span>
+    </div>
+  )
+}
+
 const BUTTON_VARIANTS = ["default", "secondary", "outline", "ghost", "ghost-muted", "destructive", "ghost-destructive", "link"] as const
 const BUTTON_SIZES = ["xs", "sm", "default", "lg"] as const
 const ICON_SIZES = ["icon-xs", "icon-sm", "icon", "icon-lg"] as const
@@ -543,6 +564,16 @@ export function Showcase() {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+      </Section>
+
+      <Section title="Status roles · Spinner (Feedback)">
+        {(["success", "attention", "running"] as const).map((role) => (
+          <StatusSwatch key={role} role={role} />
+        ))}
+        <Spinner />
+        <span className="text-running-foreground">
+          <Spinner label="Saving" />
+        </span>
       </Section>
 
       <Section title="UpdateStatusRow · AutoCheckSwitch (Feedback)">
