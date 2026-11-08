@@ -6,6 +6,7 @@ import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { DETAIL_MIN_WIDTH, useViewport } from "../use-viewport"
 import { Button } from "./button"
+import { IndicatorMark, indicatorLabel, indicatorsOf, type IndicatorProp } from "./indicator"
 import { ResizableHandle, ResizablePane, ResizablePanes, useResizablePanesLayout } from "./resizable-panes"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./sheet"
 
@@ -104,17 +105,27 @@ function AppFrameNav({ className, ...props }: React.ComponentProps<"nav">) {
  * One place in the nav: an icon, with the label for screen readers. `current` marks where the person
  * is. At least 44px each way, so it's easy to hit without a label to aim at.
  */
+/**
+ * A top-level place. `indicator` marks it when something there wants the person: `attention`
+ * (waiting on them) or `unread`, with an optional count. A dot at the icon's top right on the rail
+ * and the pivot; a count badge on the bottom bar, "9+" past nine. Attention wins what's drawn; the
+ * name says both, with the count ("Conversations, 2 waiting for you").
+ */
 function AppFrameNavItem({
   icon,
   label,
   current,
+  indicator,
   className,
   ...props
 }: Omit<React.ComponentProps<"button">, "children"> & {
   icon: IconName
   label: string
   current?: boolean
+  indicator?: IndicatorProp
 }) {
+  const said = indicatorLabel(indicator)
+  const [top] = indicatorsOf(indicator)
   return (
     <button
       type="button"
@@ -127,8 +138,19 @@ function AppFrameNavItem({
       )}
       {...props}
     >
-      <Icon name={icon} />
-      <span className="sr-only">{label}</span>
+      <span className="relative inline-flex">
+        <Icon name={icon} />
+        {top?.count !== undefined ? (
+          <>
+            {/* The bar has room for a count; the rail and the pivot show a dot. */}
+            <IndicatorMark indicator={indicator} shape="badge" className="absolute -top-2 left-1/2 nav-rail:hidden in-data-[slot=app-frame-pivot]:hidden" />
+            <IndicatorMark indicator={indicator} className="absolute -top-0.5 -right-0.5 hidden nav-rail:inline-block in-data-[slot=app-frame-pivot]:inline-block" />
+          </>
+        ) : (
+          <IndicatorMark indicator={indicator} className="absolute -top-0.5 -right-0.5" />
+        )}
+      </span>
+      <span className="sr-only">{said ? `${label}, ${said}` : label}</span>
     </button>
   )
 }

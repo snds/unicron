@@ -121,6 +121,30 @@
     "meter-strong": { "$type": "color", "$value": "{primary}" },
     "letter-spacing": { "$type": "dimension", "$value": "0.04em", "$description": "Revealed mono text." }
   },
+  "status-orb": {
+    "$description": "StatusOrb: one glanceable state (idle, thinking, working, needs-you, done, failed, offline), told apart by shape and motion as well as these colours. Dots, halos and rings take the status fills; the done and failed glyphs take the text inks.",
+    "size-xs": { "$type": "dimension", "$value": "0.75rem", "$description": "A step in a run trace." },
+    "size-sm": { "$type": "dimension", "$value": "1rem", "$description": "A row, a header." },
+    "size-md": { "$type": "dimension", "$value": "1.25rem", "$description": "A nav item, a hero. The icon's 20px optical size." },
+    "idle": { "$type": "color", "$value": "{muted-foreground}" },
+    "thinking": { "$type": "color", "$value": "{running}" },
+    "working": { "$type": "color", "$value": "{running}" },
+    "needs-you": { "$type": "color", "$value": "{attention}" },
+    "done": { "$type": "color", "$value": "{success-foreground}" },
+    "failed": { "$type": "color", "$value": "{destructive}" },
+    "offline": { "$type": "color", "$value": "{muted-foreground}" }
+  },
+  "indicator": {
+    "$description": "The attention or unread mark on an AppFrameNavItem or an Item: a dot, or a count badge on the bottom bar.",
+    "dot-size": { "$type": "dimension", "$value": "0.5rem" },
+    "badge-height": { "$type": "dimension", "$value": "1rem" },
+    "attention": { "$type": "color", "$value": "{attention}", "$description": "The dot, and the badge's edge." },
+    "unread": { "$type": "color", "$value": "{info}", "$description": "The dot, and the badge's fill." },
+    "attention-badge-bg": { "$type": "color", "$value": "{attention-surface}", "$description": "The count reads Lc 75 on it in --attention-foreground." },
+    "attention-badge-ink": { "$type": "color", "$value": "{attention-foreground}" },
+    "unread-badge-bg": { "$type": "color", "$value": "{info}" },
+    "unread-badge-ink": { "$type": "color", "$value": "{info-foreground}" }
+  },
   "approval": {
     "$description": "ApprovalSheet (docs/specs/security/approval-sheet.md): approve or deny a request from another device, with number matching, an arming delay, and a timeout that denies.",
     "min-width": { "$type": "dimension", "$value": "20rem", "$description": "Never smaller than this at any breakpoint." },
