@@ -5,6 +5,7 @@ _The six components Lockdown's brief §5.7 asked unicron to grow, written as the
 | Spec | Job | Composes | Owns (why it is a component) |
 |---|---|---|---|
 | [ApprovalSheet](approval-sheet.md) | Approve or deny a request from another device, agent, TV, or contact, with number matching and "This wasn't me" | AdaptiveSheetContent, Item, Input, DialogActions, RiskTierBadge | Origin gate, arming delay, timeout that denies, retry limit, the report action |
+| [AgentPrompt](agent-prompt.md) | An agent's permission, continue or choice question, inline in the conversation | Button, Item, Kbd, RiskTierBadge, AdaptiveSheetContent | Keys only the newest prompt hears, buttons or numbered rows, a sheet on a phone, one announcement |
 | [RiskTierBadge](risk-tier-badge.md) | Say in one word how much trust a path carries: `standard`, `official`, `tolerated` | badgeVariants, Icon, IconButton → Tooltip | The closed vocabulary and its copy; word, icon, and color paired by construction; `loading` and `unverified` states |
 | [SecretField](secret-field.md) | Use a hidden value without exposing it longer than the job takes | Field, InputGroup, IconButton, Tooltip | One-shot value handle, reveal lifetime, hide on blur, copy with a conditional clipboard clear, gate hook |
 | [CodeDisplay](code-display.md) | Read and type a one-time code before it dies | Item, IconButton, Badge, the shared copy countdown | Period maths, expiring cue, next code early, haptic, rollover announcement, digit-by-digit label |
@@ -43,7 +44,7 @@ Core copy names no product ("we", "the app", "device codes"); the host's localiz
 - States always include loading, error, disabled (or why not), reduced motion, and high contrast.
 - Codes and secrets are spoken per character, never as a number.
 - Every spec carries `DSA record: none: first principles, Lockdown brief §5.7`.
-- Imports: from the root of `@unicron/ui`, or the subpath `@unicron/ui/security/<name>` (`approval-sheet`, `risk-tier-badge`, `secret-field`, `code-display`, `large-type-view`, `crown-jewel`).
+- Imports: from the root of `@unicron/ui`, or the subpath `@unicron/ui/security/<name>` (`approval-sheet`, `agent-prompt`, `risk-tier-badge`, `secret-field`, `code-display`, `large-type-view`, `crown-jewel`).
 
 ## Test harness
 

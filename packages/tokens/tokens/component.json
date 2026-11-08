@@ -154,6 +154,12 @@
     "warning": { "$type": "color", "$value": "{warning}", "$description": "A budget past 70%." },
     "over": { "$type": "color", "$value": "{destructive}", "$description": "A budget past 90%." }
   },
+  "agent-prompt": {
+    "$description": "AgentPrompt (docs/specs/security/agent-prompt.md): an agent's question in the conversation, with an attention edge while it waits.",
+    "edge": { "$type": "dimension", "$value": "0.25rem", "$description": "The left edge's width." },
+    "edge-color": { "$type": "color", "$value": "{attention}", "$description": "While it waits on the person. Lc 44 on a card (light), 70 (dark)." },
+    "edge-answered": { "$type": "color", "$value": "{border}", "$description": "Once answered: quiet, so only open questions stand out." }
+  },
   "approval": {
     "$description": "ApprovalSheet (docs/specs/security/approval-sheet.md): approve or deny a request from another device, with number matching, an arming delay, and a timeout that denies.",
     "min-width": { "$type": "dimension", "$value": "20rem", "$description": "Never smaller than this at any breakpoint." },
