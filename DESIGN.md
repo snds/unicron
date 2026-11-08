@@ -55,7 +55,14 @@ point is Apple's first-party productivity apps rendered with shadcn's restraint.
 - `primary` is near-black in light mode and near-white in dark mode. It is the default button and
   the strongest text, never a brand colour.
 - Accent hues (blue, coral, green, amber) exist in tier 1 but are not semantic roles. Apps assign
-  them (one hue per area for wayfinding). `destructive` is the only chromatic role in the core.
+  them (one hue per area for wayfinding). The chromatic roles in the core are `destructive`,
+  `warning`, `info` and three status roles.
+- Status roles say one thing in every app, whatever its accent: `success` (green: done),
+  `attention` (amber: waiting on you; not `warning`, which says something is wrong) and `running`
+  (blue: working now). Each has a fill (`bg-success`: a dot, an orb, a bar; no text on it), a
+  foreground (`text-success-foreground`: ink on the page, a card, the sidebar, a selected row and
+  its own wash, Lc 75 or more) and a surface (`bg-success-surface`: a quiet wash). Colour is never
+  the only cue: a status also differs by shape or motion (`StatusOrb`).
 - Dark mode swaps only tier 2. Separators and control borders become translucent white (10% / 35%)
   so they sit on any dark surface. Accents step one stop lighter (500 → 400) to keep contrast.
 - An accent hue drawn as text (an area's name, a status word, a link) uses its text step: `600` in
@@ -131,7 +138,10 @@ glyphs. Component semantics, anatomy and states are owned by the component docs,
 - Do add app-only roles in the app's extension layer, never in the core semantic tier.
 - Don't introduce a second accent inside one surface; one hue carries one meaning.
 - Don't animate layout; animate opacity, transform and the icon axes, at 120–200ms with the
-  standard ease.
+  standard ease. Live states loop at `--motion-spin` (0.9s a turn) and `--motion-pulse` (1.4s a
+  beat).
+- Do let reduced motion win: with `prefers-reduced-motion`, `@unicron/ui`'s styles stop every loop,
+  let entrances fade in place, and keep a Spinner as a still glyph at reduced opacity.
 - Don't restyle a primitive with `className` overrides to make a new component; add a variant or
   compose a pattern and let `dsa` see it.
 
@@ -139,6 +149,8 @@ glyphs. Component semantics, anatomy and states are owned by the component docs,
 
 `background` `foreground` `card` `card-foreground` `popover` `popover-foreground` `primary`
 `primary-foreground` `secondary` `secondary-foreground` `muted` `muted-foreground` `accent`
-`accent-foreground` `destructive` `border` `input` `ring` `radius` `sidebar` `sidebar-foreground`
+`accent-foreground` `destructive` `warning` `warning-foreground` `info` `info-foreground`
+`success` `success-foreground` `success-surface` `attention` `attention-foreground`
+`attention-surface` `running` `running-foreground` `running-surface` `border` `input` `ring` `radius` `sidebar` `sidebar-foreground`
 `sidebar-primary` `sidebar-primary-foreground` `sidebar-accent` `sidebar-accent-foreground`
 `sidebar-border` `sidebar-ring` · fonts: `font-sans` `font-mono` `font-heading`.

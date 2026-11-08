@@ -101,6 +101,19 @@
 /* Tailwind's sm, md and xl are useViewport's medium, expanded and wide. This is its ultrawide. */
 @theme {
   --breakpoint-ultrawide: 160rem;
+  /* Live states turn and beat at one rate in every app: the motion roles, not Tailwind's 1s and 2s. */
+  --animate-spin: spin var(--motion-spin) linear infinite;
+  --animate-pulse: pulse var(--motion-pulse) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
 }
 
 /*
@@ -414,4 +427,42 @@ html:has([data-slot="app-frame"]) body {
 [data-sonner-toaster] [data-sonner-toast] > * {
   transition-duration: var(--motion-base);
   transition-timing-function: var(--motion-ease);
+}
+
+/*
+ * Reduced motion, system-wide. Live agent UIs move all the time, so with prefers-reduced-motion
+ * nothing loops, slides, grows or turns:
+ * - Entrances and exits (tw-animate-css: dialogs, sheets, menus, toasts) fade in place.
+ * - Transitions keep only colour and opacity, at --motion-fast.
+ * - Loops stop: animate-spin, animate-pulse, animate-ping, animate-bounce. A component with its
+ *   own loop (StatusOrb) stills it here too, by data-slot.
+ * - A Spinner can't spin, so it stays as a still glyph at reduced opacity: still busy, not moving.
+ * Unlayered, so it wins over every utility without !important.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    --tw-enter-translate-x: 0;
+    --tw-enter-translate-y: 0;
+    --tw-enter-scale: 1;
+    --tw-enter-rotate: 0;
+    --tw-exit-translate-x: 0;
+    --tw-exit-translate-y: 0;
+    --tw-exit-scale: 1;
+    --tw-exit-rotate: 0;
+    transition-property: opacity, color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
+    transition-duration: var(--motion-fast);
+    scroll-behavior: auto;
+  }
+  .animate-spin,
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce {
+    animation: none;
+  }
+  [data-slot="spinner"] {
+    animation: none;
+    opacity: 0.6;
+  }
 }

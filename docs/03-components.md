@@ -31,7 +31,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `popover` | `Popover`, `PopoverTrigger`, `PopoverContent`, `PopoverHeader`, `PopoverTitle`, `PopoverDescription`, `PopoverClose` | Overlay | Base UI Popover |
 | `dropdown-menu` | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | Navigation | Base UI Menu |
 | `resizable-panes` | `ResizablePanes`, `ResizablePane`, `ResizableHandle`, `useResizablePanesLayout`, `useResizablePaneRef` | Layout | react-resizable-panels |
-| `spinner` | `Spinner` | Feedback | Icon (`progress_activity`) |
+| `spinner` | `Spinner` (`label`, default "Loading"; turns at `--motion-spin`, still under reduced motion) | Feedback | Icon (`progress_activity`) |
 | `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
 | `empty` | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | Feedback | div |
 | `sonner` | `Toaster` | Feedback | sonner (+ next-themes) |

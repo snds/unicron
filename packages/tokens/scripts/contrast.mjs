@@ -153,6 +153,24 @@ const RECIPES = [
     })).concat([{ id: `${fill}-on-accent`, source: `bg-${fill} on a selected row`, kind: "solid", paint: r(fill), over: [r("popover"), r("accent")] }])
   ),
 
+  // Status roles (success, attention, running): live and finished states in agent UIs. The
+  // foreground is ink on a surface, drawn small (a status word, a count, an icon beside a row), so
+  // it is held to reading text on every surface a status sits on, its own wash included. The fill
+  // carries no text (a dot, an orb, a bar), so it is a solid: it has to show against what it sits on.
+  ...["success", "attention", "running"].flatMap((role) => [
+    ...["background", "card", "sidebar"].map((bg) => ({
+      id: `${role}-text-${bg}`, source: `text-${role}-foreground on bg-${bg}`, kind: "text-secondary", paint: r(`${role}-foreground`), over: [r(bg)],
+    })),
+    { id: `${role}-text-accent`, source: `text-${role}-foreground on a selected row`, kind: "text-secondary", paint: r(`${role}-foreground`), over: [r("popover"), r("accent")] },
+    { id: `${role}-text-surface`, source: `bg-${role}-surface text-${role}-foreground`, kind: "text-secondary", paint: r(`${role}-foreground`), over: [r("card"), r(`${role}-surface`)] },
+    ...["background", "card", "sidebar"].map((bg) => ({
+      id: `${role}-on-${bg}`, source: `bg-${role} (StatusOrb, Progress) on bg-${bg}`, kind: "solid", paint: r(role), over: [r(bg)],
+    })),
+    { id: `${role}-on-accent`, source: `bg-${role} on a selected row`, kind: "solid", paint: r(role), over: [r("popover"), r("accent")] },
+    { id: `${role}-on-surface`, source: `bg-${role} on bg-${role}-surface`, kind: "solid", paint: r(role), over: [r("card"), r(`${role}-surface`)] },
+    { id: `${role}-surface`, source: `bg-${role}-surface on a card`, kind: "surface", paint: r(`${role}-surface`), over: [r("card")] },
+  ]),
+
   // Control borders: a field has to be findable
   { id: "input-card", source: "input, select, textarea, checkbox: border-input", kind: "border-control", paint: r("input"), over: [r("card")] },
   { id: "input-page", source: "border-input", kind: "border-control", paint: r("input"), over: [r("background")] },

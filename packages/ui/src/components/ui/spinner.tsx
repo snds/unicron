@@ -4,11 +4,15 @@ import { cn } from "../../lib/utils"
 
 import { Icon, type IconProps } from "../icon"
 
-function Spinner({ className, ...props }: Omit<IconProps, "name">) {
+/**
+ * Busy. Turns once per --motion-spin. With prefers-reduced-motion it stays still at reduced
+ * opacity (@unicron/ui's styles), so it still reads as busy without moving.
+ */
+function Spinner({ className, label = "Loading", ...props }: Omit<IconProps, "name">) {
   return (
     <Icon data-slot="spinner"
       role="status"
-      aria-label="Loading"
+      label={label}
       className={cn("size-4 animate-spin", className)}
       {...props} name="progress_activity" />
   )

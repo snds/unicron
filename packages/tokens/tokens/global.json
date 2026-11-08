@@ -27,7 +27,9 @@
     "600": { "$type": "color", "$value": "oklch(0.44 0.141 255)", "$description": "Blue as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.6 0.19 255)" },
     "400": { "$type": "color", "$value": "oklch(0.7 0.15 255)" },
-    "300": { "$type": "color", "$value": "oklch(0.87 0.061 255)", "$description": "Blue as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
+    "300": { "$type": "color", "$value": "oklch(0.87 0.061 255)", "$description": "Blue as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
+    "50": { "$type": "color", "$value": "oklch(0.955 0.025 255)", "$description": "The light-mode running surface (--running-surface): blue.600 reads Lc 75 or more on it." },
+    "900": { "$type": "color", "$value": "oklch(0.27 0.06 255)", "$description": "The dark-mode running surface (--running-surface): blue.300 reads Lc 75 or more on it." }
   },
   "coral": {
     "600": { "$type": "color", "$value": "oklch(0.44 0.178 25)", "$description": "Coral as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
@@ -39,14 +41,18 @@
     "600": { "$type": "color", "$value": "oklch(0.43 0.096 160)", "$description": "Green as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.62 0.15 160)" },
     "400": { "$type": "color", "$value": "oklch(0.72 0.13 160)" },
-    "300": { "$type": "color", "$value": "oklch(0.85 0.15 160)", "$description": "Green as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
+    "300": { "$type": "color", "$value": "oklch(0.85 0.15 160)", "$description": "Green as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
+    "50": { "$type": "color", "$value": "oklch(0.955 0.03 160)", "$description": "The light-mode success surface (--success-surface): green.600 reads Lc 75 or more on it." },
+    "900": { "$type": "color", "$value": "oklch(0.27 0.045 160)", "$description": "The dark-mode success surface (--success-surface): green.300 reads Lc 75 or more on it." }
   },
   "amber": {
     "600": { "$type": "color", "$value": "oklch(0.44 0.092 75)", "$description": "Amber as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
     "500": { "$type": "color", "$value": "oklch(0.75 0.16 75)" },
     "450": { "$type": "color", "$value": "oklch(0.77 0.155 76)", "$description": "The light-mode warning fill: its label (neutral.950) Lc 62, the fill Lc 31 or more against the page, the sidebar and a selected row." },
     "400": { "$type": "color", "$value": "oklch(0.82 0.14 80)" },
-    "300": { "$type": "color", "$value": "oklch(0.87 0.105 75)", "$description": "Amber as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
+    "300": { "$type": "color", "$value": "oklch(0.87 0.105 75)", "$description": "Amber as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
+    "50": { "$type": "color", "$value": "oklch(0.96 0.035 80)", "$description": "The light-mode attention surface (--attention-surface): amber.600 reads Lc 75 or more on it." },
+    "900": { "$type": "color", "$value": "oklch(0.28 0.045 75)", "$description": "The dark-mode attention surface (--attention-surface): amber.300 reads Lc 75 or more on it." }
   },
   "red": {
     "700": { "$type": "color", "$value": "oklch(0.45 0.16 27.3)", "$description": "Destructive text in light mode: Lc 76 or more on neutral.0, .50 and .100 (a selected row), 75 on its own 10% tint." },
@@ -80,7 +86,9 @@
   },
   "duration": {
     "fast": { "$type": "duration", "$value": "120ms" },
-    "base": { "$type": "duration", "$value": "200ms" }
+    "base": { "$type": "duration", "$value": "200ms" },
+    "spin": { "$type": "duration", "$value": "900ms", "$description": "One turn of a spinner or a working ring." },
+    "pulse": { "$type": "duration", "$value": "1400ms", "$description": "One beat of a pulse or a breathing halo: slow enough to read as alive, not alarming." }
   },
   "ease": {
     "standard": { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1] }
