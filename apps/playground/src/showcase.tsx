@@ -93,6 +93,10 @@ import {
   ResizableHandle,
   ResizablePane,
   ResizablePanes,
+  AppFrameNav,
+  AppFrameNavEnd,
+  AppFrameNavItem,
+  FoldPanes,
   ScrollArea,
   Separator,
   Sheet,
@@ -116,6 +120,10 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  AutoCheckSwitch,
+  UpdateStatusRow,
+  type UpdateState,
+  type UpdateStatus,
 } from "@unicron/ui"
 
 const SELECT_ITEMS = {
@@ -181,6 +189,50 @@ function ButtonMatrix() {
         </table>
       </div>
     </section>
+  )
+}
+
+const UPDATE_STATES: UpdateState[] = ["idle", "checking", "up_to_date", "downloading", "ready", "available", "failed"]
+
+/** Settings → About's updates rows in every state the update kit reports. */
+function UpdatesDemo() {
+  const [status, setStatus] = useState<UpdateStatus>({
+    version: "0.1.0-main.20261107093000",
+    channel: "main",
+    enabled: true,
+    off: null,
+    auto_check: true,
+    state: "idle",
+    percent: 42,
+    offered: "0.1.0-main.20261108120000",
+    error: "The download stopped. Check your connection and try again.",
+    link: "https://github.com/snds/releases/releases/tag/lockdown-main",
+    link_why: "This copy can't update itself.",
+    asked: false,
+  })
+  return (
+    <div className="flex w-full max-w-lg flex-col gap-4">
+      <NativeSelect
+        aria-label="Update state"
+        value={status.state}
+        onChange={(e) => setStatus({ ...status, state: e.target.value as UpdateState })}
+      >
+        {UPDATE_STATES.map((s) => (
+          <NativeSelectOption key={s} value={s}>
+            {s}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+      <UpdateStatusRow
+        status={status}
+        appName="Lockdown"
+        onCheck={() => setStatus({ ...status, state: "checking" })}
+        onRestart={() => toast("Restarting…")}
+        onReload={() => toast("Reloading…")}
+        restartNote="Restarting locks Lockdown. Unlock it with your master password as usual."
+      />
+      <AutoCheckSwitch status={status} onCheckedChange={(on) => setStatus({ ...status, auto_check: on })} />
+    </div>
   )
 }
 
@@ -401,6 +453,26 @@ export function Showcase() {
         </div>
       </Section>
 
+      <Section title="AppFrameNav · FoldPanes (Layout)">
+        {/* AppFrame itself takes over the page, so it can't sit in a gallery. Narrow or turn this window to see the rail. */}
+        <div className="relative flex h-16 w-full items-center justify-center rounded-lg border">
+          <AppFrameNav aria-label="Example places">
+            <AppFrameNavItem icon="forum" label="Conversation" current />
+            <AppFrameNavItem icon="article" label="Canvas" />
+            <AppFrameNavItem icon="task_alt" label="Tasks" />
+            <AppFrameNavEnd>
+              <p className="type-meta p-1">End</p>
+            </AppFrameNavEnd>
+          </AppFrameNav>
+        </div>
+        <div className="flex h-32 w-full rounded-lg border">
+          <FoldPanes split="columns">
+            <p className="p-3 text-sm">Left of a fold</p>
+            <p className="border-l p-3 text-sm">Right of a fold</p>
+          </FoldPanes>
+        </div>
+      </Section>
+
       <Section title="Tabs · DropdownMenu (Navigation)">
         <Tabs defaultValue="inbox" className="w-full max-w-sm">
           <TabsList>
@@ -471,6 +543,10 @@ export function Showcase() {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+      </Section>
+
+      <Section title="UpdateStatusRow · AutoCheckSwitch (Feedback)">
+        <UpdatesDemo />
       </Section>
 
       <Section title="Spinner · Skeleton · Empty · Toast (Feedback)">

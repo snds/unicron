@@ -1,5 +1,23 @@
 # @unicron/tokens
 
+## 0.14.0
+
+### Minor Changes
+
+- bb9b169: `AppFrame` can now hold columns on the left: `AppFramePivot` and `AppFramePivotEnd` for top-level places, and `AppFrameSidebar` for a list beside the content. New tokens: `--c-app-frame-pivot-width` and `--c-app-frame-sidebar-width`. Existing frames are unchanged, because unused columns take no room.
+
+## 0.13.0
+
+### Minor Changes
+
+- caa53e0: `AppFrame` no longer runs off the screen in a home-screen app: it measures the page rather than trusting `100vh`. `AppFrameNav` is now a floating glass capsule of icons, like the bars in iOS 27, and a pill at the foot of the right edge when height is scarce, as on iPhone Duo. `AppFrameNavItem`'s `label` is now for screen readers only. New: `useViewport().navPlacement` and `pageHeight`, the `nav-rail:` variant, `bleed` on `AppFrameMain`, `--c-app-frame-nav-gap` and `--c-app-frame-nav-item-width`.
+
+## 0.12.0
+
+### Minor Changes
+
+- cf2005f: Adds what an app needs to fit every screen: phones on their side, tablets, foldables and the iPhone Duo. `AppFrame` (the outermost box: page lock, safe areas, keyboard), `AppFrameNav` (a tab bar that becomes a rail on a short screen), `FoldPanes`, `useViewport`, the `short:`, `fold-book:`, `fold-tabletop:`, `standalone:`, `frame-tight:` and `frame-minimal:` variants, an `ultrawide:` breakpoint, and `--c-app-frame-*` tokens. See docs/05-consuming.md, "Fit every screen". Every app gets these without changing anything: `Input`, `Textarea`, `NativeSelect` and `CommandInput` stay at 16px on touch, so iOS no longer zooms into them on a tablet or a phone on its side (their text is 14px only with a mouse now). `Textarea` and `Empty` tighten up on a short screen, side and bottom `Sheet`s keep clear of the notch, and a finger beside a `ResizableHandle` grabs it even when the pane under it scrolls.
+
 ## 0.11.0
 
 ### Minor Changes
