@@ -10,6 +10,7 @@ import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
+import { IndicatorMark, indicatorLabel, type IndicatorProp } from "./indicator"
 import { Separator } from "./separator"
 
 function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
@@ -67,18 +68,35 @@ const itemVariants = cva(
   }
 )
 
+/**
+ * A row. `indicator` adds a trailing dot when something in it wants the person: `attention`
+ * (waiting on them) or `unread`. Attention wins what's drawn; a screen reader hears both, with the
+ * count ("2 waiting for you").
+ */
 function Item({
   className,
   variant = "default",
   size = "default",
   render,
+  indicator,
+  children,
   ...props
-}: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants>) {
+}: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants> & { indicator?: IndicatorProp }) {
+  const said = indicatorLabel(indicator)
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
       {
         className: cn(itemVariants({ variant, size, className })),
+        children: said ? (
+          <>
+            {children}
+            <IndicatorMark indicator={indicator} />
+            <span className="sr-only">{said}</span>
+          </>
+        ) : (
+          children
+        ),
       },
       props
     ),

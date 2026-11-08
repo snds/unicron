@@ -32,6 +32,8 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `dropdown-menu` | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | Navigation | Base UI Menu |
 | `resizable-panes` | `ResizablePanes`, `ResizablePane`, `ResizableHandle`, `useResizablePanesLayout`, `useResizablePaneRef` | Layout | react-resizable-panels |
 | `spinner` | `Spinner` (`label`, default "Loading"; turns at `--motion-spin`, still under reduced motion) | Feedback | Icon (`progress_activity`) |
+| `status-orb` | `StatusOrb`, `statusOrbCopy`, `statusOrbStates`, `StatusOrbProps`, `StatusOrbState`, `StatusOrbSize` (seven states told apart by shape and motion as well as colour; words only in the tooltip and name) | Feedback | span + Icon + Tooltip |
+| `indicator` | `IndicatorMark`, `indicatorCopy`, `indicatorLabel`, `indicatorCount`, `indicatorsOf`, `Indicator`, `IndicatorProp` (the `indicator` prop on `AppFrameNavItem` and `Item`: attention or unread, a dot or a "9+" badge, the count in the name) | Feedback | span |
 | `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
 | `empty` | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | Feedback | div |
 | `sonner` | `Toaster` | Feedback | sonner (+ next-themes) |

@@ -419,6 +419,131 @@ html:has([data-slot="app-frame"]) body {
 }
 
 /*
+ * StatusOrb (components/ui/status-orb.tsx): one state per shape and motion, as well as colour. The
+ * dot is 60% of the orb; the halo is the whole orb. In a layer, so a className still overrides.
+ */
+@layer components {
+  [data-slot="status-orb"] {
+    --status-orb-size: var(--c-status-orb-size-sm);
+    --status-orb-ring: calc(var(--status-orb-size) / 8);
+    width: var(--status-orb-size);
+    height: var(--status-orb-size);
+    color: var(--c-status-orb-idle);
+    --c-icon-opsz: 20;
+  }
+  [data-slot="status-orb"][data-size="xs"] {
+    --status-orb-size: var(--c-status-orb-size-xs);
+  }
+  [data-slot="status-orb"][data-size="md"] {
+    --status-orb-size: var(--c-status-orb-size-md);
+  }
+  [data-slot="status-orb"][data-state="thinking"] { color: var(--c-status-orb-thinking); }
+  [data-slot="status-orb"][data-state="working"] { color: var(--c-status-orb-working); }
+  [data-slot="status-orb"][data-state="needs-you"] { color: var(--c-status-orb-needs-you); }
+  [data-slot="status-orb"][data-state="done"] { color: var(--c-status-orb-done); }
+  [data-slot="status-orb"][data-state="failed"] { color: var(--c-status-orb-failed); }
+  [data-slot="status-orb"][data-state="offline"] { color: var(--c-status-orb-offline); }
+
+  [data-slot="status-orb-dot"],
+  [data-slot="status-orb-halo"] {
+    position: absolute;
+    border-radius: 9999px;
+  }
+  [data-slot="status-orb-dot"] {
+    inset: 20%;
+    background: currentColor;
+  }
+  [data-slot="status-orb-halo"] {
+    inset: 0;
+    display: none;
+  }
+  [data-slot="status-orb-glyph"] {
+    width: 100%;
+    height: 100%;
+  }
+  /* Thinking: a soft halo that breathes. */
+  [data-state="thinking"] > [data-slot="status-orb-halo"] {
+    display: block;
+    background: currentColor;
+    opacity: 0.3;
+    animation: status-orb-breathe var(--motion-pulse) ease-in-out infinite;
+  }
+  /* Working: a ring with a gap, turning. The dot shrinks to clear it. */
+  [data-state="working"] > [data-slot="status-orb-halo"] {
+    display: block;
+    border: var(--status-orb-ring) solid currentColor;
+    border-top-color: transparent;
+    animation: spin var(--motion-spin) linear infinite;
+  }
+  /* Needs you: a solid ring that pulses outward. */
+  [data-state="needs-you"] > [data-slot="status-orb-halo"] {
+    display: block;
+    border: var(--status-orb-ring) solid currentColor;
+    animation: status-orb-ping var(--motion-pulse) ease-out infinite;
+  }
+  [data-state="working"] > [data-slot="status-orb-dot"],
+  [data-state="needs-you"] > [data-slot="status-orb-dot"] {
+    inset: 32%;
+  }
+  /* Offline: hollow. */
+  [data-state="offline"] > [data-slot="status-orb-dot"] {
+    background: transparent;
+    border: var(--status-orb-ring) solid currentColor;
+  }
+
+  /* Indicator (components/ui/indicator.tsx): attention or unread, a dot or a count badge. */
+  [data-slot="indicator"] {
+    display: inline-block;
+    flex-shrink: 0;
+    border-radius: 9999px;
+  }
+  [data-slot="indicator"][data-shape="dot"] {
+    width: var(--c-indicator-dot-size);
+    height: var(--c-indicator-dot-size);
+    background: var(--c-indicator-unread);
+  }
+  [data-slot="indicator"][data-shape="dot"][data-kind="attention"] {
+    background: var(--c-indicator-attention);
+  }
+  [data-slot="indicator"][data-shape="badge"] {
+    min-width: var(--c-indicator-badge-height);
+    height: var(--c-indicator-badge-height);
+    padding-inline: calc(var(--c-indicator-badge-height) / 4);
+    font-size: var(--type-overline-size);
+    line-height: var(--c-indicator-badge-height);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    background: var(--c-indicator-unread-badge-bg);
+    color: var(--c-indicator-unread-badge-ink);
+  }
+  [data-slot="indicator"][data-shape="badge"][data-kind="attention"] {
+    background: var(--c-indicator-attention-badge-bg);
+    color: var(--c-indicator-attention-badge-ink);
+    box-shadow: inset 0 0 0 1px var(--c-indicator-attention);
+  }
+}
+@keyframes status-orb-breathe {
+  0%,
+  100% {
+    transform: scale(0.75);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+}
+@keyframes status-orb-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 50%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 calc(var(--status-orb-size) / 3) transparent;
+  }
+}
+
+/*
  * Toasts on the motion roles. sonner's own stylesheet enters and leaves in 400ms on plain `ease`;
  * these selectors are one step more specific than sonner's, so they win wherever its styles load.
  */
@@ -464,5 +589,13 @@ html:has([data-slot="app-frame"]) body {
   [data-slot="spinner"] {
     animation: none;
     opacity: 0.6;
+  }
+  /* StatusOrb: halos hold still, and the working ring is dashed rather than turning. */
+  [data-slot="status-orb-halo"] {
+    animation: none;
+  }
+  [data-slot="status-orb"][data-state="working"] > [data-slot="status-orb-halo"] {
+    border-style: dashed;
+    border-top-color: currentColor;
   }
 }

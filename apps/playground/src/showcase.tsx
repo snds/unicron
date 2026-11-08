@@ -108,6 +108,8 @@ import {
   SheetTrigger,
   Skeleton,
   Spinner,
+  StatusOrb,
+  statusOrbStates,
   Switch,
   Tabs,
   TabsContent,
@@ -479,8 +481,8 @@ export function Showcase() {
         <div className="relative flex h-16 w-full items-center justify-center rounded-lg border">
           <AppFrameNav aria-label="Example places">
             <AppFrameNavItem icon="forum" label="Conversation" current />
-            <AppFrameNavItem icon="article" label="Canvas" />
-            <AppFrameNavItem icon="task_alt" label="Tasks" />
+            <AppFrameNavItem icon="article" label="Canvas" indicator={{ kind: "unread", count: 12 }} />
+            <AppFrameNavItem icon="task_alt" label="Tasks" indicator={{ kind: "attention", count: 2 }} />
             <AppFrameNavEnd>
               <p className="type-meta p-1">End</p>
             </AppFrameNavEnd>
@@ -574,6 +576,34 @@ export function Showcase() {
         <span className="text-running-foreground">
           <Spinner label="Saving" />
         </span>
+      </Section>
+
+      <Section title="StatusOrb · Item indicator (Feedback)">
+        {(["xs", "sm", "md"] as const).map((size) => (
+          <div key={size} className="flex items-center gap-3">
+            {statusOrbStates.map((state) => (
+              <StatusOrb key={state} state={state} size={size} />
+            ))}
+          </div>
+        ))}
+        <div className="flex w-full max-w-sm flex-col">
+          <Item render={<button type="button" />} indicator={{ kind: "attention", count: 1 }}>
+            <ItemMedia>
+              <StatusOrb state="needs-you" tooltip={false} />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>Fix the build</ItemTitle>
+            </ItemContent>
+          </Item>
+          <Item render={<button type="button" />} indicator={{ kind: "unread" }}>
+            <ItemMedia>
+              <StatusOrb state="done" tooltip={false} />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>Weekly plan</ItemTitle>
+            </ItemContent>
+          </Item>
+        </div>
       </Section>
 
       <Section title="UpdateStatusRow · AutoCheckSwitch (Feedback)">
