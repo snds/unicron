@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { SecurityShowcase } from "./security"
 import { SecurityApprovalsShowcase } from "./security-approvals"
 import { toast } from "sonner"
@@ -110,6 +110,7 @@ import {
   Progress,
   ProgressLabel,
   ProgressValue,
+  RunTrace,
   Spinner,
   StatusOrb,
   statusOrbStates,
@@ -164,6 +165,47 @@ function StatusSwatch({ role }: { role: keyof typeof STATUS_CLASSES }) {
         {role}
       </span>
       <span className={`${c.surface} ${c.ink} type-meta rounded-md px-2 py-0.5`}>{role}</span>
+    </div>
+  )
+}
+
+const REASONING = ["Looking at the failing import.", "The path changed in the last commit.", "Trying the new path."].join("\n")
+
+/** A run that plays through its steps, then folds; Replay starts it again. */
+function PlaybackDemo() {
+  const [t0, setT0] = useState(() => Date.now())
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 500)
+    return () => clearInterval(id)
+  }, [])
+  const plan = [
+    { id: "read", label: "Read package.json", ms: 1500 },
+    { id: "test", label: "Run tests", ms: 3000, fails: true },
+    { id: "fix", label: "Fix import", ms: 2000 },
+  ]
+  let at = t0
+  const steps = plan.flatMap((p) => {
+    if (now < at) return []
+    const startedAt = at
+    at += p.ms
+    const done = now >= at
+    return [{
+      id: p.id,
+      label: p.label,
+      startedAt,
+      endedAt: done ? at : undefined,
+      state: (done ? (p.fails ? "failed" : "done") : "running") as "failed" | "done" | "running",
+      detail: p.fails ? <p className="type-support">1 test failed. Full output is in the log.</p> : undefined,
+    }]
+  })
+  const live = now < at
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-3">
+      <RunTrace steps={steps} live={live} reasoning={live ? REASONING : undefined} />
+      <div><Button variant="outline" size="sm" onClick={() => setT0(Date.now())}>
+        Replay
+      </Button></div>
     </div>
   )
 }
@@ -622,6 +664,10 @@ export function Showcase() {
           <Progress tone="budget" value={94} aria-label="Spend" />
           <Progress value={null} aria-label="Loading" />
         </div>
+      </Section>
+
+      <Section title="RunTrace · Collapsible (Feedback)">
+        <PlaybackDemo />
       </Section>
 
       <Section title="UpdateStatusRow · AutoCheckSwitch (Feedback)">
