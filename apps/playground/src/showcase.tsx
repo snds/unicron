@@ -107,6 +107,9 @@ import {
   SheetTitle,
   SheetTrigger,
   Skeleton,
+  Progress,
+  ProgressLabel,
+  ProgressValue,
   Spinner,
   StatusOrb,
   statusOrbStates,
@@ -555,6 +558,21 @@ export function Showcase() {
               <ItemTitle>Weekly plan</ItemTitle>
             </ItemContent>
           </Item>
+        </div>
+      </Section>
+
+      <Section title="Progress (Feedback)">
+        <div className="flex w-full max-w-sm flex-col gap-4">
+          <Progress value={40}>
+            <ProgressLabel>Upload</ProgressLabel>
+            <ProgressValue />
+          </Progress>
+          <Progress value={100} aria-label="Done" />
+          <Progress variant="segmented" value={3} max={7} aria-label="Plan, 3 of 7" />
+          <Progress variant="segmented" value={4} max={4} aria-label="Plan done" />
+          <Progress tone="budget" value={76} aria-label="Spend" />
+          <Progress tone="budget" value={94} aria-label="Spend" />
+          <Progress value={null} aria-label="Loading" />
         </div>
       </Section>
 
