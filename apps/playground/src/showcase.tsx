@@ -215,6 +215,14 @@ function PlaybackDemo() {
 function PromptDemo() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const answer = (key: string) => (id: string) => setAnswers((a) => ({ ...a, [key]: id }))
+  // The reply goes out, spins for a moment, then lands; the permission denies itself in five minutes.
+  const [sending, setSending] = useState(false)
+  const reply = (id: string) => {
+    setAnswers((a) => ({ ...a, ask: id }))
+    setSending(true)
+    setTimeout(() => setSending(false), 1500)
+  }
+  const [deadline] = useState(() => Date.now() + 5 * 60_000)
   return (
     <div className="flex w-full max-w-md flex-col gap-3">
       <AgentPrompt kind="continue" answer={answers.go} onAnswer={answer("go")}>
@@ -232,7 +240,19 @@ function PromptDemo() {
       >
         How should I fix the failing test?
       </AgentPrompt>
-      <AgentPrompt kind="permission" tier="tolerated" verified answer={answers.net} onAnswer={answer("net")}>
+      <AgentPrompt kind="reply" options={[{ id: "deny", label: "Deny" }]} answer={answers.ask} pending={sending} onAnswer={reply}>
+        Which branch should the fix go on?
+      </AgentPrompt>
+      <AgentPrompt
+        kind="permission"
+        tier="tolerated"
+        verified
+        options={[{ id: "allow", label: "Allow once" }, { id: "deny", label: "Deny" }]}
+        expiresAt={deadline}
+        safeAnswer="deny"
+        answer={answers.net}
+        onAnswer={answer("net")}
+      >
         Download packages from registry.npmjs.org
       </AgentPrompt>
     </div>
