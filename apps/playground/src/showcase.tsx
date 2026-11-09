@@ -114,6 +114,7 @@ import {
   AgentPrompt,
   Spinner,
   StatusOrb,
+  statusOrbCopy,
   statusOrbStates,
   Switch,
   Tabs,
@@ -660,6 +661,15 @@ export function Showcase() {
             ))}
           </div>
         ))}
+        {/* A run's lifecycle, with the words the tooltip carries. */}
+        <ol className="type-meta flex flex-wrap items-center gap-3">
+          {(["queued", "working", "paused", "working", "stopped"] as const).map((state, i) => (
+            <li key={i} className="flex items-center gap-1">
+              <StatusOrb state={state} tooltip={false} />
+              {statusOrbCopy[state]}
+            </li>
+          ))}
+        </ol>
         <div className="flex w-full max-w-sm flex-col">
           <Item render={<button type="button" />} indicator={{ kind: "attention", count: 1 }}>
             <ItemMedia>
