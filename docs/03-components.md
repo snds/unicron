@@ -14,9 +14,9 @@ same families to decide whether a repeated composition is a **variant** (one fam
 
 | Module | Exports | Family | Base |
 |---|---|---|---|
-| `button` | `Button`, `buttonVariants` | Action | Base UI Button |
+| `button` | `Button` (`indicator`: a corner dot and its words in the name), `buttonVariants` | Action | Base UI Button |
 | `toggle` | `Toggle`, `toggleVariants` | Action | Base UI Toggle |
-| `toggle-group` | `ToggleGroup`, `ToggleGroupItem` | Action | Base UI ToggleGroup |
+| `toggle-group` | `ToggleGroup`, `ToggleGroupItem` (`indicator`, as on Button) | Action | Base UI ToggleGroup |
 | `button-group` | `ButtonGroup`, `ButtonGroupText`, `ButtonGroupSeparator`, `buttonGroupVariants` | Action | div (useRender) |
 | `input` | `Input` | Form | Base UI Input |
 | `textarea` | `Textarea` | Form | textarea |
@@ -51,7 +51,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `sheet` | `Sheet`, `SheetTrigger`, `SheetContent`, `AdaptiveSheetContent`, `SheetHeader`, `SheetFooter`, `SheetTitle`, `SheetDescription`, `SheetClose` | Overlay | Base UI Dialog |
 | `command` | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandItemAction`, `CommandShortcut`, `CommandSeparator`, `commandItemActionShortcut`, `CommandMatch`, `CommandItemActionProps` | Overlay (command palette; a known gap in the canonical 62, composed from Dialog + InputGroup + cmdk) | cmdk |
 | `icon` | `Icon`, `IconName`, `IconProps`, `IconTone` | Content | svg + Material Symbols Rounded |
-| `icon-button` | `IconButton`, `IconButtonProps` | Action | Tooltip + Button (or any `render`) |
+| `icon-button` | `IconButton`, `IconButtonProps` (`indicator`: the words follow the label in its name; the tooltip stays the label) | Action | Tooltip + Button (or any `render`) |
 | `chip` | `Chip`, `ChipAction`, `ChipRemove`, `ChipRemoveProps` | Data Display | span (useRender) + Base UI Button + IconButton |
 | `update-status` | `UpdateStatusRow`, `AutoCheckSwitch`, `updateLine`, `canCheckForUpdates`, `updateWords`, `UpdateStatus`, `UpdateState`, `UpdateChannel`, `UpdateWords`, `UpdateStatusRowProps`, `AutoCheckSwitchProps` | Feedback | Button + Icon (status row); Field + Switch (switch row) |
 | `security/code-display` | `CodeDisplay`, `CodeDisplayList`, `groupCode`, `spellCode`, `codeDisplayAnnouncements`, `CodeDisplayProps`, `CodeDisplayCopyRef` | Data Display | Item + IconButton + Badge + Button (spec: [code-display](specs/security/code-display.md)) |

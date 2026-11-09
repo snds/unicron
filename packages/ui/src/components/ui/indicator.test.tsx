@@ -4,6 +4,10 @@ import { describe, expect, it } from "vitest"
 import { AppFrame, AppFrameMain, AppFrameNav, AppFrameNavItem } from "./app-frame"
 import { IndicatorMark, indicatorCount, indicatorLabel, indicatorsOf } from "./indicator"
 import { Item, ItemContent, ItemTitle } from "./item"
+import { Button } from "./button"
+import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
+import { Icon } from "../icon"
+import { IconButton } from "../icon-button"
 
 describe("indicator words", () => {
   it("carry the count and the meaning", () => {
@@ -100,5 +104,56 @@ describe("Item indicator", () => {
     const { container } = render(<Item>Row</Item>)
     expect(container.querySelector('[data-slot="indicator"]')).toBeNull()
     expect(container.querySelector('[data-slot="item"]')?.textContent).toBe("Row")
+  })
+})
+
+describe("indicator on a control", () => {
+  it("marks a Button in its corner and adds the words after its text", () => {
+    render(<Button indicator={{ kind: "attention", count: 2 }}>Tasks</Button>)
+    const button = screen.getByRole("button", { name: "Tasks, 2 waiting for you" })
+    expect(button.className).toContain("relative")
+    const mark = button.querySelector('[data-slot="indicator"]')!
+    expect(mark).toHaveAttribute("data-kind", "attention")
+    expect(mark).toHaveAttribute("data-placement", "corner")
+    expect(mark).toHaveAttribute("aria-hidden")
+  })
+
+  it("joins an aria-label rather than adding words a label would hide", () => {
+    render(
+      <Button size="icon" aria-label="Open" indicator={{ kind: "unread" }}>
+        <Icon name="forum" />
+      </Button>
+    )
+    const button = screen.getByRole("button", { name: "Open, Unread" })
+    expect(button.querySelector(".sr-only")).toBeNull()
+  })
+
+  it("puts it on an IconButton: the name carries it, the tooltip stays the label", () => {
+    render(<IconButton icon="forum" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />)
+    const button = screen.getByRole("button", { name: "Open conversation, 3 unread" })
+    expect(button.className).toContain("relative")
+    expect(button.querySelector('[data-slot="indicator"]')).toHaveAttribute("data-kind", "unread")
+  })
+
+  it("puts it on a ToggleGroupItem, with its aria-label", () => {
+    render(
+      <ToggleGroup>
+        <ToggleGroupItem value="tasks" aria-label="Tasks" indicator={{ kind: "attention", count: 1 }}>
+          <Icon name="task_alt" />
+        </ToggleGroupItem>
+      </ToggleGroup>
+    )
+    const item = screen.getByRole("button", { name: "Tasks, 1 waiting for you" })
+    expect(item.querySelector('[data-slot="indicator"]')).toBeInTheDocument()
+  })
+
+  it("changes nothing without one, or with a count of 0", () => {
+    const { rerender } = render(<Button>Tasks</Button>)
+    let button = screen.getByRole("button", { name: "Tasks" })
+    expect(button.className).not.toContain("relative")
+    expect(button.querySelector('[data-slot="indicator"]')).toBeNull()
+    rerender(<Button indicator={{ kind: "attention", count: 0 }}>Tasks</Button>)
+    button = screen.getByRole("button", { name: "Tasks" })
+    expect(button.querySelector('[data-slot="indicator"]')).toBeNull()
   })
 })

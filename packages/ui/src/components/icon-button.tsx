@@ -2,8 +2,10 @@
 import * as React from "react"
 import type { VariantProps } from "class-variance-authority"
 
+import { cn } from "../lib/utils"
 import { Icon, type IconName } from "./icon"
 import { Button, type buttonVariants } from "./ui/button"
+import { indicatorOnControl, type IndicatorProp } from "./ui/indicator"
 import { Kbd } from "./ui/kbd"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 
@@ -27,6 +29,8 @@ export type IconButtonProps = Omit<React.ComponentProps<typeof TooltipTrigger>, 
    */
   render?: React.ReactElement
   children?: React.ReactNode
+  /** Something behind it wants the person: a dot in the corner, and the words after the label. */
+  indicator?: IndicatorProp
 }
 
 /**
@@ -45,8 +49,11 @@ export function IconButton({
   size = "icon",
   children,
   disabled,
+  indicator,
+  className,
   ...props
 }: IconButtonProps) {
+  const on = indicatorOnControl(indicator, label)
   // TooltipTrigger's own `disabled` only stops the tooltip opening; it never reaches the element.
   // So the control gets it through `render`, and the tooltip stays shut while it is disabled.
   const control = render
@@ -54,8 +61,15 @@ export function IconButton({
     : <Button variant={variant} size={size} disabled={disabled} />
   return (
     <Tooltip>
-      <TooltipTrigger aria-label={label} render={control} disabled={disabled} {...props}>
+      <TooltipTrigger
+        aria-label={on?.label ?? label}
+        render={control}
+        disabled={disabled}
+        className={on && typeof className !== "function" ? cn("relative", className) : className}
+        {...props}
+      >
         {children ?? (icon && <Icon name={icon} fill={fill} />)}
+        {on?.mark}
       </TooltipTrigger>
       <TooltipContent>
         {tooltip ?? label}

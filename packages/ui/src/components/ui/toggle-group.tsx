@@ -8,6 +8,7 @@ import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group
 import { type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
+import { indicatorOnControl, type IndicatorProp } from "./indicator"
 import { toggleVariants } from "./toggle"
 
 const ToggleGroupContext = React.createContext<
@@ -58,14 +59,18 @@ function ToggleGroup({
   )
 }
 
+/** `indicator` marks the item when something behind it wants the person: a dot in its corner, and the words in its name. */
 function ToggleGroupItem({
   className,
   children,
   variant = "default",
   size = "default",
+  indicator,
+  "aria-label": ariaLabel,
   ...props
-}: TogglePrimitive.Props & VariantProps<typeof toggleVariants>) {
+}: TogglePrimitive.Props & VariantProps<typeof toggleVariants> & { indicator?: IndicatorProp }) {
   const context = React.useContext(ToggleGroupContext)
+  const on = indicatorOnControl(indicator, ariaLabel)
 
   return (
     <TogglePrimitive
@@ -79,11 +84,15 @@ function ToggleGroupItem({
           variant: context.variant || variant,
           size: context.size || size,
         }),
+        on && "relative",
         className
       )}
+      aria-label={on?.label ?? ariaLabel}
       {...props}
     >
       {children}
+      {on?.mark}
+      {on?.words}
     </TogglePrimitive>
   )
 }
