@@ -1,5 +1,20 @@
 # @unicron/ui
 
+## 0.24.0
+
+### Minor Changes
+
+- 9e46ed1: AgentPrompt: `kind="reply"` takes words (Enter sends); `pending` and `error` cover sending and a failed send; `expiresAt` + `safeAnswer` count down and answer with the safe option when time runs out (`onExpire` to let the server do it). `onAnswer` gets the reply text as a second argument.
+- 3b2b83c: `indicator` prop on Button, IconButton and ToggleGroupItem, as on AppFrameNavItem and Item: a dot in the top-right corner, and the words in the name ("Tasks, 2 waiting for you"). Apps can drop their own IndicatorMark placement rules.
+- f995814: RunTrace: a step can be `needs-you` (waiting on an answer), and the run's line shows it while live. New `marks` prop puts answers, stops and pauses between steps, one quiet line each. Stopped steps and runs use the new `stopped` orb.
+- 7b3fc1c: StatusOrb: add `queued`, `paused` and `stopped`, each a still glyph (clock, pause, stop) on its own `--c-status-orb-*` token. A run someone stopped no longer has to borrow `idle`.
+
+### Patch Changes
+
+- 79a2d40: RunTrace fades its reasoning with a plain mask-image instead of Tailwind's mask-t-* utilities, so no app ships their @property rules: 0.2 KB gzipped off every app's CSS. No visual change.
+- Updated dependencies [7b3fc1c]
+  - @unicron/tokens@0.16.0
+
 ## 0.23.0
 
 ### Minor Changes
