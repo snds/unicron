@@ -122,11 +122,14 @@
     "letter-spacing": { "$type": "dimension", "$value": "0.04em", "$description": "Revealed mono text." }
   },
   "status-orb": {
-    "$description": "StatusOrb: one glanceable state (idle, thinking, working, needs-you, done, failed, offline), told apart by shape and motion as well as these colours. Dots, halos and rings take the status fills; the done and failed glyphs take the text inks.",
+    "$description": "StatusOrb: one glanceable state (idle, queued, thinking, working, paused, needs-you, done, stopped, failed, offline), told apart by shape and motion as well as these colours. Dots, halos and rings take the status fills; the glyphs (queued, paused, done, stopped, failed) take the text inks.",
     "size-xs": { "$type": "dimension", "$value": "0.75rem", "$description": "A step in a run trace." },
     "size-sm": { "$type": "dimension", "$value": "1rem", "$description": "A row, a header." },
     "size-md": { "$type": "dimension", "$value": "1.25rem", "$description": "A nav item, a hero. The icon's 20px optical size." },
     "idle": { "$type": "color", "$value": "{muted-foreground}" },
+    "queued": { "$type": "color", "$value": "{muted-foreground}", "$description": "A clock glyph: waiting its turn." },
+    "paused": { "$type": "color", "$value": "{muted-foreground}", "$description": "A pause glyph: on hold, and it picks up again." },
+    "stopped": { "$type": "color", "$value": "{muted-foreground}", "$description": "A stop glyph: someone ended it. Not a failure, so not destructive." },
     "thinking": { "$type": "color", "$value": "{running}" },
     "working": { "$type": "color", "$value": "{running}" },
     "needs-you": { "$type": "color", "$value": "{attention}" },

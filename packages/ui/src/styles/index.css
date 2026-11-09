@@ -437,6 +437,9 @@ html:has([data-slot="app-frame"]) body {
   [data-slot="status-orb"][data-size="md"] {
     --status-orb-size: var(--c-status-orb-size-md);
   }
+  [data-slot="status-orb"][data-state="queued"] { color: var(--c-status-orb-queued); }
+  [data-slot="status-orb"][data-state="paused"] { color: var(--c-status-orb-paused); }
+  [data-slot="status-orb"][data-state="stopped"] { color: var(--c-status-orb-stopped); }
   [data-slot="status-orb"][data-state="thinking"] { color: var(--c-status-orb-thinking); }
   [data-slot="status-orb"][data-state="working"] { color: var(--c-status-orb-working); }
   [data-slot="status-orb"][data-state="needs-you"] { color: var(--c-status-orb-needs-you); }

@@ -25,6 +25,32 @@ describe("StatusOrb", () => {
     for (const words of Object.values(statusOrbCopy)) expect(words.split(" ").length).toBeLessThanOrEqual(2)
   })
 
+  it("draws queued, paused and stopped as still glyphs of their own, coloured from their own tokens", () => {
+    const glyphs = { queued: "schedule", paused: "pause_circle", stopped: "stop_circle" } as const
+    for (const [state, name] of Object.entries(glyphs)) {
+      const { container, unmount } = render(<StatusOrb state={state as keyof typeof glyphs} tooltip={false} />)
+      const glyph = container.querySelector('[data-slot="status-orb-glyph"]')
+      expect(glyph).toBeInTheDocument()
+      expect(glyph?.textContent).toContain(name)
+      expect(container.querySelector('[data-slot="status-orb-halo"]')).toBeNull()
+      expect(css).toContain(`[data-slot="status-orb"][data-state="${state}"] { color: var(--c-status-orb-${state}); }`)
+      // Nothing waiting or over moves.
+      expect(css).not.toMatch(new RegExp(String.raw`\[data-state="${state}"\][^{]*\{[^}]*animation`))
+      unmount()
+    }
+  })
+
+  it("tells stopped apart from failed and from idle, by shape and by name", () => {
+    const names = new Set(statusOrbStates.map((state) => statusOrbCopy[state]))
+    expect(names.size).toBe(statusOrbStates.length)
+    const { container, rerender } = render(<StatusOrb state="stopped" tooltip={false} />)
+    const stopped = container.querySelector('[data-slot="status-orb-glyph"]')?.textContent
+    rerender(<StatusOrb state="failed" tooltip={false} />)
+    expect(container.querySelector('[data-slot="status-orb-glyph"]')?.textContent).not.toBe(stopped)
+    rerender(<StatusOrb state="idle" tooltip={false} />)
+    expect(container.querySelector('[data-slot="status-orb-glyph"]')).toBeNull()
+  })
+
   it("draws done and failed as glyphs, and the rest as a dot and a halo", () => {
     const { container, rerender } = render(<StatusOrb state="done" tooltip={false} />)
     expect(container.querySelector('[data-slot="status-orb-glyph"]')).toBeInTheDocument()
