@@ -4,7 +4,7 @@
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
-import { Icon } from "../icon"
+import { Icon, type IconName } from "../icon"
 import { IconButton } from "../icon-button"
 import { useViewport } from "../use-viewport"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./collapsible"
@@ -12,7 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { AdaptiveSheetContent, Sheet, SheetHeader, SheetTitle, SheetTrigger } from "./sheet"
 import { StatusOrb, type StatusOrbState } from "./status-orb"
 
-export type RunStepState = "running" | "done" | "failed" | "stopped"
+/** `needs-you`: the step is blocked on a person's answer (an AgentPrompt in the conversation). */
+export type RunStepState = "running" | "needs-you" | "done" | "failed" | "stopped"
 
 export interface RunStep {
   id: string
@@ -29,11 +30,26 @@ export interface RunStep {
   detail?: React.ReactNode
 }
 
+/**
+ * Something that happened between steps, not a step itself: an answer, a stop, a pause, a resume.
+ * One line in meta type, an icon and a few words, drawn after the step it follows.
+ */
+export interface RunMark {
+  id: string
+  /** The step it follows. Without one it comes before the first step. */
+  after?: string
+  /** A few words: "Allowed once", "Paused for a game". */
+  label: string
+  icon?: IconName
+  /** Epoch milliseconds. Not drawn; for the host's own ordering and for the title. */
+  at?: number
+}
+
 /** Every word RunTrace draws or says. Hosts pass data, not copy; swap this for another language. */
 export const runTraceCopy = {
   steps: (n: number) => (n === 1 ? "1 step" : `${n} steps`),
   failed: (n: number) => `${n} failed`,
-  state: { running: "Running", done: "Done", failed: "Failed", stopped: "Stopped" } satisfies Record<RunStepState, string>,
+  state: { running: "Running", "needs-you": "Needs you", done: "Done", failed: "Failed", stopped: "Stopped" } satisfies Record<RunStepState, string>,
   details: "Details",
   hideReasoning: "Hide reasoning",
   showReasoning: "Show reasoning",
@@ -49,7 +65,28 @@ export function formatRunDuration(ms: number): string {
   return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`
 }
 
-const ORB: Record<RunStepState, StatusOrbState> = { running: "working", done: "done", failed: "failed", stopped: "idle" }
+const ORB: Record<RunStepState, StatusOrbState> = { running: "working", "needs-you": "needs-you", done: "done", failed: "failed", stopped: "stopped" }
+
+/** How the whole run reads on its one line: waiting on you beats working; failed beats stopped beats done. */
+function runOrb(steps: readonly RunStep[], live: boolean): StatusOrbState {
+  if (live) return steps.some((s) => s.state === "needs-you") ? "needs-you" : "working"
+  if (steps.some((s) => s.state === "failed")) return "failed"
+  if (steps.some((s) => s.state === "stopped")) return "stopped"
+  return "done"
+}
+
+/** Steps with each mark after the step it follows; a mark without a step it can find goes last. */
+function interleave(steps: readonly RunStep[], marks: readonly RunMark[]) {
+  type Row = { kind: "step"; step: RunStep } | { kind: "mark"; mark: RunMark }
+  const ids = new Set(steps.map((s) => s.id))
+  const rows: Row[] = marks.filter((m) => m.after === undefined).map((mark) => ({ kind: "mark", mark }))
+  for (const step of steps) {
+    rows.push({ kind: "step", step })
+    for (const mark of marks) if (mark.after === step.id) rows.push({ kind: "mark", mark })
+  }
+  for (const mark of marks) if (mark.after !== undefined && !ids.has(mark.after)) rows.push({ kind: "mark", mark })
+  return rows
+}
 
 /** The time, ticking once a second while something is live. */
 function useNow(live: boolean) {
@@ -65,6 +102,8 @@ function useNow(live: boolean) {
 
 export interface RunTraceProps extends Omit<React.ComponentProps<"div">, "children"> {
   steps: readonly RunStep[]
+  /** What happened between steps: answers, stops, pauses. Each goes after the step it names. */
+  marks?: readonly RunMark[]
   /** The run is going. It opens while live and folds to one line when it ends. */
   live?: boolean
   /** Reasoning text as it streams: a three-line window that keeps to the newest line. */
@@ -85,6 +124,7 @@ export interface RunTraceProps extends Omit<React.ComponentProps<"div">, "childr
  */
 function RunTrace({
   steps,
+  marks = [],
   live = false,
   reasoning,
   open: openProp,
@@ -116,7 +156,7 @@ function RunTrace({
   const start = startedAt ?? Math.min(...steps.map((s) => s.startedAt), now)
   const end = live ? now : endedAt ?? Math.max(start, ...steps.map((s) => s.endedAt ?? s.startedAt))
   const failed = steps.filter((s) => s.state === "failed").length
-  const current = [...steps].reverse().find((s) => s.state === "running")
+  const current = [...steps].reverse().find((s) => s.state === "running" || s.state === "needs-you")
   const time = formatRunDuration(end - start)
   const copy = runTraceCopy
 
@@ -134,7 +174,7 @@ function RunTrace({
         className="type-meta hover:text-foreground focus-visible:ring-ring/50 -mx-1 flex w-fit max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left outline-none transition-colors focus-visible:ring-3"
       >
         {/* The spaces between parts are for the button's name; a flex row draws none of them. */}
-        <StatusOrb state={live ? "working" : failed ? "failed" : "done"} size="xs" tooltip={false} />{" "}
+        <StatusOrb state={runOrb(steps, live)} size="xs" tooltip={false} />{" "}
         {live && current ? <><span className="truncate font-mono">{current.label}</span>{" "}</> : null}
         <span>{time}</span>{" "}
         <Dot />{" "}
@@ -162,9 +202,13 @@ function RunTrace({
           </div>
         ) : null}
         <ol data-slot="run-trace-steps" className="flex flex-col gap-1">
-          {steps.map((step) => (
-            <RunTraceStep key={step.id} step={step} now={now} />
-          ))}
+          {interleave(steps, marks).map((row) =>
+            row.kind === "step" ? (
+              <RunTraceStep key={row.step.id} step={row.step} now={now} />
+            ) : (
+              <RunTraceMark key={`mark-${row.mark.id}`} mark={row.mark} />
+            )
+          )}
         </ol>
       </CollapsibleContent>
     </Collapsible>
@@ -201,6 +245,18 @@ function RunTraceStep({ step, now }: { step: RunStep; now: number }) {
       <span className="min-w-0 flex-1 font-mono text-(length:--type-meta-size) leading-(--type-meta-leading) break-words">{step.label}</span>{" "}
       <span className="type-meta shrink-0">{time}</span>
       {step.detail ? <StepDetail step={step} /> : null}
+    </li>
+  )
+}
+
+/** Between steps: the icon where a step's orb sits, and a few quiet words. */
+function RunTraceMark({ mark }: { mark: RunMark }) {
+  return (
+    <li data-slot="run-trace-mark" className="type-meta flex min-w-0 items-center gap-2">
+      <span aria-hidden className="flex size-(--c-status-orb-size-xs) shrink-0 items-center justify-center">
+        {mark.icon ? <Icon name={mark.icon} className="size-full" /> : <Dot />}
+      </span>
+      <span className="min-w-0 flex-1 break-words">{mark.label}</span>
     </li>
   )
 }

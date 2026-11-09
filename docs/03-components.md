@@ -36,7 +36,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `indicator` | `IndicatorMark`, `indicatorCopy`, `indicatorLabel`, `indicatorCount`, `indicatorsOf`, `Indicator`, `IndicatorProp` (the `indicator` prop on `AppFrameNavItem` and `Item`: attention or unread, a dot or a "9+" badge, the count in the name) | Feedback | span |
 | `progress` | `Progress` (`variant`: bar, segmented; `tone`: default, budget), `ProgressTrack`, `ProgressIndicator`, `ProgressLabel`, `ProgressValue`, `progressBudgetThresholds` | Feedback | Base UI Progress |
 | `collapsible` | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` | Layout | Base UI Collapsible |
-| `run-trace` | `RunTrace`, `runTraceCopy`, `formatRunDuration`, `RunTraceProps`, `RunStep`, `RunStepState` (an agent run: open on the current step while live, one line when done; step detail in a popover, a sheet on a phone) | Feedback | Collapsible + StatusOrb + IconButton + Popover / AdaptiveSheetContent |
+| `run-trace` | `RunTrace`, `runTraceCopy`, `formatRunDuration`, `RunTraceProps`, `RunStep`, `RunStepState`, `RunMark` (an agent run: open on the current step while live, one line when done; a step can wait on you (`needs-you`); `marks` put answers, stops and pauses between steps in one quiet line each; step detail in a popover, a sheet on a phone) | Feedback | Collapsible + StatusOrb + IconButton + Popover / AdaptiveSheetContent |
 | `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
 | `empty` | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | Feedback | div |
 | `sonner` | `Toaster` | Feedback | sonner (+ next-themes) |
