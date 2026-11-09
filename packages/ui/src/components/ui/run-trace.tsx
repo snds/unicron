@@ -219,7 +219,12 @@ function Dot() {
   return <span aria-hidden>·</span>
 }
 
-/** Three lines of the newest reasoning, the older lines fading out at the top. */
+/**
+ * Three lines of the newest reasoning, the older lines fading out at the top. The fade is a plain
+ * mask-image, not Tailwind's mask-t-* utilities: those bring a dozen @property rules, which every
+ * app paid for (0.2 KB gzipped) because the stylesheet scans every component. Any opaque colour
+ * works as the mask's solid end; --foreground is one.
+ */
 function Reasoning({ text }: { text: string }) {
   const ref = React.useRef<HTMLParagraphElement>(null)
   React.useEffect(() => {
@@ -229,7 +234,7 @@ function Reasoning({ text }: { text: string }) {
     <p
       ref={ref}
       data-slot="run-trace-reasoning"
-      className="type-support max-h-[calc(var(--type-support-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap mask-t-from-50%"
+      className="type-support max-h-[calc(var(--type-support-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap [mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]"
     >
       {text}
     </p>
