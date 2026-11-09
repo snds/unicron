@@ -97,4 +97,11 @@ describe("RunTrace", () => {
     expect(screen.queryByText(/Fourth\./)).toBeNull()
     expect(screen.getByRole("button", { name: "Show reasoning" })).toHaveAttribute("aria-pressed", "true")
   })
+
+  it("fades old reasoning with a plain mask, not Tailwind's heavier mask utilities", () => {
+    render(<RunTrace steps={steps} live reasoning={["one", "two", "three", "four"].join("\n")} />)
+    const reasoning = document.querySelector('[data-slot="run-trace-reasoning"]')!
+    expect(reasoning.className).toContain("[mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]")
+    expect(reasoning.className).not.toMatch(/mask-[tblrxy]-/)
+  })
 })
