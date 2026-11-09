@@ -183,6 +183,7 @@ function PlaybackDemo() {
   }, [])
   const plan = [
     { id: "read", label: "Read package.json", ms: 1500 },
+    { id: "install", label: "pnpm install", ms: 2500, asks: true },
     { id: "test", label: "Run tests", ms: 3000, fails: true },
     { id: "fix", label: "Fix import", ms: 2000 },
   ]
@@ -197,14 +198,20 @@ function PlaybackDemo() {
       label: p.label,
       startedAt,
       endedAt: done ? at : undefined,
-      state: (done ? (p.fails ? "failed" : "done") : "running") as "failed" | "done" | "running",
+      // A step that asks waits on you until it's answered.
+      state: (done ? (p.fails ? "failed" : "done") : p.asks ? "needs-you" : "running") as "failed" | "done" | "running" | "needs-you",
       detail: p.fails ? <p className="type-support">1 test failed. Full output is in the log.</p> : undefined,
     }]
   })
   const live = now < at
   return (
     <div className="flex w-full max-w-sm flex-col gap-3">
-      <RunTrace steps={steps} live={live} reasoning={live ? REASONING : undefined} />
+      <RunTrace
+        steps={steps}
+        marks={steps.some((s) => s.id === "install" && s.endedAt) ? [{ id: "allowed", after: "install", label: "Allowed once", icon: "check" }] : []}
+        live={live}
+        reasoning={live ? REASONING : undefined}
+      />
       <div><Button variant="outline" size="sm" onClick={() => setT0(Date.now())}>
         Replay
       </Button></div>

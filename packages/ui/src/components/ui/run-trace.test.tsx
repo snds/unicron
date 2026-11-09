@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./collapsible"
@@ -88,6 +88,53 @@ describe("RunTrace", () => {
     rerender(<RunTrace steps={[{ ...live[0], state: "done", endedAt: T + 1_000 }]} onOpenChange={onOpenChange} />)
     expect(screen.getByRole("button", { name: "Done 1s 1 step" })).toHaveAttribute("aria-expanded", "false")
     expect(onOpenChange).toHaveBeenLastCalledWith(false)
+  })
+
+  it("shows a step that waits on you, and the run's one line says so while live", () => {
+    const waiting: RunStep[] = [steps[0], { id: "ask", label: "pnpm install", state: "needs-you", startedAt: T + 2_000 }]
+    render(<RunTrace steps={waiting} live />)
+    const step = document.querySelector<HTMLElement>('[data-slot="run-trace-step"][data-state="needs-you"]')!
+    expect(step).toHaveTextContent("pnpm install")
+    expect(within(step).getByRole("img", { name: "Needs you" })).toHaveAttribute("data-state", "needs-you")
+    // The trigger names the step it's on, and its orb asks for you.
+    const trigger = document.querySelector('[data-slot="run-trace-trigger"]')
+    expect(trigger).toHaveTextContent("pnpm install")
+    expect(trigger?.querySelector('[data-slot="status-orb"]')).toHaveAttribute("data-state", "needs-you")
+  })
+
+  it("draws a stopped step and a stopped run with the stop orb, not idle", () => {
+    const stopped: RunStep[] = [steps[0], { id: "b", label: "Run tests", state: "stopped", startedAt: T + 2_000, endedAt: T + 3_000 }]
+    render(<RunTrace steps={stopped} defaultOpen />)
+    const step = document.querySelector<HTMLElement>('[data-slot="run-trace-step"][data-state="stopped"]')!
+    expect(within(step).getByRole("img", { name: "Stopped" })).toHaveAttribute("data-state", "stopped")
+    expect(document.querySelector('[data-slot="run-trace-trigger"] [data-slot="status-orb"]')).toHaveAttribute("data-state", "stopped")
+  })
+
+  it("puts marks between the steps they follow: before the first, after a step, and unplaced ones last", () => {
+    render(
+      <RunTrace
+        steps={steps}
+        defaultOpen
+        marks={[
+          { id: "1", after: "b", label: "Allowed once", icon: "check" },
+          { id: "0", label: "Picked up again" },
+          { id: "2", after: "gone", label: "Paused for a game", icon: "pause" },
+        ]}
+      />
+    )
+    const rows = [...document.querySelectorAll('[data-slot="run-trace-steps"] > li')].map((li) => `${li.getAttribute("data-slot")}:${li.textContent}`)
+    expect(rows.map((r) => r.split(":")[0])).toEqual([
+      "run-trace-mark",
+      "run-trace-step",
+      "run-trace-step",
+      "run-trace-mark",
+      "run-trace-step",
+      "run-trace-mark",
+    ])
+    expect(rows[3]).toContain("Allowed once")
+    // A mark is words, not a control, and not a step: the count stays at three.
+    expect(screen.getByRole("button", { name: /3 steps/ })).toBeInTheDocument()
+    expect(document.querySelector('[data-slot="run-trace-mark"] button')).toBeNull()
   })
 
   it("shows reasoning in a short window that can be turned off", () => {
