@@ -5,6 +5,7 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
+import { indicatorOnControl, type IndicatorProp } from "./indicator"
 
 const variants = cva(
   "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/60 dark:aria-invalid:ring-destructive/50 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 aria-invalid:ring-3 active:not-aria-[haspopup]:translate-y-px [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-[color,background-color,border-color,box-shadow,translate] outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
@@ -66,19 +67,32 @@ function buttonVariants(props?: Parameters<typeof variants>[0]): string {
   return cn(variants(props))
 }
 
+/**
+ * `indicator` marks the button when something behind it wants the person (`attention`, `unread`):
+ * a dot in its top-right corner, and the words in its name.
+ */
 function Button({
   className,
   variant = "default",
   size = "default",
   shape = "default",
+  indicator,
+  children,
+  "aria-label": ariaLabel,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants> & { indicator?: IndicatorProp }) {
+  const on = indicatorOnControl(indicator, ariaLabel)
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, shape, className }))}
+      aria-label={on?.label ?? ariaLabel}
+      className={cn(buttonVariants({ variant, size, shape, className: cn(on && "relative", className) }))}
       {...props}
-    />
+    >
+      {children}
+      {on?.mark}
+      {on?.words}
+    </ButtonPrimitive>
   )
 }
 

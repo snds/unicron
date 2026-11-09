@@ -359,6 +359,19 @@ export function Showcase() {
         <IconButton label="Pin" render={<Toggle size="sm" defaultPressed />}>
           <Icon name="keep" fill />
         </IconButton>
+        {/* indicator on a control: a corner dot, and the words in its name. */}
+        <Button variant="outline" indicator={{ kind: "attention", count: 2 }}>
+          Tasks
+        </Button>
+        <IconButton icon="forum" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />
+        <ToggleGroup defaultValue={["chat"]}>
+          <ToggleGroupItem value="chat" aria-label="Chat">
+            <Icon name="chat" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="tasks" aria-label="Tasks" indicator={{ kind: "attention", count: 1 }}>
+            <Icon name="task_alt" />
+          </ToggleGroupItem>
+        </ToggleGroup>
         <div className="w-full max-w-md rounded-xl border p-4">
           <p className="mb-4 text-sm">DialogActions (narrow the window to see the phone row)</p>
           <DialogActions>
