@@ -1,5 +1,11 @@
 # @unicron/tokens
 
+## 0.16.0
+
+### Minor Changes
+
+- 7b3fc1c: StatusOrb: add `queued`, `paused` and `stopped`, each a still glyph (clock, pause, stop) on its own `--c-status-orb-*` token. A run someone stopped no longer has to borrow `idle`.
+
 ## 0.15.0
 
 ### Minor Changes
