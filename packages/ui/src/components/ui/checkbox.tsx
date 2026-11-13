@@ -12,7 +12,8 @@ import { cn } from "../../lib/utils"
  * by shape as well as by fill. A dash stands for "some of these" (`indeterminate`).
  *
  * The marks are an inline SVG, not an icon: they need no icon set and they never take a label's
- * case or tracking. On a coarse pointer the target widens to 44px (`hit-area`). The root is a
+ * case or tracking. Focus is the stylesheet's one ring for every control. On a coarse pointer the
+ * target widens to 44px (`hit-area`). The root is a
  * `peer`, so a label beside it can follow its state (`peer-data-checked:line-through` on a done
  * item).
  */
@@ -21,7 +22,7 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer group/checkbox hit-area inline-flex size-4 shrink-0 items-center justify-center rounded-lg text-background transition-[background-color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent data-checked:bg-foreground data-indeterminate:bg-foreground aria-invalid:inset-ring-2 aria-invalid:inset-ring-destructive data-disabled:pointer-events-none data-disabled:opacity-50 group-has-disabled/field:opacity-50",
+        "peer group/checkbox hit-area inline-flex size-4 shrink-0 items-center justify-center rounded-lg text-background transition-[background-color,box-shadow] data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent data-checked:bg-foreground data-indeterminate:bg-foreground aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill data-disabled:pointer-events-none data-disabled:opacity-50 group-has-disabled/field:opacity-50",
         className
       )}
       {...props}

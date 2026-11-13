@@ -36,9 +36,7 @@ describe("Badge", () => {
   })
 
   it("needs-you is the one solid tone: the yellow with its ink, and its ring in that ink", () => {
-    expect(classesOf({ tone: "needs-you" })).toEqual(
-      expect.arrayContaining(["bg-needs-you-fill", "text-needs-you-on-fill", "focus-visible:outline-needs-you-on-fill"])
-    )
+    expect(classesOf({ tone: "needs-you" })).toEqual(expect.arrayContaining(["bg-needs-you-fill", "text-needs-you-on-fill", "on-needs-you"]))
     for (const tone of TONES.filter((t) => t !== "needs-you")) {
       expect(classesOf({ tone }).some((c) => /^bg-(primary|needs-you-fill|critical-fill|foreground)$/.test(c))).toBe(false)
     }
@@ -87,6 +85,9 @@ describe("Badge", () => {
     )
     const link = screen.getByRole("link", { name: "Failing" })
     expect(link).toHaveAttribute("data-slot", "badge")
-    expect(link.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-overline", "bg-critical-soft", "focus-visible:outline-2"]))
+    const classes = link.className.split(/\s+/)
+    expect(classes).toEqual(expect.arrayContaining(["type-overline", "bg-critical-soft", "[a]:hover:underline"]))
+    // As a link it takes the stylesheet's focus ring: nothing here resets it.
+    expect(classes.some((c) => /(^|:)outline-(none|hidden)$/.test(c))).toBe(false)
   })
 })

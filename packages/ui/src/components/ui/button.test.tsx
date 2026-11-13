@@ -135,26 +135,23 @@ describe("Button sizes", () => {
 })
 
 describe("Button focus and invalid edges", () => {
-  it("every kind draws the shared focus ring: 2px, solid, 2px clear of the control", () => {
+  // The ring is one rule in the stylesheet for every control (:focus-visible, 2px solid --ring,
+  // 2px clear). A control gets it by not resetting it.
+  it("no kind resets the shared focus ring or draws one of its own", () => {
     for (const variant of VARIANTS) {
       const classes = classesOf({ variant })
-      expect(classes).toEqual(expect.arrayContaining(["focus-visible:outline-2", "focus-visible:outline-offset-2"]))
-      expect(classes).not.toContain("outline-none")
-      expect(classes.some((c) => c.startsWith("focus-visible:ring-"))).toBe(false)
+      expect(classes.some((c) => /(^|:)outline-(none|hidden)$/.test(c))).toBe(false)
+      expect(classes.some((c) => c.startsWith("focus-visible:"))).toBe(false)
     }
   })
 
-  it("the ring is the page's ink, and on the yellow the ink that sits on the yellow", () => {
-    expect(classesOf({ variant: "destructive" })).toContain("focus-visible:outline-ring")
-    for (const variant of NEEDS_YOU) {
-      const classes = classesOf({ variant })
-      expect(classes).toContain("focus-visible:outline-needs-you-on-fill")
-      expect(classes).not.toContain("focus-visible:outline-ring")
-    }
+  it("on the yellow the ring takes the ink that sits on the yellow", () => {
+    for (const variant of NEEDS_YOU) expect(classesOf({ variant })).toContain("on-needs-you")
+    for (const variant of VARIANTS.filter((v) => !v.startsWith("needs-you"))) expect(classesOf({ variant })).not.toContain("on-needs-you")
   })
 
-  it("an invalid button takes a 2px inside edge in critical ink", () => {
-    expect(classesOf({})).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-destructive"]))
+  it("an invalid button takes a 2px inside edge in the critical fill, as an invalid field does", () => {
+    expect(classesOf({})).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-critical-fill"]))
   })
 
   it("any invalid ring left in the primitives is drawn at the alpha the contrast gate measures", () => {

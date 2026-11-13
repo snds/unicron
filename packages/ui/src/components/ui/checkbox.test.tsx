@@ -78,11 +78,13 @@ describe("Checkbox", () => {
     expect(box.some((c) => c.includes("bg-primary"))).toBe(false)
   })
 
-  it("draws the shared focus ring, and widens its touch target on a coarse pointer", () => {
+  it("leaves the stylesheet's focus ring alone, and widens its touch target on a coarse pointer", () => {
     render(<Checkbox aria-label="Sleeping bags" />)
     const box = classesOf(screen.getByRole("checkbox"))
-    expect(box).toEqual(expect.arrayContaining(["focus-visible:outline-2", "focus-visible:outline-offset-2", "focus-visible:outline-ring", "hit-area"]))
-    expect(box).not.toContain("outline-none")
+    expect(box).toContain("hit-area")
+    expect(box.some((c) => /(^|:)outline-(none|hidden)$/.test(c) || c.startsWith("focus-visible:"))).toBe(false)
+    // Invalid: a 2px inside edge in the critical fill, as an invalid field has.
+    expect(box).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-critical-fill"]))
   })
 
   it("disabled takes no press and says so", () => {

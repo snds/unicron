@@ -12,9 +12,9 @@ import { cn } from "../../lib/utils"
  * a label-ink knob, so the two states differ by position and by fill, never by colour alone.
  * (`Toggle` in code is the pressed button, a different control.)
  *
- * It is 24px tall, so on a coarse pointer its target widens to 44px (`hit-area`). Where it ends a
- * row, make the whole row the target (ToggleRow). Name it with a label (`id` + `htmlFor`) or
- * `aria-label`.
+ * Focus is the stylesheet's one ring for every control. The switch is 24px tall, so on a coarse
+ * pointer its target widens to 44px (`hit-area`). Where it ends a row, make the whole row the
+ * target (ToggleRow). Name it with a label (`id` + `htmlFor`) or `aria-label`.
  */
 function Switch({
   className,
@@ -29,7 +29,7 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-lg p-1 transition-[background-color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/80 data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-destructive data-disabled:pointer-events-none data-disabled:opacity-50",
+        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-lg p-1 transition-[background-color,box-shadow] data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/80 data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill data-disabled:pointer-events-none data-disabled:opacity-50",
         className
       )}
       {...props}

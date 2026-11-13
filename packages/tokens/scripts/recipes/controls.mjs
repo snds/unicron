@@ -47,15 +47,16 @@ export const recipes = [
   { id: "btn-ny-edge", source: "button needs-you-outline: inset-ring-needs-you-on-fill, the 1px edge", kind: "border-rest", paint: r("needs-you-on-fill"), over: NEEDS_YOU },
 
   // ── Shared by the controls ──────────────────────────────────────────────────────────────────
-  // An invalid control's 2px inside edge, in critical ink.
+  // An invalid control's 2px inside edge: the critical fill, the same edge an invalid field has.
   ...SURFACES.map(([on, bg]) => ({
-    id: `ctl-invalid-${on}`, source: "button, switch, checkbox: aria-invalid:inset-ring-2 inset-ring-destructive", kind: "border-error", paint: r("destructive"), over: [r(bg)],
+    id: `ctl-invalid-${on}`, source: "button, switch, checkbox: aria-invalid:inset-ring-2 inset-ring-critical-fill", kind: "border-error", paint: r("critical-fill"), over: [r(bg)],
   })),
-  // Focus: a 2px solid ring 2px clear of the control, so it is judged against what is around it.
+  // Focus: the stylesheet's ring (2px solid --ring, 2px clear of the control), so it is judged
+  // against what is around the control. On the yellow, `on-needs-you` points --ring at its ink.
   ...SURFACES.map(([on, bg]) => ({
-    id: `ctl-focus-${on}`, source: "button, float button, switch, checkbox, badge: focus-visible:outline-ring", kind: "focus", paint: r("ring"), over: [r(bg)],
+    id: `ctl-focus-${on}`, source: "button, float button, switch, checkbox, badge: :focus-visible outline in --ring", kind: "focus", paint: r("ring"), over: [r(bg)],
   })),
-  { id: "ctl-focus-needs-you", source: "button needs-you kinds, badge needs-you: focus-visible:outline-needs-you-on-fill", kind: "focus", paint: r("needs-you-on-fill"), over: NEEDS_YOU },
+  { id: "ctl-focus-needs-you", source: "button needs-you kinds, badge needs-you: on-needs-you (--ring = needs-you-on-fill)", kind: "focus", paint: r("needs-you-on-fill"), over: NEEDS_YOU },
 
   // ── FloatButton: every fill is opaque, because it floats over content ───────────────────────
   { id: "float-glyph", source: "float button neutral: bg-surface-raised text-foreground", kind: "text-body", paint: r("foreground"), over: [r("surface-raised")] },
@@ -135,6 +136,10 @@ export const exceptions = [
   { id: "btn-ink-press-raised", modes: "stone", reason: ON_STATE },
   { id: "float-glyph-hover", modes: "stone", reason: ON_STATE },
   { id: "float-glyph-press", modes: "all", reason: ON_STATE },
+  // The error edge is the critical fill, as on a field: 2.9:1 on the graphite page, 2.6:1 on a
+  // raised surface there.
+  { id: "ctl-invalid-page", modes: "graphite", reason: FIGMA },
+  { id: "ctl-invalid-raised", modes: "graphite", reason: FIGMA },
   // Body ink on the soft critical ground: the critical Banner's own pair (Lc 87 on stone).
   { id: "badge-critical", modes: "stone", reason: FIGMA },
   // A progress cell in the identity fill (Warpcore's spend bar, Synapse's checks bar) or the

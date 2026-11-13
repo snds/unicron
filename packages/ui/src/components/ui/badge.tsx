@@ -23,7 +23,8 @@ const TONE_OF_VARIANT: Record<BadgeVariant, BadgeTone> = {
 
 const tones = cva(
   // A mono caps word in a 20px box on the 2px control radius. Edges are inset, so they add no size.
-  "group/badge type-overline inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg px-1.5 whitespace-nowrap transition-[color,background-color,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [a]:underline-offset-2 [a]:hover:underline [&>svg]:pointer-events-none [&>svg]:size-3!",
+  // Focus (a badge drawn as a link) is the stylesheet's one ring; nothing here resets it.
+  "group/badge type-overline inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg px-1.5 whitespace-nowrap transition-[color,background-color,box-shadow] [a]:underline-offset-2 [a]:hover:underline [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       tone: {
@@ -32,7 +33,7 @@ const tones = cva(
         // Live or agent activity ("Running"): the app's live ink in a hairline box.
         live: "rule-box text-secondary-live",
         // Waits on the person: the one solid tone, the yellow.
-        "needs-you": "bg-needs-you-fill text-needs-you-on-fill focus-visible:outline-needs-you-on-fill",
+        "needs-you": "on-needs-you bg-needs-you-fill text-needs-you-on-fill",
         // An error ("Failed", "Clash"): the critical banner at badge size. Ink on the soft critical
         // ground inside a critical edge; critical ink on that ground falls under the label floor.
         critical: "bg-critical-soft text-foreground inset-ring inset-ring-critical-fill",

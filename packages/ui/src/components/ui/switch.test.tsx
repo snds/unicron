@@ -89,11 +89,13 @@ describe("Switch (Figma 32:53, Toggle)", () => {
     expect(knob.some((c) => c.startsWith("rounded-") && c !== "rounded-none")).toBe(false)
   })
 
-  it("draws the shared focus ring, and widens its touch target on a coarse pointer", () => {
+  it("leaves the stylesheet's focus ring alone, and widens its touch target on a coarse pointer", () => {
     render(<Switch aria-label="Lock after 5 minutes" />)
     const track = classesOf(screen.getByRole("switch"))
-    expect(track).toEqual(expect.arrayContaining(["focus-visible:outline-2", "focus-visible:outline-offset-2", "focus-visible:outline-ring", "hit-area"]))
-    expect(track).not.toContain("outline-none")
+    expect(track).toContain("hit-area")
+    expect(track.some((c) => /(^|:)outline-(none|hidden)$/.test(c) || c.startsWith("focus-visible:"))).toBe(false)
+    // Invalid: a 2px inside edge in the critical fill, as an invalid field has.
+    expect(track).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-critical-fill"]))
   })
 
   it("size=\"sm\" is still accepted and draws the one size", () => {

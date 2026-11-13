@@ -31,11 +31,11 @@ describe("FloatButton (Figma 20:1690)", () => {
     expect(classesOf()).toEqual(expect.arrayContaining(["rounded-lg", "[&_svg]:size-5"]))
   })
 
-  it("casts no shadow, and draws the shared focus ring", () => {
-    for (const kind of ["neutral", "primary"] as const) {
-      const classes = classesOf({ kind })
+  it("casts no shadow, and leaves the stylesheet's focus ring alone", () => {
+    for (const props of [{ kind: "neutral" }, { kind: "primary" }, { current: true }] as const) {
+      const classes = classesOf(props)
       expect(classes.some((c) => /(^|:)shadow/.test(c))).toBe(false)
-      expect(classes).toEqual(expect.arrayContaining(["focus-visible:outline-2", "focus-visible:outline-offset-2", "focus-visible:outline-ring"]))
+      expect(classes.some((c) => /(^|:)outline-(none|hidden)$/.test(c) || c.startsWith("focus-visible:"))).toBe(false)
     }
   })
 

@@ -18,15 +18,16 @@ const WASH = "hover:bg-state-hover active:bg-state-pressed aria-expanded:bg-stat
 // Two washes on the needs-you yellow too, in the ink that sits on it (the page's ink is near-white
 // on graphite, and would lighten the yellow instead of marking it). 5% and 9%: at 10% the label
 // on the pressed wash measures Lc 74.8, just under the Lc 75 that text on a fill is held to.
-const WASH_ON_NEEDS_YOU =
-  "hover:bg-needs-you-on-fill/5 active:bg-needs-you-on-fill/9 aria-expanded:bg-needs-you-on-fill/9 focus-visible:outline-needs-you-on-fill"
+// `on-needs-you` points the focus ring at that ink as well.
+const WASH_ON_NEEDS_YOU = "on-needs-you hover:bg-needs-you-on-fill/5 active:bg-needs-you-on-fill/9 aria-expanded:bg-needs-you-on-fill/9"
 // A 1px edge drawn inside the box, so an outlined button is exactly as wide as a solid one.
 const OUTLINE = "inset-ring inset-ring-foreground text-foreground"
 
 const variants = cva(
-  // No border and no outline reset: the edge of an outlined kind is an inset ring, and focus is the
-  // one ring every control shares (2px solid ink, 2px clear of the control).
-  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg whitespace-nowrap select-none transition-[color,background-color,box-shadow,translate] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-destructive [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  // No border, and nothing about focus: the edge of an outlined kind is an inset ring, and the
+  // focus ring is the stylesheet's one rule for every control (2px solid --ring, 2px clear of it).
+  // A control opts out of that rule with outline-none; this one must not.
+  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg whitespace-nowrap select-none transition-[color,background-color,box-shadow,translate] active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -50,7 +51,7 @@ const variants = cva(
         // The three kinds for the needs-you yellow, and only there. One solid action per block;
         // the second action is `needs-you-text`.
         "needs-you":
-          "bg-needs-you-on-fill text-needs-you-fill hover:bg-needs-you-on-fill/90 active:bg-needs-you-on-fill/80 focus-visible:outline-needs-you-on-fill",
+          "on-needs-you bg-needs-you-on-fill text-needs-you-fill hover:bg-needs-you-on-fill/90 active:bg-needs-you-on-fill/80",
         "needs-you-outline": cn("inset-ring inset-ring-needs-you-on-fill text-needs-you-on-fill", WASH_ON_NEEDS_YOU),
         "needs-you-text": cn("text-needs-you-on-fill", WASH_ON_NEEDS_YOU),
       },
