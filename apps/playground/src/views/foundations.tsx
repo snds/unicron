@@ -338,13 +338,17 @@ const KEPT_NAMES: { name: string; paint: string; role: string; sample: string }[
   { name: "support", paint: "type-support", role: "caption", sample: "Also locks when the screen sleeps." },
 ]
 
+// The label and the specimen sit side by side from md up, top-aligned: each row is then the taller
+// of the label (two 20px lines) and the role's own line box (a multiple of 4), plus 32, so every
+// row and every section after the type sits on the 4px grid. Baseline alignment here would make
+// each row an odd height and push the rest of the page off the grid.
 function Specimen({ role, alias, paint, sample }: { role: string; alias?: string; paint: string; sample: string }) {
   const [ref, value] = useRead(fontText)
   return (
     <div
       data-type-role={alias ? undefined : role}
       data-type-alias={alias}
-      className="rule-t grid gap-x-6 gap-y-2 py-4 md:grid-cols-[18rem_minmax(0,1fr)] md:items-baseline"
+      className="rule-t grid gap-x-6 gap-y-2 py-4 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start"
     >
       <div className="min-w-0">
         <p className="type-meta text-text-body">{alias ? `type-${alias} → type-${role}` : `type-${role}`}</p>
@@ -433,8 +437,9 @@ function Measured({
   )
 }
 
-/** Every step of Tailwind's radius scale draws the control radius, so no class rounds more than another. */
+/** The bare class and every step of Tailwind's radius scale draw the control radius, so no class rounds more than another. */
 const RADIUS_SCALE: [name: string, paint: string][] = [
+  ["rounded", "rounded"],
   ["rounded-sm", "rounded-sm"],
   ["rounded-md", "rounded-md"],
   ["rounded-lg", "rounded-lg"],
@@ -463,8 +468,8 @@ function Shape() {
             read={(style) => radius(style.borderTopLeftRadius)}
           />
         </div>
-        <Group title={`Tailwind's scale // ${count(RADIUS_SCALE.length)} steps, one radius`}>
-          <div className="grid grid-cols-4 gap-x-4 gap-y-6 sm:grid-cols-7">
+        <Group title={`Tailwind's scale // ${count(RADIUS_SCALE.length)} classes, one radius`}>
+          <div className="grid grid-cols-4 gap-x-4 gap-y-6 lg:grid-cols-8">
             {RADIUS_SCALE.map(([name, paint]) => (
               <Measured key={name} name={name} paint={`bg-surface-raised rule-box size-12 ${paint}`} read={(style) => radius(style.borderTopLeftRadius)} />
             ))}

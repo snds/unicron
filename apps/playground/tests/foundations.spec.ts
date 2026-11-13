@@ -151,6 +151,85 @@ test("every color role resolves, on both grounds", async ({ page }) => {
   }
 })
 
+// ── nesting ────────────────────────────────────────────────────────────────────────────────────
+// A box takes the ground of its nearest `.dark` or `.light` box. A `data-theme` box with no ground
+// class of its own finds it by selector, three dark boxes deep (docs/02-tokens.md → Two axes), and
+// the stylesheet's `dark:` variant reaches as far. Each case builds the boxes inside the page and
+// reads the roles on a probe in the innermost one.
+
+type Box = { cls?: "dark" | "light"; theme?: (typeof APPS)[number] }
+const NESTING: [page: (typeof GROUNDS)[number], boxes: Box[], want: string][] = [
+  ["graphite", [{ theme: "synapse" }], "synapse/graphite"],
+  ["graphite", [{ cls: "light" }, { theme: "synapse" }], "synapse/stone"],
+  ["graphite", [{ cls: "light" }, { cls: "dark" }, { theme: "synapse" }], "synapse/graphite"],
+  ["graphite", [{ cls: "light" }, { cls: "dark" }, { cls: "light" }, { theme: "synapse" }], "synapse/stone"],
+  ["graphite", [{ cls: "light" }, { cls: "dark" }, { cls: "light" }, { cls: "dark" }, { theme: "synapse" }], "synapse/graphite"],
+  ["graphite", [{ cls: "light" }, { cls: "dark", theme: "synapse" }], "synapse/graphite"],
+  ["graphite", [{ cls: "light" }, { cls: "dark" }, { cls: "light", theme: "synapse" }], "synapse/stone"],
+  ["graphite", [{ theme: "vale" }, { theme: "synapse" }], "synapse/graphite"],
+  ["graphite", [{ cls: "light" }, { theme: "vale" }, { theme: "synapse" }], "synapse/stone"],
+  ["graphite", [{ cls: "light" }, { cls: "dark" }], "warpcore/graphite"],
+  ["stone", [{ theme: "lockdown" }], "lockdown/stone"],
+  ["stone", [{ cls: "dark" }, { theme: "lockdown" }], "lockdown/graphite"],
+  ["stone", [{ cls: "dark" }, { cls: "light" }, { theme: "lockdown" }], "lockdown/stone"],
+  ["stone", [{ cls: "dark" }, { cls: "light" }, { cls: "dark" }, { theme: "lockdown" }], "lockdown/graphite"],
+  ["stone", [{ cls: "dark" }, { cls: "light" }, { cls: "dark" }, { cls: "light" }, { cls: "dark" }, { theme: "lockdown" }], "lockdown/graphite"],
+  ["stone", [{ cls: "dark" }, { cls: "dark" }, { cls: "light" }, { cls: "light" }, { cls: "dark" }, { theme: "vale" }], "vale/graphite"],
+]
+
+const rgb = (hex: string) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`
+
+for (const ground of GROUNDS) {
+  test(`a box takes its nearest ground, nested, in a ${ground} page`, async ({ page }) => {
+    await open(page, "warpcore", ground)
+    for (const [pageGround, boxes, want] of NESTING) {
+      if (pageGround !== ground) continue
+      const name = ["html", ...boxes.map((b) => `div${b.cls ? `.${b.cls}` : ""}${b.theme ? `[${b.theme}]` : ""}`)].join(" > ")
+      const seen = await page.evaluate((boxes) => {
+        // The `dark:` variant as the stylesheet compiled it: the selector of any `dark:` rule,
+        // after its class.
+        let variant = ""
+        const walk = (rules: CSSRuleList) => {
+          for (const rule of rules) {
+            if (variant) return
+            if (rule instanceof CSSStyleRule) {
+              const m = /^\.dark\\:[\w\\/.-]+(:is\(\.dark \*\).*)$/.exec(rule.selectorText)
+              if (m && !/:(hover|focus|active|disabled)|\[|::/.test(m[1])) variant = `*${m[1]}`
+            } else if ("cssRules" in rule) walk((rule as CSSGroupingRule).cssRules)
+          }
+        }
+        for (const sheet of document.styleSheets) walk(sheet.cssRules)
+        let parent: HTMLElement = document.body
+        const outer = document.createElement("div")
+        parent.append(outer)
+        parent = outer
+        for (const box of boxes) {
+          const el = document.createElement("div")
+          if (box.cls) el.className = box.cls
+          if (box.theme) el.setAttribute("data-theme", box.theme)
+          parent.append(el)
+          parent = el
+        }
+        const probe = document.createElement("span")
+        parent.append(probe)
+        const read = (role: string) => {
+          probe.style.color = `var(--${role})`
+          return getComputedStyle(probe).color
+        }
+        const out = { ground: read("surface-ground"), fill: read("primary-fill"), body: read("text-body"), variant, dark: variant ? probe.matches(variant) : null }
+        outer.remove()
+        return out
+      }, boxes)
+      const mode = MODES[want]!
+      expect(seen.ground, `${name}: surface-ground`).toBe(rgb(mode["surface-ground"]!))
+      expect(seen.fill, `${name}: primary-fill`).toBe(rgb(mode["primary-fill"]!))
+      expect(seen.body, `${name}: text-body`).toBe(rgb(mode["text-body"]!))
+      expect(seen.variant, "the stylesheet has a dark: variant to test").not.toBe("")
+      expect(seen.dark, `${name}: the dark: variant`).toBe(want.endsWith("/graphite"))
+    }
+  })
+}
+
 // ── type ───────────────────────────────────────────────────────────────────────────────────────
 
 test("Geist and Geist Mono load", async ({ page }) => {
@@ -204,6 +283,32 @@ test("the names from before 1.0 still draw, as their new roles", async ({ page }
   expect(support.color).toBe(await roleColor(page, "support-foreground"))
 })
 
+// The page that shows the 4px system sits on it: at desktop width, where the type rows put the
+// label beside the specimen, every section, its title and every type row start on the grid.
+test.describe("at desktop width", () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
+
+  test("the foundations sit on the 4px grid", async ({ page }) => {
+    await open(page, "vale", "stone")
+    const off = await page.locator('[data-slot="foundations"]').evaluate((root) => {
+      const top0 = root.getBoundingClientRect().top
+      const boxes = root.querySelectorAll("section, section > header, h2, [data-type-role], [data-type-alias]")
+      const out: string[] = []
+      for (const el of boxes) {
+        const box = el.getBoundingClientRect()
+        const top = +(box.top - top0).toFixed(2)
+        const height = +box.height.toFixed(2)
+        if (top % 4 || height % 4) {
+          out.push(`${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""} ${el.getAttribute("data-type-role") ?? el.getAttribute("data-type-alias") ?? ""} at ${top}, ${height} tall`)
+        }
+      }
+      return { out, count: boxes.length }
+    })
+    expect(off.count).toBeGreaterThan(40)
+    expect(off.out, "boxes off the 4px grid").toEqual([])
+  })
+})
+
 // ── space, radius, stroke, size ────────────────────────────────────────────────────────────────
 
 test("spacing, radius, strokes and sizes measure what Figma says", async ({ page }) => {
@@ -223,9 +328,9 @@ test("spacing, radius, strokes and sizes measure what Figma says", async ({ page
   for (const [name, value] of Object.entries(measures)) {
     await expect(reading(page.locator(`[data-measure="${name}"]`)), name).toHaveText(value)
   }
-  // Every step of Tailwind's radius scale is the control radius.
-  for (const step of ["sm", "md", "lg", "xl", "2xl", "3xl", "4xl"]) {
-    await expect(reading(page.locator(`[data-measure="rounded-${step}"]`)), `rounded-${step}`).toHaveText("2 px")
+  // The bare `rounded` and every step of Tailwind's radius scale is the control radius.
+  for (const name of ["rounded", ...["sm", "md", "lg", "xl", "2xl", "3xl", "4xl"].map((step) => `rounded-${step}`)]) {
+    await expect(reading(page.locator(`[data-measure="${name}"]`)), name).toHaveText("2 px")
   }
 })
 
