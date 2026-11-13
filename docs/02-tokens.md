@@ -1,50 +1,321 @@
 # 02 · Tokens
 
-Source of truth: `packages/tokens/tokens/*.json`, in the
+Source of truth: the JSON files in `packages/tokens/tokens/`, in the
 [DTCG](https://tr.designtokens.org/format/) format. `pnpm tokens:build` writes
 `packages/tokens/dist/tokens.css` and `dist/tokens.json`. Nothing reads the JSON directly at
 runtime; everything reads the CSS custom properties.
 
-## Three tiers
+The colour, type and size values are Figma's (the file "Unicron explorations", read on
+2026-11-13). `pnpm test` fails if a built value differs from Figma's
+([Figma parity](#figma-parity)).
+
+## Two axes
+
+A screen has an **app** and a **ground**. They are set apart, on the page's root:
+
+| Axis | Values | How it is set |
+|---|---|---|
+| App | `warpcore`, `vale`, `lockdown`, `synapse` | `data-theme="<app>"` |
+| Ground | graphite (dark), stone (light) | the `dark` class for graphite; nothing, or `light`, for stone |
+
+```html
+<html data-theme="vale" class="dark">   <!-- Figma's "vale / graphite" -->
+<html data-theme="vale">                <!-- "vale / stone" -->
+<html class="dark">                     <!-- no app: the default, warpcore / graphite -->
+```
+
+That gives Figma's 8 modes. An app sets `data-theme` once, in its HTML, and toggles `dark` as it
+always did (`next-themes` with `attribute="class"` does this). A component never sets either.
+
+Each app declares two colours: a **primary** (its identity) and a **secondary** (live activity
+and agents). Its neutrals are tinted by the primary's hue.
+
+| App | Primary | Live |
+|---|---|---|
+| Warpcore | blue-violet (hue 277) | plasma cyan (215) |
+| Vale | Japanese indigo (228) | fog teal (165) |
+| Lockdown | signal green (152) | steel blue (245). A proposal in the decision record, not confirmed |
+| Synapse | magenta (352) | synaptic teal (195) |
+
+**Nesting.** Either axis can also be set on a box inside the page: a `dark` or `light` box, a
+`data-theme` box, or both on one element. One level of ground nesting is supported, the same
+limit as `@unicron/ui`'s `dark:` variant: a `.dark` box inside a `.light` box inside a dark page
+is not.
+
+## Tiers and files
 
 | Tier | File | CSS prefix | Holds | Example |
 |---|---|---|---|---|
-| 1 Global | `global.json` | `--g-` | Raw values: the neutral ramp, accent hues, bare hue angles, radius base, durations, easing, font stacks | `--g-neutral-900: oklch(0.185 0.008 260)` |
-| 2 Semantic | `semantic.json` | `--` | Roles. Exactly the shadcn/ui contract plus the sidebar contract. Light = `$value`; dark = `$extensions["unicron.modes"].dark` | `--primary: var(--g-neutral-900)` / `.dark { --primary: var(--g-neutral-100) }` |
-| 3 Component | `component.json` | `--c-` | Knobs the core primitives read; they alias tier 2 or hold per-component sizes | `--c-icon-fill: 0`, `--c-sheet-regular-width: 24rem` |
+| 1 Global | `global.json` | `--g-` | Raw values: the theme slots (default app), the shared needs-you, critical and scrim colours, sizes, strokes, radius base, durations, easing, font stacks, and the legacy ramps | `--g-theme-stone-ground: #EFF0F5` |
+| 1, per app | `themes/<app>.json` | `--g-theme-` | The same 28 theme slots, with that app's values | `[data-theme="vale"] { --g-theme-stone-ground: #ECF1F4 }` |
+| 2 Semantic | `semantic.json` | `--` | Roles. Figma's theme roles, plus the shadcn/ui and sidebar contracts as aliases of them. Light = `$value`; dark = `$extensions["unicron.modes"].dark` | `--surface-ground: var(--g-theme-stone-ground)` / `.dark { --surface-ground: var(--g-theme-graphite-ground) }` |
+| Type roles | `type.json` | `--type-` | 23 text styles, five variables each | `--type-body-size: 1rem` |
+| 3 Component | `component.json` and `component/<area>.json` | `--c-` | Knobs the core primitives read; they alias tier 2 or hold per-component sizes | `--c-scrim-sheet: 0.5` |
 
-Only tier 2 swaps between light and dark. Tier 1 is theme-agnostic. Tier 3 follows tier 2 through
-`var()` and may carry a dark override for perceptual corrections only (icons are graded down
-slightly on dark surfaces).
+The app axis lives in tier 1 and the ground axis in tier 2. Tier 3 follows tier 2 through `var()`.
 
 ## Naming
 
-- The CSS name is the tier prefix plus the JSON path joined with `-`: `neutral.900` in
-  `global.json` → `--g-neutral-900`; `icon.fill` in `component.json` → `--c-icon-fill`.
-- Semantic names follow shadcn exactly (`background`, `muted-foreground`, `ring`, …) so any
-  shadcn component drops in unchanged.
-- References use DTCG syntax and are tier-agnostic: `{neutral.0}`, `{foreground}`, `{icon.fill}`.
-  The builder resolves them to `var(--…)` so the cascade stays live.
+- The CSS name is the tier prefix plus the JSON path joined with `-`: `theme.stone.ground` in
+  `global.json` → `--g-theme-stone-ground`; `scrim.sheet` in `component.json` → `--c-scrim-sheet`.
+- A canonical role is named as in Figma, with the slash as a dash: `surface/ground` →
+  `--surface-ground`, `primary/on-fill` → `--primary-on-fill`.
+- The shadcn names stay (`background`, `muted-foreground`, `ring`, …), so a shadcn component and
+  every existing class keep working.
+- References use DTCG syntax: `{theme.stone.ground}`, `{text-body}`, `{scrim.sheet}`. The builder
+  resolves them to `var(--…)` so the cascade stays live.
 
-## Modes
+## Theme slots (tier 1)
 
-Light and dark are modes of the semantic tier, kept on the token itself:
+A slot is one Figma primitive: one colour, for one app, on one ground. There are 14 per ground,
+so 28 per app. `global.json` holds the default app's values (warpcore), so every slot exists with
+no `data-theme`. Each `themes/<app>.json` re-declares all 28 and nothing else, as raw hex, with
+the Figma variable id in each `$description`.
 
-```json
-"primary": {
-  "$type": "color",
-  "$value": "{neutral.900}",
-  "$extensions": { "unicron.modes": { "dark": "{neutral.100}" } }
-}
+| Slot | Figma primitive | Read by the role |
+|---|---|---|
+| `ground` | `bg` | `surface-ground` |
+| `raised` | `surf` | `surface-raised` |
+| `rule` | `rule` | `line-rule` |
+| `grid-dot` | `dot` | `line-grid-dot` |
+| `faint` | `faint` | `text-faint` |
+| `label` | `mute` | `text-label` |
+| `secondary` | `sub` | `text-secondary` |
+| `body` | `ink` | `text-body` |
+| `primary-fill` | `org` | `primary-fill` |
+| `primary-on-fill` | `onO` | `primary-on-fill` |
+| `primary-text` | `ptext` | `primary-text` |
+| `primary-soft` | `psoft` | `primary-soft` |
+| `primary-display` | `pdisp` | `primary-display` |
+| `live` | `sec` | `secondary-live` |
+
+The CSS names are `--g-theme-graphite-<slot>` and `--g-theme-stone-<slot>`. Only tier 2 reads a
+slot.
+
+Shared by every app, so not slots (also in `global.json`):
+
+| Token | Value |
+|---|---|
+| `needs-you.fill`, `needs-you.on-fill` | `#EDE54A`, `#1C1C1C`, on both grounds |
+| `critical.{fill, on-fill, text, soft}.{graphite, stone}` | one red set per ground |
+| `scrim.graphite`, `scrim.stone` | `#000000`; `#141618` at 64% alpha, stored in the colour as Figma stores it |
+
+In `dist/tokens.css` the order is: `:root { …tier 1, with the default slots… }`, then one
+`[data-theme="<app>"] { …28 slots… }` block per app, then the type roles, then tiers 2 and 3.
+
+## Roles (tier 2)
+
+### Figma's roles
+
+Each reads its stone slot in light and its graphite slot in dark. Every one is a Tailwind colour
+under its own name, so the class is the utility prefix plus the role: `bg-surface-ground`,
+`text-text-label`, `border-line-rule`.
+
+| Figma role | CSS variable | Tailwind (examples) | Use |
+|---|---|---|---|
+| `surface/ground` | `--surface-ground` | `bg-surface-ground` | The page. Also the label on an active Filter Chip |
+| `surface/raised` | `--surface-raised` | `bg-surface-raised` | Raised controls and cards: fields, menus, dialogs, the tab bar, a chat bubble |
+| `surface/scrim` | `--surface-scrim` | `bg-surface-scrim` | The dim behind sheets, dialogs and menus ([Scrim](#scrim)) |
+| `line/rule` | `--line-rule` | `border-line-rule`, `bg-line-rule` | Hairline rules and 1px borders; the empty part of a progress bar |
+| `line/grid-dot` | `--line-grid-dot` | `bg-line-grid-dot` | The dot grid; a sheet's grabber |
+| `text/body` | `--text-body` | `text-text-body` | Main text, icons by default, the unread mark. APCA Lc 90 on the ground |
+| `text/secondary` | `--text-secondary` | `text-text-secondary` | Supporting text: helper lines, descriptions. Lc 75 |
+| `text/label` | `--text-label` | `text-text-label` | Labels, meta, overlines, counts, placeholders. Lc 60 |
+| `text/faint` | `--text-faint` | `text-text-faint` | The faintest ink: an index number. No contrast target, so never the only way to read something |
+| `primary/fill` | `--primary-fill` | `bg-primary-fill` | The identity as a solid: the one primary action, the selected-row edge, the tab indicator, a field's focus border |
+| `primary/on-fill` | `--primary-on-fill` | `text-primary-on-fill` | Text on `primary-fill`. Lc 75 |
+| `primary/text` | `--primary-text` | `text-primary-text` | The identity as small text, or an icon on `primary-soft`. Lc 60 |
+| `primary/soft` | `--primary-soft` | `bg-primary-soft` | The quiet identity tint: a selected row, the current nav item |
+| `primary/display` | `--primary-display` | `text-primary-display` | The identity as large type, 36px and up only. Lc 45 |
+| `secondary/live` | `--secondary-live` | `text-secondary-live`, `bg-secondary-live` | Live activity and agents only: live status, the filled part of a progress bar |
+| `needs-you/fill` | `--needs-you-fill` | `bg-needs-you-fill` | The yellow block that waits on the person. At most one per screen |
+| `needs-you/on-fill` | `--needs-you-on-fill` | `text-needs-you-on-fill` | Text on the yellow; the fill of the solid needs-you button |
+| `critical/fill` | `--critical-fill` | `bg-critical-fill` | Error as a solid: the destructive button, an invalid field's 2px border |
+| `critical/on-fill` | `--critical-on-fill` | `text-critical-on-fill` | Text on `critical-fill` |
+| `critical/text` | `--critical-text` | `text-critical-text` | Error text |
+| `critical/soft` | `--critical-soft` | `bg-critical-soft` | A critical banner's background |
+
+Two names to keep apart. `text-text-secondary` is Figma's secondary **text**. `bg-secondary` and
+`text-secondary` are the shadcn neutral **fill**, an alias of `surface-raised`. And
+`secondary-live` is the live colour, not that fill.
+
+### State and diff roles
+
+Figma draws no states. These are the system's proposal (build contract §6).
+
+| Role | Value | Tailwind | Use |
+|---|---|---|---|
+| `state-hover` | 6% of `text-body`, over whatever is underneath | `bg-state-hover` | Hover on a neutral or transparent control or row |
+| `state-pressed` | 10% of `text-body` | `bg-state-pressed` | Pressed |
+| `diff-added` | `primary-soft` | `bg-diff-added` | The wash behind an added line. The `+` mark always shows |
+| `diff-removed` | `critical-soft` | `bg-diff-removed` | The wash behind a removed line. The `−` mark always shows |
+
+A solid fill (`primary-fill`, `critical-fill`, the needs-you button) shows hover as itself at 90%
+and pressed at 80%. Selected is `primary-soft` with a 2px `primary-fill` edge, never a solid.
+
+### The shadcn contract, as aliases
+
+Every name from before 1.0 still exists and still makes its Tailwind class. Each now points at a
+Figma role. `scripts/check.mjs` pins each line of this table.
+
+| Role (Tailwind class) | Now |
+|---|---|
+| `background` (`bg-background`) | `surface-ground` |
+| `foreground`, `card-foreground`, `popover-foreground`, `accent-foreground`, `secondary-foreground` | `text-body` |
+| `card`, `popover`, `muted`, `secondary` | `surface-raised` |
+| `accent` | 8% of `text-body` in `surface-raised`: the opaque hover and highlight fill |
+| `support-foreground` | `text-secondary` |
+| `muted-foreground`, `muted-foreground-on-fill` | `text-label` |
+| `faint-foreground` (new) | `text-faint` |
+| `primary` / `primary-foreground` | `primary-fill` / `primary-on-fill` |
+| `border` | `line-rule` |
+| `input` | `line-rule`. A field's resting border is a hairline now ([Contrast](#contrast)) |
+| `ring` | `text-body`: focus is a solid 2px ink outline, offset 2px |
+| `destructive` | `critical-text` |
+| `protected` / `protected-foreground` | `text-body` / `surface-ground` |
+| `sidebar` | `surface-ground` |
+| `sidebar-foreground` | `text-secondary` |
+| `sidebar-accent` / `sidebar-accent-foreground` | `primary-soft` / `text-body` |
+| `sidebar-border`, `sidebar-ring` | `line-rule`, `ring` |
+| `sidebar-primary` / `sidebar-primary-foreground` | `primary` / `primary-foreground` |
+
+**`primary` changed meaning.** Before 1.0 it was near-black (the strongest ink). It is now the
+app's colour, for the one primary action of a screen. Code that used `text-primary` or
+`bg-primary` to mean "strongest ink" wants `text-foreground` or `bg-foreground`.
+
+### Status roles
+
+| Role | Means | Fill (`bg-*`) | Text (`text-*-foreground`) | Wash (`bg-*-surface`) |
+|---|---|---|---|---|
+| `running` | working now | `secondary-live` | `secondary-live` | 14% of `secondary-live` in the ground |
+| `attention` | waiting on the person | `needs-you-fill`, the yellow, on both grounds | amber (`amber.600`) on stone, where the yellow does not read; the yellow on graphite | pale amber (`amber.50`) on stone; 14% of the yellow in the ground on graphite |
+| `success` | done, worked | `green.500` / `400` | `green.600` / `300` | `green.50` / `900` |
+| `warning` | something is wrong | `amber.550` / `300`, under `warning-foreground` (white / near-black) | — | — |
+| `info` | for your information | `blue.550` / `300`, under `info-foreground` (white / near-black) | — | — |
+
+- `running` and `attention` follow the app and the direction. `success`, `warning` and `info`
+  keep their accent ramps, the same in every app.
+- `warning` and `info` were re-picked at 1.0. Text on a fill went from Lc 60 to Lc 75, which the
+  old pairs missed (62 and 72). The light fills are darker and take a white label; the dark
+  fills are lighter and take a near-black one. Both also read as an ink on the ground (Lc 60 or
+  more), for a warning glyph or a digit.
+- `attention` is not `warning`. `warning` says something is wrong; `attention` says the person is
+  needed. Failed is `destructive`.
+- Colour is never the only cue. A status also differs by shape or motion (`StatusOrb`).
+- The yellow on stone is as light as the ground. A needs-you block reads there by its hue and
+  its dark text, but a small yellow mark does not: give it a shape, or use
+  `text-attention-foreground`.
+
+## How the two axes resolve
+
+A custom property keeps the value it computed on the element that declared it. So
+`--background: var(--surface-ground)`, declared once on `:root`, would stay the root's colour
+inside a `.dark` box. The build therefore writes:
+
+- every colour of tiers 2 and 3 in **both** ground blocks, even when its expression is the same
+  in both (an alias has to be declared again wherever its target changes);
+- both ground blocks on `[data-theme]` as well, so a themed box re-reads its slots on the ground
+  it sits on.
+
+```css
+:root, .light, [data-theme]                               { /* tiers 2 and 3, stone */ }
+.dark, .dark [data-theme]:not(.light):not(.dark .light *) { /* tiers 2 and 3, graphite */ }
 ```
 
-The builder emits `:root, .light { … }` for light and `.dark { … }` for dark. Apps switch themes by
-toggling the `dark` class on `<html>` (`next-themes` with `attribute="class"` does this).
+An app that re-points a core role in its own layer (`--sidebar: var(--surface-chrome)`) and also
+nests themed boxes repeats the re-point on `[data-theme]`
+([App extension layer](#app-extension-layer)).
 
-A box can hold the other mode inside a page. Put `dark` on it inside a light page, or `light` on it
-inside a dark page (a light preview, the playground's light column). `@unicron/ui`'s `dark:` variant
-stops at the nearest `.light`, so its dark-only styles don't leak in either. One level of nesting is
-supported: a `.dark` box inside a `.light` box inside a dark page is not.
+## Type roles
+
+23 roles, one set for every app and both grounds, in `tokens/type.json` as DTCG typography
+composites. The build emits five variables per role:
+
+```css
+--type-<role>-family    /* var(--g-font-sans) or var(--g-font-mono) */
+--type-<role>-weight
+--type-<role>-size      /* rem */
+--type-<role>-leading   /* rem; always a multiple of 4px */
+--type-<role>-tracking  /* em */
+```
+
+`@unicron/ui`'s stylesheet turns each role into one `type-<role>` utility. Components use those,
+never a raw `text-sm` or `font-medium`.
+
+| Role | Family | Weight | Size / line height (px) | Tracking | For |
+|---|---|---|---|---|---|
+| `display` | Geist | 700 | 72 / 68 | -0.04em | Empty-state hero, big moments |
+| `display-compact` | Geist | 700 | 48 / 48 | -0.03em | The compact display size |
+| `title` | Geist | 700 | 32 / 36 | -0.015em | Section and view titles |
+| `lead` | Geist | 500 | 24 / 32 | -0.01em | An opening paragraph; sheet and dialog titles |
+| `subtitle` | Geist | 500 | 18 / 28 | -0.005em | Titles in panels and cards; phone top-bar titles |
+| `body` | Geist | 400 | 16 / 24 | 0 | Default reading text |
+| `body-strong` | Geist | 500 | 16 / 24 | 0 | Emphasis within body |
+| `response` | Geist | 400 | 17 / 28 | 0 | Model output |
+| `ui` | Geist | 500 | 15 / 20 | 0 | Controls, buttons, menus |
+| `ui-emphasis` | Geist | 600 | 15 / 20 | 0 | Emphasized control text |
+| `label` | Geist | 500 | 14 / 20 | 0 | Form labels, tabs |
+| `caption` | Geist | 400 | 13 / 20 | 0 | Supporting text under media or tables |
+| `overline` | Geist Mono | 500 | 11 / 16 | 0.04em | The small label above a title. Upper case: the only role with a case |
+| `folio` | Geist Mono | 500 | 12 / 20 | 0 | Running headers, step markers |
+| `meta` | Geist Mono | 400 | 12 / 20 | 0 | Timestamps, model name, counts |
+| `code-inline` | Geist Mono | 400 | 15 / 20 | 0 | Inline code |
+| `code-display` | Geist Mono | 500 | 36 / 40 | 0.12em | Large codes, such as a one-time code |
+| `number-hero` | Geist | 700 | 168 / 148 | -0.05em | Hero numbers |
+| `number-metric` | Geist | 700 | 44 / 44 | -0.02em | Metric values |
+| `number-index` | Geist | 700 | 28 / 32 | -0.02em | Index numerals (item 03) |
+| `number-count` | Geist Mono | 400 | 24 / 28 | 0 | Counts |
+| `brand-wordmark` | Geist | 700 | 13 / 16 | 0.12em | The app wordmark in the App Lockup |
+| `icon-glyph` | Geist | 400 | 32 / 32 | 0 | The letter in a placeholder mark |
+
+- A line box shorter than its type is intended on `display` (72 / 68) and `number-hero`
+  (168 / 148).
+- Case and figure style are not variables. The stylesheet sets them: `type-overline` is upper
+  case; the number roles and the mono roles use tabular figures.
+- No role sets a colour.
+- The utilities from before 1.0 stay as deprecated aliases in the stylesheet:
+  `type-page-title` → `title`, `type-section-title` → `subtitle`, `type-group-title` → `label`,
+  `type-support` → `caption`. `type-body`, `type-body-strong`, `type-meta` and `type-overline`
+  keep their names and take the new values.
+
+**Fonts.** `font.sans` is `"Geist Variable", Geist, ui-sans-serif, system-ui, sans-serif` and
+`font.mono` is `"Geist Mono Variable", "Geist Mono", ui-monospace, SFMono-Regular, Menlo,
+monospace`. The tokens only name the families. `@unicron/ui` loads the font files.
+
+## Sizes, radius, strokes, spacing
+
+| Figma | Tier 1 | Role | Tailwind |
+|---|---|---|---|
+| `size/control` 48 | `size.control` 3rem | `--size-control` | `h-control`, `size-control`, `min-h-control` |
+| `size/touch-min` 44 | `size.touch-min` 2.75rem | `--size-touch-min` | `min-h-touch-min`, `size-touch-min` |
+| `radius/control` 2 | `radius.base` 0.125rem | `--radius` | every step from `rounded-xs` to `rounded-4xl` is this one 2px corner |
+| `radius/none`, `radius/round` | — | — | Tailwind's own `rounded-none`, `rounded-full` |
+| a 1px stroke | `stroke.rule` 1px | `--stroke-rule` | — |
+| a 2px stroke | `stroke.emphasis` 2px | `--stroke-emphasis` | — |
+
+- `size-control` is the height of every floating control, the tab bar, the status strip and a
+  text field. `size-touch-min` is the floor for a touch target. Every other fixed size is a tier 3
+  knob of the component that draws it.
+- `rounded-full` is no longer a control shape. Marks (unread, live, an indicator) are squares.
+- A stroke never adds height. On a part that hugs its content, a rule is an inset shadow, not a
+  border. `@unicron/ui`'s stylesheet has the utilities.
+- **Spacing has no tokens.** Tailwind's 4px unit is Figma's `space/004`, so `gap-3` is
+  `space/012`. Layout spacing is a multiple of 4. The half steps 2, 6, 10 and 14 (`0.5`, `1.5`,
+  `2.5`, `3.5`) are for inside a component only.
+
+## Scrim
+
+`bg-surface-scrim` is the colour: black on graphite, `#141618` at 64% on stone. How much of it
+shows is a tier 3 knob, the same number on both grounds:
+
+| Knob | Value | Behind |
+|---|---|---|
+| `--c-scrim-sheet` | 0.5 | a phone sheet |
+| `--c-scrim-dialog` | 0.6 | a desktop dialog |
+| `--c-scrim-menu` | 0.32 | a menu that dims the screen (quick create) |
+
+On stone the two multiply, so a sheet's scrim draws at about 32%. A scrim is never opaque and
+never blurred: no `backdrop-blur` anywhere.
 
 ## Motion
 
@@ -129,130 +400,199 @@ and opacity, at `--motion-fast`; `animate-spin`, `animate-pulse`, `animate-ping`
 `animate-bounce` stop; and `Spinner` stays as a still glyph at reduced opacity, so it still reads as
 busy. A component with its own loop stills it in the same layer, by `data-slot`.
 
-## Status roles
-
-Agent UIs need "done", "waiting on you" and "working" to mean one thing in every app, whatever its
-accent. Three roles, each with three steps:
-
-| Role | Hue | Means | Fill (`bg-*`) | Foreground (`text-*-foreground`) | Surface (`bg-*-surface`) |
-|---|---|---|---|---|---|
-| `success` | green | done, worked | `green.500` / `400` | `green.600` / `300` | `green.50` / `900` |
-| `attention` | amber | waiting on the person | `amber.500` / `400` | `amber.600` / `300` | `amber.50` / `900` |
-| `running` | blue | working now | `blue.500` / `400` | `blue.600` / `300` | `blue.50` / `900` |
-
-- The **fill** is a dot, an orb or a bar, and carries no text: Lc 30 or more against the page, a
-  card, the sidebar, a selected row and its own surface.
-- The **foreground** is ink (a status word, a count, an icon): Lc 75 or more on the page, a card,
-  the sidebar, a selected row and its own surface, in each mode. Unlike `warning-foreground`, it is
-  not a label for the fill.
-- `attention` is not `warning`. `warning` says something is wrong; `attention` says the person is
-  needed. Failed is `destructive`.
-- Colour is never the only cue. A status also differs by shape or motion (`StatusOrb`).
-
 ## The Tailwind map
 
-`dist/tokens.css` ends with an `@theme inline { … }` block that exposes tier 2 to Tailwind v4
-utilities: every semantic colour becomes `--color-<name>: var(--<name>)` (so `bg-background`,
-`text-muted-foreground`), the fonts become `--font-sans` / `--font-mono` / `--font-heading`, and the
-radius scale is derived from `--radius` using the multipliers in
-`semantic.json → $extensions["unicron.theme"].radius`.
+`dist/tokens.css` ends with an `@theme inline { … }` block that exposes tier 2 to Tailwind v4:
+
+- every semantic colour as `--color-<name>: var(--<name>)`, so `bg-surface-ground`,
+  `text-text-label`, `bg-background`, `text-muted-foreground`;
+- the fonts as `--font-sans`, `--font-mono`, `--font-heading`;
+- the radius scale, `--radius-xs` to `--radius-4xl`, each `var(--radius)`;
+- the two sizes as `--spacing-control` and `--spacing-touch-min`, which Tailwind's sizing and
+  spacing utilities read;
+- the default transition and the `ease-*` utilities ([Motion](#motion)).
+
+The type roles are not in the map: `@unicron/ui` writes their utilities by hand.
 
 ## Contrast
 
-Contrast is judged by APCA first; WCAG 2.x is the fallback, printed beside every pair. The method
-comes from [Emphasis Engine](https://github.com/snds/emphasis-engine) (`docs/architecture.md`):
+Contrast is judged by APCA first; WCAG 2.x is kept for borders and rings. The method comes from
+[Emphasis Engine](https://github.com/snds/emphasis-engine) (`docs/architecture.md`):
 **measure outcomes, not variables.**
 
 - **A recipe is a pair as a component paints it,** through the component's own opacity modifiers
-  and mixes (`bg-input/30`, `ring-ring/50`, `hover:bg-primary/80`, `bg-destructive/10`), over the
-  stack it sits on. A role painted by five components is measured five ways.
-- **Its element kind sets its floor,** not the role or the system:
+  and mixes (a hover wash, a solid at 90%), over the stack it sits on.
+- **Every recipe is measured in all 8 modes:** 4 apps × 2 grounds.
+- **Its element kind sets its floor.** The text floors are the direction's targets, the ones
+  Figma's values were solved to:
 
   | Element kind | Floor | Examples |
   |---|---|---|
-  | Reading text (primary, secondary) | APCA Lc 75, Bronze's mark for text under 16px (Lc 60 at 16px+) | body, descriptions, placeholders, shortcut keys, inactive tabs |
-  | A label on a fill or tint | APCA Lc 60; Lc 75 reported (★) as the target | buttons, badges, status fills, destructive labels |
-  | Solid | APCA Lc 30 against the page | `bg-primary` |
-  | Control border | 3:1 (WCAG 1.4.11): a field has to be findable | `border-input` |
-  | Focus | 3:1 as drawn, the ring at 50% | `ring-ring/50` |
-  | Surface, state, separator | reported as OKLCH ΔL | cards, hovers, `border-border` |
+  | `text-body` | APCA Lc 90 | main text |
+  | `text-secondary` | Lc 75 | descriptions, helper lines |
+  | `text-label` | Lc 60 | labels, meta, and any coloured text (`primary-text`, `secondary-live`, `critical-text`, a status word) |
+  | `text-display` | Lc 45 | `primary-display`, at 36px and up |
+  | `on-fill` | Lc 75 | text on `primary-fill`, `critical-fill`, the yellow, `warning`, `info` |
+  | `solid` | Lc 30 against what it sits on | a fill, a mark, a bar |
+  | `focus`, `border-error` | 3:1 (WCAG 1.4.11) | the focus ring; a field's focus border and error border |
+  | `text-faint`, `border-rest`, `border-decorative`, `state`, `surface` | reported, not gated | the faintest ink; a field's resting border; separators; how far a hover or a surface moves |
 
-  Non-text keeps the WCAG ratio because APCA has no calibrated target for 1px lines and rings.
-- **Text roles sit at emphasis levels, not only above a floor.** Emphasis Engine places primary
-  text at text level 5 and secondary at level 3 (`src/engine/intent.ts`). Floors alone let
-  secondary drift up to the first step that cleared every surface, muted fills included, until it
-  read Lc 87 under primary's 106: one level, not two. Since then there are three text levels,
-  primary (5), support (4) and secondary (3), and `contrast.mjs` gates each adjacent pair at least
-  Lc 10 apart, coded, on every surface they share. The coded gap stands in for the drawn one:
-  rendering takes more from 13px support text than from 14px body, so equal drawn steps need
-  uneven coded ones, and apps check the levels as drawn (Synapse's `scripts/emphasis-check.sh`
-  measures WebKit's pixels: at least 12 apart, and no level overlapping the next).
-- **On a fill, an ink re-points for its content.** A fill (`bg-muted`, `bg-accent`, `bg-secondary`,
-  `bg-sidebar-accent`, a highlighted or selected item, a key) sets `--muted-foreground` to
-  `--muted-foreground-on-fill` for what's inside it (`@unicron/ui`'s styles, at zero specificity).
-  Secondary text keeps Lc 75 on the fill without dragging the role up everywhere else, and
-  components and apps keep writing `text-muted-foreground`.
-- **A role points at the weakest ramp step that clears every recipe it paints.** When no step
-  does, a tier-1 step is added beside the ramp (`neutral.150`, `neutral.250`, `neutral.450`, `neutral.550`, `neutral.650`, `red.300`, `red.600`,
-  `white-alpha.35`); existing tier-1 values never change.
-- **Accent hues have text steps.** Apps assign the accent hues and draw them as text too, so each
-  hue has a `600` (light) and a `300` (dark) held to reading text on `neutral.0`, `.50` and `.100`,
-  and on `.950`, `.900` and `.800`. Point an app's text role at those, and its fills and dots at
-  `500` / `400`.
-- **Disabled controls are exempt.** WCAG 2 exempts text and borders of disabled controls (1.4.3,
-  1.4.11: "part of an inactive user interface component"). A disabled control here draws at 50%
-  opacity, so its label reads about Lc 35 in dark mode, under every floor above, on purpose: dimming
-  is how it says it can't be used. No recipe in `contrast.mjs` measures a disabled state. Don't
-  leave a control disabled with no other cue; say why near it, or keep it enabled and explain on
-  press.
-- **States differ from each other, not only from rest.** Hover, pressed (`active:`) and selected
-  are three different fills. A pressed fill can't sink a label under its floor, so destructive
-  presses halfway between rest and hover (`/15`, dark `/25`) rather than past it, and the default
-  button presses to `bg-primary/90`. The pressed fills are recipes in the gate.
-- **One job per role.** When a role serves two jobs that want different values, the component is
-  pointed at the role that matches the second job: disabled fields fill with `muted`, not
-  `input/50`; the button-group divider is a `border`, not an `input`.
+- **A field's resting border is reported, not gated.** Figma draws it as a hairline
+  (`line-rule`, 1.3:1 to 1.4:1). Before 1.0 the gate held control borders to 3:1. A field is found
+  by its `surface-raised` box; its focus and error borders are the ones held to 3:1.
+- **The three neutral text levels read apart.** Body, secondary and label are each gated at
+  least Lc 10 from the next, on every surface they share (the ground, a raised surface, a
+  selected row).
+- **A plain alias is not measured twice.** `check.mjs` pins each shadcn name to its Figma role,
+  and the role is measured.
+- **Disabled controls are exempt.** A disabled control draws at 50% opacity, so its label reads
+  under every floor above, on purpose (WCAG 2 exempts inactive controls). No recipe measures a
+  disabled state. Do not leave a control disabled with no other cue.
+- **The legacy accent ramps keep their text steps.** Apps draw the accent hues as text on the
+  legacy neutral ramp: `600` in light and `300` in dark (red: `700` and `200`), still held to
+  Lc 75.
 
-`packages/tokens/scripts/contrast.mjs` (run by `pnpm --filter @unicron/tokens test`, so in CI)
-resolves every role from `dist/tokens.css`, measures each recipe in both modes, prints the measure,
-its floor, the WCAG ratio and the APCA Lc, and fails on a miss. A waived recipe is listed in the
-script with its reason, and a waiver that starts passing fails the run. A new component recipe goes
-in the table when the component lands.
+### Exceptions: Figma values under a floor
+
+Figma is the source of truth for the theme values. When a Figma value misses a floor, the value
+is not changed and the miss is not hidden. `scripts/contrast.mjs` lists it by name, with what it
+measures in each mode, under "Exceptions": reported, not gated. The list has to match the misses
+exactly, so an exception that starts passing fails the run.
+
+The cause is one thing. Figma solved each text role against the **ground**, with almost no room
+to spare: `text-label` measures Lc 60.4 to 60.7 there. On any surface nearer the text's own
+lightness (a raised surface, a selected row, a hover wash) it lands just under.
+
+As of 2026-11-13 the run lists 189 measures in 45 recipes. In short:
+
+| What | Where | Measures | Floor |
+|---|---|---|---|
+| `text-label` on `surface-raised` (a field's placeholder) | graphite | Lc 59.3 to 59.6 | 60 |
+| `text-label`, `primary-text`, `secondary-live` on `primary-soft` | both | Lc 56.5 to 59.9 | 60 |
+| `text-body` on `primary-soft` and on `critical-soft` | stone | Lc 85.1 to 87.5 | 90 |
+| `primary-text`, `secondary-live`, `critical-text` on `surface-raised` | graphite | Lc 59.0 to 59.97 | 60 |
+| `critical-text` on `critical-soft` | graphite | Lc 58.2 | 60 |
+| `primary-display` on `surface-raised` | graphite | Lc 44.0 to 44.6 | 45 |
+| body over secondary text | stone | Lc 9.6 to 9.8 apart | 10 |
+| `primary-fill` and `critical-fill` as solids | graphite | Lc 19.3 to 26.8 | 30 |
+| the same fills as a field's focus and error border | graphite | 2.59:1 to 2.97:1 | 3:1 |
+| `needs-you-fill` as a solid, and so `attention` as a mark | stone | Lc 0 to 11.9 | 30 |
+| text on a hover or pressed wash, and on `accent` | both | up to Lc 12 under | 90, 75, 60 |
+| `primary-on-fill` on a pressed fill (80%) | vale and lockdown stone | Lc 72.6 to 74.5 | 75 |
+| `running-foreground` on `running-surface` | both | Lc 55.6 to 58.6 | 60 |
+
+Run `pnpm --filter @unicron/tokens contrast` for the full list. These are Sean's to decide: change
+a value in Figma, accept the miss, or change a floor.
+
+### Must differ
+
+Two watch items from the decision record are measured and reported, not gated: Lockdown's green
+beside `success`, and Synapse's magenta beside `critical`. Each row gives the OKLab distance
+(ΔEOK), the lightness gap and the hue gap. As a reading aid, under ΔEOK 0.05 two colours read as
+the same at a glance, and under 0.15 as close. Today Lockdown's `primary-soft` and
+`success-surface` on graphite are 0.007 apart, and Synapse's `primary-soft` and `critical-soft`
+are 0.033 apart on both grounds.
+
+### Recipes, and where they live
+
+The core recipes (the roles on the surfaces they share, and the states) are in
+`packages/tokens/scripts/contrast.mjs`. Each component area adds its own file,
+`packages/tokens/scripts/recipes/<area>.mjs`, when its components land; the script loads every
+file in that folder. The format is in
+[`scripts/recipes/README.md`](../packages/tokens/scripts/recipes/README.md).
+
+`pnpm --filter @unicron/tokens test` runs it (so CI does). It prints one line per recipe, with the
+measure in each of the 8 modes, then the exceptions and the must-differ rows, and fails on any
+miss that is not a named exception. `--rows` adds the drawn colours, the WCAG ratio and the APCA
+Lc for every recipe and mode.
+
+## Figma parity
+
+`packages/tokens/tokens/figma/theme-2026-11.json` is a checked-in snapshot of the Figma read-out:
+the 21 theme roles in the 8 modes, the 23 text styles, and the space, radius and size numbers.
+`scripts/figma-parity.mjs` (part of `pnpm test`) resolves the built CSS as a browser would and
+fails if anything differs:
+
+- every theme role in every mode, hex and alpha, and the defaults against Figma's default app;
+- every source slot's hex, and the Figma variable id in its `$description`;
+- every type role: family, weight, size, line height, letter spacing, case;
+- `size/control`, `size/touch-min`, `radius/control`;
+- every spacing step against Tailwind's 4px unit.
+
+A value changes in Figma first. Then a new read-out, a new snapshot
+(`node scripts/figma-snapshot.mjs <figma-tokens.json>`), and the sources follow until the check
+passes. The snapshot is never edited by hand.
 
 ## How to add a token
 
-1. Decide the tier. A raw value → `global.json`. A role every product shares → `semantic.json`.
-   A knob a core primitive reads → `component.json`. A role only your product has → your app
-   extension file, not this package.
-2. Add the token with `$type` and `$value` (a reference where possible), and a `dark` mode for
-   semantic colours.
-3. Run `pnpm tokens:build && pnpm test && pnpm lint:tokens`. The check fails if a core semantic
-   name is missing, if a reference does not resolve, if an app role leaked into the core, or if a
-   role pair in the contrast table is under its APCA floor (see [Contrast](#contrast)). The
-   lint fails if a tier-2 or tier-3 colour is a raw value instead of a `{reference}` (tier 3 may
-   hold literal sizes and axis numbers), or if a primitive in `packages/ui/src` carries a colour
-   literal.
+1. Decide where it goes.
+   - A raw value → `global.json`.
+   - A role every product shares → `semantic.json`, as a reference.
+   - A knob a core primitive reads → your area's file, `tokens/component/<area>.json`. The build
+     merges every file in that folder with `component.json`. A file there may re-declare a knob
+     that `component.json` holds (the build prints a note); two area files may not declare the
+     same knob.
+   - A role only your product has → your app extension file, not this package.
+2. Add the token with `$type` and `$value` (a reference where possible). A semantic colour that
+   differs by ground gets a `dark` mode. One that only points at another role does not: the build
+   declares it on both grounds for you.
+3. Run `pnpm tokens:build && pnpm test && pnpm lint:tokens`.
+   - `check.mjs` fails if a contract name is missing, an alias points somewhere else, a colour is
+     missing from a ground, or an app role leaked into the core.
+   - `figma-parity.mjs` fails if a built value differs from Figma's.
+   - `contrast.mjs` fails if a recipe is under its floor and is not a named exception.
+   - The lint fails if a tier 2 or tier 3 colour is a raw value, if a role points at the legacy
+     neutral ramp, if a knob's colour reads tier 1 (`{needs-you.fill}`, the raw value, where
+     `{needs-you-fill}`, the role, is meant), if a theme file is not exactly the 28 slots as hex
+     with their Figma ids, if a type role is off the 4px grid, or if a primitive in
+     `packages/ui/src` carries a colour or motion literal.
 4. If the token should be a Tailwind utility and is not a semantic colour, add it to the theme
-   extension in `semantic.json` (or extend `scripts/build.mjs`).
+   extension in `semantic.json` (`radius`, `spacing`) or extend `scripts/build.mjs`.
+
+**A value Figma holds** (a theme slot, a type role, a size) is not edited here on its own. See
+[Figma parity](#figma-parity).
 
 ## App extension layer
 
 Product-only roles live in the product, after the core import. The documented example is
-`packages/tokens/examples/app-extension.css` (Mailbird's panes, per-area hues, unread marker and
-note tints). Rules: alias `--g-*` or `--*`, swap only in `.dark`, expose to Tailwind with your own
-`@theme inline` block. See [05-consuming.md](05-consuming.md).
+`packages/tokens/examples/app-extension.css`. Rules:
+
+- Pick the theme in the HTML (`data-theme`, the `dark` class), not in CSS.
+- Alias a role (`--*`), not a raw value. The legacy `--g-neutral-*` ramp is not themed, so a
+  surface or an ink built on it will not follow the app or the tint.
+- A role that only points at core roles is the same on both grounds: declare it once, on
+  `:root, .light, .dark, [data-theme]`, so it follows a nested box too.
+- A role that differs by ground swaps in `.dark`.
+- Expose your roles to Tailwind with your own `@theme inline` block.
+
+See [05-consuming.md](05-consuming.md).
+
+## What stayed as legacy
+
+Kept, unchanged, because apps alias them from their own layers. No core role reads them, except
+that `success`, `warning` and `info` keep their accent ramps.
+
+| Legacy | Why it stays |
+|---|---|
+| `--g-neutral-*` (hue 260) and `--g-white-alpha-*` | Vale and Lockdown alias them. Not themed: they do not follow the app or its tint |
+| `--g-blue-*`, `--g-coral-*`, `--g-green-*`, `--g-amber-*`, `--g-red-*` | App layers use them for per-area hues. `amber.550` and `blue.550` were added at 1.0 for `warning` and `info` |
+| `--g-hue-*` | Bare hue angles for an app's tinted surfaces |
+| `muted-foreground-on-fill` | Fills re-point `--muted-foreground` at it. It now equals `muted-foreground`: Figma has one label ink |
+| `--c-icon-*` | The Material Symbols axes. They go when the Carbon icon set replaces the icon font |
+
+Changed in value, not in name: `font.sans` and `font.mono` (Inter and the system mono stack
+became Geist and Geist Mono), `radius.base` (10px became 2px), and every role in the alias table
+above.
 
 ## Figma variables
 
-The three tiers map to three Figma variable collections:
+Figma holds the system in three collections. The code mirrors them, under its own names:
 
-| Figma collection | Modes | Source |
+| Figma collection | Holds | In code |
 |---|---|---|
-| `global` | one mode | `global.json` |
-| `semantic` | `light`, `dark` | `semantic.json` (`$value` → light, `unicron.modes.dark` → dark) |
-| `component` | one mode (dark overrides as a second mode where present) | `component.json` |
+| `Unicron / Primitives` | 128 colours, one per app, ground and slot | the theme slots: `global.json` (default app) and `themes/<app>.json` |
+| `Unicron / Theme` | 21 roles in 8 modes | the Figma roles in `semantic.json`; `critical/*` and `surface/scrim` hold literals in Figma, and sit in `global.json` here |
+| `Unicron / Space` | 18 spacing steps, 3 radii, 2 sizes | Tailwind's 4px unit, `radius.base`, `size.control`, `size.touch-min` |
 
-Variable names use `/` where the CSS uses `-` (`neutral/900`, `muted-foreground`, `icon/fill`).
-Aliases in Figma mirror DTCG references, so `semantic/primary` aliases `global/neutral/900` in the
-light mode and `global/neutral/100` in dark. `dist/tokens.json` is the flat form intended for a
-Figma import script; the planned Style Dictionary build will emit a Figma-ready file directly.
+The 23 text styles of `Unicron Type/` are `type.json`. Figma has no variable for a stroke width,
+a state colour, `success`, `warning` or `info`: those exist only in code.

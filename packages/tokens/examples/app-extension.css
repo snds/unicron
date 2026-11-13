@@ -1,69 +1,100 @@
 /*
  * App extension layer — EXAMPLE.
  *
- * The core semantic tier is the shadcn contract and nothing else. Roles that only one
- * product understands (which pane is chrome, what colour "unread" is, one hue per
- * app area) are declared by that product, in its own stylesheet, after the core:
+ * The core carries Figma's roles and the shadcn contract. Roles that only one product
+ * understands (what colour "unread" is, one hue per app area, a note's tint) are declared by
+ * that product, in its own stylesheet, after the core:
  *
  *   @import "@unicron/ui/styles";
  *   @import "./app-extension.css";
  *
- * Rules: alias tier-1 (--g-*) or tier-2 (--*) tokens, never raw values; swap only in
- * .dark; expose to Tailwind through your own @theme inline block. Component-tier knobs
- * for app-only components (list rows, composer, note cards…) also live here, as --c-*.
+ * The app's theme is not set here. It is set in the HTML, once:
  *
- * This example is the layer Mailbird (a mail / calendar / contacts / notes suite) adds.
+ *   <html data-theme="vale" class="dark">     Vale on graphite (dark)
+ *   <html data-theme="vale">                  Vale on stone (light)
+ *
+ * data-theme picks the app (warpcore, vale, lockdown, synapse). The `dark` class picks the
+ * ground. Every core role follows both: bg-surface-ground, text-text-label, bg-primary-fill.
+ *
+ * Rules:
+ *   - Alias a role (--*), never a raw value.
+ *   - Do not build a surface or an ink on --g-neutral-*. That ramp is legacy and is not
+ *     themed: it does not follow the app or its tint. Use surface-ground, surface-raised,
+ *     line-rule, text-body, text-secondary, text-label.
+ *   - A role that only points at core roles is the same on both grounds. Declare it once, on
+ *     the four selectors below, so it also follows a nested .dark, .light or data-theme box.
+ *   - A role that differs by ground swaps in .dark.
+ *   - Expose your roles to Tailwind through your own @theme inline block.
+ *   - Component knobs for app-only components (a week strip, a recipient field, a note card)
+ *     also live here, as --c-*.
+ *
+ * This example is a layer a mail, calendar, contacts and notes app might add.
  */
 
-:root {
-  /* Panes */
-  --surface-chrome: var(--g-neutral-50);   /* nav rail, tab bar, list pane */
-  --surface-canvas: var(--g-neutral-0);    /* reading / editing pane */
-  --surface-selected: var(--g-neutral-100);
+/* The same on both grounds: the roles these point at already carry the ground and the app. */
+:root, .light, .dark, [data-theme] {
+  --surface-reader: var(--surface-raised);        /* the reading pane */
+  --unread: var(--text-body);                     /* the unread mark: a square of ink */
+  --flagged: var(--needs-you-fill);
 
-  /* One hue per app area, the same wayfinding Apple uses. */
-  --vertical-mail: var(--g-blue-500);
-  --vertical-calendar: var(--g-coral-500);
-  --vertical-contacts: var(--g-green-500);
-  --vertical-notes: var(--g-amber-500);
-  --unread: var(--g-blue-500);
+  /* App-only component knobs (tier 3) alias roles. */
+  --c-week-strip-today: var(--primary-soft);
+  --c-week-strip-today-edge: var(--primary-fill);
+  --c-recipient-chip: var(--surface-raised);
+  --c-recipient-chip-border: var(--line-rule);
 
-  /* Tinted surfaces (note cards): a light, soft wash behind dark text. */
-  --tint-l: 0.95;
-  --tint-c: 0.045;
-
-  /* The core sidebar contract can be re-pointed at an app role. */
-  --sidebar: var(--surface-chrome);
+  /* A note's tint: a hue angle from tier 1, with lightness and chroma set per ground below. */
+  --c-note-card-blue: oklch(var(--tint-l) var(--tint-c) var(--g-hue-blue));
+  --c-note-card-green: oklch(var(--tint-l) var(--tint-c) var(--g-hue-green));
 }
 
+/*
+ * Differs by ground. One hue per calendar, from the accent ramps: 600 is the text step in light,
+ * 300 in dark (each held to APCA Lc 75 on the legacy neutrals; check them on your own surfaces).
+ */
+:root, .light, [data-theme] {
+  --calendar-work: var(--g-blue-600);
+  --calendar-home: var(--g-green-600);
+  --calendar-travel: var(--g-coral-600);
+  /* A light, soft wash behind dark text. */
+  --tint-l: 0.95;
+  --tint-c: 0.045;
+}
 .dark {
-  --surface-chrome: var(--g-neutral-900);
-  --surface-canvas: var(--g-neutral-950);
-  --surface-selected: var(--g-neutral-800);
-  --vertical-mail: var(--g-blue-400);
-  --vertical-calendar: var(--g-coral-400);
-  --vertical-contacts: var(--g-green-400);
-  --vertical-notes: var(--g-amber-400);
-  --unread: var(--g-blue-400);
+  --calendar-work: var(--g-blue-300);
+  --calendar-home: var(--g-green-300);
+  --calendar-travel: var(--g-coral-300);
   /* Deep and quiet, so light text keeps its contrast. */
   --tint-l: 0.3;
   --tint-c: 0.05;
 }
 
-/* App-only component knobs (tier 3) alias the roles above. */
-:root {
-  --c-list-row-selected: var(--surface-selected);
-  --c-list-row-unread-dot: var(--unread);
-  --c-note-card-blue: oklch(var(--tint-l) var(--tint-c) var(--g-hue-blue));
+/*
+ * A core role can be re-pointed at an app role. Repeat it on [data-theme] if the app also nests
+ * themed boxes, because the core declares its roles there too.
+ */
+:root, .light, .dark, [data-theme] {
+  --popover: var(--surface-reader);
 }
 
 @theme inline {
-  --color-surface-chrome: var(--surface-chrome);
-  --color-surface-canvas: var(--surface-canvas);
-  --color-surface-selected: var(--surface-selected);
+  --color-surface-reader: var(--surface-reader);
   --color-unread: var(--unread);
-  --color-vertical-mail: var(--vertical-mail);
-  --color-vertical-calendar: var(--vertical-calendar);
-  --color-vertical-contacts: var(--vertical-contacts);
-  --color-vertical-notes: var(--vertical-notes);
+  --color-flagged: var(--flagged);
+  --color-calendar-work: var(--calendar-work);
+  --color-calendar-home: var(--calendar-home);
+  --color-calendar-travel: var(--calendar-travel);
 }
+
+/*
+ * An app outside the four can bring its own theme: declare all 28 slots, 14 per ground, as raw
+ * values. The names are in @unicron/tokens/tokens/themes/*.json. Unicron's contrast gate does
+ * not measure a theme it does not ship, so measure yours.
+ *
+ *   [data-theme="acme"] {
+ *     --g-theme-graphite-ground: …;
+ *     --g-theme-graphite-raised: …;
+ *     …
+ *     --g-theme-stone-live: …;
+ *   }
+ */
