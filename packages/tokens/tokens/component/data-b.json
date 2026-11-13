@@ -1,0 +1,11 @@
+{
+  "$description": "Tier 3 · Component knobs for the data-b rows and blocks (packages/ui: field-row.tsx, toggle-row.tsx, metric.tsx, needs-you.tsx, banner.tsx, calendar-event.tsx, meta-list.tsx, steps.tsx, tile.tsx), merged with component.json at build and emitted as --c-*. It adds knobs and re-declares none. Every other size these parts draw sits on the 4px spacing scale (paddings 8 to 24, the 40px index column, the 4px tile edge) or is a stroke role (the 2px metric rule, the 2px calendar bar), so it needs no knob. Drawn widths (Field Row 648, Metric 175, Needs You 534, Banner 358, Calendar Event 300) are only the size Figma drew; in use each part fills its container.",
+  "field-row": {
+    "$description": "FieldRow (Figma 6. Field Row, 15:512).",
+    "label-width": {
+      "$type": "dimension",
+      "$value": "8.75rem",
+      "$description": "The label column of the default and display sizes: fixed 140px, typed in on the Field Row frame (15:504, 15:508). The value starts 16px after it. Stacked puts the label above the value and does not read this."
+    }
+  }
+}
