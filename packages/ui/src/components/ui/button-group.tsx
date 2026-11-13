@@ -1,5 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: joined outlined buttons share one 1px edge; no app PR, no DSA record)
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -7,15 +8,19 @@ import { cn } from "../../lib/utils"
 
 import { Separator } from "./separator"
 
+// Joined: the inner corners square off, and each part after the first steps back 1px over the one
+// before. An edge is drawn inside its box (an inset ring or rule), so two outlined buttons side by
+// side would show a 2px seam; overlapping by the edge's width leaves the one 1px line between them.
+// A focused part comes forward, so its ring is never under its neighbour.
 const buttonGroupVariants = cva(
   "has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-lg flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
     variants: {
       orientation: {
         horizontal:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-lg! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:border-l-0",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-lg! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:-ml-(--stroke-rule)",
         vertical:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:-mt-(--stroke-rule)",
       },
     },
     defaultVariants: {
@@ -50,7 +55,7 @@ function ButtonGroupText({
     props: mergeProps<"div">(
       {
         className: cn(
-          "bg-muted gap-2 rounded-lg border px-2.5 text-sm font-medium [&_svg:not([class*='size-'])]:size-4 flex items-center [&_svg]:pointer-events-none",
+          "type-overline flex items-center gap-2 rounded-lg bg-surface-raised px-3 text-muted-foreground rule-box [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
           className
         ),
       },
@@ -73,7 +78,7 @@ function ButtonGroupSeparator({
       data-slot="button-group-separator"
       orientation={orientation}
       className={cn(
-        "bg-border relative self-stretch data-horizontal:mx-px data-horizontal:w-auto data-vertical:my-px data-vertical:h-auto",
+        "relative self-stretch bg-line-rule data-horizontal:mx-px data-horizontal:w-auto data-vertical:my-px data-vertical:h-auto",
         className
       )}
       {...props}

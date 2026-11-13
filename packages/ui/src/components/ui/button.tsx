@@ -5,7 +5,9 @@
 // Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 15:478; no app PR, no DSA record)
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
+import type * as React from "react"
 import { cn } from "../../lib/utils"
+import { useDisabledReason } from "./field"
 import { indicatorOnControl, type IndicatorProp } from "./indicator"
 import { Spinner } from "./spinner"
 
@@ -112,6 +114,12 @@ type ButtonProps = ButtonPrimitive.Props &
      * label and its place in the tab order, and shows a spinner where its icon goes.
      */
     loading?: boolean
+    /**
+     * Why the button is disabled, shown as a line under it (contract 5.1b #37: "Fix or remove the
+     * address in red."). With `disabled`, the button then stays in the tab order (`aria-disabled`)
+     * and points at the line with `aria-describedby`, so the reason is read with its name.
+     */
+    disabledReason?: React.ReactNode
   }
 
 /**
@@ -131,21 +139,26 @@ function Button({
   disabled,
   focusableWhenDisabled,
   indicator,
+  disabledReason,
   children,
   "aria-label": ariaLabel,
+  "aria-describedby": describedBy,
   ...props
 }: ButtonProps) {
   const on = indicatorOnControl(indicator, ariaLabel)
-  return (
+  const reason = useDisabledReason(disabled && !loading, disabledReason, describedBy)
+  const button = (
     <ButtonPrimitive
       data-slot="button"
       data-variant={variant}
       data-size={size}
       aria-label={on?.label ?? ariaLabel}
       aria-busy={loading || undefined}
+      aria-describedby={reason.describedBy}
       disabled={disabled || loading}
       // A button that goes busy under the keyboard keeps focus: it is aria-disabled, not removed.
-      focusableWhenDisabled={focusableWhenDisabled ?? (loading && !disabled)}
+      // So does one disabled with a reason: the reason must be reachable.
+      focusableWhenDisabled={focusableWhenDisabled ?? ((loading && !disabled) || reason.active)}
       className={cn(buttonVariants({ variant, size, shape, block, className: cn(on && "relative", className) }))}
       {...props}
     >
@@ -159,6 +172,14 @@ function Button({
       {on?.mark}
       {on?.words}
     </ButtonPrimitive>
+  )
+  if (!reason.active) return button
+  // The reason sits under the button, left-aligned with it (a `block` button keeps its width).
+  return (
+    <span data-slot="button-with-reason" className={cn("inline-flex flex-col items-start gap-1", block && "flex w-full items-stretch")}>
+      {button}
+      {reason.line}
+    </span>
   )
 }
 

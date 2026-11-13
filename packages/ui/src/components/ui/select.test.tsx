@@ -140,10 +140,12 @@ describe("Select", () => {
     expect(screen.queryByRole("listbox")).toBeNull()
   })
 
-  it("carries aria-invalid onto the trigger, where the error ring keys on it", () => {
+  it("carries aria-invalid onto the trigger, where the 2px critical border keys on it", () => {
     render(<Subject invalid />)
     expect(trigger()).toHaveAttribute("aria-invalid", "true")
-    expect(trigger().className).toContain("aria-invalid:ring-destructive/80")
+    // 1.0: Figma's error field (32:48): a 2px inside border in critical-fill, no outer ring.
+    expect(trigger().className).toContain("aria-invalid:rule-box-emphasis")
+    expect(trigger().className).toContain("aria-invalid:[--rule-color:var(--critical-fill)]")
   })
 
   it("renders a label outside a group without throwing", async () => {

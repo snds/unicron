@@ -198,10 +198,12 @@ describe("text fields on touch", () => {
     ["Input", Input],
     ["Textarea", Textarea],
   ] as const)("%s only drops under 16px with a mouse", (_, Field) => {
+    // 1.0: the value is the `ui` role (15px, Figma 32:48); on a touch screen it is the body size,
+    // 16px, so iOS does not zoom into the field when it takes focus.
     render(<Field aria-label="field" />)
     const { className } = screen.getByLabelText("field")
-    expect(className).toContain("text-base")
-    expect(className).toContain("pointer-fine:md:text-sm")
+    expect(className).toContain("type-ui")
+    expect(className).toContain("pointer-coarse:text-(length:--type-body-size)")
     expect(className).not.toMatch(/(^|\s)md:text-sm/)
   })
 })

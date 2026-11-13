@@ -1,5 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: square on the 2px corner, as Figma 32:121 "Initial Tile"; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
@@ -18,7 +19,9 @@ function Avatar({
       data-slot="avatar"
       data-size={size}
       className={cn(
-        "size-8 rounded-full after:rounded-full data-[size=lg]:size-10 data-[size=sm]:size-6 group/avatar relative flex shrink-0 select-none after:absolute after:inset-0 after:border after:border-border after:mix-blend-darken dark:after:mix-blend-lighten",
+        // Square on the 2px corner (Figma 32:121). The 1px rule is drawn over the picture, inside
+        // the box, so a photo never runs to a soft edge and the rule never adds size.
+        "group/avatar relative flex size-8 shrink-0 rounded-lg bg-surface-raised select-none data-[size=lg]:size-10 data-[size=sm]:size-6 after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:rule-box",
         className
       )}
       {...props}
@@ -31,7 +34,7 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn(
-        "rounded-full aspect-square size-full object-cover",
+        "aspect-square size-full rounded-[inherit] object-cover",
         className
       )}
       {...props}
@@ -47,7 +50,7 @@ function AvatarFallback({
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "bg-muted text-muted-foreground rounded-full flex size-full items-center justify-center text-sm group-data-[size=sm]/avatar:text-xs",
+        "type-ui-emphasis flex size-full items-center justify-center rounded-[inherit] bg-surface-raised text-foreground group-data-[size=sm]/avatar:type-overline group-data-[size=sm]/avatar:text-foreground",
         className
       )}
       {...props}
@@ -60,7 +63,8 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
     <span
       data-slot="avatar-badge"
       className={cn(
-        "bg-primary text-primary-foreground ring-background absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-blend-color ring-2 select-none",
+        // A mark, so a square (contract 1.6).
+        "absolute right-0 bottom-0 z-10 inline-flex items-center justify-center bg-primary text-primary-foreground ring-2 ring-background select-none",
         "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
         "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
         "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",
@@ -92,8 +96,7 @@ function AvatarGroupCount({
     <div
       data-slot="avatar-group-count"
       className={cn(
-        "bg-muted text-muted-foreground size-8 rounded-full text-sm group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3 relative flex shrink-0 items-center justify-center ring-2 ring-background",
-        "",
+        "type-overline relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-raised text-foreground ring-2 ring-background group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3",
         className
       )}
       {...props}

@@ -68,9 +68,10 @@ describe("orientation variants", () => {
     )
     const [fill, normal] = container.querySelectorAll('[data-slot="tabs-list"]')
     expect(fill).toHaveAttribute("data-size", "fill")
-    // tailwind-merge keeps the later height, so fill wins over the default 32px.
+    // tailwind-merge keeps the later height, so fill wins over the default 40px (1.0: the
+    // segmented control and the Top Tab line are both 40 tall).
     expect(fill.className).toContain("group-data-horizontal/tabs:h-full")
-    expect(fill.className).not.toContain("group-data-horizontal/tabs:h-8")
-    expect(normal.className).toContain("group-data-horizontal/tabs:h-8")
+    expect(fill.className).not.toContain("group-data-horizontal/tabs:h-10")
+    expect(normal.className).toContain("group-data-horizontal/tabs:h-10")
   })
 })
