@@ -169,3 +169,37 @@ describe("Progress", () => {
     expect(container.querySelector('[data-slot="progress-track"]')!.className).toContain("group-data-indeterminate/progress:animate-pulse")
   })
 })
+
+describe("Progress round 2 (contract 5.1b #29)", () => {
+  it("takes the neutral and warning tones on either variant", () => {
+    const { rerender } = render(<Progress variant="segmented" segments={3} value={2} max={3} tone="neutral" aria-label="Strength" />)
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "neutral")
+    expect(screen.getByRole("progressbar").querySelector("[data-filled]")!.className).toContain("group-data-[fill=neutral]/progress:bg-(--c-progress-neutral)")
+    rerender(<Progress value={9} max={10} tone="warning" aria-label="Spend" />)
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "warning")
+    expect(screen.getByRole("progressbar").querySelector('[data-slot="progress-indicator"]')!.className).toContain("group-data-[fill=warning]/progress:bg-(--c-progress-warning)")
+  })
+
+  it("cuts 3 to 64 segments", () => {
+    for (const segments of [3, 10, 30, 64]) {
+      const { container, unmount } = render(<Progress variant="segmented" segments={segments} value={1} max={1} aria-label="Cells" />)
+      expect(cells(container)).toHaveLength(segments)
+      unmount()
+    }
+  })
+
+  it("a tick marks a value across the bar: 2px of ink, taller than the bar, decorative", () => {
+    const { container } = render(<Progress variant="segmented" segments={64} tone="primary" value={6.4} max={10} tick={8} aria-label="$6.40 of $10.00 today" />)
+    const tick = container.querySelector('[data-slot="progress-tick"]') as HTMLElement
+    expect(tick).toHaveAttribute("aria-hidden")
+    expect(tick.style.left).toBe("80%")
+    expect(classesOf(tick)).toEqual(expect.arrayContaining(["w-(--stroke-emphasis)", "h-(--c-progress-tick-height)", "bg-(--c-progress-tick)"]))
+    expect(screen.getByRole("progressbar", { name: "$6.40 of $10.00 today" })).toHaveAttribute("aria-valuenow", "6.4")
+  })
+
+  it("without a tick the bar keeps its old shape", () => {
+    const { container } = render(<Progress value={4} max={10} aria-label="Import" />)
+    expect(container.querySelector('[data-slot="progress-bar"]')).toBeNull()
+    expect(container.querySelector('[data-slot="progress-tick"]')).toBeNull()
+  })
+})

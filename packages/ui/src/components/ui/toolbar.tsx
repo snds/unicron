@@ -25,6 +25,7 @@ function Toolbar({
   className,
   size = "sm",
   orientation = "horizontal",
+  onKeyDown,
   ...props
 }: ToolbarPrimitive.Root.Props & { size?: ToolbarSize }) {
   return (
@@ -33,6 +34,18 @@ function Toolbar({
         data-slot="toolbar"
         data-size={size}
         orientation={orientation}
+        // Home and End jump to the ends (Base UI's toolbar moves by the arrows only).
+        onKeyDown={(event) => {
+          onKeyDown?.(event)
+          if (event.defaultPrevented || (event.key !== "Home" && event.key !== "End")) return
+          const items = [...event.currentTarget.querySelectorAll<HTMLElement>("[data-slot=toolbar-button], [data-slot=toolbar-toggle]")].filter(
+            (item) => !item.hasAttribute("disabled")
+          )
+          const target = event.key === "Home" ? items[0] : items.at(-1)
+          if (!target) return
+          event.preventDefault()
+          target.focus()
+        }}
         className={cn("flex w-fit items-center gap-1 data-[orientation=vertical]:flex-col", className)}
         {...props}
       />

@@ -190,3 +190,30 @@ describe("SelectContent width", () => {
     expect(cls.some((name) => name.includes("backdrop-blur"))).toBe(false)
   })
 })
+
+describe("Select in the 2026-11 look", () => {
+  it("the trigger is the Text Field box, 48 tall, the value in the ui role", () => {
+    render(<Subject />)
+    const cls = trigger().className
+    for (const name of ["bg-surface-raised", "rule-box", "type-ui", "data-[size=default]:h-control", "data-popup-open:rule-box-emphasis"]) expect(cls).toContain(name)
+    expect(cls).not.toMatch(/focus-visible:ring/)
+  })
+
+  it("the list is solid, a 1px rule, the 2px corner; no blur, no shadow", async () => {
+    render(<Subject />)
+    await openList()
+    const cls = content().className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-popover", "rule-box", "rounded-lg"]))
+    expect(cls.some((name) => /shadow-|backdrop-blur|ring-1/.test(name))).toBe(false)
+  })
+
+  it("an item highlights with bg-accent; the chosen one shows a checkmark", async () => {
+    render(<Subject defaultValue="code" />)
+    await openList()
+    const code = screen.getByRole("option", { name: "Code" })
+    expect(code.className).toContain("data-highlighted:bg-accent")
+    expect(code.className).toContain("type-ui")
+    expect(code.querySelector('[data-icon-name="checkmark"]')).not.toBeNull()
+    expect(screen.getByRole("option", { name: "General" }).querySelector('[data-icon-name="checkmark"]')).toBeNull()
+  })
+})
