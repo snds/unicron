@@ -39,11 +39,20 @@ export interface MotionContract {
   reducedProperties: readonly string[]
   /** Why it animates something other than transform and opacity, when it does. */
   exception?: string
+  /**
+   * A component's contract: the `data-slot` selectors of the parts that move. A recipe has none
+   * (it is shown on a specimen); a component's surfaces are found in the document, since most
+   * of them render in a portal.
+   */
+  surfaces?: readonly string[]
 }
 
 const COLOURS = ["color", "background-color", "border-color", "box-shadow"] as const
 
-/** The recipes in styles/motion.css. Component contracts join this list as each one is built. */
+/**
+ * The recipes in styles/motion.css, then the components built on them. A component joins this
+ * list when its motion is built, so the list is also the record of what is done.
+ */
 export const motionContracts = [
   {
     id: "press",
@@ -131,6 +140,71 @@ export const motionContracts = [
     interrupted: "Refused again mid-shake, it starts over.",
     reduced: "No movement. The error colour and the error text carry it.",
     reducedProperties: [],
+  },
+  {
+    id: "dialog",
+    recipe: "motion-pop (popup) + motion-fade (backdrop)",
+    trigger: "the dialog opens or closes",
+    properties: ["opacity", "scale"],
+    duration: "--motion-base",
+    easing: ["--motion-ease-enter", "--motion-ease-exit"],
+    frequency: "occasional",
+    interrupted: "Transitions: dismissed mid-open, popup and backdrop turn round from where they are.",
+    reduced: "Popup and backdrop fade in place.",
+    reducedProperties: ["opacity"],
+    surfaces: ['[data-slot="dialog-content"]', '[data-slot="dialog-overlay"]'],
+  },
+  {
+    id: "popover",
+    recipe: "motion-pop",
+    trigger: "the popover opens from its trigger, or closes",
+    properties: ["opacity", "scale"],
+    duration: "--motion-base",
+    easing: ["--motion-ease-enter", "--motion-ease-exit"],
+    frequency: "occasional",
+    interrupted: "A transition: closed mid-open, it turns round from where it is.",
+    reduced: "Fades in place.",
+    reducedProperties: ["opacity"],
+    surfaces: ['[data-slot="popover-content"]'],
+  },
+  {
+    id: "tooltip",
+    recipe: "motion-pop + motion-pop-fast",
+    trigger: "hover or focus, after the delay; no motion when moving between neighbouring tooltips",
+    properties: ["opacity", "scale"],
+    duration: "--motion-fast",
+    easing: ["--motion-ease-enter", "--motion-ease-exit"],
+    frequency: "frequent",
+    interrupted: "A transition: the pointer leaves mid-open and it turns round from where it is.",
+    reduced: "Fades in place.",
+    reducedProperties: ["opacity"],
+    surfaces: ['[data-slot="tooltip-content"]'],
+  },
+  {
+    id: "menu",
+    recipe: "motion-pop-glass",
+    trigger: "the menu opens by pointer, or closes; opened or closed from the keyboard it does not animate",
+    properties: ["scale", "opacity"],
+    duration: "--motion-fast",
+    easing: ["--motion-ease-enter", "--motion-ease-exit"],
+    frequency: "frequent",
+    interrupted: "Transitions: closed mid-open, the surface and its content turn round from where they are.",
+    reduced: "The content fades; the surface does not scale.",
+    reducedProperties: ["opacity"],
+    surfaces: ['[data-slot="dropdown-menu-content"]'],
+  },
+  {
+    id: "select",
+    recipe: "motion-pop-glass",
+    trigger: "the list opens by pointer, or closes; opened or closed from the keyboard it does not animate",
+    properties: ["scale", "opacity"],
+    duration: "--motion-fast",
+    easing: ["--motion-ease-enter", "--motion-ease-exit"],
+    frequency: "frequent",
+    interrupted: "Transitions: closed mid-open, the surface and its content turn round from where they are.",
+    reduced: "The content fades; the surface does not scale.",
+    reducedProperties: ["opacity"],
+    surfaces: ['[data-slot="select-content"]'],
   },
 ] as const satisfies readonly MotionContract[]
 

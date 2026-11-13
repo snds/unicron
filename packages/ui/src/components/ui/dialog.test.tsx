@@ -302,8 +302,12 @@ describe("Dialog padding (--c-dialog-padding)", () => {
   })
 })
 
-describe("Dialog motion (VQA 2026-10-28)", () => {
-  it("enters on --motion-fast (120ms), not Tailwind's 100ms", () => {
+describe("Dialog motion", () => {
+  // The 2026-10-28 review moved the dialog off Tailwind's 100ms onto a motion role (120ms both
+  // ways). On 2026-11-12 Sean set the entrance to the pop recipe's own pace: 200ms in, 120ms out.
+  // The timing now lives in the recipes (styles/motion.css), not in a duration class here, and
+  // the browser checks (apps/playground/tests) measure it.
+  it("opens and closes on the pop and fade recipes, with no raw duration", () => {
     render(
       <Dialog open>
         <DialogContent>
@@ -311,11 +315,15 @@ describe("Dialog motion (VQA 2026-10-28)", () => {
         </DialogContent>
       </Dialog>
     )
+    expect(overlay().className.split(" ")).toContain("motion-fade")
+    expect(popup().className.split(" ")).toContain("motion-pop")
     for (const el of [overlay(), popup()]) {
       const cls = el.className.split(" ")
-      expect(cls).toContain("duration-(--motion-fast)")
-      expect(cls).toContain("ease-(--motion-ease)")
-      expect(cls).not.toContain("duration-100")
+      // The full pop, not the short one: 200ms in.
+      expect(cls).not.toContain("motion-pop-fast")
+      expect(cls.some((c) => /^duration-/.test(c))).toBe(false)
+      // Transitions, not keyframes: dismissed mid-open, it turns round instead of restarting.
+      expect(cls.some((c) => c.includes("animate-in") || c.includes("animate-out"))).toBe(false)
     }
   })
 })
