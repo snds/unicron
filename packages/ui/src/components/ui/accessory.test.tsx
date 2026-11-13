@@ -86,6 +86,14 @@ describe("Accessory (Figma 20:1713)", () => {
     expect(onOpen).toHaveBeenCalledTimes(1)
   })
 
+  it("a swipe that lifts past the strip still counts", () => {
+    const onOpen = vi.fn()
+    const { container } = render(<Accessory tone="live" title="Cabin for the 20th" onOpen={onOpen} />)
+    fireEvent.pointerDown(stripOf(container), { button: 0, pointerId: 7, clientX: 100, clientY: 700 })
+    fireEvent.pointerUp(document.body, { pointerId: 7, clientX: 102, clientY: 600 })
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+
   it("a short or sideways move is not a swipe", () => {
     const onSwipeUp = vi.fn()
     const { container } = render(<Accessory title="Cabin for the 20th" onSwipeUp={onSwipeUp} />)

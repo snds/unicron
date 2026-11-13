@@ -86,33 +86,48 @@ function readLength(el: Element, name: string, fallback: number): number {
 
 /** The switcher's swipe and its keys, as button handlers. */
 function useSwitcherGestures(onSwipe: ((direction: PageHeadSwipe) => void) | undefined) {
-  const start = React.useRef<{ id: number; x: number; y: number } | null>(null)
+  const latest = React.useRef(onSwipe)
+  const stop = React.useRef<(() => void) | undefined>(undefined)
   const swallowClick = React.useRef(false)
+  React.useEffect(() => {
+    latest.current = onSwipe
+  })
+  React.useEffect(() => () => stop.current?.(), [])
   if (!onSwipe) return {}
   return {
     onPointerDown(event: React.PointerEvent<HTMLButtonElement>) {
+      stop.current?.()
       if (event.button !== 0) return
-      const edge = readLength(event.currentTarget, "--c-page-head-swipe-edge", EDGE_FALLBACK)
+      const el = event.currentTarget
       // Too near the left edge: that swipe is the system's way back.
-      start.current = event.clientX < edge ? null : { id: event.pointerId, x: event.clientX, y: event.clientY }
-    },
-    onPointerUp(event: React.PointerEvent<HTMLButtonElement>) {
-      const from = start.current
-      start.current = null
-      if (!from || from.id !== event.pointerId) return
-      const dx = event.clientX - from.x
-      const dy = event.clientY - from.y
-      const threshold = readLength(event.currentTarget, "--c-page-head-swipe-threshold", SWIPE_FALLBACK)
-      if (Math.abs(dx) <= threshold || Math.abs(dx) <= 2 * Math.abs(dy)) return
-      // Content follows the finger: a swipe to the left brings the next one in.
-      onSwipe(dx < 0 ? "next" : "previous")
-      swallowClick.current = true
-      setTimeout(() => {
-        swallowClick.current = false
-      }, 0)
-    },
-    onPointerCancel() {
-      start.current = null
+      if (event.clientX < readLength(el, "--c-page-head-swipe-edge", EDGE_FALLBACK)) return
+      const { pointerId: id, clientX: x, clientY: y } = event
+      const doc = el.ownerDocument
+      // The lift is watched on the page: a swipe often ends past the head.
+      const up = (e: PointerEvent) => {
+        if (e.pointerId !== id) return
+        stop.current?.()
+        const dx = e.clientX - x
+        const dy = e.clientY - y
+        const threshold = readLength(el, "--c-page-head-swipe-threshold", SWIPE_FALLBACK)
+        if (Math.abs(dx) <= threshold || Math.abs(dx) <= 2 * Math.abs(dy)) return
+        // Content follows the finger: a swipe to the left brings the next one in.
+        latest.current?.(dx < 0 ? "next" : "previous")
+        swallowClick.current = true
+        setTimeout(() => {
+          swallowClick.current = false
+        }, 0)
+      }
+      const cancel = (e: PointerEvent) => {
+        if (e.pointerId === id) stop.current?.()
+      }
+      doc.addEventListener("pointerup", up, true)
+      doc.addEventListener("pointercancel", cancel, true)
+      stop.current = () => {
+        doc.removeEventListener("pointerup", up, true)
+        doc.removeEventListener("pointercancel", cancel, true)
+        stop.current = undefined
+      }
     },
     onClick(event: React.MouseEvent<HTMLButtonElement> & { preventBaseUIHandler?: () => void }) {
       if (!swallowClick.current) return
@@ -123,7 +138,7 @@ function useSwitcherGestures(onSwipe: ((direction: PageHeadSwipe) => void) | und
     onKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return
       event.preventDefault()
-      onSwipe(event.key === "ArrowRight" ? "next" : "previous")
+      latest.current?.(event.key === "ArrowRight" ? "next" : "previous")
     },
   }
 }

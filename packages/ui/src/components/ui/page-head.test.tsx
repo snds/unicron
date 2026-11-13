@@ -102,7 +102,8 @@ describe("PageHead", () => {
     const button = screen.getByRole("button", { name: "Personal, Switch vault" })
     expect(button).toHaveAttribute("aria-keyshortcuts", "ArrowLeft ArrowRight")
     fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 200, clientY: 140 })
-    fireEvent.pointerUp(button, { pointerId: 1, clientX: 100, clientY: 150 })
+    // Lifted past the head: still a swipe.
+    fireEvent.pointerUp(document.body, { pointerId: 1, clientX: 100, clientY: 150 })
     expect(onSwipe).toHaveBeenLastCalledWith("next")
     fireEvent.click(button)
     expect(onClick).not.toHaveBeenCalled()

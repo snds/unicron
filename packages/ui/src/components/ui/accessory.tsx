@@ -81,6 +81,40 @@ function readLength(el: Element, name: string, fallback: number): number {
   return match[2] === "px" ? n : n * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
 }
 
+/**
+ * Watches one press from where it starts to where it lifts, anywhere on the page: a swipe often
+ * lifts past the edge of what it started on, where that element would never hear the lift.
+ */
+function useLift(onLift: (dx: number, dy: number, el: HTMLElement) => void) {
+  const latest = React.useRef(onLift)
+  const stop = React.useRef<(() => void) | undefined>(undefined)
+  React.useEffect(() => {
+    latest.current = onLift
+  })
+  React.useEffect(() => () => stop.current?.(), [])
+  return (event: React.PointerEvent<HTMLElement>) => {
+    stop.current?.()
+    const el = event.currentTarget
+    const doc = el.ownerDocument
+    const { pointerId: id, clientX: x, clientY: y } = event
+    const up = (e: PointerEvent) => {
+      if (e.pointerId !== id) return
+      stop.current?.()
+      latest.current(e.clientX - x, e.clientY - y, el)
+    }
+    const cancel = (e: PointerEvent) => {
+      if (e.pointerId === id) stop.current?.()
+    }
+    doc.addEventListener("pointerup", up, true)
+    doc.addEventListener("pointercancel", cancel, true)
+    stop.current = () => {
+      doc.removeEventListener("pointerup", up, true)
+      doc.removeEventListener("pointercancel", cancel, true)
+      stop.current = undefined
+    }
+  }
+}
+
 function isActionObject(action: AccessoryAction): action is Exclude<AccessoryAction, React.ReactNode> & { label: string } {
   return typeof action === "object" && action !== null && !React.isValidElement(action) && "label" in action
 }
@@ -141,15 +175,22 @@ function Accessory({
   announce,
   className,
   onPointerDown,
-  onPointerUp,
-  onPointerCancel,
   onClickCapture,
   ...props
 }: AccessoryProps) {
   const descriptionId = React.useId()
-  const gesture = React.useRef<{ id: number; x: number; y: number } | null>(null)
   const swallowClick = React.useRef(false)
   const swipe = onSwipeUp ?? onOpen
+  const watchLift = useLift((dx, dy, el) => {
+    const threshold = readLength(el, "--c-accessory-swipe-threshold", SWIPE_FALLBACK)
+    if (!swipe || -dy <= threshold || Math.abs(dy) <= Math.abs(dx)) return
+    swipe()
+    // The lift may also click whatever it ended on.
+    swallowClick.current = true
+    setTimeout(() => {
+      swallowClick.current = false
+    }, 0)
+  })
   const open = onOpen ?? onSwipeUp
   const ink = INK[tone]
   // A request that waits on the person stays until it is answered.
@@ -209,34 +250,13 @@ function Accessory({
         strip({ tone }),
         // In the bottom row it takes the room the minimized tab bar gives up.
         compact && "grow basis-0",
-        swipe && "touch-none",
+        swipe && "touch-none select-none",
         className
       )}
       onPointerDown={(event) => {
         onPointerDown?.(event)
         if (!swipe || event.button !== 0) return
-        gesture.current = { id: event.pointerId, x: event.clientX, y: event.clientY }
-      }}
-      onPointerUp={(event) => {
-        onPointerUp?.(event)
-        const start = gesture.current
-        gesture.current = null
-        if (!swipe || !start || start.id !== event.pointerId) return
-        const dx = event.clientX - start.x
-        const dy = event.clientY - start.y
-        const threshold = readLength(event.currentTarget, "--c-accessory-swipe-threshold", SWIPE_FALLBACK)
-        if (-dy > threshold && Math.abs(dy) > Math.abs(dx)) {
-          swipe()
-          // The lift may also click whatever it ended on.
-          swallowClick.current = true
-          setTimeout(() => {
-            swallowClick.current = false
-          }, 0)
-        }
-      }}
-      onPointerCancel={(event) => {
-        onPointerCancel?.(event)
-        gesture.current = null
+        watchLift(event)
       }}
       onClickCapture={(event) => {
         onClickCapture?.(event)
