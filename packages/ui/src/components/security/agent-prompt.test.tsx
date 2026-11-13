@@ -19,7 +19,8 @@ describe("AgentPrompt", () => {
     expect(container.querySelector('[data-layout="buttons"]')).toBeInTheDocument()
     const allow = screen.getByRole("button", { name: /Allow/ })
     expect(allow.className).toContain("bg-primary")
-    expect(screen.getByRole("button", { name: /Deny/ }).className).toContain("border-border bg-background")
+    // The second option is the outlined button: transparent, with a 1px ink edge drawn inside the box.
+    expect(screen.getByRole("button", { name: /Deny/ }).className).toContain("inset-ring inset-ring-foreground")
     fireEvent.click(allow)
     expect(onAnswer).toHaveBeenCalledWith("allow")
   })
