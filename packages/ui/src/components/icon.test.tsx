@@ -145,7 +145,7 @@ describe("registerIcons", () => {
     registerIcons({
       "test--unsafe":
         '<script>alert(1)</script><style>svg{display:none}</style><foreignObject><div>x</div></foreignObject>' +
-        '<image href="https://example.com/x.png"/><path d="M0 0h32v32H0z" onclick="alert(1)" style="fill:red" class="x"/>' +
+        '<image href="https://example.com/x.png"/><path d="M0 0h32v32H0z" onclick="alert(1)" style="fill:red" class="x" constructor="y" __proto__="z"/>' +
         '<a href="javascript:alert(1)"><path d="M1 1h2v2H1z"/></a>',
     })
     const { container } = render(<Icon name="test--unsafe" />)

@@ -57,25 +57,13 @@ export function iconNames(): IconName[] {
 
 // Keep in step with scripts/build-icons.mjs (icon.test.tsx checks every curated icon survives parsing).
 const ELEMENTS = new Set(["path", "circle", "rect", "g"])
-const ATTRIBUTES: Record<string, string> = {
-  d: "d",
-  cx: "cx",
-  cy: "cy",
-  r: "r",
-  x: "x",
-  y: "y",
-  width: "width",
-  height: "height",
-  rx: "rx",
-  ry: "ry",
-  transform: "transform",
-  fill: "fill",
-  "fill-rule": "fillRule",
-  "clip-rule": "clipRule",
-  opacity: "opacity",
-  "stroke-width": "strokeWidth",
-  "data-icon-path": "data-icon-path",
-}
+// SVG attribute → the React prop that writes it.
+const ATTRIBUTES = new Map([
+  ...["d", "cx", "cy", "r", "x", "y", "width", "height", "rx", "ry", "transform", "fill", "opacity", "data-icon-path"].map((name) => [name, name] as const),
+  ["fill-rule", "fillRule"],
+  ["clip-rule", "clipRule"],
+  ["stroke-width", "strokeWidth"],
+])
 const TAG = /<(\/?)([A-Za-z][\w:-]*)((?:\s+[\w:-]+="[^"]*")*)\s*(\/?)>/g
 const ATTRIBUTE = /([\w:-]+)="([^"]*)"/g
 
@@ -105,7 +93,7 @@ export function parseIconMarkup(markup: string): ReactNode[] {
     }
     const props: Record<string, string> = {}
     for (const [, attribute, value] of attributes!.matchAll(ATTRIBUTE)) {
-      const prop = ATTRIBUTES[attribute!]
+      const prop = ATTRIBUTES.get(attribute!)
       if (prop) props[prop] = value!
     }
     const node: Open = { element: element!, props, children: [] }
