@@ -1,13 +1,18 @@
 // Owned component (not generated): a closed vocabulary of trust tiers, each one word, one icon,
 // one colour, paired by construction so no product can show colour alone.
 // Promoted from: snds/lockdown · PR snds/unicron (this PR) · DSA none (first principles, Lockdown brief §5.7)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: Badge's mono caps and square corner; no app PR, no DSA record)
 // Spec: docs/specs/security/risk-tier-badge.md
+"use client"
+
 import * as React from "react"
+import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
-import { IconButton } from "../icon-button"
-import { badgeVariants } from "../ui/badge"
+import { badgeVariants, type BadgeTone } from "../ui/badge"
+import { Tooltip, TooltipContent } from "../ui/tooltip"
+import { TextAction } from "./parts"
 
 /**
  * The tier ids. They come from the signed bridge manifest and type the `tier` prop; people never
@@ -87,15 +92,27 @@ export interface RiskTierBadgeProps extends Omit<React.ComponentProps<"span">, "
   explainDisabled?: boolean
 }
 
+/**
+ * Each state as a Badge tone: the word carries the tier, the glyph backs it up, and the tone only
+ * sorts them into quiet (built in, verified, checking), careful (use with care) and blocked
+ * (unverified). No tier takes the live colour or the primary: neither is about trust.
+ */
+const TIER_TONE: Record<RiskTierState, BadgeTone> = {
+  standard: "neutral",
+  official: "neutral",
+  tolerated: "warning",
+  unverified: "critical",
+  loading: "neutral",
+}
+
 const TIER_CLASSES: Record<RiskTierState, string> = {
-  // Icon and text in the standard ink.
-  standard: "bg-(--c-risk-tier-standard-bg) text-(--c-risk-tier-standard-ink)",
-  // Text stays foreground for contrast; only the icon takes the ink.
-  official: "bg-(--c-risk-tier-official-bg) text-foreground [&>svg]:text-(--c-risk-tier-official-ink)",
-  tolerated: "bg-(--c-risk-tier-tolerated-bg) text-foreground [&>svg]:text-(--c-risk-tier-tolerated-ink)",
-  // Outline, no fill.
-  unverified: "border-(--c-risk-tier-unverified-ink) bg-transparent text-(--c-risk-tier-unverified-ink)",
-  loading: "bg-muted text-muted-foreground animate-pulse motion-reduce:animate-none",
+  // Built in: the label ink, as any neutral badge.
+  standard: "",
+  // Verified: the word in body ink, so it reads a step above Built in without a colour of its own.
+  official: "text-text-body",
+  tolerated: "",
+  unverified: "",
+  loading: "animate-pulse motion-reduce:animate-none",
 }
 
 /**
@@ -127,36 +144,43 @@ export function RiskTierBadge({
   }, [state])
 
   return (
-    <span data-slot="risk-tier-badge" data-tier={state} data-size={size} className={cn("inline-flex items-center gap-0.5", className)} {...props}>
+    <span data-slot="risk-tier-badge" data-tier={state} data-size={size} className={cn("inline-flex items-center gap-2", className)} {...props}>
       <span
         data-slot="risk-tier-badge-pill"
         className={cn(
-          badgeVariants({ variant: "secondary" }),
-          "border font-medium [&>svg]:size-3.5!",
-          size === "md" ? "h-(--c-risk-tier-height-md) text-sm" : "h-(--c-risk-tier-height-sm)",
+          badgeVariants({ tone: TIER_TONE[state] }),
+          size === "md" ? "h-(--c-risk-tier-height-md) px-2" : "h-(--c-risk-tier-height-sm)",
           TIER_CLASSES[state],
-          // High contrast: a 1px solid border in the tier ink, tint dropped.
-          "contrast-more:border-current contrast-more:bg-transparent forced-colors:border-current forced-colors:bg-transparent"
+          // High contrast and forced colours: the inset edges are dropped by the browser, so a real
+          // 1px border in the tier ink takes their place, and any tint goes.
+          "contrast-more:border contrast-more:border-current contrast-more:bg-transparent forced-colors:border forced-colors:border-current forced-colors:bg-transparent"
         )}
         aria-describedby={explain ? descId : undefined}
       >
         <span className="sr-only">Risk tier: </span>
-        <Icon name={copy.icon} data-icon="inline-start" />
+        <Icon name={copy.icon} size="sm" data-icon="inline-start" />
         <span data-slot="risk-tier-badge-label">{copy.label}</span>
         <span className="sr-only">. {copy.hint}</span>
       </span>
       {explain && (
         <>
-          <IconButton
-            data-slot="risk-tier-badge-explain"
-            icon="help"
-            label={`What does ${copy.label} mean?`}
-            variant="ghost-muted"
-            size={size === "md" ? "icon-sm" : "icon-xs"}
-            disabled={explainDisabled || state === "loading"}
-            aria-describedby={descId}
-            tooltip={<RiskTierExplain copy={copy} disclosures={disclosures} />}
-          />
+          <Tooltip>
+            <TooltipPrimitive.Trigger
+              render={
+                <TextAction
+                  data-slot="risk-tier-badge-explain"
+                  icon="help"
+                  aria-label={`What does ${copy.label} mean?`}
+                  className="text-text-label hover:text-text-body"
+                  disabled={explainDisabled || state === "loading"}
+                  aria-describedby={descId}
+                />
+              }
+            />
+            <TooltipContent>
+              <RiskTierExplain copy={copy} disclosures={disclosures} />
+            </TooltipContent>
+          </Tooltip>
           {/* The same content as the tooltip, always in the tree, so aria-describedby resolves whether or not the tooltip is open. */}
           <span id={descId} className="sr-only">
             <RiskTierExplain copy={copy} disclosures={disclosures} />
@@ -174,7 +198,7 @@ export function RiskTierBadge({
 
 function RiskTierExplain({ copy, disclosures }: { copy: RiskTierCopy; disclosures: string[] }) {
   return (
-    <span data-slot="risk-tier-badge-explain-content" className="flex min-w-48 flex-col gap-1 text-left">
+    <span data-slot="risk-tier-badge-explain-content" className="type-caption flex min-w-48 flex-col gap-1 text-left">
       <span>{copy.meaning}</span>
       {disclosures.length > 0 && (
         <ul className="list-disc pl-4">

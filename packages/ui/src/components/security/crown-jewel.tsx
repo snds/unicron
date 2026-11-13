@@ -1,29 +1,19 @@
 // Owned component (not generated): the CrownJewel treatment, three parts in one module. Spec:
 // docs/specs/security/crown-jewel-treatment.md.
 // Promoted from: snds/lockdown · PR snds/unicron (this PR) · DSA none (first principles, Lockdown brief §5.7)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction; not drawn in Figma, built from the Lockdown brief X5 and I8; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
-import { IconButton } from "../icon-button"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
-import {
-  Dialog,
-  DialogAction,
-  DialogActions,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog"
-import { Field, FieldLabel } from "../ui/field"
-import { Input } from "../ui/input"
 import { Skeleton } from "../ui/skeleton"
 import { readSecondsToken } from "./copy-countdown"
+import { ReviewFrame, TextAction } from "./parts"
+import { SecretField } from "./secret-field"
 
 // ── Context: what nested SecretField, CodeDisplay and LargeTypeView read ──────────────────────
 
@@ -88,7 +78,7 @@ export function CrownJewelMark({ size = "md", className, ...props }: CrownJewelM
       className={cn("inline-flex shrink-0 items-center align-middle", className)}
       {...props}
     >
-      <Icon name="locked--filled" className={size === "sm" ? "size-3.5" : "size-4"} />
+      <Icon name="locked--filled" size={size === "sm" ? "sm" : "md"} />
       <span className="sr-only">Crown jewel</span>
     </span>
   )
@@ -137,7 +127,7 @@ export function CrownJewelGate({
   const [password, setPassword] = React.useState("")
   const [armed, setArmed] = React.useState(false)
   const [waiting, setWaiting] = React.useState(false)
-  const passwordRef = React.useRef<HTMLInputElement>(null)
+  const passwordRef = React.useRef<HTMLInputElement & HTMLTextAreaElement>(null)
   const popupRef = React.useRef<HTMLDivElement>(null)
   const biometricRan = React.useRef(false)
 
@@ -195,77 +185,77 @@ export function CrownJewelGate({
   const tries =
     attemptsLeft === undefined ? undefined : `${attemptsLeft} ${attemptsLeft === 1 ? "try" : "tries"} left`
 
+  const formId = React.useId()
   return (
-    <Dialog
+    <ReviewFrame
       open={open}
       onOpenChange={(next) => {
         if (!next) onCancel?.()
         onOpenChange?.(next)
       }}
+      size="question"
+      ref={popupRef}
+      data-slot="crown-jewel-gate"
+      data-level={level}
+      data-armed={armed ? "true" : "false"}
+      showClose={false}
+      initialFocus={level === "password" ? passwordRef : undefined}
+      overline="Crown jewel"
+      title="Confirm it's you"
+      footer={
+        <div className="flex flex-row-reverse items-center gap-3">
+          <Button
+            type="submit"
+            form={formId}
+            data-kind="confirm"
+            disabled={!armed || busy || (level === "password" ? password.length === 0 : !onBiometric || waiting)}
+          >
+            Confirm
+          </Button>
+          <Button type="button" variant="secondary" data-kind="cancel" onClick={cancel} disabled={!armed || busy}>
+            Cancel
+          </Button>
+        </div>
+      }
     >
-      <DialogContent
-        ref={popupRef}
-        data-slot="crown-jewel-gate"
-        data-level={level}
-        data-armed={armed ? "true" : "false"}
-        showCloseButton={false}
-        initialFocus={level === "password" ? passwordRef : undefined}
-      >
-        <form onSubmit={submit} className="contents">
-          <DialogHeader>
-            <DialogTitle>Confirm it's you</DialogTitle>
-            <DialogDescription data-slot="crown-jewel-gate-reason">{reason}</DialogDescription>
-          </DialogHeader>
-          <div data-slot="crown-jewel-gate-step" className="flex flex-col gap-2">
-            {level === "password" ? (
-              <Field>
-                <FieldLabel htmlFor="crown-jewel-gate-password">Account password</FieldLabel>
-                <Input
-                  ref={passwordRef}
-                  id="crown-jewel-gate-password"
-                  type="password"
-                  autoComplete="current-password"
-                  spellCheck={false}
-                  value={password}
-                  disabled={busy}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </Field>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                {biometricName === null
-                  ? "This device has no biometric check; use your account password instead."
-                  : waiting || busy
-                    ? `Waiting for ${biometricName}…`
-                    : onBiometric
-                      ? `${biometricName} confirms it's you. No password is needed for this.`
-                      : `This device cannot use ${biometricName}; use your account password instead.`}
-              </p>
-            )}
-            <p aria-live="polite" className="text-destructive min-h-5 text-sm">
-              {error ? (
-                <>
-                  {error}
-                  {tries && !error.includes("left") ? ` ${tries}.` : null}
-                </>
-              ) : null}
+      <form id={formId} onSubmit={submit} className="flex flex-col gap-4">
+        <p data-slot="crown-jewel-gate-reason" className="type-body text-text-body">
+          {reason}
+        </p>
+        <div data-slot="crown-jewel-gate-step" className="flex flex-col gap-2">
+          {level === "password" ? (
+            <SecretField
+              mode="edit"
+              id="crown-jewel-gate-password"
+              label="Account password"
+              value={password}
+              onChange={setPassword}
+              disabled={busy}
+              autoComplete="current-password"
+              inputRef={passwordRef}
+            />
+          ) : (
+            <p className="type-body text-text-secondary">
+              {biometricName === null
+                ? "This device has no biometric check; use your account password instead."
+                : waiting || busy
+                  ? `Waiting for ${biometricName}…`
+                  : onBiometric
+                    ? `${biometricName} confirms it's you. No password is needed for this.`
+                    : `This device cannot use ${biometricName}; use your account password instead.`}
             </p>
-          </div>
-          <DialogActions>
-            <DialogAction kind="cancel" type="button" onClick={cancel} disabled={!armed || busy}>
-              Cancel
-            </DialogAction>
-            <DialogAction
-              kind="confirm"
-              type="submit"
-              disabled={!armed || busy || (level === "password" ? password.length === 0 : !onBiometric || waiting)}
-            >
-              Confirm
-            </DialogAction>
-          </DialogActions>
-        </form>
-      </DialogContent>
-    </Dialog>
+          )}
+          <p aria-live="polite" className="type-caption text-critical-text min-h-5">
+            {error ? (
+              <>
+                {error}
+                {tries && !error.includes("left") ? ` ${tries}.` : null}
+              </>
+            ) : null}
+          </p>
+        </div>
+      </form>
+    </ReviewFrame>
   )
 }
 
@@ -453,6 +443,19 @@ export function CrownJewelSurface({
     "--text-label": "var(--c-crown-jewel-muted-ink)",
     "--primary-fill": "var(--c-crown-jewel-ink)",
     "--primary-on-fill": "var(--c-crown-jewel-surface)",
+    // The two washes are mixes of the page's ink, fixed where they are declared; inside the inverted
+    // surface they take the surface's ink, or a hover would not show.
+    "--state-hover": "var(--c-crown-jewel-hover)",
+    "--state-pressed": "var(--c-crown-jewel-pressed)",
+    "--line-grid-dot": "var(--c-crown-jewel-border)",
+    // Coloured inks are solved for the page's ground, so on the inverted ground they lose their
+    // contrast: a live countdown and a critical word take the surface's ink (the words still carry
+    // them), and a countdown's cells take the ink and the surface's hairline.
+    "--secondary-live": "var(--c-crown-jewel-ink)",
+    "--critical-text": "var(--c-crown-jewel-ink)",
+    "--destructive": "var(--c-crown-jewel-ink)",
+    "--c-progress-live": "var(--c-crown-jewel-ink)",
+    "--c-progress-track": "var(--c-crown-jewel-border)",
   } as React.CSSProperties
 
   return (
@@ -466,9 +469,10 @@ export function CrownJewelSurface({
         role="region"
         aria-label={`Crown jewel: ${title}`}
         className={cn(
-          "bg-background text-foreground flex min-w-80 flex-col gap-3 rounded-xl border p-4 text-sm",
-          // Forced colors drop the inversion; a 2px border, the lock and the word carry the treatment.
-          "forced-colors:border-2 contrast-more:border-2",
+          // A panel, so square (contract §1.2). The inverted ground is the whole signal; no edge is drawn on it.
+          "bg-surface-ground text-text-body type-body flex min-w-80 flex-col gap-3 p-4",
+          // Forced colors drop the inversion; a 2px edge, the lock and the word carry the treatment.
+          "forced-colors:rule-box-emphasis contrast-more:rule-box-emphasis contrast-more:[--rule-color:var(--text-body)]",
           className
         )}
         style={{ ...remap, ...style }}
@@ -479,23 +483,17 @@ export function CrownJewelSurface({
         {...props}
       >
         <div data-slot="crown-jewel-banner" className="flex items-center gap-2">
-          <Icon data-slot="crown-jewel-icon" name="locked" />
-          <span data-slot="crown-jewel-label" className="font-medium">
+          <Icon data-slot="crown-jewel-icon" name="locked--filled" size="sm" />
+          <span data-slot="crown-jewel-label" className="type-overline text-text-body">
             Crown jewel
           </span>
           {deviceOnly && (
-            <Badge data-slot="crown-jewel-device-only" variant="outline">
+            <Badge data-slot="crown-jewel-device-only" tone="neutral">
               This device only
             </Badge>
           )}
           <span className="ml-auto">
-            <IconButton
-              data-slot="crown-jewel-explain"
-              label="What crown jewel means"
-              icon="help"
-              size="icon-sm"
-              onClick={() => setExplain(true)}
-            />
+            <TextAction data-slot="crown-jewel-explain" aria-label="What crown jewel means" icon="help" onClick={() => setExplain(true)} />
           </span>
         </div>
         <div data-slot="crown-jewel-content" className="flex flex-col gap-3">
@@ -505,7 +503,8 @@ export function CrownJewelSurface({
               <Skeleton className="h-8 w-full" />
             </>
           ) : error ? (
-            <p className="text-destructive" role="alert">
+            // A solid critical line: it reads on the inverted ground whichever ground the page has.
+            <p data-slot="crown-jewel-error" className="bg-critical-fill text-critical-on-fill type-body px-3 py-2" role="alert">
               {error}
             </p>
           ) : (
@@ -517,33 +516,38 @@ export function CrownJewelSurface({
         </span>
       </section>
 
-      <Dialog open={explain} onOpenChange={setExplain}>
-        <DialogContent data-slot="crown-jewel-explain-dialog">
-          <DialogHeader>
-            <DialogTitle>Crown jewel</DialogTitle>
-            <DialogDescription>A secret that could unlock everything else, so it follows stricter rules.</DialogDescription>
-          </DialogHeader>
-          <ul className="flex list-disc flex-col gap-1.5 pl-5">
-            {biometricName === null ? (
-              <li>To use it, show it in full or export it, you type your account password, every time.</li>
-            ) : (
-              <>
-                <li>To use it, {biometricName} confirms it's you, every time.</li>
-                <li>To show it in full or to export it, you type your account password.</li>
-              </>
-            )}
-            <li>It never fills in on its own, never appears in search previews, and is never handed to agents.</li>
-            {deviceOnly && <li>It stays on this device and is not synced.</li>}
-          </ul>
-          <p className="font-medium">
-            You will only ever see this frame inside {appName ? `the ${appName} app` : "the app"} or a system prompt, never on a
-            web page.
-          </p>
-          <DialogFooter>
+      <ReviewFrame
+        open={explain}
+        onOpenChange={setExplain}
+        size="question"
+        data-slot="crown-jewel-explain-dialog"
+        overline="Crown jewel"
+        title="Crown jewel"
+        closeOnOutsideClick
+        footer={
+          <div className="flex flex-row-reverse">
             <Button onClick={() => setExplain(false)}>Got it</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <p className="type-body text-text-body">A secret that could unlock everything else, so it follows stricter rules.</p>
+        <ul className="type-body text-text-secondary flex list-disc flex-col gap-1.5 pl-5">
+          {biometricName === null ? (
+            <li>To use it, show it in full or export it, you type your account password, every time.</li>
+          ) : (
+            <>
+              <li>To use it, {biometricName} confirms it's you, every time.</li>
+              <li>To show it in full or to export it, you type your account password.</li>
+            </>
+          )}
+          <li>It never fills in on its own, never appears in search previews, and is never handed to agents.</li>
+          {deviceOnly && <li>It stays on this device and is not synced.</li>}
+        </ul>
+        <p className="type-body-strong text-text-body">
+          You will only ever see this frame inside {appName ? `the ${appName} app` : "the app"} or a system prompt, never on a
+          web page.
+        </p>
+      </ReviewFrame>
 
       {!hostRequestProof && (
         <CrownJewelGate

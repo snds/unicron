@@ -158,7 +158,7 @@ describe("AutoCheckSwitch", () => {
   it("is a named switch, described by when the check runs", async () => {
     const onCheckedChange = vi.fn()
     render(<AutoCheckSwitch status={base} onCheckedChange={onCheckedChange} />)
-    const sw = screen.getByRole("switch", { name: "Check automatically" })
+    const sw = screen.getByRole("switch", { name: "Check for updates automatically" })
     expect(sw).toHaveAccessibleDescription("When the app opens, and every six hours.")
     expect(sw).toBeChecked()
     await userEvent.click(sw)
@@ -167,14 +167,14 @@ describe("AutoCheckSwitch", () => {
 
   it("says five minutes on the local channel", () => {
     render(<AutoCheckSwitch status={at({ channel: "local", auto_check: false })} onCheckedChange={() => {}} />)
-    const sw = screen.getByRole("switch", { name: "Check automatically" })
+    const sw = screen.getByRole("switch", { name: "Check for updates automatically" })
     expect(sw).toHaveAccessibleDescription("When the app opens, and every five minutes.")
     expect(sw).not.toBeChecked()
   })
 
   it("can be held disabled", () => {
     render(<AutoCheckSwitch status={base} onCheckedChange={() => {}} disabled />)
-    expect(screen.getByRole("switch", { name: "Check automatically" })).toHaveAttribute("aria-disabled", "true")
+    expect(screen.getByRole("switch", { name: "Check for updates automatically" })).toHaveAttribute("aria-disabled", "true")
   })
 
   it("renders nothing when the build has no updates", () => {
