@@ -298,7 +298,8 @@ function TabBarItem({ value, icon, label, mark, render, className, onClick, ...p
       {
         className: cn(
           "hit-area relative inline-flex min-w-0 shrink items-center justify-center rounded-sm text-text-label",
-          "transition-[color,background-color,flex-grow,height,opacity] duration-(--motion-state) ease-(--motion-ease-move)",
+          // Colours answer at once (fast); folding away when minimized moves on the state role.
+          "[transition:color_var(--motion-fast)_var(--motion-ease),background-color_var(--motion-fast)_var(--motion-ease),flex-grow_var(--motion-state)_var(--motion-ease-move),height_var(--motion-state)_var(--motion-ease-move),opacity_var(--motion-state)_var(--motion-ease-move),visibility_var(--motion-state)]",
           "hover:bg-state-hover active:bg-state-pressed",
           vertical ? "h-10 w-full" : "h-full grow basis-0",
           active && "bg-primary-soft text-text-body hover:bg-primary-soft active:bg-primary-soft",
