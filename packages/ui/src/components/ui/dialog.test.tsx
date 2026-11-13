@@ -7,7 +7,19 @@ import { compile } from "tailwindcss"
 import { describe, expect, it, vi } from "vitest"
 
 import { Command, CommandDialog, CommandInput, CommandList } from "./command"
-import { Dialog, DialogAction, DialogActions, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog"
+import {
+  Dialog,
+  DialogAction,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverline,
+  DialogTitle,
+  dialogSizeName,
+} from "./dialog"
 
 // The strip a desktop app renders so its window stays draggable while a dialog is open (issue #7).
 const strip = <div aria-hidden data-testid="drag-strip" className="fixed inset-x-0 top-0 z-50 h-13" data-tauri-drag-region="deep" />
@@ -81,19 +93,18 @@ describe("DialogContent beforeContent", () => {
 })
 
 describe("DialogContent size", () => {
-  // Each size is a range between two tokens. The min is the fixed width the size had up to 0.15
-  // (PR #14's mapping), pinned here so no dialog an app already has gets narrower.
+  // Sizes by name (cross-app decisions §14, contract §5.1b row 15). Each is a range between two
+  // knobs; both are the drawn width by default.
   const tokens = JSON.parse(
-    readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/component.json"), "utf8")
+    readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/component/overlays.json"), "utf8")
   )
   it.each([
-    ["xs", "16rem", "20rem"],
-    ["sm", "24rem", "28rem"],
-    ["md", "28rem", "36rem"],
-    ["lg", "32rem", "42rem"],
-    ["xl", "42rem", "56rem"],
-    ["2xl", "48rem", "64rem"],
-  ] as const)("%s fits its content between %s and %s", (size, min, max) => {
+    ["question", "30rem"],
+    ["review", "35rem"],
+    ["form", "40rem"],
+    ["compose", "45rem"],
+    ["viewer", "60rem"],
+  ] as const)("%s is %s, read from its two knobs", (size, width) => {
     render(
       <Dialog open>
         <DialogContent size={size}>
@@ -103,14 +114,53 @@ describe("DialogContent size", () => {
     )
     const cls = popup().className.split(" ")
     expect(popup()).toHaveAttribute("data-size", size)
-    expect(cls).toContain(`sm:[--dialog-min-width:var(--c-dialog-${size}-min-width)]`)
-    expect(cls).toContain(`sm:[--dialog-max-width:var(--c-dialog-${size}-max-width)]`)
-    expect(cls).toContain("sm:w-max")
-    expect(tokens.dialog[size]["min-width"].$value).toBe(min)
-    expect(tokens.dialog[size]["max-width"].$value).toBe(max)
+    expect(cls).toContain(`[--dialog-min-width:var(--c-dialog-${size}-min-width)]`)
+    expect(cls).toContain(`[--dialog-max-width:var(--c-dialog-${size}-max-width)]`)
+    expect(tokens.dialog[size]["min-width"].$value).toBe(width)
+    expect(tokens.dialog[size]["max-width"].$value).toBe(width)
   })
 
-  it("is sm by default", () => {
+  it("never outgrows the screen less --c-dialog-margin on each side, at any width (Synapse SNA5)", () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>Capped</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    const cls = popup().className.split(" ")
+    expect(cls).toEqual(
+      expect.arrayContaining([
+        "w-max",
+        "min-w-[min(var(--dialog-min-width),calc(100%-2*var(--c-dialog-margin)))]",
+        "max-w-[min(var(--dialog-max-width),calc(100%-2*var(--c-dialog-margin)))]",
+        "max-h-[calc(100dvh-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
+      ])
+    )
+    // Not only from sm up: a phone keeps the margin too.
+    expect(cls.some((c) => c.startsWith("sm:"))).toBe(false)
+    expect(tokens.dialog.margin.$value).toBe("1.5rem")
+  })
+
+  it("full takes the whole window less the margin, both ways", () => {
+    render(
+      <Dialog open>
+        <DialogContent size="full">
+          <DialogTitle>Kit page</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    const cls = popup().className.split(" ")
+    expect(cls).toEqual(
+      expect.arrayContaining([
+        "[--dialog-min-width:100%]",
+        "[--dialog-max-width:100%]",
+        "h-[calc(100dvh-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
+      ])
+    )
+  })
+
+  it("is form (640) by default", () => {
     render(
       <Dialog open>
         <DialogContent>
@@ -118,12 +168,32 @@ describe("DialogContent size", () => {
         </DialogContent>
       </Dialog>
     )
-    expect(popup()).toHaveAttribute("data-size", "sm")
+    expect(popup()).toHaveAttribute("data-size", "form")
+  })
+
+  it.each([
+    ["xs", "question"],
+    ["sm", "question"],
+    ["md", "review"],
+    ["lg", "form"],
+    ["xl", "compose"],
+    ["2xl", "viewer"],
+  ] as const)("the old name %s takes %s", (old, name) => {
+    expect(dialogSizeName(old)).toBe(name)
+    render(
+      <Dialog open>
+        <DialogContent size={old}>
+          <DialogTitle>Old</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    const all = document.querySelectorAll<HTMLElement>('[data-slot="dialog-content"]')
+    expect(all[all.length - 1]).toHaveAttribute("data-size", name)
   })
 
   it("CommandDialog keeps a fixed width, the size's min, so it doesn't resize as results change", () => {
     render(
-      <CommandDialog open size="lg">
+      <CommandDialog open size="review">
         <Command>
           <CommandInput placeholder="Type a command" />
           <CommandList />
@@ -131,8 +201,8 @@ describe("DialogContent size", () => {
       </CommandDialog>
     )
     const cls = popup().className.split(" ")
-    expect(cls).toContain("sm:w-(--dialog-min-width)")
-    expect(cls).not.toContain("sm:w-max")
+    expect(cls).toContain("w-[min(var(--dialog-min-width),calc(100%-2*var(--c-dialog-margin)))]")
+    expect(cls).not.toContain("w-max")
   })
 })
 
@@ -193,7 +263,7 @@ describe("Dialog closeOnOutsideClick", () => {
 describe("DialogFooter sticky", () => {
   const footer = () => document.querySelector('[data-slot="dialog-footer"]') as HTMLElement
 
-  it("is not sticky by default", () => {
+  it("is not sticky by default: the actions at the right, 16 apart, no fill and no rule (as drawn)", () => {
     render(
       <Dialog open>
         <DialogContent>
@@ -202,11 +272,14 @@ describe("DialogFooter sticky", () => {
         </DialogContent>
       </Dialog>
     )
+    const cls = footer().className.split(" ")
     expect(footer()).not.toHaveAttribute("data-sticky")
-    expect(footer().className.split(" ")).not.toContain("sticky")
+    expect(cls).not.toContain("sticky")
+    expect(cls).toEqual(expect.arrayContaining(["flex", "justify-end", "gap-4"]))
+    expect(cls.some((c) => c.startsWith("bg-") || c.startsWith("border") || c.startsWith("rule-"))).toBe(false)
   })
 
-  it("pins to the popup's bottom edge, over its padding, and is opaque", () => {
+  it("pins to the popup's bottom edge, over its padding, opaque, with a hairline above", () => {
     render(
       <Dialog open>
         <DialogContent>
@@ -217,7 +290,7 @@ describe("DialogFooter sticky", () => {
     )
     const cls = footer().className.split(" ")
     expect(footer()).toHaveAttribute("data-sticky", "true")
-    expect(cls).toEqual(expect.arrayContaining(["sticky", "-bottom-(--c-dialog-padding)", "bg-popover"]))
+    expect(cls).toEqual(expect.arrayContaining(["sticky", "-bottom-(--c-dialog-padding)", "bg-surface-raised", "rule-t"]))
   })
 
   it("DialogActions takes it too", () => {
@@ -236,13 +309,13 @@ describe("DialogFooter sticky", () => {
 })
 
 describe("Dialog padding (--c-dialog-padding)", () => {
-  // The footer reaches out by the popup's padding to run edge to edge. Both read one variable, so
-  // a dialog that changes it keeps its footer flush (a p-6 popup with a -mx-4 footer did not).
-  // jsdom applies no Tailwind, so compile each element's classes with Tailwind itself and resolve
-  // the variable the way the browser would: the popup's own override, else the token.
+  // A sticky footer reaches out by the content's padding to run edge to edge. Both read one
+  // variable, so a dialog that changes it keeps its footer flush. jsdom applies no Tailwind, so
+  // compile each element's classes with Tailwind itself and resolve the variable the way the
+  // browser would: the popup's own override, else the token.
   const require = createRequire(import.meta.url)
   const tokens = JSON.parse(
-    readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/component.json"), "utf8")
+    readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/component/overlays.json"), "utf8")
   )
   const utilities = readFileSync(require.resolve("tailwindcss/utilities.css"), "utf8")
 
@@ -271,14 +344,16 @@ describe("Dialog padding (--c-dialog-padding)", () => {
     // The newest popup: the last test's may still be in the portal, closing.
     const el = Array.from(document.querySelectorAll<HTMLElement>('[data-slot="dialog-content"]')).at(-1)!
     const popupCss = await declarations(el)
+    const scrollCss = await declarations(el.querySelector('[data-slot="dialog-scroll"]') as HTMLElement)
     const footerCss = await declarations(el.querySelector('[data-slot="dialog-footer"]') as HTMLElement)
     const pad = popupCss.get("--c-dialog-padding") ?? tokens.dialog.padding.$value
     const value = (v?: string) => v?.replaceAll("var(--c-dialog-padding)", pad).replace(/^calc\((.+) \* -1\)$/, "-$1")
     return {
       pad,
-      popupPadding: value(popupCss.get("padding")),
+      contentPadding: value(scrollCss.get("padding")),
       footer: {
         marginInline: value(footerCss.get("margin-inline")),
+        marginTop: value(footerCss.get("margin-top")),
         marginBottom: value(footerCss.get("margin-bottom")),
         padding: value(footerCss.get("padding")),
         bottom: value(footerCss.get("bottom")),
@@ -286,19 +361,20 @@ describe("Dialog padding (--c-dialog-padding)", () => {
     }
   }
 
-  it("is 1rem by default, the p-4 the dialog always had", async () => {
-    expect(tokens.dialog.padding.$value).toBe("1rem")
+  it("is 1.5rem by default, the 24 Figma's dialogs draw, with 1rem above the header", async () => {
+    expect(tokens.dialog.padding.$value).toBe("1.5rem")
+    expect(tokens.dialog["padding-top"].$value).toBe("1rem")
     expect(await measure()).toEqual({
-      pad: "1rem",
-      popupPadding: "1rem",
-      footer: { marginInline: "-1rem", marginBottom: "-1rem", padding: "1rem", bottom: "-1rem" },
+      pad: "1.5rem",
+      contentPadding: "1.5rem",
+      footer: { marginInline: "-1.5rem", marginTop: "-1.5rem", marginBottom: "-1.5rem", padding: "1.5rem", bottom: "-1.5rem" },
     })
   })
 
-  it.each(["1.5rem", "0px", "2rem"])("an override to %s keeps the footer's bleed equal to the padding", async (pad) => {
+  it.each(["1rem", "0px", "2rem"])("an override to %s keeps the footer's bleed equal to the padding", async (pad) => {
     const m = await measure(`[--c-dialog-padding:${pad}]`)
-    expect(m.popupPadding).toBe(pad)
-    expect(m.footer).toEqual({ marginInline: `-${pad}`, marginBottom: `-${pad}`, padding: pad, bottom: `-${pad}` })
+    expect(m.contentPadding).toBe(pad)
+    expect(m.footer).toEqual({ marginInline: `-${pad}`, marginTop: `-${pad}`, marginBottom: `-${pad}`, padding: pad, bottom: `-${pad}` })
   })
 })
 
@@ -317,5 +393,119 @@ describe("Dialog motion (VQA 2026-10-28)", () => {
       expect(cls).toContain("ease-(--motion-ease)")
       expect(cls).not.toContain("duration-100")
     }
+  })
+})
+
+describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
+  function NewLogin({ onOpenChange, showCloseButton }: { onOpenChange?: (open: boolean) => void; showCloseButton?: boolean }) {
+    return (
+      <Dialog open onOpenChange={onOpenChange}>
+        <DialogContent showCloseButton={showCloseButton}>
+          <DialogHeader>
+            <DialogOverline>New login // personal vault</DialogOverline>
+            <DialogTitle>github.com</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <label>
+              Website
+              <input defaultValue="github.com" />
+            </label>
+          </DialogBody>
+          <DialogActions>
+            <DialogAction kind="cancel">Cancel</DialogAction>
+            <DialogAction icon="checkmark">Save login</DialogAction>
+          </DialogActions>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  it("is named by its title, with the overline above it in the overline role", () => {
+    render(<NewLogin />)
+    expect(screen.getByRole("dialog", { name: "github.com" })).toBeInTheDocument()
+    expect(screen.getByText("New login // personal vault").className.split(" ")).toEqual(
+      expect.arrayContaining(["type-overline", "text-text-label"])
+    )
+    expect(screen.getByRole("heading", { name: "github.com" }).className.split(" ")).toEqual(
+      expect.arrayContaining(["type-lead", "text-text-body"])
+    )
+  })
+
+  it("is solid and square: the raised surface, the 2px corner, a 1px rule drawn over the content, no blur or shadow", () => {
+    render(<NewLogin />)
+    const cls = popup().className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rounded"]))
+    expect(cls.some((c) => /blur|shadow|ring-|rounded-(xl|lg|md)/.test(c))).toBe(false)
+    const rule = popup().querySelector('[data-slot="dialog-rule"]') as HTMLElement
+    expect(rule.className.split(" ")).toEqual(expect.arrayContaining(["rule-box", "absolute", "inset-0", "pointer-events-none"]))
+    expect(rule).toHaveAttribute("aria-hidden")
+    expect(overlay().className.split(" ")).toContain("scrim-dialog")
+  })
+
+  it("closes from a neutral FloatButton M named Close, drawn at the header's top right, and the header keeps clear of it", () => {
+    const onOpenChange = vi.fn()
+    render(<NewLogin onOpenChange={onOpenChange} />)
+    const close = screen.getByRole("button", { name: "Close" })
+    expect(close).toHaveAttribute("data-slot", "dialog-close")
+    expect(close).toHaveAttribute("data-kind", "neutral")
+    expect(close).toHaveAttribute("data-size", "m")
+    expect(close.querySelector('[data-icon-name="close"]')).not.toBeNull()
+    expect(close.parentElement!.className.split(" ")).toEqual(expect.arrayContaining(["absolute", "top-5", "right-4"]))
+    const header = document.querySelector('[data-slot="dialog-header"]') as HTMLElement
+    expect(header.className.split(" ")).toContain("pr-12")
+    fireEvent.click(close)
+    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+  })
+
+  it("without a close button, the header takes the full width", () => {
+    render(<NewLogin showCloseButton={false} />)
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull()
+    const header = document.querySelector('[data-slot="dialog-header"]') as HTMLElement
+    expect(header.className.split(" ")).not.toContain("pr-12")
+  })
+
+  it("starts focus in the content, not on the close button, which comes last in the tab order", async () => {
+    render(<NewLogin />)
+    const close = screen.getByRole("button", { name: "Close" })
+    const save = screen.getByRole("button", { name: "Save login" })
+    expect(save.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await vi.waitFor(() => expect(screen.getByRole("textbox")).toHaveFocus())
+  })
+
+  it("actions keep their words at every width; an icon comes before them, at 16", () => {
+    render(<NewLogin />)
+    const save = screen.getByRole("button", { name: "Save login" })
+    expect(save).toHaveAttribute("data-kind", "confirm")
+    expect(save).toHaveAttribute("data-variant", "default")
+    expect(save.querySelector('[data-icon-name="checkmark"]')).not.toBeNull()
+    expect(save.className).not.toMatch(/max-sm:|rounded-full|sr-only/)
+    const cancel = screen.getByRole("button", { name: "Cancel" })
+    expect(cancel).toHaveAttribute("data-variant", "secondary")
+    expect(cancel.querySelector("svg")).toBeNull()
+  })
+
+  it("the content scrolls inside the rule, 24 at the sides and bottom and 16 above the header", () => {
+    render(<NewLogin />)
+    const scroll = popup().querySelector('[data-slot="dialog-scroll"]') as HTMLElement
+    expect(scroll.className.split(" ")).toEqual(
+      expect.arrayContaining(["overflow-y-auto", "p-(--c-dialog-padding)", "pt-(--c-dialog-padding-top)", "gap-6"])
+    )
+    expect(popup().className.split(" ")).toContain("overflow-hidden")
+  })
+
+  it("a description reads in the body role and secondary ink, and describes the dialog", () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Steam for good?</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>It can't be brought back from Recently deleted.</DialogDescription>
+        </DialogContent>
+      </Dialog>
+    )
+    const dialog = screen.getByRole("dialog", { name: "Delete Steam for good?" })
+    expect(dialog).toHaveAccessibleDescription("It can't be brought back from Recently deleted.")
+    expect(screen.getByText(/brought back/).className.split(" ")).toEqual(expect.arrayContaining(["type-body", "text-text-secondary"]))
   })
 })

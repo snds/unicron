@@ -1,14 +1,19 @@
-import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { fireEvent, render, screen } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
+
+import { Icon } from "../icon"
 
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -123,5 +128,94 @@ describe("DropdownMenuLabel", () => {
       </DropdownMenu>
     )
     expect(screen.getByRole("group", { name: "Density" })).toBeInTheDocument()
+  })
+})
+
+describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown States 03)", () => {
+  function QuickCreate({ scrim = true, onSelect }: { scrim?: boolean; onSelect?: (what: string) => void }) {
+    return (
+      <DropdownMenu open>
+        <DropdownMenuTrigger>New message</DropdownMenuTrigger>
+        <DropdownMenuContent width="auto" scrim={scrim}>
+          <DropdownMenuLabel>Create // long press</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => onSelect?.("message")}>
+            <Icon name="edit" />
+            New message
+            <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Icon name="calendar" />
+            New event
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive">
+            <Icon name="trash-can" />
+            Delete draft
+          </DropdownMenuItem>
+          <DropdownMenuCheckboxItem checked>Show weekends</DropdownMenuCheckboxItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
+
+  it("is solid and square: the raised surface, a 1px rule, the 2px corner, 8 inside and 4 between rows; no frost, no shadow", () => {
+    render(<QuickCreate />)
+    const cls = content().className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box", "rounded", "p-2", "gap-1", "flex-col"]))
+    expect(cls.some((c) => /blur|shadow|backdrop|\/70|rounded-lg|zoom/.test(c))).toBe(false)
+  })
+
+  it("scrim dims the page with the menu scrim (quick create); a plain menu draws none", () => {
+    const { unmount } = render(<QuickCreate />)
+    const scrim = document.querySelector('[data-slot="dropdown-menu-scrim"]') as HTMLElement
+    expect(scrim.className.split(" ")).toEqual(expect.arrayContaining(["scrim-menu", "fixed", "inset-0"]))
+    unmount()
+    render(<QuickCreate scrim={false} />)
+    expect(document.querySelector('[data-slot="dropdown-menu-scrim"]')).toBeNull()
+  })
+
+  it("a section label is an overline in label ink", () => {
+    render(<QuickCreate />)
+    expect(screen.getByText("Create // long press").className.split(" ")).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
+  })
+
+  it("rows: the ui role, 36 tall (44 on touch), a 20px glyph 10 from the words, the highlight on bg-accent", () => {
+    render(<QuickCreate />)
+    const row = screen.getByRole("menuitem", { name: /New message/ })
+    expect(row.className.split(" ")).toEqual(
+      expect.arrayContaining(["type-ui", "min-h-9", "pointer-coarse:min-h-touch-min", "gap-2.5", "px-2.5", "data-highlighted:bg-accent", "[&_svg:not([class*='size-'])]:size-5"])
+    )
+  })
+
+  it("the keys sit in a Kbd at the row's end", () => {
+    render(<QuickCreate />)
+    const row = screen.getByRole("menuitem", { name: /New message/ })
+    expect(row.querySelector('[data-slot="dropdown-menu-shortcut"] [data-slot="kbd"]')).toHaveTextContent("⌘N")
+  })
+
+  it("a destructive row reads in the critical ink", () => {
+    render(<QuickCreate />)
+    expect(screen.getByRole("menuitem", { name: /Delete draft/ }).className).toContain("data-[variant=destructive]:text-critical-text")
+  })
+
+  it("a checkbox row says it is checked", () => {
+    render(<QuickCreate />)
+    expect(screen.getByRole("menuitemcheckbox", { name: "Show weekends" })).toHaveAttribute("aria-checked", "true")
+  })
+
+  it("a separator is a hairline, edge to edge", () => {
+    render(<QuickCreate />)
+    expect((document.querySelector('[data-slot="dropdown-menu-separator"]') as HTMLElement).className.split(" ")).toEqual(
+      expect.arrayContaining(["bg-line-rule", "h-px", "-mx-2"])
+    )
+  })
+
+  it("picking a row runs it from the keyboard", async () => {
+    const onSelect = vi.fn()
+    render(<QuickCreate onSelect={onSelect} />)
+    const row = screen.getByRole("menuitem", { name: /New message/ })
+    row.focus()
+    fireEvent.click(row)
+    expect(onSelect).toHaveBeenCalledWith("message")
   })
 })
