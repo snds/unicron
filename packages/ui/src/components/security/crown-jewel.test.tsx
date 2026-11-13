@@ -45,7 +45,7 @@ describe("the re-mapped tier (test 1)", () => {
     const css = fs.readFileSync(path.resolve(process.cwd(), "..", "tokens", "dist", "tokens.css"), "utf8")
     expect(css).toMatch(/^ {2}--c-crown-jewel-surface: var\(--protected\);$/m)
     expect(css).toMatch(/^ {2}--c-crown-jewel-ink: var\(--protected-foreground\);$/m)
-    expect(css).toMatch(/^ {2}--protected: var\(--g-neutral-950\);$/m)
+    expect(css).toMatch(/^ {2}--protected: var\(--text-body\);$/m)
   })
 
   it("draws the banner: lock, the word, the badge when device-only, and the explain control", () => {

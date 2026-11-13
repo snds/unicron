@@ -234,7 +234,7 @@ function Reasoning({ text }: { text: string }) {
     <p
       ref={ref}
       data-slot="run-trace-reasoning"
-      className="type-support max-h-[calc(var(--type-support-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap [mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]"
+      className="type-support max-h-[calc(var(--type-caption-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap [mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]"
     >
       {text}
     </p>
