@@ -52,6 +52,7 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `command` | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandItemAction`, `CommandShortcut`, `CommandSeparator`, `commandItemActionShortcut`, `CommandMatch`, `CommandItemActionProps` | Overlay (command palette; a known gap in the canonical 62, composed from Dialog + InputGroup + cmdk) | cmdk |
 | `icon` | `Icon`, `IconName`, `IconProps`, `IconTone` | Content | svg + Material Symbols Rounded |
 | `icon-button` | `IconButton`, `IconButtonProps` (`indicator`: the words follow the label in its name; the tooltip stays the label) | Action | Tooltip + Button (or any `render`) |
+| `check-draw` | `CheckDraw`, `CheckDrawProps` (a check mark that draws itself on mount with the `motion-draw` recipe; decorative, sized by `1em`, coloured by `currentColor`; simply there under reduced motion) | Feedback | An SVG path: the icon font cannot draw a stroke |
 | `chip` | `Chip`, `ChipAction`, `ChipRemove`, `ChipRemoveProps` | Data Display | span (useRender) + Base UI Button + IconButton |
 | `update-status` | `UpdateStatusRow`, `AutoCheckSwitch`, `updateLine`, `canCheckForUpdates`, `updateWords`, `UpdateStatus`, `UpdateState`, `UpdateChannel`, `UpdateWords`, `UpdateStatusRowProps`, `AutoCheckSwitchProps` | Feedback | Button + Icon (status row); Field + Switch (switch row) |
 | `security/code-display` | `CodeDisplay`, `CodeDisplayList`, `groupCode`, `spellCode`, `codeDisplayAnnouncements`, `CodeDisplayProps`, `CodeDisplayCopyRef` | Data Display | Item + IconButton + Badge + Button (spec: [code-display](specs/security/code-display.md)) |
@@ -181,6 +182,42 @@ components) rather than hand-writing.
   Its `wide` prop widens the side panel (`--c-sheet-wide-width`, 36rem) for content like a
   photo or a drawing; on phones it's the same bottom sheet. The panel never exceeds the
   viewport (`max-w-full`). Its `className` styles the inner scroll area, not the panel.
+
+## Motion recipes
+
+A primitive never writes its own duration or curve. It picks a recipe from
+`packages/ui/src/styles/motion.css`, and each recipe is built only from the motion roles
+([tokens → Motion](02-tokens.md#motion)).
+
+| Recipe | Class or attribute | For | Runs | Under reduced motion |
+|---|---|---|---|---|
+| press | `motion-press`, `motion-press-sm` | a control going down under a press | scale to `--motion-press-depth` in `--motion-press`; back in `--motion-fast` | no scale; colour still changes |
+| pop | `motion-pop` | a small surface arriving from its anchor | opacity and scale from 0.96, `--motion-base` in, `--motion-fast` out | fades in place |
+| slide | `motion-slide` + `motion-slide-from-{top,bottom,left,right}` | a surface arriving from an edge | opacity and translate on `--motion-spring-firm`; `--motion-base` out | fades in place |
+| collapse | `motion-collapse` | a panel opening by height | height and opacity, `--motion-state`, move curve | height changes at once; content fades |
+| stagger | `motion-stagger` on the parent | a list appearing for the first time | children rise 4px, `--motion-stagger` apart, capped at `--motion-stagger-max` steps | every row is there at once |
+| draw | `motion-draw` (`CheckDraw`) | a success mark | a stroke draws in `--motion-base` | the mark is simply there |
+| shake | `data-shake` (`useShake`) | a refusal | three swings that die away, `--motion-state` | no movement; the error colour and text carry it |
+
+- **Entrances and exits are transitions.** pop, slide and collapse read Base UI's `data-starting-style`
+  and `data-ending-style` (and `@starting-style` for a plain mount), so closing mid-open turns round
+  from where it is. Nothing restarts.
+- **Two exceptions to "transform and opacity".** collapse animates height, because the content below
+  has to move with the panel. draw animates a stroke offset, because that is the only way to draw a
+  line. Each is written into its contract.
+- **Contracts are data.** `motionContracts` (`@unicron/ui/motion`) lists, for each recipe, its
+  trigger, the properties it may animate, its duration role, how often it is met, what happens when
+  it is interrupted, and what is left under reduced motion. The playground's Motion view
+  (`?view=motion`) draws a card per contract, and `pnpm --filter playground test:motion` checks
+  each one in a real browser: it moves only what it lists, for no longer than its role, never past
+  400ms, not at all under reduced motion, and a reversal carries on from where it was. It also
+  saves a start, middle and end frame of each.
+- **Helpers** (`@unicron/ui/motion`): `useReducedMotion`, `useShake`, `rubberBand(distance, max)`
+  for a drag past its limit, and `withViewTransition(update)` for a shared-element change on
+  `--motion-move`.
+- **One box, another mode.** `data-motion="reduced"` on any element puts everything inside it on
+  the reduced path, whatever the user's setting; `data-motion="off"` removes motion. For previews
+  and tests.
 
 ## Security components
 

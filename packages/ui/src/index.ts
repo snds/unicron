@@ -3,6 +3,9 @@ export { cn } from "./lib/utils"
 export { Icon, type IconName, type IconProps, type IconTone } from "./components/icon"
 export { Chip, ChipAction, ChipRemove, type ChipRemoveProps } from "./components/chip"
 export { IconButton, type IconButtonProps } from "./components/icon-button"
+export { CheckDraw, type CheckDrawProps } from "./components/check-draw"
+// Motion helpers and contracts. Also importable as @unicron/ui/motion.
+export * from "./lib/motion"
 // Security components (docs/specs/security/). Also importable as @unicron/ui/security/<name>.
 export * from "./components/security/code-display"
 export * from "./components/security/crown-jewel"

@@ -14,3 +14,7 @@ dist/
 # packed tarballs (pnpm pack / pnpm -r pack)
 *.tgz
 artifacts/
+
+# Playwright output (apps/playground: pnpm --filter playground test:motion)
+test-results/
+playwright-report/

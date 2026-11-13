@@ -1,0 +1,250 @@
+/*
+ * Motion primitives: named recipes built only from the motion roles (docs/02-tokens.md → Motion).
+ * A component picks a recipe by class; it never writes its own duration or curve.
+ *
+ *   motion-press, motion-press-sm   a control going down under a press
+ *   motion-pop                      a small surface arriving from its anchor and leaving faster
+ *   motion-slide (+ -from-*)        a surface arriving from an edge on the firm spring
+ *   motion-collapse                 a panel opening by height
+ *   motion-stagger                  children entering in turn
+ *   motion-draw                     a stroke drawing itself (a check)
+ *   data-shake                      a refusal: three swings that die away (lib/motion → useShake)
+ *
+ * Entrances and exits read Base UI's `data-starting-style` / `data-ending-style`, so they are
+ * transitions: closed mid-open, they turn round from where they are. `@starting-style` gives the
+ * same entrance to an element that is simply mounted.
+ *
+ * Transform and opacity only, with two stated exceptions: motion-collapse animates height (the
+ * content below must move with it) and motion-draw animates a stroke offset (the only way to draw
+ * a line; the painted area is a glyph).
+ *
+ * Every recipe has a reduced-motion form at the end of this file.
+ */
+@layer components {
+  /* ── press ─────────────────────────────────────────────────────────────────────────────────── */
+  .motion-press,
+  .motion-press-sm {
+    transition-property: color, background-color, border-color, box-shadow, scale;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease);
+  }
+  .motion-press:active:not(:disabled, [aria-disabled="true"]) {
+    scale: var(--motion-press-depth);
+    transition-duration: var(--motion-press);
+  }
+  .motion-press-sm:active:not(:disabled, [aria-disabled="true"]) {
+    scale: var(--motion-press-depth-small);
+    transition-duration: var(--motion-press);
+  }
+
+  /* ── pop ───────────────────────────────────────────────────────────────────────────────────── */
+  .motion-pop {
+    --motion-pop-from: 0.96;
+    transform-origin: var(--transform-origin, center);
+    transition-property: opacity, scale;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-enter);
+    @starting-style {
+      opacity: 0;
+      scale: var(--motion-pop-from);
+    }
+  }
+  .motion-pop[data-starting-style],
+  .motion-pop[data-ending-style] {
+    opacity: 0;
+    scale: var(--motion-pop-from);
+  }
+  .motion-pop[data-ending-style] {
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-exit);
+  }
+
+  /* ── slide ─────────────────────────────────────────────────────────────────────────────────── */
+  .motion-slide {
+    --motion-slide-x: 0px;
+    --motion-slide-y: 0px;
+    transition-property: opacity, translate;
+    transition-duration: var(--motion-spring-firm-duration);
+    transition-timing-function: var(--motion-spring-firm);
+    @starting-style {
+      opacity: 0;
+      translate: var(--motion-slide-x) var(--motion-slide-y);
+    }
+  }
+  .motion-slide[data-starting-style],
+  .motion-slide[data-ending-style] {
+    opacity: 0;
+    translate: var(--motion-slide-x) var(--motion-slide-y);
+  }
+  .motion-slide[data-ending-style] {
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-exit);
+  }
+  .motion-slide-from-top {
+    --motion-slide-y: -100%;
+  }
+  .motion-slide-from-bottom {
+    --motion-slide-y: 100%;
+  }
+  .motion-slide-from-left {
+    --motion-slide-x: -100%;
+  }
+  .motion-slide-from-right {
+    --motion-slide-x: 100%;
+  }
+
+  /* ── collapse ──────────────────────────────────────────────────────────────────────────────── */
+  .motion-collapse {
+    height: var(--collapsible-panel-height, var(--accordion-panel-height, auto));
+    overflow: hidden;
+    transition-property: height, opacity;
+    transition-duration: var(--motion-state);
+    transition-timing-function: var(--motion-ease-move);
+  }
+  .motion-collapse[data-starting-style],
+  .motion-collapse[data-ending-style] {
+    height: 0;
+    opacity: 0;
+  }
+
+  /* ── stagger ───────────────────────────────────────────────────────────────────────────────── */
+  .motion-stagger > * {
+    animation: motion-rise var(--motion-base) var(--motion-ease-enter) backwards;
+    animation-delay: calc(min(var(--motion-index, 0), var(--motion-stagger-max)) * var(--motion-stagger));
+  }
+  /* The index counts itself for the first rows; set --motion-index in markup to override. */
+  .motion-stagger > :nth-child(2) {
+    --motion-index: 1;
+  }
+  .motion-stagger > :nth-child(3) {
+    --motion-index: 2;
+  }
+  .motion-stagger > :nth-child(4) {
+    --motion-index: 3;
+  }
+  .motion-stagger > :nth-child(n + 5) {
+    --motion-index: 4;
+  }
+
+  /* ── draw ──────────────────────────────────────────────────────────────────────────────────── */
+  /* On a path with pathLength="1". */
+  .motion-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    animation: motion-draw var(--motion-base) var(--motion-ease-enter) backwards;
+  }
+
+  /* ── shake ─────────────────────────────────────────────────────────────────────────────────── */
+  /* Two names for one animation: useShake flips between them, which restarts it on every refusal. */
+  [data-shake="a"] {
+    animation: motion-shake-a var(--motion-state) var(--motion-ease-move);
+  }
+  [data-shake="b"] {
+    animation: motion-shake-b var(--motion-state) var(--motion-ease-move);
+  }
+
+  /* ── shared element ────────────────────────────────────────────────────────────────────────── */
+  /* Only while lib/motion → withViewTransition runs, so an app's own view transitions are untouched. */
+  :root[data-motion-transition]::view-transition-group(*),
+  :root[data-motion-transition]::view-transition-old(*),
+  :root[data-motion-transition]::view-transition-new(*) {
+    animation-duration: var(--motion-move);
+    animation-timing-function: var(--motion-ease-move);
+  }
+}
+
+@keyframes motion-rise {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+@keyframes motion-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes motion-shake-a {
+  20% {
+    translate: calc(var(--motion-shake-distance, 6px) * -1) 0;
+  }
+  45% {
+    translate: calc(var(--motion-shake-distance, 6px) * 0.66) 0;
+  }
+  70% {
+    translate: calc(var(--motion-shake-distance, 6px) * -0.33) 0;
+  }
+}
+@keyframes motion-shake-b {
+  20% {
+    translate: calc(var(--motion-shake-distance, 6px) * -1) 0;
+  }
+  45% {
+    translate: calc(var(--motion-shake-distance, 6px) * 0.66) 0;
+  }
+  70% {
+    translate: calc(var(--motion-shake-distance, 6px) * -0.33) 0;
+  }
+}
+
+/*
+ * Reduced motion, per recipe. The system-wide layer in index.css already limits every transition
+ * to colour and opacity; these remove what would otherwise jump or still play. Nothing is lost: a
+ * surface still fades, a check still appears, and a refusal still shows its colour and its text.
+ * Written twice: for the user's setting, and for a `data-motion="reduced"` box (previews, tests).
+ * Unlayered, so they win over the recipes above.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .motion-press:active,
+  .motion-press-sm:active,
+  .motion-pop[data-starting-style],
+  .motion-pop[data-ending-style] {
+    scale: none;
+  }
+  .motion-pop {
+    @starting-style {
+      scale: none;
+    }
+  }
+  .motion-slide[data-starting-style],
+  .motion-slide[data-ending-style] {
+    translate: none;
+  }
+  .motion-slide {
+    @starting-style {
+      translate: none;
+    }
+  }
+  .motion-stagger > *,
+  .motion-draw,
+  [data-shake] {
+    animation: none;
+  }
+}
+[data-motion="reduced"] {
+  .motion-press:active,
+  .motion-press-sm:active,
+  .motion-pop[data-starting-style],
+  .motion-pop[data-ending-style] {
+    scale: none;
+  }
+  .motion-pop {
+    @starting-style {
+      scale: none;
+    }
+  }
+  .motion-slide[data-starting-style],
+  .motion-slide[data-ending-style] {
+    translate: none;
+  }
+  .motion-slide {
+    @starting-style {
+      translate: none;
+    }
+  }
+  .motion-stagger > *,
+  .motion-draw,
+  [data-shake] {
+    animation: none;
+  }
+}

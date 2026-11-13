@@ -46,6 +46,11 @@
       "import": "./dist/components/icon.js",
       "default": "./dist/components/icon.js"
     },
+    "./motion": {
+      "types": "./dist/lib/motion/index.d.ts",
+      "import": "./dist/lib/motion/index.js",
+      "default": "./dist/lib/motion/index.js"
+    },
     "./security/*": {
       "types": "./dist/components/security/*.d.ts",
       "import": "./dist/components/security/*.js",

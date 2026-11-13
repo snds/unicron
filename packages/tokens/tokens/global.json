@@ -113,7 +113,7 @@
   },
   "stagger": {
     "step": { "$type": "duration", "$value": "50ms", "$description": "The delay between one sibling starting and the next." },
-    "max": { "$type": "number", "$value": 6, "$description": "Siblings after this many start together, so a long list never waits." }
+    "max": { "$type": "number", "$value": 4, "$description": "Siblings after this many start together, so the last one still lands inside the ceiling (4 steps of 50ms, then a 200ms entrance, is 400ms)." }
   },
   "press": {
     "depth": { "$type": "number", "$value": 0.96, "$description": "Scale of a pressed control of ordinary size (4% smaller)." },
