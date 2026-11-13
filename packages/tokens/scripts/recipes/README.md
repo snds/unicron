@@ -38,11 +38,14 @@ export default ({ r, mix }) => [
 | `solid` | Lc 30 | a fill, a mark or a bar against what it sits on |
 | `focus` | 3:1 | a focus ring or focus border (WCAG 1.4.11) |
 | `border-error` | 3:1 | an error border |
+| `control-edge` | 3:1 | the edge that alone shows a control, where no glyph, knob or text inside it does (an unchecked checkbox) |
 | `text-faint`, `border-rest`, `border-decorative`, `state`, `surface` | reported | the faintest ink, a resting field border, separators, how far a state or a surface moves |
 
 The kind names from before 1.0 still load: `text-primary` (now `text-body`), `text-on-tint`
 (`text-label`), `on-solid` (`on-fill`). `border-control` is gone: a resting border is
-`border-rest`, and a border held to 3:1 is `focus` or `border-error`. The `large` flag is gone
+`border-rest`, and a border held to 3:1 is `focus`, `border-error` or `control-edge`. A resting
+edge is `border-rest` only when something else shows the control: a field's box and its text, a
+switch's knob, a float button's glyph. When the edge is all there is, it is `control-edge`. The `large` flag is gone
 too: a floor follows the kind, not the type size, except `text-display`.
 
 Pick the kind by the ink, as the direction does. Text in `text-label`, or in a colour

@@ -155,15 +155,16 @@ describe("Button focus and invalid edges", () => {
   })
 
   it("any invalid ring left in the primitives is drawn at the alpha the contrast gate measures", () => {
-    // scripts/contrast.mjs gates aria-invalid:ring-destructive/60 (light) and /50 (dark) at 3:1.
-    // Primitives restyled to the 2026-11 direction no longer draw one; the rest are held here.
+    // packages/tokens/scripts/recipes/legacy-fields.mjs gates aria-invalid:ring-destructive/80
+    // (stone) and dark:…/50 (graphite) at 3:1. Primitives restyled to the 2026-11 direction no
+    // longer draw one; the rest are held here.
     const dir = import.meta.dirname
     const found = readdirSync(dir)
       .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
       .flatMap((f) => readFileSync(resolve(dir, f), "utf8").match(/\S*ring-destructive\/\d+/g) ?? [])
     for (const cls of found) {
       expect(cls).toMatch(/aria-invalid/)
-      expect(cls).toMatch(cls.startsWith("dark:") ? /\/50$/ : /\/60$/)
+      expect(cls).toMatch(cls.startsWith("dark:") ? /\/50$/ : /\/80$/)
     }
   })
 })

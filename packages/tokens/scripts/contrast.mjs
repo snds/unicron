@@ -26,6 +26,8 @@
 //   --rows[=text]         also print one row per recipe and mode (drawn colours, WCAG, APCA),
 //                         for every recipe or only those whose id contains `text`
 //   --print-exceptions    print every miss as an exception entry, to paste and then justify
+//   --write-docs          write the short table of exceptions into docs/02-tokens.md (every run
+//                         checks that table against its own numbers, and fails when it differs)
 
 import fs from "node:fs"
 import path from "node:path"
@@ -53,6 +55,9 @@ const KINDS = {
   // Non-text keeps the WCAG 1.4.11 ratio: APCA has no calibrated target for thin lines and rings.
   focus: { metric: "ratio", min: 3, rule: "a focus ring or focus border, 3:1 (WCAG 1.4.11)" },
   "border-error": { metric: "ratio", min: 3, rule: "an error border, 3:1 (WCAG 1.4.11)" },
+  // The edge that alone shows a control, where nothing else (a glyph, a knob, a label inside it)
+  // does: an unchecked checkbox. WCAG 1.4.11 holds it to 3:1, as a focus or error border.
+  "control-edge": { metric: "ratio", min: 3, rule: "the edge that alone shows a control, 3:1 (WCAG 1.4.11)" },
   // Reported, not gated.
   "text-faint": { metric: "lc" }, // the direction sets no target for the faintest ink
   "border-rest": { metric: "ratio" }, // a field's resting border is a hairline (contract §9.4)
@@ -581,6 +586,97 @@ if (excepted.length) {
       const unit = mine[0].metric === "ratio" ? ":1" : ""
       const measured = mine.map((row) => `${row.mode.name} ${row.value.toFixed(digits(row))}${unit}`).join(" · ")
       console.log(`${pad(id, 34)} ${pad(what, 56)} ${pad(floorText(mine[0]), 6, true)}  ${measured}`)
+    }
+  }
+}
+
+// ── The exceptions, in short, for docs/02-tokens.md ─────────────────────────────────────────
+// The docs carry a short table of the exceptions: what misses, where, by how much. It is written
+// from this run (`--write-docs`) and checked against it on every run, so its numbers cannot go
+// stale. Each excepted recipe belongs to one row; a new exception needs a row, and a row whose
+// recipes all pass again has to go.
+const SUMMARY = [
+  { what: "`text-label` on `surface-raised` (a field's placeholder)", ids: ["label-raised", "legacy-fields:placeholder"] },
+  { what: "`text-label`, `primary-text`, `secondary-live` on `primary-soft`", ids: ["label-soft", "primary-text-soft", "live-soft"] },
+  { what: "`text-body` on `primary-soft` and on `critical-soft` (a selected row; a critical banner or badge; a removed diff line)", ids: ["body-soft", "body-critical-soft", "controls:badge-critical", "body-diff-removed"] },
+  { what: "`primary-text`, `secondary-live`, `critical-text` on `surface-raised`", ids: ["primary-text-raised", "live-raised", "critical-text-raised"] },
+  { what: "`critical-text` on `critical-soft`", ids: ["critical-text-soft"] },
+  { what: "`primary-display` on `surface-raised`", ids: ["primary-display-raised"] },
+  { what: "body over secondary text", ids: ["gap:body-ground/secondary-ground", "gap:body-raised/secondary-raised", "gap:body-soft/secondary-soft"] },
+  { what: "`primary-fill` and `critical-fill` as solids, progress cells included", ids: ["primary-fill-ground", "primary-fill-raised", "primary-edge-soft", "critical-fill-ground", "critical-fill-raised", "controls:progress-primary-track", "controls:progress-primary-page", "controls:progress-critical-track", "controls:progress-critical-page"] },
+  { what: "the same fills as a 2px focus or error edge (a field; an invalid button, switch or checkbox)", ids: ["field-focus-raised", "field-focus-ground", "field-error-raised", "field-error-ground", "controls:ctl-invalid-page", "controls:ctl-invalid-raised"] },
+  { what: "`needs-you-fill` as a solid, and so `attention` as a mark", ids: ["needs-you-fill-ground", "needs-you-fill-raised", "attention-on-soft", "attention-on-surface"] },
+  { what: "text on a hover or pressed wash, and on `accent` (rows, menu items, buttons, a float button, a select trigger)", ids: ["body-ground-hover", "label-ground-hover", "body-ground-pressed", "secondary-ground-pressed", "label-ground-pressed", "label-raised-hover", "body-raised-pressed", "secondary-raised-pressed", "label-raised-pressed", "body-soft-hover", "secondary-soft-hover", "label-soft-hover", "body-accent", "label-accent", "critical-text-accent", "controls:btn-ink-hover-page", "controls:btn-ink-press-page", "controls:btn-ink-press-raised", "controls:float-glyph-hover", "controls:float-glyph-press", "legacy-fields:placeholder-hover"] },
+  { what: "`text-body` on `diff-added`, the neutral wash", ids: ["body-diff-added"] },
+  { what: "the label on a pressed solid (80%): a primary button, the create float button", ids: ["primary-on-fill-pressed-ground", "primary-on-fill-pressed-raised", "controls:btn-primary-press-page", "controls:btn-primary-press-raised", "controls:float-primary-press"] },
+  { what: "the current (inverted) float button, pressed (80%)", ids: ["controls:float-current-press"] },
+  { what: "`running-foreground` on `running-surface`", ids: ["running-text-surface"] },
+]
+const DOCS = path.join(here, "..", "..", "..", "docs", "02-tokens.md")
+const DOCS_START = "<!-- contrast:exceptions start · written by `node scripts/contrast.mjs --write-docs` (packages/tokens); do not edit by hand -->"
+const DOCS_END = "<!-- contrast:exceptions end -->"
+{
+  const exceptedIds = new Set(excepted.map((row) => row.id))
+  const grouped = new Map()
+  for (const group of SUMMARY) {
+    for (const id of group.ids) {
+      if (grouped.has(id)) errors.push(`docs summary: "${id}" is in two rows`)
+      grouped.set(id, group)
+      if (!exceptedIds.has(id)) errors.push(`docs summary: "${id}" is no longer an exception; take it out of SUMMARY in contrast.mjs`)
+    }
+  }
+  for (const id of exceptedIds) {
+    if (!grouped.has(id)) errors.push(`docs summary: the exception "${id}" has no row; add it to SUMMARY in contrast.mjs`)
+  }
+  /** Which modes, in words: "both", a ground, or the apps on a ground. */
+  const where = (modes) => {
+    const grounds = ["graphite", "stone"].map((ground) => {
+      const apps = MODES.filter((m) => m.ground === ground && modes.has(m)).map((m) => m.app)
+      if (!apps.length) return null
+      if (apps.length === MODES.filter((m) => m.ground === ground).length) return ground
+      return `${apps.length === 1 ? apps[0] : `${apps.slice(0, -1).join(", ")} and ${apps.at(-1)}`} ${ground}`
+    })
+    return grounds[0] === "graphite" && grounds[1] === "stone" ? "both" : grounds.filter(Boolean).join("; ")
+  }
+  const num = (row) => (row.metric === "ratio" ? `${row.value.toFixed(2)}:1` : `Lc ${row.value.toFixed(Number(row.value.toFixed(1)) >= row.floor ? 2 : 1)}`)
+  const lines = [
+    `The run lists ${excepted.length} measures in ${exceptedIds.size} recipes. In short:`,
+    "",
+    "| What | Where | Measures | Floor |",
+    "|---|---|---|---|",
+  ]
+  for (const group of SUMMARY) {
+    const mine = excepted.filter((row) => group.ids.includes(row.id))
+    if (!mine.length) continue
+    const floors = [...new Set(mine.map((row) => row.floor))].sort((a, b) => b - a)
+    let measures
+    let floor
+    if (floors.length === 1) {
+      const sorted = [...mine].sort((a, b) => a.value - b.value)
+      const [lo, hi] = [num(sorted[0]), num(sorted.at(-1))]
+      const gap = mine[0].kind === "level-gap"
+      measures = (lo === hi ? lo : `${lo} to ${hi.replace(/^Lc /, "")}`) + (gap ? " apart" : "")
+      floor = mine[0].metric === "ratio" ? `${floors[0]}:1` : `Lc ${floors[0]}`
+    } else {
+      const under = Math.max(...mine.map((row) => row.floor - row.value))
+      measures = `up to Lc ${under.toFixed(1)} under`
+      floor = `Lc ${floors.join(", ")}`
+    }
+    lines.push(`| ${group.what} | ${where(new Set(mine.map((row) => row.mode)))} | ${measures} | ${floor} |`)
+  }
+  const section = `${DOCS_START}\n${lines.join("\n")}\n${DOCS_END}`
+  if (fs.existsSync(DOCS)) {
+    const docs = fs.readFileSync(DOCS, "utf8")
+    const at = docs.indexOf(DOCS_START)
+    const end = docs.indexOf(DOCS_END)
+    if (at < 0 || end < at) errors.push(`docs/02-tokens.md: the exceptions summary markers are missing (expected "${DOCS_START}" … "${DOCS_END}")`)
+    else if (docs.slice(at, end + DOCS_END.length) !== section) {
+      if (args.includes("--write-docs")) {
+        fs.writeFileSync(DOCS, docs.slice(0, at) + section + docs.slice(end + DOCS_END.length))
+        console.log("\nwrote the exceptions summary into docs/02-tokens.md")
+      } else {
+        errors.push("docs/02-tokens.md: the exceptions summary differs from this run; run `node scripts/contrast.mjs --write-docs` in packages/tokens")
+      }
     }
   }
 }

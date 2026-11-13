@@ -7,9 +7,12 @@ import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 import { cn } from "../../lib/utils"
 
 /**
- * Checkbox: a 16px square on the 2px control radius. Unchecked is the raised surface with a
- * hairline; checked is an ink fill with the check drawn in the ground colour, so the state shows
- * by shape as well as by fill. A dash stands for "some of these" (`indeterminate`).
+ * Checkbox: a 16px square on the 2px control radius. Unchecked is the raised surface with a 1px
+ * edge in the label ink (`--c-checkbox-edge`): that edge is the only thing that shows an empty
+ * box, so it is held to 3:1, where the line-rule hairline measures 1.3:1. It is still the rule-box
+ * layer, pointed at the knob, so an invalid box's 2px critical edge draws over it. Checked is an
+ * ink fill with the check drawn in the ground colour, so the state shows by shape as well as by
+ * fill. A dash stands for "some of these" (`indeterminate`).
  *
  * The marks are an inline SVG, not an icon: they need no icon set and they never take a label's
  * case or tracking. Focus is the stylesheet's one ring for every control. On a coarse pointer the
@@ -22,7 +25,7 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer group/checkbox hit-area inline-flex size-4 shrink-0 items-center justify-center rounded-lg text-background transition-[background-color,box-shadow] data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent data-checked:bg-foreground data-indeterminate:bg-foreground aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill data-disabled:pointer-events-none data-disabled:opacity-50 group-has-disabled/field:opacity-50",
+        "peer group/checkbox hit-area inline-flex size-4 shrink-0 items-center justify-center rounded-lg text-background transition-[background-color,box-shadow] data-unchecked:rule-box data-unchecked:[--line-rule:var(--c-checkbox-edge)] data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent data-checked:bg-foreground data-indeterminate:bg-foreground aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill data-disabled:pointer-events-none data-disabled:opacity-50 group-has-disabled/field:opacity-50",
         className
       )}
       {...props}

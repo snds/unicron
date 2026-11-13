@@ -452,11 +452,18 @@ Contrast is judged by APCA first; WCAG 2.x is kept for borders and rings. The me
   | `on-fill` | Lc 75 | text on `primary-fill`, `critical-fill`, the yellow, `warning`, `info` |
   | `solid` | Lc 30 against what it sits on | a fill, a mark, a bar |
   | `focus`, `border-error` | 3:1 (WCAG 1.4.11) | the focus ring; a field's focus border and error border |
+  | `control-edge` | 3:1 (WCAG 1.4.11) | the edge that alone shows a control: an unchecked checkbox |
   | `text-faint`, `border-rest`, `border-decorative`, `state`, `surface` | reported, not gated | the faintest ink; a field's resting border; separators; how far a hover or a surface moves |
 
 - **A field's resting border is reported, not gated.** Figma draws it as a hairline
   (`line-rule`, 1.3:1 to 1.4:1). Before 1.0 the gate held control borders to 3:1. A field is found
-  by its `surface-raised` box; its focus and error borders are the ones held to 3:1.
+  by its `surface-raised` box and its text; its focus and error borders are the ones held to 3:1.
+  The same goes for a resting edge that something else backs up: a switch's knob, a float
+  button's glyph.
+- **An edge that is all a control shows is gated.** An unchecked checkbox has no glyph, no knob
+  and no text inside it, and its raised fill barely moves off the ground, so its edge is held to
+  3:1 (`control-edge`). It is drawn in the label ink (`--c-checkbox-edge`, 4.8:1 or more), not the
+  hairline.
 - **The three neutral text levels read apart.** Body, secondary and label are each gated at
   least Lc 10 from the next, on every surface they share (the ground, a raised surface, a
   selected row).
@@ -480,25 +487,31 @@ The cause is one thing. Figma solved each text role against the **ground**, with
 to spare: on the graphite ground `text-label` measures Lc 60.4 to 60.7. On any surface nearer the
 text's own lightness (a raised surface, a selected row, a hover wash) it lands just under.
 
-As of 2026-11-13 the run lists 189 measures in 45 recipes. In short:
+<!-- contrast:exceptions start · written by `node scripts/contrast.mjs --write-docs` (packages/tokens); do not edit by hand -->
+The run lists 261 measures in 65 recipes. In short:
 
 | What | Where | Measures | Floor |
 |---|---|---|---|
-| `text-label` on `surface-raised` (a field's placeholder) | graphite | Lc 59.3 to 59.6 | 60 |
-| `text-label`, `primary-text`, `secondary-live` on `primary-soft` | both | Lc 56.5 to 59.9 | 60 |
-| `text-body` on `primary-soft` and on `critical-soft` | stone | Lc 85.1 to 87.5 | 90 |
-| `primary-text`, `secondary-live`, `critical-text` on `surface-raised` | graphite | Lc 59.0 to 59.97 | 60 |
-| `critical-text` on `critical-soft` | graphite | Lc 58.2 | 60 |
-| `primary-display` on `surface-raised` | graphite | Lc 44.0 to 44.6 | 45 |
-| body over secondary text | stone | Lc 9.6 to 9.8 apart | 10 |
-| `primary-fill` and `critical-fill` as solids | graphite | Lc 19.3 to 26.8 | 30 |
-| the same fills as a field's focus and error border | graphite | 2.59:1 to 2.97:1 | 3:1 |
-| `needs-you-fill` as a solid, and so `attention` as a mark | stone | Lc 0 to 11.9 | 30 |
-| text on a hover or pressed wash, and on `accent` | both | up to Lc 12 under | 90, 75, 60 |
-| `primary-on-fill` on a pressed fill (80%) | vale and lockdown stone | Lc 72.6 to 74.5 | 75 |
-| `running-foreground` on `running-surface` | both | Lc 55.6 to 58.6 | 60 |
+| `text-label` on `surface-raised` (a field's placeholder) | graphite | Lc 59.3 to 59.6 | Lc 60 |
+| `text-label`, `primary-text`, `secondary-live` on `primary-soft` | both | Lc 56.5 to 59.9 | Lc 60 |
+| `text-body` on `primary-soft` and on `critical-soft` (a selected row; a critical banner or badge; a removed diff line) | stone | Lc 85.1 to 87.5 | Lc 90 |
+| `primary-text`, `secondary-live`, `critical-text` on `surface-raised` | graphite | Lc 59.0 to 59.97 | Lc 60 |
+| `critical-text` on `critical-soft` | graphite | Lc 58.2 | Lc 60 |
+| `primary-display` on `surface-raised` | vale, lockdown and synapse graphite | Lc 44.0 to 44.6 | Lc 45 |
+| body over secondary text | stone | Lc 9.6 to 9.8 apart | Lc 10 |
+| `primary-fill` and `critical-fill` as solids, progress cells included | graphite | Lc 16.7 to 26.8 | Lc 30 |
+| the same fills as a 2px focus or error edge (a field; an invalid button, switch or checkbox) | graphite | 2.59:1 to 2.97:1 | 3:1 |
+| `needs-you-fill` as a solid, and so `attention` as a mark | stone | Lc 0.0 to 11.9 | Lc 30 |
+| text on a hover or pressed wash, and on `accent` (rows, menu items, buttons, a float button, a select trigger) | both | up to Lc 11.6 under | Lc 90, 75, 60 |
+| `text-body` on `diff-added`, the neutral wash | stone | Lc 84.0 to 84.4 | Lc 90 |
+| the label on a pressed solid (80%): a primary button, the create float button | vale and lockdown stone | Lc 72.6 to 74.5 | Lc 75 |
+| the current (inverted) float button, pressed (80%) | graphite | Lc 68.2 to 68.4 | Lc 75 |
+| `running-foreground` on `running-surface` | both | Lc 55.6 to 58.6 | Lc 60 |
+<!-- contrast:exceptions end -->
 
-Run `pnpm --filter @unicron/tokens contrast` for the full list. These are Sean's to decide: change
+The table is written from the run (`node scripts/contrast.mjs --write-docs`), and every run
+fails when it differs, so its numbers stay current. Run `pnpm --filter @unicron/tokens contrast`
+for the full list. These are Sean's to decide: change
 a value in Figma, accept the miss, or change a floor.
 
 ### Must differ
@@ -516,7 +529,10 @@ The core recipes (the roles on the surfaces they share, and the states) are in
 `packages/tokens/scripts/contrast.mjs`. Each component area adds its own file,
 `packages/tokens/scripts/recipes/<area>.mjs`, when its components land; the script loads every
 file in that folder. The format is in
-[`scripts/recipes/README.md`](../packages/tokens/scripts/recipes/README.md).
+[`scripts/recipes/README.md`](../packages/tokens/scripts/recipes/README.md). One file is temporary:
+`legacy-fields.mjs` measures what the field classes from before 1.0 still paint (Input, Textarea,
+Select's trigger, NativeSelect, InputGroup, Toggle's invalid ring) until the primitives round
+restyles them as TextField.
 
 `pnpm --filter @unicron/tokens test` runs it (so CI does). It prints one line per recipe, with the
 measure in each of the 8 modes, then the exceptions and the must-differ rows, and fails on any

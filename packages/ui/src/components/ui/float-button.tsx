@@ -26,9 +26,11 @@ const variants = cva(
   {
     variants: {
       look: {
-        // Raised surface, hairline edge, ink glyph.
+        // Raised surface, hairline edge, ink glyph. Hover is the opaque highlight fill (accent: 8% of
+        // the ink in the raised surface); pressed is the contract's pressed wash (state-pressed,
+        // 10% of the ink) laid on the raised surface, so it stays opaque.
         neutral:
-          "rule-box bg-surface-raised text-foreground hover:bg-accent active:bg-[color-mix(in_oklab,var(--accent),var(--foreground)_8%)] aria-expanded:bg-accent",
+          "rule-box bg-surface-raised text-foreground hover:bg-accent active:bg-[color-mix(in_oklab,var(--text-body)_10%,var(--surface-raised))] aria-expanded:bg-accent",
         // The create action, bottom right: the identity fill.
         primary:
           "bg-primary text-primary-foreground hover:bg-[color-mix(in_oklab,var(--primary)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--primary)_80%,var(--background))]",

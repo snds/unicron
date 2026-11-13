@@ -143,7 +143,7 @@ describe("Select", () => {
   it("carries aria-invalid onto the trigger, where the error ring keys on it", () => {
     render(<Subject invalid />)
     expect(trigger()).toHaveAttribute("aria-invalid", "true")
-    expect(trigger().className).toContain("aria-invalid:ring-destructive/60")
+    expect(trigger().className).toContain("aria-invalid:ring-destructive/80")
   })
 
   it("renders a label outside a group without throwing", async () => {

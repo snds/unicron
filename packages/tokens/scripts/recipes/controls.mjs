@@ -61,7 +61,7 @@ export const recipes = [
   // ── FloatButton: every fill is opaque, because it floats over content ───────────────────────
   { id: "float-glyph", source: "float button neutral: bg-surface-raised text-foreground", kind: "text-body", paint: r("foreground"), over: [r("surface-raised")] },
   { id: "float-glyph-hover", source: "float button neutral: hover:bg-accent", kind: "text-body", paint: r("foreground"), over: [r("accent")] },
-  { id: "float-glyph-press", source: "float button neutral: active:bg-[color-mix(accent, foreground 8%)]", kind: "text-body", paint: r("foreground"), over: [mix("accent", "foreground", 0.08)] },
+  { id: "float-glyph-press", source: "float button neutral: active:bg-[color-mix(text-body 10%, surface-raised)], the pressed wash laid on the button", kind: "text-body", paint: r("foreground"), over: [mix("surface-raised", "text-body", 0.1)] },
   { id: "float-edge", source: "float button neutral: rule-box on the page (resting hairline)", kind: "border-rest", paint: r("line-rule"), over: [r("surface-ground")] },
   { id: "float-primary", source: "float button primary: bg-primary text-primary-foreground", kind: "on-fill", paint: r("primary-foreground"), over: [r("primary")] },
   { id: "float-primary-hover", source: "float button primary: hover:bg-[color-mix(primary 90%, background)]", kind: "on-fill", paint: r("primary-foreground"), over: [mix("primary", "background", 0.1)] },
@@ -85,7 +85,11 @@ export const recipes = [
   ...SURFACES.map(([on, bg]) => ({
     id: `checkbox-fill-${on}`, source: "checkbox checked: data-checked:bg-foreground against what it sits on", kind: "solid", paint: r("foreground"), over: [r(bg)],
   })),
-  { id: "checkbox-edge", source: "checkbox unchecked: data-unchecked:rule-box on the page (resting hairline)", kind: "border-rest", paint: r("line-rule"), over: [r("surface-ground")] },
+  // Unchecked, the edge is the only thing that shows the box (its raised fill barely moves off the
+  // ground), so it is held to 3:1 against what is around it, on both surfaces a form sits on.
+  ...SURFACES.map(([on, bg]) => ({
+    id: `checkbox-edge-${on}`, source: "checkbox unchecked: data-unchecked:rule-box in --c-checkbox-edge (the label ink), the box's only edge", kind: "control-edge", paint: r("c-checkbox-edge"), over: [r(bg)],
+  })),
 
   // ── Badge: a mono caps word; the tone backs it up ───────────────────────────────────────────
   { id: "badge-neutral", source: "badge neutral: rule-box text-muted-foreground", kind: "text-label", paint: r("muted-foreground"), over: [r("surface-ground")] },
@@ -135,7 +139,7 @@ export const exceptions = [
   { id: "btn-ink-press-page", modes: "stone", reason: ON_STATE },
   { id: "btn-ink-press-raised", modes: "stone", reason: ON_STATE },
   { id: "float-glyph-hover", modes: "stone", reason: ON_STATE },
-  { id: "float-glyph-press", modes: "all", reason: ON_STATE },
+  { id: "float-glyph-press", modes: "stone", reason: ON_STATE },
   // The error edge is the critical fill, as on a field: 2.9:1 on the graphite page, 2.6:1 on a
   // raised surface there.
   { id: "ctl-invalid-page", modes: "graphite", reason: FIGMA },

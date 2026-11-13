@@ -69,10 +69,13 @@ describe("Checkbox", () => {
     expect(check.getAttribute("class")).toContain("group-data-indeterminate/checkbox:hidden")
   })
 
-  it("unchecked is a 16px square on the control radius: raised surface, hairline, no fill of its own", () => {
+  it("unchecked is a 16px square on the control radius: raised surface, an edge in the label ink, no fill of its own", () => {
     render(<Checkbox aria-label="Sleeping bags" />)
     const box = classesOf(screen.getByRole("checkbox"))
     expect(box).toEqual(expect.arrayContaining(["size-4", "rounded-lg", "data-unchecked:bg-surface-raised", "data-unchecked:rule-box"]))
+    // The edge is the only thing that shows an empty box, so the rule takes the checkbox's edge
+    // knob (the label ink, 3:1 or more), not the hairline.
+    expect(box).toContain("data-unchecked:[--line-rule:var(--c-checkbox-edge)]")
     // The hairline belongs to the unchecked state only: on the ink fill it would draw a second edge.
     expect(box).not.toContain("rule-box")
     expect(box.some((c) => c.includes("bg-primary"))).toBe(false)
