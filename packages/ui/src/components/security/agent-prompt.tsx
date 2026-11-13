@@ -4,6 +4,7 @@
 // layout rule that turns long options into numbered rows, a bottom sheet on a phone, one
 // "Waiting for you" announcement, a countdown to the safe answer, and a typed reply.
 // Promoted from: hand-raised from the Mercury review (none)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: the needs-you look of Figma 15:517, the safe answer solid and focused (cross-app decisions §2); contract 5.1b #44; no app PR, no DSA record)
 // Spec: docs/specs/security/agent-prompt.md
 "use client"
 
@@ -13,7 +14,6 @@ import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { useViewport } from "../use-viewport"
 import { Button } from "../ui/button"
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "../ui/item"
 import { Kbd } from "../ui/kbd"
 import { AdaptiveSheetContent, Sheet, SheetHeader, SheetTitle } from "../ui/sheet"
 import { Spinner } from "../ui/spinner"
@@ -29,24 +29,36 @@ export interface AgentPromptOption {
   label: string
   /** A second line. Any option with one turns the set into numbered rows. */
   detail?: string
+  /**
+   * The answer that does no harm (Deny, Stop). It is the one solid button and takes focus when the
+   * prompt arrives (cross-app decisions §2), and N answers it. `safeAnswer` marks it too.
+   */
+  safe?: boolean
+  /**
+   * The letter that answers this option, by meaning, not by place: `"y"`, `"n"`, `"a"`. Digits 1
+   * to 9 always answer by place. Without one, in a yes-or-no kind, N is the safe option and Y the
+   * first other one.
+   */
+  key?: string
 }
 
-/** The words the prompt owns, per kind. Hosts pass the kind and the options, never the title. */
+/** The words the prompt owns, per kind. Hosts pass the kind and the options; the overline is optional. */
 export const agentPromptCopy: Record<AgentPromptKind, { title: string; icon: IconName; options: AgentPromptOption[] }> = {
+  // The safe answer first: it is the solid one (cross-app decisions §2). The keys keep their meaning.
   permission: {
     title: "Allow?",
     icon: "user--feedback",
     options: [
-      { id: "allow", label: "Allow" },
-      { id: "deny", label: "Deny" },
+      { id: "deny", label: "Deny", safe: true, key: "n" },
+      { id: "allow", label: "Allow once", key: "y" },
     ],
   },
   continue: {
     title: "Continue?",
     icon: "play",
     options: [
-      { id: "continue", label: "Continue" },
-      { id: "stop", label: "Stop" },
+      { id: "stop", label: "Stop", safe: true, key: "n" },
+      { id: "continue", label: "Continue", key: "y" },
     ],
   },
   choice: { title: "Choose", icon: "list--checked", options: [] },
@@ -58,7 +70,7 @@ export const AGENT_PROMPT_REPLY = "reply"
 
 /** Words for the deadline, the reply field and sending. */
 export const agentPromptStateCopy = {
-  /** The timer's name: "Deny in 4:59". The visible text is only the time. */
+  /** The timer's name: "Deny in 04:59". The visible text is only the time. */
   safeIn: (answer: string, time: string) => `${answer} in ${time}`,
   timedOut: "Timed out",
   replyLabel: "Your answer",
@@ -66,10 +78,14 @@ export const agentPromptStateCopy = {
   sending: "Sending",
 }
 
-/** "29:59", "0:05". */
+/**
+ * The time left, as every countdown in the four apps writes it (cross-app decisions §13): `MM:SS`
+ * with a leading zero ("28:14", "01:05"), then `NN S` under a minute ("45 S", "05 S").
+ */
 export function formatPromptCountdown(ms: number): string {
   const s = Math.max(0, Math.ceil(ms / 1000))
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
+  if (s < 60) return `${String(s).padStart(2, "0")} S`
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
 }
 
 export const agentPromptAnnouncements = { waiting: "Waiting for you" } as const
@@ -84,6 +100,27 @@ export function agentPromptLayout(options: readonly AgentPromptOption[]): "butto
     options.every((o) => !o.detail && o.label.length <= AGENT_PROMPT_MAX_BUTTON_LABEL)
     ? "buttons"
     : "rows"
+}
+
+/**
+ * The letter each option answers to, by meaning. An option's own `key` wins. In a yes-or-no kind
+ * an option without one takes N if it is the safe one and Y if it is the first other one; with no
+ * safe option at all, the first is Y and the second N, as before 1.0.
+ */
+function keysOf(options: readonly AgentPromptOption[], yesNo: boolean, safeId: string | undefined): (string | undefined)[] {
+  const keys = options.map((o) => o.key?.toLowerCase())
+  if (!yesNo) return keys
+  const taken = new Set(keys.filter(Boolean))
+  if (safeId === undefined) {
+    if (options[0] && !keys[0] && !taken.has("y")) keys[0] = "y"
+    if (options[1] && !keys[1] && !taken.has("n")) keys[1] = "n"
+    return keys
+  }
+  const safeAt = options.findIndex((o) => o.id === safeId)
+  if (safeAt >= 0 && !keys[safeAt] && !taken.has("n")) keys[safeAt] = "n"
+  const yesAt = options.findIndex((_, i) => i !== safeAt && !keys[i])
+  if (yesAt >= 0 && !taken.has("y")) keys[yesAt] = "y"
+  return keys
 }
 
 // Only the newest prompt that's waiting hears keys, and only it opens its sheet on a phone.
@@ -119,10 +156,17 @@ function isTyping(target: EventTarget | null) {
 
 export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, "children" | "title"> {
   kind: AgentPromptKind
-  /** What the agent wants to do or know, in a line or two: "Run pnpm install in the sandbox". */
+  /** What the agent wants to do or know: "Run pnpm install in the sandbox". Six lines, then it scrolls. */
   children?: React.ReactNode
-  /** Defaults to the kind's own (Allow / Deny, Continue / Stop). A choice needs its own. */
+  /** Defaults to the kind's own (Deny / Allow once, Stop / Continue). A choice needs its own. */
   options?: readonly AgentPromptOption[]
+  /**
+   * The mono caps line that names the prompt ("Question", "Ask first // GitHub"). Type it in
+   * sentence case. Default: the kind's title ("Allow?"). The countdown and `// +1` follow it.
+   */
+  overline?: React.ReactNode
+  /** More questions wait after this one: `// +1` after the overline (cross-app decisions §2). */
+  more?: number
   /** The trust tier of what's asking, from a signed manifest. */
   tier?: RiskTier
   /** The host's manifest check for `tier` (see RiskTierBadge). */
@@ -137,25 +181,39 @@ export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, 
   error?: React.ReactNode
   /** When it answers itself (epoch ms). Needs `safeAnswer`. */
   expiresAt?: number
-  /** The option it takes when time runs out: the one that does no harm (Deny, Stop). */
+  /** The option it takes when time runs out: the one that does no harm (Deny, Stop). It is marked safe. */
   safeAnswer?: string
   /** Time ran out. Default: `onAnswer(safeAnswer)`. A host whose server answers on its own passes a no-op. */
   onExpire?: () => void
   /** False for an older prompt still on screen; only listening prompts take keys. Default true. */
   listen?: boolean
+  /**
+   * Move focus to the safe answer (the reply field, for a reply) when the prompt arrives, but only
+   * when nothing else has focus, so a person busy elsewhere is not pulled away. Default true.
+   */
+  autoFocus?: boolean
+  /** The word on a reply's send button. Default "Send"; Warpcore says "Reply". */
+  sendLabel?: string
 }
 
 /**
- * An agent's question, in the conversation. It has an attention edge, the kind's title, what's
- * asked, an optional risk tier, and the options. Two or three short options are buttons, the first
- * primary; anything else is numbered rows that wrap. Y/N (permission, continue) and 1-9 answer it
- * when focus isn't in a text field, and only the newest prompt listens. On a phone the options open
- * in a bottom sheet.
+ * An agent's question, in the needs-you look (Figma "8. Needs You": the yellow field, 24 padding,
+ * 16 gap, an overline in its ink). While it waits, it is the screen's one yellow shape. The overline
+ * names it, with the countdown and `// +1` after it; the question is in the body role; then the
+ * options. The safe answer (Deny, Stop) is the one solid button and takes focus on arrival; the
+ * rest are text buttons (cross-app decisions §2). An open question keeps its send button solid.
+ * Long or detailed options are numbered rows that wrap.
+ *
+ * Keys answer by meaning: Y the yes, N the safe answer, 1 to 9 by place, when focus isn't in a text
+ * field, and only the newest prompt listens. Once answered it turns quiet (the raised surface with
+ * a hairline) and marks the answer. On a phone the options open in a bottom sheet.
  */
 export function AgentPrompt({
   kind,
   children,
   options: optionsProp,
+  overline,
+  more,
   tier,
   verified,
   onAnswer,
@@ -166,6 +224,8 @@ export function AgentPrompt({
   safeAnswer,
   onExpire,
   listen = true,
+  autoFocus = true,
+  sendLabel = agentPromptStateCopy.send,
   className,
   ...props
 }: AgentPromptProps) {
@@ -178,6 +238,8 @@ export function AgentPrompt({
   const answer = answerProp ?? (expired ? safeAnswer : undefined)
   const waiting = answer === undefined
   const sending = pending && !waiting
+  // Yellow while it waits on the person, and while their answer is on its way.
+  const asking = waiting || sending
   const titleId = React.useId()
   const { widthClass } = useViewport()
   const compact = widthClass === "compact"
@@ -190,6 +252,12 @@ export function AgentPrompt({
     setReopened(open)
     if (!open) setDismissed(true)
   }
+
+  const yesNo = kind === "permission" || kind === "continue"
+  const safeId = safeAnswer ?? options.find((o) => o.safe)?.id
+  const keys = keysOf(options, yesNo, safeId)
+  // The one solid option: the safe one; with none marked, the first. A reply's solid is its send.
+  const solidId = kind === "reply" ? undefined : (safeId ?? options[0]?.id)
 
   const answerWith = React.useCallback(
     (id: string, text?: string) => {
@@ -216,21 +284,24 @@ export function AgentPrompt({
     expire.current()
   }, [expired, answerProp])
 
-  // Keys: Y and N for the first two options of a yes-or-no kind, 1-9 for any option. The handler
-  // reads the latest options through a ref, so a host re-rendering never re-orders the prompts.
-  const latest = React.useRef({ kind, options, answerWith })
-  latest.current = { kind, options, answerWith }
+  // Keys: an option's letter (by meaning), or 1-9 by place. The handler reads the latest options
+  // through a ref, so a host re-rendering never re-orders the prompts.
+  const latest = React.useRef({ options, keys, answerWith })
+  React.useLayoutEffect(() => {
+    latest.current = { options, keys, answerWith }
+  })
   React.useEffect(() => {
     if (!isNewest) return
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return
-      const { kind, options, answerWith } = latest.current
+      const { options, keys, answerWith } = latest.current
       const key = e.key.toLowerCase()
       let option: AgentPromptOption | undefined
-      const yesNo = kind === "permission" || kind === "continue"
-      if (yesNo && key === "y") option = options[0]
-      else if (yesNo && key === "n") option = options[1]
-      else if (/^[1-9]$/.test(key)) option = options[Number(key) - 1]
+      if (/^[1-9]$/.test(key)) option = options[Number(key) - 1]
+      else {
+        const at = keys.indexOf(key)
+        option = at >= 0 ? options[at] : undefined
+      }
       if (!option) return
       e.preventDefault()
       answerWith(option.id)
@@ -239,33 +310,70 @@ export function AgentPrompt({
     return () => document.removeEventListener("keydown", onKey)
   }, [isNewest])
 
+  // On arrival, focus goes to the safe answer (or the reply field), unless something else holds it.
+  const solidRef = React.useRef<HTMLButtonElement>(null)
+  const replyRef = React.useRef<HTMLTextAreaElement>(null)
+  React.useEffect(() => {
+    if (!autoFocus || !isNewest || compact) return
+    const active = document.activeElement
+    if (active && active !== document.body) return
+    ;(kind === "reply" ? replyRef.current : solidRef.current)?.focus()
+  }, [autoFocus, isNewest, compact, kind])
+
   // "Waiting for you", once: the live region is filled after it mounts, so it's heard.
   const [announce, setAnnounce] = React.useState("")
   React.useEffect(() => {
     if (waiting) setAnnounce(agentPromptAnnouncements.waiting)
   }, [waiting])
 
-  const yesNo = kind === "permission" || kind === "continue"
   const safeLabel = options.find((o) => o.id === safeAnswer)?.label
+  const ink = asking ? "text-needs-you-on-fill" : "text-text-label"
   const timer =
     deadline !== undefined && safeLabel && (waiting || expired) ? (
       <span
         role="timer"
         data-slot="agent-prompt-timer"
         aria-label={expired ? agentPromptStateCopy.timedOut : agentPromptStateCopy.safeIn(safeLabel, formatPromptCountdown(left ?? 0))}
-        className="type-meta flex items-center gap-1 tabular-nums"
+        className={cn("type-overline", ink)}
       >
-        <Icon name="time" />
+        {"// "}
         {expired ? agentPromptStateCopy.timedOut : formatPromptCountdown(left ?? 0)}
       </span>
     ) : null
-  const choices = (
+  const optionsFor = (onYellow: boolean, inline: boolean) =>
+    options.length ? (
+      <AgentPromptOptions
+        options={options}
+        keys={keys}
+        solidId={solidId}
+        solidRef={onYellow ? solidRef : undefined}
+        answer={answer}
+        sending={sending}
+        onYellow={onYellow}
+        inline={inline}
+        onAnswer={answerWith}
+      />
+    ) : null
+  // A reply's short ways out (Deny) sit in one row after its send button; long ones stay rows below.
+  const replyInline = agentPromptLayout(options) === "buttons"
+  const choices = (onYellow: boolean) => (
     <>
-      {kind === "reply" ? <AgentPromptReply answer={answer} sending={sending} onSend={(text) => answerWith(AGENT_PROMPT_REPLY, text)} /> : null}
-      {options.length ? <AgentPromptOptions options={options} yesNo={yesNo} answer={answer} sending={sending} onAnswer={answerWith} /> : null}
+      {kind === "reply" ? (
+        <AgentPromptReply
+          ref={onYellow ? replyRef : undefined}
+          answer={answer}
+          sending={sending}
+          onYellow={onYellow}
+          sendLabel={sendLabel}
+          onSend={(text) => answerWith(AGENT_PROMPT_REPLY, text)}
+        >
+          {replyInline ? optionsFor(onYellow, true) : null}
+        </AgentPromptReply>
+      ) : null}
+      {kind !== "reply" || !replyInline ? optionsFor(onYellow, false) : null}
       {error && waiting ? (
-        <p role="alert" data-slot="agent-prompt-error" className="type-support text-destructive flex items-center gap-1.5">
-          <Icon name="warning" />
+        <p role="alert" data-slot="agent-prompt-error" className={cn("type-caption flex items-center gap-1.5", onYellow ? "text-needs-you-on-fill" : "text-critical-text")}>
+          <Icon name="warning--alt" />
           {error}
         </p>
       ) : null}
@@ -281,44 +389,48 @@ export function AgentPrompt({
       data-expired={expired ? "" : undefined}
       aria-labelledby={titleId}
       className={cn(
-        "bg-card text-card-foreground ring-foreground/10 flex min-w-0 flex-col gap-3 rounded-xl border-l-(length:--c-agent-prompt-edge) border-(--c-agent-prompt-edge-color) p-3 ring-1",
-        !waiting && !sending && "border-(--c-agent-prompt-edge-answered)",
+        "flex min-w-0 flex-col gap-4 p-6",
+        asking ? "on-needs-you bg-needs-you-fill text-needs-you-on-fill" : "bg-surface-raised rule-box text-text-body rounded-lg",
         className
       )}
       {...props}
     >
-      <header className="flex flex-wrap items-center gap-2">
-        <Icon name={copy.icon} className={cn(waiting || sending ? "text-attention-foreground" : "text-muted-foreground")} />
-        <h3 id={titleId} className="type-group-title">
-          {copy.title}
+      <header className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <h3 id={titleId} className={cn("type-overline", ink)}>
+          {overline ?? copy.title}
         </h3>
-        {tier || timer ? (
-          <span className="ml-auto flex items-center gap-2">
-            {timer}
-            {tier ? <RiskTierBadge tier={tier} verified={verified} /> : null}
+        {timer}
+        {more ? <span className={cn("type-overline", ink)}>{`// +${more}`}</span> : null}
+        {tier ? (
+          <span className="ml-auto flex items-center">
+            <RiskTierBadge tier={tier} verified={verified} />
           </span>
         ) : null}
       </header>
-      {children ? <div className="type-body min-w-0 break-words">{children}</div> : null}
+      {children ? (
+        <div data-slot="agent-prompt-body" className="type-body max-h-[calc(var(--type-body-leading)*6)] min-w-0 overflow-y-auto break-words">
+          {children}
+        </div>
+      ) : null}
       {compact && waiting ? (
         <>
-          <Button size="sm" className="self-start" onClick={() => setSheetOpen(true)}>
+          <Button variant="needs-you" className="self-start" onClick={() => setSheetOpen(true)}>
             {agentPromptAnswerLabel}
           </Button>
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <AdaptiveSheetContent data-slot="agent-prompt-sheet">
               <SheetHeader>
-                <SheetTitle>{copy.title}</SheetTitle>
+                <SheetTitle>{overline ?? copy.title}</SheetTitle>
               </SheetHeader>
-              <div className="flex flex-col gap-3 px-4 pb-4">
+              <div className="flex flex-col gap-4 px-4 pb-4">
                 {children ? <div className="type-body break-words">{children}</div> : null}
-                {choices}
+                {choices(false)}
               </div>
             </AdaptiveSheetContent>
           </Sheet>
         </>
       ) : (
-        choices
+        choices(asking)
       )}
       <span role="status" className="sr-only">
         {waiting ? announce : ""}
@@ -343,7 +455,24 @@ function useTimeLeft(deadline: number | undefined, on: boolean) {
 }
 
 /** The words of a reply: Enter sends, Shift+Enter is a new line. Once sent it keeps them, read-only. */
-function AgentPromptReply({ answer, sending, onSend }: { answer?: string; sending: boolean; onSend: (text: string) => void }) {
+function AgentPromptReply({
+  answer,
+  sending,
+  onYellow,
+  sendLabel,
+  onSend,
+  ref,
+  children,
+}: {
+  answer?: string
+  sending: boolean
+  onYellow: boolean
+  sendLabel: string
+  onSend: (text: string) => void
+  ref?: React.Ref<HTMLTextAreaElement>
+  /** The other ways out, in the send button's row. */
+  children?: React.ReactNode
+}) {
   const [text, setText] = React.useState("")
   const done = answer !== undefined
   const send = () => {
@@ -351,14 +480,15 @@ function AgentPromptReply({ answer, sending, onSend }: { answer?: string; sendin
     if (trimmed && !done) onSend(trimmed)
   }
   return (
-    <div data-slot="agent-prompt-reply" className="flex items-end gap-2">
+    <div data-slot="agent-prompt-reply" className="flex flex-col gap-3">
       <Textarea
+        ref={ref}
         aria-label={agentPromptStateCopy.replyLabel}
         placeholder={agentPromptStateCopy.replyLabel}
         rows={2}
         value={text}
         readOnly={done}
-        className="min-w-0 flex-1"
+        className="min-w-0"
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -367,29 +497,46 @@ function AgentPromptReply({ answer, sending, onSend }: { answer?: string; sendin
           }
         }}
       />
-      <Button size="sm" disabled={done || !text.trim()} aria-pressed={done ? answer === AGENT_PROMPT_REPLY : undefined} onClick={send}>
-        {sending && answer === AGENT_PROMPT_REPLY ? (
-          <Spinner label={agentPromptStateCopy.sending} data-icon="inline-start" />
-        ) : (
-          <Icon name={answer === AGENT_PROMPT_REPLY ? "checkmark" : "send--alt"} data-icon="inline-start" />
-        )}
-        {agentPromptStateCopy.send}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          variant={done && !sending ? (answer === AGENT_PROMPT_REPLY ? "secondary" : "ghost") : onYellow ? "needs-you" : "default"}
+          disabled={done || !text.trim()}
+          aria-pressed={done ? answer === AGENT_PROMPT_REPLY : undefined}
+          onClick={send}
+        >
+          {sending && answer === AGENT_PROMPT_REPLY ? (
+            <Spinner label={agentPromptStateCopy.sending} data-icon="inline-start" />
+          ) : (
+            <Icon name={answer === AGENT_PROMPT_REPLY ? "checkmark" : "send--alt"} data-icon="inline-start" />
+          )}
+          {sendLabel}
+        </Button>
+        {children}
+      </div>
     </div>
   )
 }
 
 function AgentPromptOptions({
   options,
-  yesNo,
+  keys,
+  solidId,
+  solidRef,
   answer,
   sending,
+  onYellow,
+  inline = false,
   onAnswer,
 }: {
   options: readonly AgentPromptOption[]
-  yesNo: boolean
+  keys: readonly (string | undefined)[]
+  solidId: string | undefined
+  solidRef?: React.Ref<HTMLButtonElement>
   answer?: string
   sending: boolean
+  onYellow: boolean
+  /** Buttons that join a row the caller draws (a reply's send row). */
+  inline?: boolean
   onAnswer: (id: string) => void
 }) {
   const done = answer !== undefined
@@ -397,22 +544,32 @@ function AgentPromptOptions({
   const mark = (id: string, check: React.ReactNode) =>
     answer !== id ? null : sending ? <Spinner label={agentPromptStateCopy.sending} data-icon="inline-start" /> : check
   // The key that answers each option, shown only with a fine pointer (a keyboard is likely).
-  const keyFor = (i: number) => (yesNo && i === 0 ? "Y" : yesNo && i === 1 ? "N" : String(i + 1))
-  const hint = (i: number) =>
-    i < 9 && !done ? (
-      <Kbd aria-hidden className="hidden pointer-fine:inline-flex">
-        {keyFor(i)}
+  const keyFor = (i: number) => keys[i]?.toUpperCase() ?? (i < 9 ? String(i + 1) : undefined)
+  const hint = (i: number) => {
+    const k = keyFor(i)
+    return k && !done ? (
+      <Kbd aria-hidden className={cn("hidden pointer-fine:inline-flex", onYellow && "bg-transparent text-inherit inset-ring inset-ring-current/40")}>
+        {k}
       </Kbd>
     ) : null
+  }
+  // Waiting: the solid option is the yellow's ink (or the primary fill off the yellow, in a phone
+  // sheet), the rest are text. Answered: quiet, the chosen one outlined.
+  const variantFor = (id: string) => {
+    if (done && !sending) return answer === id ? "secondary" : "ghost"
+    if (onYellow) return id === solidId ? "needs-you" : "needs-you-text"
+    return id === solidId ? "default" : "ghost"
+  }
 
   if (agentPromptLayout(options) === "buttons") {
     return (
-      <div data-slot="agent-prompt-options" data-layout="buttons" className="flex flex-wrap gap-2">
+      <div data-slot="agent-prompt-options" data-layout="buttons" className={inline ? "contents" : "flex flex-wrap gap-3"}>
         {options.map((o, i) => (
           <Button
             key={o.id}
-            size="sm"
-            variant={i === 0 ? "default" : "outline"}
+            ref={o.id === solidId ? solidRef : undefined}
+            variant={variantFor(o.id)}
+            data-safe={o.id === solidId ? "" : undefined}
             disabled={done}
             aria-pressed={done ? answer === o.id : undefined}
             onClick={() => onAnswer(o.id)}
@@ -425,29 +582,51 @@ function AgentPromptOptions({
       </div>
     )
   }
+  // Rows: each option a full-width button with its number, its label and its detail, wrapping,
+  // never cut. On the yellow an ink edge marks each one; the solid one is filled in that ink.
   return (
-    <ol data-slot="agent-prompt-options" data-layout="rows" className="flex flex-col gap-1.5">
-      {options.map((o, i) => (
-        <li key={o.id}>
-          <Item
-            render={<button type="button" disabled={done} aria-pressed={done ? answer === o.id : undefined} />}
-            variant="outline"
-            size="sm"
-            data-selected={answer === o.id ? "true" : undefined}
-            onClick={() => onAnswer(o.id)}
-          >
-            <ItemMedia>
-              <span aria-hidden className="type-meta w-4 text-center">
+    <ol data-slot="agent-prompt-options" data-layout="rows" className="flex flex-col gap-2">
+      {options.map((o, i) => {
+        const solid = !done && o.id === solidId
+        return (
+          <li key={o.id}>
+            <button
+              ref={o.id === solidId ? solidRef : undefined}
+              type="button"
+              data-slot="agent-prompt-option"
+              data-safe={o.id === solidId ? "" : undefined}
+              data-selected={answer === o.id ? "true" : undefined}
+              disabled={done}
+              aria-pressed={done ? answer === o.id : undefined}
+              onClick={() => onAnswer(o.id)}
+              className={cn(
+                "hit-area flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-(--motion-fast) ease-(--motion-ease) disabled:pointer-events-none disabled:opacity-50 aria-pressed:opacity-100",
+                onYellow && !done
+                  ? solid
+                    ? "bg-needs-you-on-fill text-needs-you-fill hover:bg-needs-you-on-fill/90 active:bg-needs-you-on-fill/80"
+                    : "inset-ring-needs-you-on-fill text-needs-you-on-fill inset-ring hover:bg-needs-you-on-fill/5 active:bg-needs-you-on-fill/9"
+                  : solid
+                    ? "bg-primary-fill text-primary-on-fill hover:bg-primary-fill/90 active:bg-primary-fill/80"
+                    : "rule-box text-text-body hover:bg-state-hover active:bg-state-pressed data-selected:bg-primary-soft"
+              )}
+            >
+              <span aria-hidden className="type-meta w-4 shrink-0 text-center text-inherit">
                 {mark(o.id, <Icon name="checkmark" />) ?? i + 1}
               </span>
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle className="line-clamp-none">{o.label}</ItemTitle>
-              {o.detail ? <ItemDescription className="line-clamp-none">{o.detail}</ItemDescription> : null}
-            </ItemContent>
-          </Item>
-        </li>
-      ))}
+              <span className="flex min-w-0 flex-col whitespace-normal">
+                <span data-slot="agent-prompt-option-title" className="type-ui-emphasis break-words">
+                  {o.label}
+                </span>
+                {o.detail ? (
+                  <span data-slot="agent-prompt-option-detail" className="type-caption break-words">
+                    {o.detail}
+                  </span>
+                ) : null}
+              </span>
+            </button>
+          </li>
+        )
+      })}
     </ol>
   )
 }
