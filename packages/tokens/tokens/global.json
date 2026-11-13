@@ -1,7 +1,7 @@
 {
-  "$description": "Tier 1 · Global primitives. Raw values only. Emitted as --g-*. Never referenced by components directly; semantic tokens alias these.",
+  "$description": "Tier 1 · Global primitives. Raw values only. Emitted as --g-*. Never referenced by components directly; semantic tokens alias these. The neutral ramp, the accent ramps, white-alpha and the hue angles are legacy: apps alias them from their own layers, so they stay, unchanged, but no core role points at the neutral ramp any more (success, warning and info keep their accent ramps).",
   "neutral": {
-    "$description": "Neutral ramp, slightly cool (hue 260) so long reading sessions feel calm.",
+    "$description": "Legacy neutral ramp (hue 260), kept unchanged for app layers that alias it. Not themed: the core reads the theme slots instead.",
     "0": { "$type": "color", "$value": "oklch(1 0 0)" },
     "25": { "$type": "color", "$value": "oklch(0.987 0.002 260)" },
     "50": { "$type": "color", "$value": "oklch(0.974 0.003 260)" },
@@ -25,6 +25,7 @@
   "blue": {
     "$description": "Accent hues. 500 is the light-mode step, 400 the dark-mode step (lighter, so it keeps contrast on dark surfaces).",
     "600": { "$type": "color", "$value": "oklch(0.44 0.141 255)", "$description": "Blue as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
+    "550": { "$type": "color", "$value": "oklch(0.57 0.18 255)", "$description": "The light-mode info fill (--info): the lightest blue that holds a white label at Lc 75 (it measures 76.3; 500 measures 72). Lc 60 or more as an ink on the stone grounds. Added at 1.0." },
     "500": { "$type": "color", "$value": "oklch(0.6 0.19 255)" },
     "400": { "$type": "color", "$value": "oklch(0.7 0.15 255)" },
     "300": { "$type": "color", "$value": "oklch(0.87 0.061 255)", "$description": "Blue as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
@@ -47,8 +48,9 @@
   },
   "amber": {
     "600": { "$type": "color", "$value": "oklch(0.44 0.092 75)", "$description": "Amber as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
+    "550": { "$type": "color", "$value": "oklch(0.57 0.12 75)", "$description": "The light-mode warning fill (--warning): the lightest amber that holds a white label at Lc 75 (it measures 76.9). Lc 60 or more as an ink on the stone grounds, and Lc 45 or more as a solid against the ground, a raised surface, a selected row and a rule. Added at 1.0: no step sat there (500 holds white at Lc 49, 600 is a brown)." },
     "500": { "$type": "color", "$value": "oklch(0.75 0.16 75)" },
-    "450": { "$type": "color", "$value": "oklch(0.77 0.155 76)", "$description": "The light-mode warning fill: its label (neutral.950) Lc 62, the fill Lc 31 or more against the page, the sidebar and a selected row." },
+    "450": { "$type": "color", "$value": "oklch(0.77 0.155 76)", "$description": "The light-mode warning fill before 1.0: its label (neutral.950) Lc 62. --warning now uses amber.550 with a white label; kept unchanged for anything that points here." },
     "400": { "$type": "color", "$value": "oklch(0.82 0.14 80)" },
     "300": { "$type": "color", "$value": "oklch(0.87 0.105 75)", "$description": "Amber as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
     "50": { "$type": "color", "$value": "oklch(0.96 0.035 80)", "$description": "The light-mode attention surface (--attention-surface): amber.600 reads Lc 75 or more on it." },
@@ -81,8 +83,83 @@
     "brown": { "$type": "number", "$value": 65 },
     "gray": { "$type": "number", "$value": 260 }
   },
+  "theme": {
+    "$description": "Theme slots: the values that differ by app, one per Figma primitive, per ground (graphite = dark, stone = light). These are the defaults, Figma's default app (warpcore), so every slot exists with no data-theme attribute. tokens/themes/<app>.json re-declares all 28 under [data-theme=\"<app>\"]. Tier 2 reads the stone slot in light and the graphite slot in dark; nothing else reads a slot.",
+    "$extensions": { "unicron.default-app": "warpcore" },
+    "graphite": {
+      "ground": { "$type": "color", "$value": "#18191D", "$description": "Figma VariableID:5:3 (warpcore/graphite/bg): surface/ground in warpcore / graphite." },
+      "raised": { "$type": "color", "$value": "#212125", "$description": "Figma VariableID:5:4 (warpcore/graphite/surf): surface/raised in warpcore / graphite." },
+      "rule": { "$type": "color", "$value": "#313238", "$description": "Figma VariableID:5:5 (warpcore/graphite/rule): line/rule in warpcore / graphite." },
+      "grid-dot": { "$type": "color", "$value": "#393A40", "$description": "Figma VariableID:5:6 (warpcore/graphite/dot): line/grid-dot in warpcore / graphite." },
+      "faint": { "$type": "color", "$value": "#5F6066", "$description": "Figma VariableID:5:7 (warpcore/graphite/faint): text/faint in warpcore / graphite." },
+      "label": { "$type": "color", "$value": "#B2B4BA", "$description": "Figma VariableID:5:8 (warpcore/graphite/mute): text/label in warpcore / graphite." },
+      "secondary": { "$type": "color", "$value": "#D3D4D8", "$description": "Figma VariableID:5:9 (warpcore/graphite/sub): text/secondary in warpcore / graphite." },
+      "body": { "$type": "color", "$value": "#EFF0F3", "$description": "Figma VariableID:5:10 (warpcore/graphite/ink): text/body in warpcore / graphite." },
+      "primary-fill": { "$type": "color", "$value": "#5146EE", "$description": "Figma VariableID:5:11 (warpcore/graphite/org): primary/fill in warpcore / graphite." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:12 (warpcore/graphite/onO): primary/on-fill in warpcore / graphite." },
+      "primary-text": { "$type": "color", "$value": "#A1AEFF", "$description": "Figma VariableID:5:13 (warpcore/graphite/ptext): primary/text in warpcore / graphite." },
+      "primary-soft": { "$type": "color", "$value": "#1F2343", "$description": "Figma VariableID:5:14 (warpcore/graphite/psoft): primary/soft in warpcore / graphite." },
+      "primary-display": { "$type": "color", "$value": "#888EFF", "$description": "Figma VariableID:7:3 (warpcore/graphite/pdisp): primary/display in warpcore / graphite." },
+      "live": { "$type": "color", "$value": "#1EC5E4", "$description": "Figma VariableID:5:15 (warpcore/graphite/sec): secondary/live in warpcore / graphite." }
+    },
+    "stone": {
+      "ground": { "$type": "color", "$value": "#EFF0F5", "$description": "Figma VariableID:5:18 (warpcore/stone/bg): surface/ground in warpcore / stone." },
+      "raised": { "$type": "color", "$value": "#F7F8FD", "$description": "Figma VariableID:5:19 (warpcore/stone/surf): surface/raised in warpcore / stone." },
+      "rule": { "$type": "color", "$value": "#D1D2D9", "$description": "Figma VariableID:5:20 (warpcore/stone/rule): line/rule in warpcore / stone." },
+      "grid-dot": { "$type": "color", "$value": "#BCBDC4", "$description": "Figma VariableID:5:21 (warpcore/stone/dot): line/grid-dot in warpcore / stone." },
+      "faint": { "$type": "color", "$value": "#A3A4AB", "$description": "Figma VariableID:5:22 (warpcore/stone/faint): text/faint in warpcore / stone." },
+      "label": { "$type": "color", "$value": "#67696E", "$description": "Figma VariableID:5:23 (warpcore/stone/mute): text/label in warpcore / stone." },
+      "secondary": { "$type": "color", "$value": "#3C3D40", "$description": "Figma VariableID:5:24 (warpcore/stone/sub): text/secondary in warpcore / stone." },
+      "body": { "$type": "color", "$value": "#151618", "$description": "Figma VariableID:5:25 (warpcore/stone/ink): text/body in warpcore / stone." },
+      "primary-fill": { "$type": "color", "$value": "#4837E0", "$description": "Figma VariableID:5:26 (warpcore/stone/org): primary/fill in warpcore / stone." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:27 (warpcore/stone/onO): primary/on-fill in warpcore / stone." },
+      "primary-text": { "$type": "color", "$value": "#4E4DCD", "$description": "Figma VariableID:5:28 (warpcore/stone/ptext): primary/text in warpcore / stone." },
+      "primary-soft": { "$type": "color", "$value": "#D5DDFF", "$description": "Figma VariableID:5:29 (warpcore/stone/psoft): primary/soft in warpcore / stone." },
+      "primary-display": { "$type": "color", "$value": "#4837E0", "$description": "Figma VariableID:7:4 (warpcore/stone/pdisp): primary/display in warpcore / stone." },
+      "live": { "$type": "color", "$value": "#007491", "$description": "Figma VariableID:5:30 (warpcore/stone/sec): secondary/live in warpcore / stone." }
+    }
+  },
+  "needs-you": {
+    "$description": "Waiting on the person. One yellow and one near-black, the same in every app and both grounds (Figma needs-you/*, all 8 modes).",
+    "fill": { "$type": "color", "$value": "#EDE54A", "$description": "Figma needs-you/fill (VariableID:5:137); the <app>/<ground>/yel primitives all hold this value." },
+    "on-fill": { "$type": "color", "$value": "#1C1C1C", "$description": "Figma needs-you/on-fill (VariableID:5:138); the <app>/<ground>/onYel primitives all hold this value." }
+  },
+  "critical": {
+    "$description": "Errors. One set per ground, the same for every app (Figma critical/*, typed into the Theme collection with no primitive behind it).",
+    "fill": {
+      "graphite": { "$type": "color", "$value": "#BE2323", "$description": "Figma critical/fill (VariableID:30:2325) in every graphite mode." },
+      "stone": { "$type": "color", "$value": "#B7191C", "$description": "Figma critical/fill (VariableID:30:2325) in every stone mode." }
+    },
+    "on-fill": {
+      "graphite": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma critical/on-fill (VariableID:30:2326) in every graphite mode." },
+      "stone": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma critical/on-fill (VariableID:30:2326) in every stone mode." }
+    },
+    "text": {
+      "graphite": { "$type": "color", "$value": "#FF978A", "$description": "Figma critical/text (VariableID:30:2327) in every graphite mode." },
+      "stone": { "$type": "color", "$value": "#B6322D", "$description": "Figma critical/text (VariableID:30:2327) in every stone mode." }
+    },
+    "soft": {
+      "graphite": { "$type": "color", "$value": "#3E1F1B", "$description": "Figma critical/soft (VariableID:30:2328) in every graphite mode." },
+      "stone": { "$type": "color", "$value": "#FFD9D3", "$description": "Figma critical/soft (VariableID:30:2328) in every stone mode." }
+    }
+  },
+  "scrim": {
+    "$description": "The full-screen dim behind sheets, dialogs and menus (Figma surface/scrim, VariableID:54:50), the same for every app. Graphite is opaque black; stone carries 64% alpha inside the colour, as Figma stores it. The layer's own opacity is a tier 3 knob (--c-scrim-sheet, -dialog, -menu), the same number in both grounds.",
+    "graphite": { "$type": "color", "$value": "#000000", "$description": "Figma surface/scrim (VariableID:54:50) in every graphite mode." },
+    "stone": { "$type": "color", "$value": "rgb(20 22 24 / 0.64)", "$description": "Figma surface/scrim (VariableID:54:50) in every stone mode: #141618 at 64% alpha." }
+  },
   "radius": {
-    "base": { "$type": "dimension", "$value": "0.625rem" }
+    "base": { "$type": "dimension", "$value": "0.125rem", "$description": "2px: Figma radius/control (VariableID:7:31), the one corner every rounded part takes. Figma's radius/none (0) and radius/round (999) are Tailwind's own rounded-none and rounded-full." }
+  },
+  "size": {
+    "$description": "The two control sizes Figma holds as variables. Every other fixed size is a tier 3 knob of the component that draws it.",
+    "control": { "$type": "dimension", "$value": "3rem", "$description": "48px: Figma size/control (VariableID:27:1982). Every floating control, the tab bar, the status strip, a text field's least height." },
+    "touch-min": { "$type": "dimension", "$value": "2.75rem", "$description": "44px: Figma size/touch-min (VariableID:27:1983). The floor for a touch target." }
+  },
+  "stroke": {
+    "$description": "The two stroke widths the direction draws. Figma types them in; it has no stroke variable.",
+    "rule": { "$type": "dimension", "$value": "1px", "$description": "Hairline rules and 1px borders." },
+    "emphasis": { "$type": "dimension", "$value": "2px", "$description": "Focus and error borders, the selected-row edge, the tab indicator." }
   },
   "duration": {
     "press": { "$type": "duration", "$value": "100ms", "$description": "A control going down under a finger or a click. The one step under 120ms: the hand is already there, so it must feel immediate." },
@@ -120,7 +197,8 @@
     "depth-small": { "$type": "number", "$value": 0.9, "$description": "Scale of a pressed icon-size control (10% smaller): a small target needs a larger change to show." }
   },
   "font": {
-    "sans": { "$type": "fontFamily", "$value": ["Inter Variable", "ui-sans-serif", "system-ui", "sans-serif"] },
-    "mono": { "$type": "fontFamily", "$value": ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"] }
+    "$description": "Geist and Geist Mono, as values. @unicron/ui loads the font files (@fontsource-variable/geist, @fontsource-variable/geist-mono); the plain family name follows for an app that installs the static fonts.",
+    "sans": { "$type": "fontFamily", "$value": ["Geist Variable", "Geist", "ui-sans-serif", "system-ui", "sans-serif"] },
+    "mono": { "$type": "fontFamily", "$value": ["Geist Mono Variable", "Geist Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"] }
   }
 }

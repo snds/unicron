@@ -1,0 +1,40 @@
+{
+  "$description": "Tier 1 · App theme: Vale (Japanese indigo 228, live fog teal 165). The 28 theme slots, 14 per ground: Figma's `vale / graphite` and `vale / stone` modes of `Unicron / Theme`, each hex copied exactly from the primitive the role aliases. Emitted in dist/tokens.css as `[data-theme=\"vale\"] { --g-theme-… }`. Raw hex only, and only these slots: a change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
+  "$extensions": {
+    "unicron.app": { "name": "vale", "order": 2, "figmaModes": { "graphite": "vale / graphite", "stone": "vale / stone" } }
+  },
+  "theme": {
+    "graphite": {
+      "ground": { "$type": "color", "$value": "#161A1C", "$description": "Figma VariableID:5:33 (vale/graphite/bg): surface/ground in vale / graphite." },
+      "raised": { "$type": "color", "$value": "#1E2224", "$description": "Figma VariableID:5:34 (vale/graphite/surf): surface/raised in vale / graphite." },
+      "rule": { "$type": "color", "$value": "#2E3436", "$description": "Figma VariableID:5:35 (vale/graphite/rule): line/rule in vale / graphite." },
+      "grid-dot": { "$type": "color", "$value": "#353C3F", "$description": "Figma VariableID:5:36 (vale/graphite/dot): line/grid-dot in vale / graphite." },
+      "faint": { "$type": "color", "$value": "#5B6265", "$description": "Figma VariableID:5:37 (vale/graphite/faint): text/faint in vale / graphite." },
+      "label": { "$type": "color", "$value": "#AFB5B9", "$description": "Figma VariableID:5:38 (vale/graphite/mute): text/label in vale / graphite." },
+      "secondary": { "$type": "color", "$value": "#D0D5D7", "$description": "Figma VariableID:5:39 (vale/graphite/sub): text/secondary in vale / graphite." },
+      "body": { "$type": "color", "$value": "#EDF1F3", "$description": "Figma VariableID:5:40 (vale/graphite/ink): text/body in vale / graphite." },
+      "primary-fill": { "$type": "color", "$value": "#27728F", "$description": "Figma VariableID:5:41 (vale/graphite/org): primary/fill in vale / graphite." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:42 (vale/graphite/onO): primary/on-fill in vale / graphite." },
+      "primary-text": { "$type": "color", "$value": "#86BDD7", "$description": "Figma VariableID:5:43 (vale/graphite/ptext): primary/text in vale / graphite." },
+      "primary-soft": { "$type": "color", "$value": "#1B292F", "$description": "Figma VariableID:5:44 (vale/graphite/psoft): primary/soft in vale / graphite." },
+      "primary-display": { "$type": "color", "$value": "#58A0BE", "$description": "Figma VariableID:7:5 (vale/graphite/pdisp): primary/display in vale / graphite." },
+      "live": { "$type": "color", "$value": "#87C0A6", "$description": "Figma VariableID:5:45 (vale/graphite/sec): secondary/live in vale / graphite." }
+    },
+    "stone": {
+      "ground": { "$type": "color", "$value": "#ECF1F4", "$description": "Figma VariableID:5:48 (vale/stone/bg): surface/ground in vale / stone." },
+      "raised": { "$type": "color", "$value": "#F4F9FC", "$description": "Figma VariableID:5:49 (vale/stone/surf): surface/raised in vale / stone." },
+      "rule": { "$type": "color", "$value": "#CDD4D7", "$description": "Figma VariableID:5:50 (vale/stone/rule): line/rule in vale / stone." },
+      "grid-dot": { "$type": "color", "$value": "#B7BFC3", "$description": "Figma VariableID:5:51 (vale/stone/dot): line/grid-dot in vale / stone." },
+      "faint": { "$type": "color", "$value": "#9EA6AA", "$description": "Figma VariableID:5:52 (vale/stone/faint): text/faint in vale / stone." },
+      "label": { "$type": "color", "$value": "#646A6D", "$description": "Figma VariableID:5:53 (vale/stone/mute): text/label in vale / stone." },
+      "secondary": { "$type": "color", "$value": "#3A3E40", "$description": "Figma VariableID:5:54 (vale/stone/sub): text/secondary in vale / stone." },
+      "body": { "$type": "color", "$value": "#141618", "$description": "Figma VariableID:5:55 (vale/stone/ink): text/body in vale / stone." },
+      "primary-fill": { "$type": "color", "$value": "#186683", "$description": "Figma VariableID:5:56 (vale/stone/org): primary/fill in vale / stone." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:57 (vale/stone/onO): primary/on-fill in vale / stone." },
+      "primary-text": { "$type": "color", "$value": "#356B82", "$description": "Figma VariableID:5:58 (vale/stone/ptext): primary/text in vale / stone." },
+      "primary-soft": { "$type": "color", "$value": "#D2E3EB", "$description": "Figma VariableID:5:59 (vale/stone/psoft): primary/soft in vale / stone." },
+      "primary-display": { "$type": "color", "$value": "#186683", "$description": "Figma VariableID:7:6 (vale/stone/pdisp): primary/display in vale / stone." },
+      "live": { "$type": "color", "$value": "#397059", "$description": "Figma VariableID:5:60 (vale/stone/sec): secondary/live in vale / stone." }
+    }
+  }
+}

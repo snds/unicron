@@ -1,0 +1,40 @@
+{
+  "$description": "Tier 1 · App theme: Synapse (magenta 352, live synaptic teal 195). The 28 theme slots, 14 per ground: Figma's `synapse / graphite` and `synapse / stone` modes of `Unicron / Theme`, each hex copied exactly from the primitive the role aliases. Emitted in dist/tokens.css as `[data-theme=\"synapse\"] { --g-theme-… }`. Raw hex only, and only these slots: a change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
+  "$extensions": {
+    "unicron.app": { "name": "synapse", "order": 4, "figmaModes": { "graphite": "synapse / graphite", "stone": "synapse / stone" } }
+  },
+  "theme": {
+    "graphite": {
+      "ground": { "$type": "color", "$value": "#1C181A", "$description": "Figma VariableID:5:93 (synapse/graphite/bg): surface/ground in synapse / graphite." },
+      "raised": { "$type": "color", "$value": "#242022", "$description": "Figma VariableID:5:94 (synapse/graphite/surf): surface/raised in synapse / graphite." },
+      "rule": { "$type": "color", "$value": "#373133", "$description": "Figma VariableID:5:95 (synapse/graphite/rule): line/rule in synapse / graphite." },
+      "grid-dot": { "$type": "color", "$value": "#3F383B", "$description": "Figma VariableID:5:96 (synapse/graphite/dot): line/grid-dot in synapse / graphite." },
+      "faint": { "$type": "color", "$value": "#655E61", "$description": "Figma VariableID:5:97 (synapse/graphite/faint): text/faint in synapse / graphite." },
+      "label": { "$type": "color", "$value": "#B9B2B5", "$description": "Figma VariableID:5:98 (synapse/graphite/mute): text/label in synapse / graphite." },
+      "secondary": { "$type": "color", "$value": "#D8D3D4", "$description": "Figma VariableID:5:99 (synapse/graphite/sub): text/secondary in synapse / graphite." },
+      "body": { "$type": "color", "$value": "#F3EFF0", "$description": "Figma VariableID:5:100 (synapse/graphite/ink): text/body in synapse / graphite." },
+      "primary-fill": { "$type": "color", "$value": "#B90D75", "$description": "Figma VariableID:5:101 (synapse/graphite/org): primary/fill in synapse / graphite." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:102 (synapse/graphite/onO): primary/on-fill in synapse / graphite." },
+      "primary-text": { "$type": "color", "$value": "#FF8FCC", "$description": "Figma VariableID:5:103 (synapse/graphite/ptext): primary/text in synapse / graphite." },
+      "primary-soft": { "$type": "color", "$value": "#3A1B29", "$description": "Figma VariableID:5:104 (synapse/graphite/psoft): primary/soft in synapse / graphite." },
+      "primary-display": { "$type": "color", "$value": "#FA59AC", "$description": "Figma VariableID:7:9 (synapse/graphite/pdisp): primary/display in synapse / graphite." },
+      "live": { "$type": "color", "$value": "#31C8C9", "$description": "Figma VariableID:5:105 (synapse/graphite/sec): secondary/live in synapse / graphite." }
+    },
+    "stone": {
+      "ground": { "$type": "color", "$value": "#F4EEF0", "$description": "Figma VariableID:5:108 (synapse/stone/bg): surface/ground in synapse / stone." },
+      "raised": { "$type": "color", "$value": "#FDF7F9", "$description": "Figma VariableID:5:109 (synapse/stone/surf): surface/raised in synapse / stone." },
+      "rule": { "$type": "color", "$value": "#D8D0D3", "$description": "Figma VariableID:5:110 (synapse/stone/rule): line/rule in synapse / stone." },
+      "grid-dot": { "$type": "color", "$value": "#C3BBBE", "$description": "Figma VariableID:5:111 (synapse/stone/dot): line/grid-dot in synapse / stone." },
+      "faint": { "$type": "color", "$value": "#AAA2A5", "$description": "Figma VariableID:5:112 (synapse/stone/faint): text/faint in synapse / stone." },
+      "label": { "$type": "color", "$value": "#6D6769", "$description": "Figma VariableID:5:113 (synapse/stone/mute): text/label in synapse / stone." },
+      "secondary": { "$type": "color", "$value": "#403C3D", "$description": "Figma VariableID:5:114 (synapse/stone/sub): text/secondary in synapse / stone." },
+      "body": { "$type": "color", "$value": "#181516", "$description": "Figma VariableID:5:115 (synapse/stone/ink): text/body in synapse / stone." },
+      "primary-fill": { "$type": "color", "$value": "#AB006A", "$description": "Figma VariableID:5:116 (synapse/stone/org): primary/fill in synapse / stone." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:117 (synapse/stone/onO): primary/on-fill in synapse / stone." },
+      "primary-text": { "$type": "color", "$value": "#A52C6D", "$description": "Figma VariableID:5:118 (synapse/stone/ptext): primary/text in synapse / stone." },
+      "primary-soft": { "$type": "color", "$value": "#FDD2E3", "$description": "Figma VariableID:5:119 (synapse/stone/psoft): primary/soft in synapse / stone." },
+      "primary-display": { "$type": "color", "$value": "#AB006A", "$description": "Figma VariableID:7:10 (synapse/stone/pdisp): primary/display in synapse / stone." },
+      "live": { "$type": "color", "$value": "#007778", "$description": "Figma VariableID:5:120 (synapse/stone/sec): secondary/live in synapse / stone." }
+    }
+  }
+}
