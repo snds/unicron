@@ -51,7 +51,7 @@ function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
     <SheetPrimitive.Backdrop
       data-slot="sheet-overlay"
       className={cn(
-        "bg-black/10 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 z-50 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "bg-black/10 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 z-50 transition-opacity duration-(--motion-fast) data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -117,7 +117,7 @@ function SheetContent({
         className={cn(
           // A side or top sheet starts below --c-dialog-titlebar-inset (0px by default), so an
           // app's title bar strip never overlaps the panel.
-          "data-[side=left]:pl-[env(safe-area-inset-left)] data-[side=right]:pr-[env(safe-area-inset-right)] data-[side=bottom]:px-[max(env(safe-area-inset-left),env(safe-area-inset-right))] bg-popover text-popover-foreground fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:top-(--c-dialog-titlebar-inset) data-[side=left]:bottom-0 data-[side=left]:left-0 data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:h-auto data-[side=top]:border-b data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
+          "data-[side=left]:pl-[env(safe-area-inset-left)] data-[side=right]:pr-[env(safe-area-inset-right)] data-[side=bottom]:px-[max(env(safe-area-inset-left),env(safe-area-inset-right))] bg-popover text-popover-foreground fixed z-50 flex flex-col gap-4 bg-clip-padding text-sm shadow-lg transition duration-(--motion-base) ease-move data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:top-(--c-dialog-titlebar-inset) data-[side=left]:bottom-0 data-[side=left]:left-0 data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:h-auto data-[side=top]:border-b data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
           SHEET_SIZES[size],
           // The header keeps clear of the close button, so a long title wraps before it, not under
           // it; and of the header's actions too, when there are some (SheetHeaderActions).
@@ -208,7 +208,7 @@ function AdaptiveSheetContent({
         data-slot="sheet-content"
         data-side="adaptive"
         className={cn(
-          "bg-popover text-popover-foreground fixed z-50 flex flex-col overflow-hidden bg-clip-padding text-sm shadow-lg transition duration-200 ease-out data-ending-style:opacity-0 data-starting-style:opacity-0",
+          "bg-popover text-popover-foreground fixed z-50 flex flex-col overflow-hidden bg-clip-padding text-sm shadow-lg transition duration-(--motion-base) ease-enter data-ending-style:opacity-0 data-starting-style:opacity-0",
           // Compact: anchored to the bottom edge, rounded on top, short of the top.
           "max-sm:inset-x-0 max-sm:bottom-0 max-sm:h-(--c-sheet-compact-height) max-sm:rounded-t-(--c-sheet-compact-radius) max-sm:data-ending-style:translate-y-full max-sm:data-starting-style:translate-y-full",
           // Regular: a panel on the right, starting below --c-dialog-titlebar-inset (0px by default).

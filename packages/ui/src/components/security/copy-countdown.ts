@@ -2,6 +2,8 @@
 // Promoted from: snds/lockdown · PR snds/unicron (this PR) · DSA none (first principles, Lockdown brief §5.7)
 import * as React from "react"
 
+import { useMediaQuery, useReducedMotion } from "../../lib/motion/use-reduced-motion"
+
 /** Parse a CSS duration ("5s", "200ms") or bare number of seconds. `undefined` when it is not one. */
 export function parseSeconds(raw: string | null | undefined): number | undefined {
   if (!raw) return undefined
@@ -28,26 +30,8 @@ export function readSecondsToken(el: Element | null, name: string, fallback: num
   }
 }
 
-/** A media query, live. False where `matchMedia` is missing (jsdom, SSR). */
-export function useMediaQuery(query: string): boolean {
-  const subscribe = React.useCallback(
-    (cb: () => void) => {
-      if (typeof window === "undefined" || typeof window.matchMedia !== "function") return () => {}
-      const mq = window.matchMedia(query)
-      mq.addEventListener?.("change", cb)
-      return () => mq.removeEventListener?.("change", cb)
-    },
-    [query]
-  )
-  const get = () =>
-    typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia(query).matches : false
-  return React.useSyncExternalStore(subscribe, get, () => false)
-}
-
-/** `prefers-reduced-motion: reduce`, live. */
-export function useReducedMotion(): boolean {
-  return useMediaQuery("(prefers-reduced-motion: reduce)")
-}
+// The media-query hooks live in lib/motion; re-exported here so existing imports keep working.
+export { useMediaQuery, useReducedMotion }
 
 /** `prefers-contrast: more` or forced colors (Windows high contrast), live. */
 export function useHighContrast(): boolean {

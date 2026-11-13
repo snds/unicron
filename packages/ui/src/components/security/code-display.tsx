@@ -194,7 +194,7 @@ function Ring({ fraction, expiring, seconds }: { fraction: number; expiring: boo
           strokeDasharray={c}
           strokeDashoffset={c * (1 - Math.min(1, Math.max(0, fraction)))}
           className={cn(
-            "transition-[stroke-dashoffset] duration-1000 ease-linear motion-reduce:transition-none",
+            "transition-[stroke-dashoffset] duration-(--motion-tick) ease-linear motion-reduce:transition-none",
             expiring ? "stroke-(--c-code-ring-expiring)" : "stroke-(--c-code-ring-progress)"
           )}
         />

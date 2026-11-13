@@ -18,6 +18,13 @@
 //   (b) Primitives (packages/ui/src) carry no colour literals: no hex, rgb(), hsl(), oklch(),
 //       oklab() in any .ts/.tsx/.css file. Tailwind arbitrary values that reference a token,
 //       e.g. `bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]`, are fine.
+//   (c) Primitives carry no motion literals either (tests excluded): no Tailwind `duration-200`,
+//       `delay-150`, `duration-[200ms]`, `ease-in`, `ease-out`, `ease-in-out`; no `cubic-bezier()`
+//       or `linear()`; no raw time in a `transition` or `animation` declaration; no tier 1 motion
+//       variable (`--g-duration-*`, `--g-ease-*`, `--g-spring-*`, `--g-stagger-*`, `--g-press-*`);
+//       and no `transition-all`, which animates whatever happens to change. Write a motion role:
+//       `duration-(--motion-base)`, `ease-exit`, `var(--motion-ease-move)`. `ease-linear` is
+//       allowed: it is for a value that tracks a real quantity (a countdown, a progress bar).
 //
 // Run: pnpm lint:tokens (root) · exit 1 with every violation listed, 0 when clean.
 
@@ -125,9 +132,34 @@ for (const file of files) {
   })
 }
 
+// ── (c) no motion literals in primitives ──────────────────────────────────────────────────────
+const MOTION_RULES = [
+  [/(?<![\w-])(?:duration|delay)-(?:\d+|\[\d[^\]]*\])(?![\w-])/g, "a raw duration; write duration-(--motion-…)"],
+  [/(?<![\w-])ease-(?:in-out|in|out)(?![\w-])/g, "a generic curve; use a motion role (ease-enter, ease-exit, ease-move, var(--motion-ease-…))"],
+  [/cubic-bezier\(|(?<![\w-])linear\(/g, "a hand-written curve; curves are tokens (var(--motion-ease-…), var(--motion-spring-…))"],
+  [/--g-(?:duration|ease|spring|stagger|press)-[\w-]+/g, "a tier 1 motion value; use its --motion-* role"],
+  [/(?<![\w-])transition-all(?![\w-])/g, "transition-all animates anything that changes; name the properties"],
+]
+const TIMED_DECLARATION = /(?:transition|animation)(?:-duration|-delay)?["']?\s*:/i
+const RAW_TIME = /(?<![\w.(-])\d*\.?\d+m?s\b/g
+let motionFiles = 0
+for (const file of files) {
+  if (/\.test\.tsx?$/.test(file) || file.includes(`${path.sep}test${path.sep}`)) continue
+  motionFiles++
+  const rel = path.relative(repoRoot, file)
+  fs.readFileSync(file, "utf8").split("\n").forEach((line, i) => {
+    for (const [pattern, why] of MOTION_RULES) {
+      for (const hit of line.match(pattern) ?? []) fail(`${rel}:${i + 1}`, `motion literal ${hit} — ${why}`)
+    }
+    if (TIMED_DECLARATION.test(line)) {
+      for (const hit of line.match(RAW_TIME) ?? []) fail(`${rel}:${i + 1}`, `motion literal ${hit} in a transition or animation; use a --motion-* role`)
+    }
+  })
+}
+
 if (errors.length) {
   console.error(`✗ token lint: ${errors.length} violation${errors.length === 1 ? "" : "s"}`)
   for (const e of errors) console.error(`  ${e}`)
   process.exit(1)
 }
-console.log(`✓ token lint: ${checked} tier-2/3 tokens alias lower tiers; ${files.length} files in packages/ui/src carry no colour literals`)
+console.log(`✓ token lint: ${checked} tier-2/3 tokens alias lower tiers; ${files.length} files in packages/ui/src carry no colour literals, ${motionFiles} carry no motion literals`)

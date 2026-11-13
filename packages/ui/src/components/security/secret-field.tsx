@@ -731,7 +731,7 @@ function CopyCountdown({ left, total, numeric }: { left: number; total: number; 
         strokeDasharray="100"
         strokeDashoffset={100 - progress * 100}
         strokeLinecap="round"
-        className="stroke-(--c-secret-field-copy-progress) transition-[stroke-dashoffset] duration-1000 ease-linear forced-colors:stroke-[CanvasText]"
+        className="stroke-(--c-secret-field-copy-progress) transition-[stroke-dashoffset] duration-(--motion-tick) ease-linear forced-colors:stroke-[CanvasText]"
       />
     </svg>
   )
