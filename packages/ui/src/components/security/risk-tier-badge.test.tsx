@@ -61,6 +61,16 @@ describe("RiskTierBadge: the closed vocabulary", () => {
     expect(pill.className).toContain("forced-colors:border-current")
     expect(pill.className).toContain("contrast-more:bg-transparent")
     expect(pill.className).toContain("h-(--c-risk-tier-height-md)")
-    expect(pill.className).toContain("motion-reduce:")
+    // Carbon icons are SVG paths: no icon-font axes to raise, and no glyph fill to animate.
+    expect(pill.className).not.toContain("--c-icon-")
+    expect(pill.className).not.toContain("svg>text")
+  })
+
+  it("stops the loading pulse under reduced motion", () => {
+    // No verdict yet (verified is undefined) is the loading state.
+    const { container } = render(<RiskTierBadge tier="official" />)
+    const pill = container.querySelector('[data-slot="risk-tier-badge-pill"]')!
+    expect(pill.className).toContain("animate-pulse")
+    expect(pill.className).toContain("motion-reduce:animate-none")
   })
 })

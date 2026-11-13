@@ -443,8 +443,6 @@ export function CrownJewelSurface({
     "--border": "var(--c-crown-jewel-border)",
     "--input": "var(--c-crown-jewel-border)",
     "--ring": "var(--c-crown-jewel-muted-ink)",
-    "--c-icon-fill": "var(--c-crown-jewel-icon-fill)",
-    "--c-icon-wght": "var(--c-crown-jewel-icon-wght)",
   } as React.CSSProperties
 
   return (

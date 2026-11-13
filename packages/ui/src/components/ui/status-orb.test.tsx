@@ -15,7 +15,7 @@ describe("StatusOrb", () => {
       const orb = screen.getByRole("img", { name: statusOrbCopy[state] })
       expect(orb).toHaveAttribute("data-slot", "status-orb")
       expect(orb).toHaveAttribute("data-state", state)
-      // No words on screen (a glyph's ligature is aria-hidden inside the icon).
+      // No words on screen (the icon is an aria-hidden SVG with no text in it).
       expect(orb.textContent).not.toContain(statusOrbCopy[state])
       unmount()
     }

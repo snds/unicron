@@ -26,7 +26,7 @@
 // their own. Each is sampled into a `linear()` easing curve that runs over its sibling
 // `<name>-duration` token; the raw numbers stay in tokens.json (`spring`) for JS.
 //
-// References use DTCG syntax: "{neutral.0}" (global), "{foreground}" (semantic), "{icon.fill}" (component).
+// References use DTCG syntax: "{neutral.0}" (global), "{foreground}" (semantic), "{scrim.sheet}" (component).
 // They resolve to var(--…) so the cascade stays live (a dark override of a semantic token
 // flows into every component token that aliases it).
 //

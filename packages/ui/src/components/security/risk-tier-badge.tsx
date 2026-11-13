@@ -135,12 +135,8 @@ export function RiskTierBadge({
           "border font-medium [&>svg]:size-3.5!",
           size === "md" ? "h-(--c-risk-tier-height-md) text-sm" : "h-(--c-risk-tier-height-sm)",
           TIER_CLASSES[state],
-          // High contrast: a 1px solid border in the tier ink, tint dropped, icon weight up.
-          "contrast-more:border-current contrast-more:bg-transparent forced-colors:border-current forced-colors:bg-transparent",
-          // Icon weight 500, 600 in high contrast. Set on the pill so the Icon inherits it.
-          "[--c-icon-wght:500] contrast-more:[--c-icon-wght:600] forced-colors:[--c-icon-wght:600]",
-          // Reduced motion: the icon fill does not animate.
-          "motion-reduce:[&>svg>text]:transition-none!"
+          // High contrast: a 1px solid border in the tier ink, tint dropped.
+          "contrast-more:border-current contrast-more:bg-transparent forced-colors:border-current forced-colors:bg-transparent"
         )}
         aria-describedby={explain ? descId : undefined}
       >
