@@ -570,7 +570,7 @@ function SecretFieldRead({
 
   const copyPhase = countdown.state
   const copyLeft = countdown.secondsLeft
-  const revealGlyph = isRevealed ? "visibility_off" : "visibility"
+  const revealGlyph = isRevealed ? "view--off" : "view"
   const copyTooltip =
     copyPhase === "counting"
       ? `Copied · clears in ${copyLeft} s${conditionalClear ? "" : ", even if you copy something else"}`
@@ -676,11 +676,11 @@ function SecretFieldRead({
                   <CopyCountdown left={copyLeft} total={clipboardSeconds} numeric={reducedMotion} />
                 ) : copyPhase === "cleared" ? (
                   <>
-                    <Icon name="check" />
+                    <Icon name="checkmark" />
                     <span className="sr-only">Cleared</span>
                   </>
                 ) : (
-                  <GlyphWithGate name="content_copy" gated={gated} />
+                  <GlyphWithGate name="copy" gated={gated} />
                 )}
               </IconButton>
               {children && <span data-slot="secret-field-more">{children}</span>}
@@ -696,13 +696,13 @@ function SecretFieldRead({
   )
 }
 
-function GlyphWithGate({ name, gated }: { name: "visibility" | "visibility_off" | "content_copy"; gated: boolean }) {
+function GlyphWithGate({ name, gated }: { name: "view" | "view--off" | "copy"; gated: boolean }) {
   return (
     <span className="relative inline-flex">
       <Icon name={name} />
       {gated && (
         <span data-slot="secret-field-gate" className="absolute -right-1 -bottom-1 [&>svg]:size-2.5!">
-          <Icon name="lock" fill />
+          <Icon name="locked--filled" />
         </span>
       )}
     </span>
@@ -830,7 +830,7 @@ function SecretFieldEdit({
               <IconButton
                 data-slot="secret-field-reveal"
                 label={shown ? `Hide ${label}` : `Show ${label}`}
-                icon={shown ? "visibility_off" : "visibility"}
+                icon={shown ? "view--off" : "view"}
                 aria-pressed={shown}
                 disabled={disabled}
                 onClick={() => setShown((s) => !s)}

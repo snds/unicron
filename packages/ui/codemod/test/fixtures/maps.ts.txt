@@ -1,0 +1,83 @@
+import type { IconName } from "@unicron/ui"
+
+type Kind = "mail" | "search" | "delete"
+type View = "all" | "archive" | "delete"
+
+/** Typed as a Record: the values are icons, the keys are not. */
+export const KIND_ICONS: Record<Kind, IconName> = {
+  mail: "mail",
+  search: "search",
+  "delete": "delete",
+}
+
+export const PARTIAL: Partial<Record<string, IconName>> = { done: "check_circle", failed: "error" }
+
+// Named like an icon map, typed by inference.
+const CHANGE_ICON = { added: "add", modified: "edit", deleted: "remove", renamed: "drive_file_move" } as const
+export const GAMING_ICON = { paused: "pause_circle", migrated: "swap_horiz" } as const satisfies Record<string, IconName>
+export const STATES = { queued: "schedule", stopped: "stop_circle" } satisfies Record<string, IconName>
+
+// A tuple with one icon slot: only that slot changes.
+export type Screen = readonly [View, IconName, string]
+export const VIEWS: Array<[View, IconName]> = [
+  ["all", "inventory_2"],
+  ["archive", "archive"],
+  ["delete", "delete"],
+]
+export const SCREENS: ReadonlyArray<Screen> = [
+  ["archive", "archive", "Archive"],
+  ["delete", "delete_forever", "Deleted"],
+]
+const METHODS: Record<string, [IconName, string]> = {
+  password: ["password", "password"],
+  code: ["timer", "one-time code"],
+}
+
+export const NAV: { id: string; label: string; icon: IconName }[] = [
+  { id: "home", label: "Home", icon: "home" },
+  { id: "search", label: "Search", icon: "search" },
+  { id: "settings", label: "Settings", icon: busy() ? "hourglass_empty" : "settings" },
+]
+export const LIST: IconName[] = ["star", "flag", "delete"]
+export const icons = ["mail", "event"]
+
+export interface Step {
+  icon: "light_mode" | "dark_mode" | "contrast"
+  mark?: IconName
+  label: string
+}
+
+export function kindIcon(kind: string): IconName {
+  if (kind === "delete") return "delete"
+  switch (kind) {
+    case "mail":
+      return "mail"
+    case "search":
+      return "search"
+    default:
+      return KIND_ICONS[kind as Kind] ?? "category"
+  }
+}
+const classIcon = (c: string) => (c === "employer" ? "work" : c === "personal" ? "person" : "help")
+export const fileIcon = (mime: string): IconName => {
+  const labels = ["mail", "delete"].map((word) => word.toUpperCase())
+  if (labels.includes(mime)) return "image"
+  return "draft"
+}
+export function label(kind: string): string {
+  return kind === "mail" ? "mail" : "search"
+}
+
+function Row({ icon = "description", glyph: mark = "key" }: { icon?: IconName; glyph?: IconName }) {
+  let revealGlyph: IconName = busy() ? "visibility_off" : "visibility"
+  revealGlyph = "lock"
+  return [icon, mark, revealGlyph, CHANGE_ICON, METHODS, classIcon]
+}
+
+// Not icons: ordinary words in ordinary places.
+const mode = "search"
+const actions = ["add", "close", "delete"]
+const lookup = { search: true, close: "close", kind: "mail" }
+if (mode === "close" || actions.includes("add")) console.log(lookup["search"], `add ${mode} close`, /"delete"/.test(mode))
+declare function busy(): boolean
+export { Row }

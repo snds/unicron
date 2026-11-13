@@ -31,7 +31,7 @@ function NativeSelect({
       />
       <Icon className="text-muted-foreground top-1/2 right-2.5 size-4 -translate-y-1/2 pointer-events-none absolute select-none"
         aria-hidden="true"
-        data-slot="native-select-icon" name="keyboard_arrow_down" />
+        data-slot="native-select-icon" name="chevron--down" />
     </div>
   )
 }

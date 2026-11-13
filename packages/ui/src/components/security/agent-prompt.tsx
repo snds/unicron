@@ -35,7 +35,7 @@ export interface AgentPromptOption {
 export const agentPromptCopy: Record<AgentPromptKind, { title: string; icon: IconName; options: AgentPromptOption[] }> = {
   permission: {
     title: "Allow?",
-    icon: "front_hand",
+    icon: "stop-sign",
     options: [
       { id: "allow", label: "Allow" },
       { id: "deny", label: "Deny" },
@@ -43,13 +43,13 @@ export const agentPromptCopy: Record<AgentPromptKind, { title: string; icon: Ico
   },
   continue: {
     title: "Continue?",
-    icon: "play_arrow",
+    icon: "play",
     options: [
       { id: "continue", label: "Continue" },
       { id: "stop", label: "Stop" },
     ],
   },
-  choice: { title: "Choose", icon: "checklist", options: [] },
+  choice: { title: "Choose", icon: "list--checked", options: [] },
   reply: { title: "Reply", icon: "chat", options: [] },
 }
 
@@ -255,7 +255,7 @@ export function AgentPrompt({
         aria-label={expired ? agentPromptStateCopy.timedOut : agentPromptStateCopy.safeIn(safeLabel, formatPromptCountdown(left ?? 0))}
         className="type-meta flex items-center gap-1 tabular-nums"
       >
-        <Icon name={expired ? "timer_off" : "timer"} />
+        <Icon name="time" />
         {expired ? agentPromptStateCopy.timedOut : formatPromptCountdown(left ?? 0)}
       </span>
     ) : null
@@ -265,7 +265,7 @@ export function AgentPrompt({
       {options.length ? <AgentPromptOptions options={options} yesNo={yesNo} answer={answer} sending={sending} onAnswer={answerWith} /> : null}
       {error && waiting ? (
         <p role="alert" data-slot="agent-prompt-error" className="type-support text-destructive flex items-center gap-1.5">
-          <Icon name="error" />
+          <Icon name="warning" />
           {error}
         </p>
       ) : null}
@@ -288,7 +288,7 @@ export function AgentPrompt({
       {...props}
     >
       <header className="flex flex-wrap items-center gap-2">
-        <Icon name={copy.icon} fill className={cn(waiting || sending ? "text-attention-foreground" : "text-muted-foreground")} />
+        <Icon name={copy.icon} className={cn(waiting || sending ? "text-attention-foreground" : "text-muted-foreground")} />
         <h3 id={titleId} className="type-group-title">
           {copy.title}
         </h3>
@@ -371,7 +371,7 @@ function AgentPromptReply({ answer, sending, onSend }: { answer?: string; sendin
         {sending && answer === AGENT_PROMPT_REPLY ? (
           <Spinner label={agentPromptStateCopy.sending} data-icon="inline-start" />
         ) : (
-          <Icon name={answer === AGENT_PROMPT_REPLY ? "check" : "send"} data-icon="inline-start" />
+          <Icon name={answer === AGENT_PROMPT_REPLY ? "checkmark" : "send--alt"} data-icon="inline-start" />
         )}
         {agentPromptStateCopy.send}
       </Button>
@@ -417,7 +417,7 @@ function AgentPromptOptions({
             aria-pressed={done ? answer === o.id : undefined}
             onClick={() => onAnswer(o.id)}
           >
-            {mark(o.id, <Icon name="check" data-icon="inline-start" />)}
+            {mark(o.id, <Icon name="checkmark" data-icon="inline-start" />)}
             {o.label}
             {hint(i)}
           </Button>
@@ -438,7 +438,7 @@ function AgentPromptOptions({
           >
             <ItemMedia>
               <span aria-hidden className="type-meta w-4 text-center">
-                {mark(o.id, <Icon name="check" />) ?? i + 1}
+                {mark(o.id, <Icon name="checkmark" />) ?? i + 1}
               </span>
             </ItemMedia>
             <ItemContent>

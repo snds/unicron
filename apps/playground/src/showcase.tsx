@@ -152,9 +152,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /** A status role as it's drawn: its fill (a dot), its ink on the page, and its ink on its own wash. */
 const STATUS_CLASSES = {
-  success: { fill: "bg-success", ink: "text-success-foreground", surface: "bg-success-surface", icon: "check_circle" },
-  attention: { fill: "bg-attention", ink: "text-attention-foreground", surface: "bg-attention-surface", icon: "front_hand" },
-  running: { fill: "bg-running", ink: "text-running-foreground", surface: "bg-running-surface", icon: "progress_activity" },
+  success: { fill: "bg-success", ink: "text-success-foreground", surface: "bg-success-surface", icon: "checkmark--outline" },
+  attention: { fill: "bg-attention", ink: "text-attention-foreground", surface: "bg-attention-surface", icon: "stop-sign" },
+  running: { fill: "bg-running", ink: "text-running-foreground", surface: "bg-running-surface", icon: "in-progress" },
 } as const
 
 function StatusSwatch({ role }: { role: keyof typeof STATUS_CLASSES }) {
@@ -208,7 +208,7 @@ function PlaybackDemo() {
     <div className="flex w-full max-w-sm flex-col gap-3">
       <RunTrace
         steps={steps}
-        marks={steps.some((s) => s.id === "install" && s.endedAt) ? [{ id: "allowed", after: "install", label: "Allowed once", icon: "check" }] : []}
+        marks={steps.some((s) => s.id === "install" && s.endedAt) ? [{ id: "allowed", after: "install", label: "Allowed once", icon: "checkmark" }] : []}
         live={live}
         reasoning={live ? REASONING : undefined}
       />
@@ -385,19 +385,19 @@ export function Showcase() {
         </Button>
         <IconButton icon="archive" label="Archive" shortcut="E" />
         <IconButton label="Pin" render={<Toggle size="sm" defaultPressed />}>
-          <Icon name="keep" fill />
+          <Icon name="pin--filled" />
         </IconButton>
         {/* indicator on a control: a corner dot, and the words in its name. */}
         <Button variant="outline" indicator={{ kind: "attention", count: 2 }}>
           Tasks
         </Button>
-        <IconButton icon="forum" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />
+        <IconButton icon="chat" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />
         <ToggleGroup defaultValue={["chat"]}>
           <ToggleGroupItem value="chat" aria-label="Chat">
             <Icon name="chat" />
           </ToggleGroupItem>
           <ToggleGroupItem value="tasks" aria-label="Tasks" indicator={{ kind: "attention", count: 1 }}>
-            <Icon name="task_alt" />
+            <Icon name="task" />
           </ToggleGroupItem>
         </ToggleGroup>
         <div className="w-full max-w-md rounded-xl border p-4">
@@ -408,8 +408,8 @@ export function Showcase() {
             <DialogAction>Save</DialogAction>
           </DialogActions>
         </div>
-        <Icon name="schedule" tone="muted" />
-        <Icon name="error" tone="destructive" />
+        <Icon name="time" tone="muted" />
+        <Icon name="warning" tone="destructive" />
         <Button size="icon" aria-label="Add">
           <Icon name="add" />
         </Button>
@@ -417,24 +417,24 @@ export function Showcase() {
           <Spinner data-icon="inline-start" /> Saving
         </Button>
         <Toggle aria-label="Bold">
-          <Icon name="format_bold" />
+          <Icon name="text--bold" />
         </Toggle>
         <ToggleGroup defaultValue={["left"]}>
           <ToggleGroupItem value="left" aria-label="Align left">
-            <Icon name="format_align_left" />
+            <Icon name="text--align--left" />
           </ToggleGroupItem>
           <ToggleGroupItem value="center" aria-label="Align centre">
-            <Icon name="format_align_center" />
+            <Icon name="text--align--center" />
           </ToggleGroupItem>
           <ToggleGroupItem value="right" aria-label="Align right">
-            <Icon name="format_align_right" />
+            <Icon name="text--align--right" />
           </ToggleGroupItem>
         </ToggleGroup>
         <ButtonGroup>
           <Button variant="outline">Reply</Button>
           <ButtonGroupSeparator />
           <Button variant="outline" size="icon" aria-label="More">
-            <Icon name="keyboard_arrow_down" />
+            <Icon name="chevron--down" />
           </Button>
           <ButtonGroupText>3</ButtonGroupText>
         </ButtonGroup>
@@ -467,7 +467,7 @@ export function Showcase() {
                 <FieldLabel htmlFor="pg-email">Email</FieldLabel>
                 <InputGroup>
                   <InputGroupAddon>
-                    <Icon name="mail" />
+                    <Icon name="email" />
                   </InputGroupAddon>
                   <InputGroupInput id="pg-email" aria-invalid placeholder="you@example.com" />
                   <InputGroupAddon align="inline-end">
@@ -595,9 +595,9 @@ export function Showcase() {
         {/* AppFrame itself takes over the page, so it can't sit in a gallery. Narrow or turn this window to see the rail. */}
         <div className="relative flex h-16 w-full items-center justify-center rounded-lg border">
           <AppFrameNav aria-label="Example places">
-            <AppFrameNavItem icon="forum" label="Conversation" current />
-            <AppFrameNavItem icon="article" label="Canvas" indicator={{ kind: "unread", count: 12 }} />
-            <AppFrameNavItem icon="task_alt" label="Tasks" indicator={{ kind: "attention", count: 2 }} />
+            <AppFrameNavItem icon="chat" label="Conversation" current />
+            <AppFrameNavItem icon="document" label="Canvas" indicator={{ kind: "unread", count: 12 }} />
+            <AppFrameNavItem icon="task" label="Tasks" indicator={{ kind: "attention", count: 2 }} />
             <AppFrameNavEnd>
               <p className="type-meta p-1">End</p>
             </AppFrameNavEnd>
@@ -630,7 +630,7 @@ export function Showcase() {
         </Tabs>
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="outline" />}>
-            Options <Icon name="keyboard_arrow_down" data-icon="inline-end" />
+            Options <Icon name="chevron--down" data-icon="inline-end" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuGroup>
@@ -639,20 +639,20 @@ export function Showcase() {
                 <Icon name="archive" /> Archive <DropdownMenuShortcut>E</DropdownMenuShortcut>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Icon name="snooze" /> Snooze
+                <Icon name="time" /> Snooze
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem checked>Mark as read</DropdownMenuCheckboxItem>
             <DropdownMenuItem variant="destructive">
-              <Icon name="delete" /> Delete
+              <Icon name="trash-can" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         {/* The list's width apart from its trigger: trigger (default), fit, auto. */}
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="outline" className="w-56 justify-between" />}>
-            width="trigger" <Icon name="keyboard_arrow_down" />
+            width="trigger" <Icon name="chevron--down" />
           </DropdownMenuTrigger>
           <DropdownMenuContent width="trigger">
             <DropdownMenuItem>Matches the field</DropdownMenuItem>
@@ -671,7 +671,7 @@ export function Showcase() {
         </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="More (width auto)" />}>
-            <Icon name="more_vert" />
+            <Icon name="overflow-menu--vertical" />
           </DropdownMenuTrigger>
           <DropdownMenuContent width="auto">
             <DropdownMenuGroup>
@@ -772,7 +772,7 @@ export function Showcase() {
         <Empty className="max-w-sm">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <Icon name="inbox" />
+              <Icon name="email" />
             </EmptyMedia>
             <EmptyTitle>No messages</EmptyTitle>
             <EmptyDescription>When something arrives it shows up here.</EmptyDescription>
@@ -808,7 +808,7 @@ export function Showcase() {
         </KbdGroup>
         <Item variant="outline" className="w-full max-w-sm">
           <ItemMedia variant="icon">
-            <Icon name="description" />
+            <Icon name="document" />
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Quarterly notes.pdf</ItemTitle>
@@ -826,7 +826,7 @@ export function Showcase() {
           <Item variant="outline">
             <ItemMain onClick={() => toast("Opening Intro call")}>
               <ItemMedia variant="icon">
-                <Icon name="event_available" />
+                <Icon name="calendar" />
               </ItemMedia>
               <ItemContent>
                 <ItemTitle>Intro call</ItemTitle>
@@ -835,13 +835,13 @@ export function Showcase() {
             </ItemMain>
             <ItemActions>
               <Button variant="ghost" size="icon-sm" aria-label="Copy link" onClick={() => toast("Link copied")}>
-                <Icon name="content_copy" />
+                <Icon name="copy" />
               </Button>
             </ItemActions>
           </Item>
           <Item variant="outline" render={<button type="button" onClick={() => toast("Opening signatures")} />}>
             <ItemMedia variant="icon">
-              <Icon name="signature" />
+              <Icon name="pen--fountain" />
             </ItemMedia>
             <ItemContent>
               <ItemTitle>Signatures and templates</ItemTitle>
@@ -866,7 +866,7 @@ export function Showcase() {
         </Chip>
         <Chip variant="outline">
           <ChipAction onClick={() => toast("Opening the event")}>
-            <Icon name="event" />
+            <Icon name="calendar" />
             <span>Design crit</span>
           </ChipAction>
           <ChipRemove label="Unlink Design crit" />
@@ -998,10 +998,10 @@ export function Showcase() {
             <CommandEmpty>No results.</CommandEmpty>
             <CommandGroup heading="Go to">
               <CommandItem>
-                <Icon name="inbox" /> Inbox <CommandShortcut>G I</CommandShortcut>
+                <Icon name="email" /> Inbox <CommandShortcut>G I</CommandShortcut>
               </CommandItem>
               <CommandItem>
-                <Icon name="calendar_month" /> Calendar <CommandShortcut>G C</CommandShortcut>
+                <Icon name="calendar" /> Calendar <CommandShortcut>G C</CommandShortcut>
               </CommandItem>
             </CommandGroup>
           </CommandList>
@@ -1009,10 +1009,10 @@ export function Showcase() {
       </Section>
 
       <Section title="Icon (Content)">
-        <Icon name="inbox" />
-        <Icon name="inbox" fill />
-        <Icon name="favorite" fill weight={600} className="text-destructive" />
-        <Icon name="settings" className="size-6" label="Settings" />
+        <Icon name="email" />
+        <Icon name="email" size="sm" />
+        <Icon name="favorite--filled" tone="destructive" />
+        <Icon name="settings" size={24} label="Settings" />
       </Section>
 
       <SecurityShowcase />

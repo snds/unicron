@@ -17,6 +17,19 @@ describe("Spinner", () => {
     expect(spinner.getAttribute("class")).toContain("animate-spin")
   })
 
+  // A spinner is not an icon: it is an arc of its own, so it needs no icon set and no font.
+  it("is an SVG arc on the icons' grid, not an icon", () => {
+    render(<Spinner />)
+    const spinner = screen.getByRole("status", { name: "Loading" })
+    expect(spinner.tagName.toLowerCase()).toBe("svg")
+    expect(spinner).toHaveAttribute("viewBox", "0 0 32 32")
+    expect(spinner).toHaveAttribute("stroke", "currentColor")
+    expect(spinner).not.toHaveAttribute("data-icon-name")
+    expect(spinner.querySelectorAll("path")).toHaveLength(1)
+    expect(spinner.querySelector("text")).toBeNull()
+    expect(spinner.getAttribute("class")).toContain("size-4")
+  })
+
   it("takes a host's own words", () => {
     render(<Spinner label="Saving" />)
     expect(screen.getByRole("status", { name: "Saving" })).toBeInTheDocument()

@@ -88,7 +88,7 @@ export function CrownJewelMark({ size = "md", className, ...props }: CrownJewelM
       className={cn("inline-flex shrink-0 items-center align-middle", className)}
       {...props}
     >
-      <Icon name="lock" fill weight={500} className={size === "sm" ? "size-3.5" : "size-4"} />
+      <Icon name="locked--filled" className={size === "sm" ? "size-3.5" : "size-4"} />
       <span className="sr-only">Crown jewel</span>
     </span>
   )
@@ -471,7 +471,7 @@ export function CrownJewelSurface({
         {...props}
       >
         <div data-slot="crown-jewel-banner" className="flex items-center gap-2">
-          <Icon data-slot="crown-jewel-icon" name="lock" />
+          <Icon data-slot="crown-jewel-icon" name="locked" />
           <span data-slot="crown-jewel-label" className="font-medium">
             Crown jewel
           </span>

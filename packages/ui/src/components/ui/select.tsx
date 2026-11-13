@@ -64,7 +64,7 @@ function SelectTrigger({
       {children}
       <SelectPrimitive.Icon
         render={
-          <Icon className="text-muted-foreground size-4 shrink-0 pointer-events-none" name="keyboard_arrow_down" />
+          <Icon className="text-muted-foreground size-4 shrink-0 pointer-events-none" name="chevron--down" />
         }
       />
     </SelectPrimitive.Trigger>
@@ -184,7 +184,7 @@ function SelectItem({
       <SelectPrimitive.ItemIndicator
         render={<span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />}
       >
-        <Icon className="pointer-events-none" name="check" />
+        <Icon className="pointer-events-none" name="checkmark" />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   )
@@ -213,7 +213,7 @@ function SelectScrollUpButton({
       className={cn("bg-popover z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4 top-0 w-full", className)}
       {...props}
     >
-      <Icon name="keyboard_arrow_up" />
+      <Icon name="chevron--up" />
     </SelectPrimitive.ScrollUpArrow>
   )
 }
@@ -228,7 +228,7 @@ function SelectScrollDownButton({
       className={cn("bg-popover z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4 bottom-0 w-full", className)}
       {...props}
     >
-      <Icon name="keyboard_arrow_down" />
+      <Icon name="chevron--down" />
     </SelectPrimitive.ScrollDownArrow>
   )
 }

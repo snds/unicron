@@ -92,7 +92,7 @@ export function SecurityShowcase() {
             issuer="Fastmail"
             account="sean@example.com"
             digits={8}
-            media={<Icon name="mail" />}
+            media={<Icon name="email" />}
             code={clock.eight.code}
             next={clock.eight.next}
             now={clock.now}
@@ -135,11 +135,11 @@ export function SecurityShowcase() {
       <Section title="LargeTypeView (security)">
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => setLargeOpen(true)}>
-            <Icon name="fullscreen" data-icon="inline-start" />
+            <Icon name="maximize" data-icon="inline-start" />
             Show large type
           </Button>
           <Button variant="outline" size="sm" onClick={() => setPrintOpen((v) => !v)}>
-            <Icon name="print" data-icon="inline-start" />
+            <Icon name="printer" data-icon="inline-start" />
             {printOpen ? "Hide" : "Show"} print variant
           </Button>
         </div>

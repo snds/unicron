@@ -552,7 +552,7 @@ export function CodeDisplay({
           <span data-slot="code-display-notice" className="flex flex-wrap items-center gap-1.5">
             {skewed && (
               <Badge variant="outline">
-                <Icon name="schedule" data-icon="inline-start" />
+                <Icon name="time" data-icon="inline-start" />
                 Clock is off by {Math.round(Math.abs(skewSeconds))} s
                 {onFixClock && (
                   <>
@@ -566,7 +566,7 @@ export function CodeDisplay({
             )}
             {warnings.includes("issuer-equals-login") && (
               <Badge variant="outline">
-                <Icon name="warning" data-icon="inline-start" />
+                <Icon name="warning--alt" data-icon="inline-start" />
                 Same account you sign in with
               </Badge>
             )}
@@ -602,13 +602,13 @@ export function CodeDisplay({
               <span className="text-xs tabular-nums">{countdown.secondsLeft}</span>
             ) : copyPhase === "cleared" ? (
               <>
-                <Icon name="check" />
+                <Icon name="checkmark" />
                 <span className="sr-only">Cleared</span>
               </>
             ) : (
               <>
-                <Icon name="content_copy" />
-                {crown.gated && <Icon name="lock" className="size-3" />}
+                <Icon name="copy" />
+                {crown.gated && <Icon name="locked" className="size-3" />}
               </>
             )}
           </IconButton>
