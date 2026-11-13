@@ -1,0 +1,9 @@
+@unicron/ui
+Copyright 2026 Sean Sands
+
+Portions derived from snds/mailbird, Apache-2.0, and shadcn/ui, MIT.
+
+The icon drawings in this package (dist/icons/data.gen.js) are from IBM Carbon
+(@carbon/icons, https://github.com/carbon-design-system/carbon), Copyright IBM Corp.,
+licensed under the Apache License, Version 2.0. Each drawing is Carbon's 32 px art,
+unchanged, stored as the inner markup of its SVG.
