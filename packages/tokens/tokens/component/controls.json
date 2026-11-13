@@ -1,0 +1,34 @@
+{
+  "$description": "Tier 3 · Component knobs for the leaf controls (packages/ui: progress.tsx, float-button.tsx). Merged with component.json at build and emitted as --c-*. Every top-level name here is new, so no key collides with component.json however the two are merged. The controls' own sizes (Button 40 / 32, Switch 44 × 24 with a 16 knob, Checkbox 16, Badge and Kbd 20, a skeleton row's 12px bars 20px apart) sit on the 4px spacing scale and the size roles, so they need no knob.",
+  "progress-track": {
+    "$type": "color",
+    "$value": "{line-rule}",
+    "$description": "Progress: the empty part of a bar, and an empty cell of a segmented one. Figma binds the empty part to line/rule (List Row progress, segments 20 to 32). Beside the other Progress knobs in component.json (height 4px, segment-gap 2px, fill, complete, warning, over)."
+  },
+  "progress-tone": {
+    "$description": "Progress fills beyond the ones in `progress` (fill, complete, warning, over). Each fill is drawn on --c-progress-track (scripts/recipes/controls.mjs).",
+    "live": {
+      "$type": "color",
+      "$value": "{secondary-live}",
+      "$description": "Live or agent activity: a segmented bar's default fill, and tone=\"live\" on either variant. Figma: List Row progress, segments 1 to 19."
+    },
+    "critical": {
+      "$type": "color",
+      "$value": "{critical-fill}",
+      "$description": "tone=\"critical\": a countdown that is about to run out. Figma (Lockdown codes): the ticks near expiry."
+    }
+  },
+  "float-button": {
+    "$description": "FloatButton's long press (onLongPress). Behaviour timers, not motion: the component reads them when a press starts, and falls back to these same values without the stylesheet.",
+    "long-press-delay": {
+      "$type": "duration",
+      "$value": "500ms",
+      "$description": "How long a press is held before it counts as a long press."
+    },
+    "long-press-slop": {
+      "$type": "dimension",
+      "$value": "10px",
+      "$description": "How far the pointer may drift during the hold before the long press is called off."
+    }
+  }
+}
