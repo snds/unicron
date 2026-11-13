@@ -21,6 +21,8 @@
 //       A component knob's colour reads a role, never tier 1: `{needs-you-fill}` (the role), not
 //       `{needs-you.fill}` (the raw value).
 //       Two files in tokens/component/ may not declare the same knob.
+//       A component knob for a corner (a dimension whose name ends in `-radius`) is the one 2px
+//       corner: it must be the bare reference `{radius}`, so no component draws a rounder part.
 //   (t) Theme files (tokens/themes/<app>.json) hold the theme slots of global.json, all of them
 //       and nothing else: a raw six-digit hex each, with the Figma variable id in `$description`.
 //       The defaults in global.json follow the same rule.
@@ -137,6 +139,9 @@ function checkValue(tier, file, dotted, label, value, type) {
   }
   if (tier.rank === 3 && label === "$value" && /-duration$/.test(dotted) && !bareRef) {
     fail(`${file} ${dotted}`, `a motion duration must be a {reference} to a motion role (e.g. {motion-base}), got "${value}"`)
+  }
+  if (tier.rank === 3 && label === "$value" && /-radius$/.test(dotted) && !(bareRef && refs[0] === "radius")) {
+    fail(`${file} ${dotted}`, `a corner knob must be {radius}, the one 2px corner (contract §1.6), got "${value}"`)
   }
   if (tier.rank === 2 && !bareRef) fail(`${file} ${dotted}`, `${label} must be a bare {reference} in the semantic tier, got "${value}"`)
 }

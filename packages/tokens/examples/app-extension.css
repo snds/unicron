@@ -23,7 +23,10 @@
  *     line-rule, text-body, text-secondary, text-label.
  *   - A role that only points at core roles is the same on both grounds. Declare it once, on
  *     the four selectors below, so it also follows a nested .dark, .light or data-theme box.
- *   - A role that differs by ground swaps in .dark.
+ *   - A role that differs by ground swaps on the core's own two ground selectors, below: the
+ *     light one, and the dark one, which also reaches a data-theme box inside a .dark page.
+ *     A plain .dark would leave such a box on the light values while the core roles around
+ *     it turn dark.
  *   - Expose your roles to Tailwind through your own @theme inline block.
  *   - Component knobs for app-only components (a week strip, a recipient field, a note card)
  *     also live here, as --c-*.
@@ -51,6 +54,8 @@
 /*
  * Differs by ground. One hue per calendar, from the accent ramps: 600 is the text step in light,
  * 300 in dark (each held to APCA Lc 75 on the legacy neutrals; check them on your own surfaces).
+ * The two selectors are the core's ground blocks, copied as they are (docs/02-tokens.md → How
+ * the two axes resolve), so these roles turn with the core roles at any nesting the core reaches.
  */
 :root, .light, [data-theme] {
   --calendar-work: var(--g-blue-600);
@@ -60,7 +65,10 @@
   --tint-l: 0.95;
   --tint-c: 0.045;
 }
-.dark {
+.dark,
+.dark [data-theme]:not(.light):not(.dark .light *),
+.dark .light .dark [data-theme]:not(.light):not(.dark .light .dark .light *),
+.dark .light .dark .light .dark [data-theme]:not(.light):not(.dark .light .dark .light .dark .light *) {
   --calendar-work: var(--g-blue-300);
   --calendar-home: var(--g-green-300);
   --calendar-travel: var(--g-coral-300);

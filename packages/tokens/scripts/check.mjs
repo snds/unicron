@@ -26,6 +26,15 @@ const { tokens, themes, defaultApp, type: typeRoles } = JSON.parse(fs.readFileSy
 const built = parseTokensCss(css)
 const { root, light, dark, theme } = built
 
+// The ground selectors, written out (scripts/build.mjs computes them).
+const LIGHT = ":root, .light, [data-theme]"
+const DARK = [
+  ".dark",
+  ".dark [data-theme]:not(.light):not(.dark .light *)",
+  ".dark .light .dark [data-theme]:not(.light):not(.dark .light .dark .light *)",
+  ".dark .light .dark .light .dark [data-theme]:not(.light):not(.dark .light .dark .light .dark .light *)",
+].join(", ")
+
 // ── The file parses as CSS ───────────────────────────────────────────────────────────────────
 // The other checks read the file by pattern, so they would not notice a comment that ends early
 // and swallows the selector after it. With the comments taken out, what is left must be whole
@@ -34,19 +43,39 @@ const { root, light, dark, theme } = built
   const bare = css.replace(/\/\*[\s\S]*?\*\//g, "")
   assert.ok(!/\/\*|\*\//.test(bare), "a comment in tokens.css is not closed where it should be")
   const selectors = [...bare.matchAll(/(?:^|\})\s*([^{}]+?)\s*\{/g)].map((m) => m[1])
-  const known = /^(:root|:root, \.light, \[data-theme\]|\.dark, \.dark \[data-theme\]:not\(\.light\):not\(\.dark \.light \*\)|\[data-theme="[\w-]+"\]|@theme inline)$/
-  for (const selector of selectors) assert.match(selector, known, `unexpected selector in tokens.css: "${selector}"`)
+  const known = [":root", LIGHT, DARK, "@theme inline", "@theme"]
+  for (const selector of selectors) {
+    assert.ok(known.includes(selector) || /^\[data-theme="[\w-]+"\]$/.test(selector), `unexpected selector in tokens.css: "${selector}"`)
+  }
   assert.equal(selectors[0], ":root", "tokens.css must open with the tier 1 :root block")
 }
 
 // ── The two axes, as selectors ───────────────────────────────────────────────────────────────
 // Both ground blocks match [data-theme], so a themed box re-reads its slots on the ground it is on.
+// A themed box with no ground class of its own is dark when its nearest ground box is `.dark`:
+// in `.dark` with no `.light` after it, or in `.dark .light .dark` with no `.light` after that,
+// three dark boxes deep (docs/02-tokens.md → How the two axes resolve). The browser suite
+// (apps/playground/tests/foundations.spec.ts) applies these selectors to nested boxes.
 for (const title of ["Tier 2 · Semantic roles (--*)", "Tier 3 · Component knobs (--c-*)"]) {
-  const t = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  assert.match(css, new RegExp(`${t} · light \\(stone\\) ── \\*/\\n:root, \\.light, \\[data-theme\\] \\{`), `${title}: expected the light block on ":root, .light, [data-theme]"`)
-  assert.match(css, new RegExp(`${t} · dark \\(graphite\\) ── \\*/\\n\\.dark, \\.dark \\[data-theme\\]:not\\(\\.light\\):not\\(\\.dark \\.light \\*\\) \\{`), `${title}: expected the dark block on ".dark" and a themed box inside it`)
+  for (const [ground, selector] of [["light (stone)", LIGHT], ["dark (graphite)", DARK]]) {
+    assert.ok(css.includes(`${title} · ${ground} ── */\n${selector} {`), `${title}: expected the ${ground} block on "${selector}"`)
+  }
 }
 assert.ok(light.size && dark.size && theme.size && root.size, "expected :root, light, dark and @theme blocks")
+
+// The documented app extension layer swaps its own ground roles on the core's two selectors, so
+// a themed box in a dark page takes its dark values with the core roles around it.
+{
+  const example = fs.readFileSync(path.join(here, "..", "examples", "app-extension.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "")
+  const rules = [...example.matchAll(/(?:^|\})\s*([^{}@]+?)\s*\{/g)].map((m) => m[1].replace(/\s+/g, " "))
+  assert.ok(rules.includes(LIGHT), `examples/app-extension.css: expected a block on the core's light selector "${LIGHT}"`)
+  assert.ok(rules.includes(DARK), `examples/app-extension.css: a role that differs by ground must swap on the core's dark selector "${DARK}"`)
+  for (const rule of rules) {
+    if (/\.dark/.test(rule) && rule !== DARK && !/^:root, \.light, \.dark, \[data-theme\]$/.test(rule)) {
+      assert.fail(`examples/app-extension.css: "${rule}" swaps on a ground selector that is not the core's`)
+    }
+  }
+}
 
 // ── Theme slots: the app axis ────────────────────────────────────────────────────────────────
 const APPS = ["warpcore", "vale", "lockdown", "synapse"]
@@ -124,7 +153,7 @@ const ALIASES = {
   "sidebar-ring": "var(--ring)",
   "state-hover": "color-mix(in oklab, var(--text-body) 6%, transparent)",
   "state-pressed": "color-mix(in oklab, var(--text-body) 10%, transparent)",
-  "diff-added": "var(--primary-soft)",
+  "diff-added": "color-mix(in oklab, var(--text-body) 8%, var(--surface-ground))",
   "diff-removed": "var(--critical-soft)",
 }
 for (const [name, value] of Object.entries(ALIASES)) {
@@ -191,6 +220,10 @@ assert.equal(px("--radius"), 2, "--radius is 2px")
 for (const step of ["xs", "sm", "md", "lg", "xl", "2xl", "3xl", "4xl"]) {
   assert.equal(theme.get(`--radius-${step}`), "var(--radius)", `--radius-${step} must be the one 2px corner`)
 }
+// The bare `rounded` reads Tailwind's --radius key. It shares the role's name, so it is in a plain
+// (not inline) @theme block, with the role's value: Tailwind then writes var(--radius), the role.
+assert.match(css, /\n@theme \{\n  --radius: var\(--g-radius-base\);\n\}\n/, "Tailwind's bare `rounded` must read --radius from a plain @theme block")
+assert.equal(theme.get("--radius"), light.get("--radius"), "Tailwind's --radius key must hold the radius role's value, the one 2px corner")
 assert.equal(px("--stroke-rule"), 1, "--stroke-rule is 1px")
 assert.equal(px("--stroke-emphasis"), 2, "--stroke-emphasis is 2px")
 assert.match(root.get("--g-font-sans"), /^"Geist Variable", Geist, /, "font.sans names Geist Variable, then Geist")

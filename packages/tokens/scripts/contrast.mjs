@@ -179,6 +179,12 @@ const CORE = [
   ...[["hover", 0.9], ["pressed", 0.8]].map(([state, alpha]) => ({
     id: `needs-you-button-${state}`, source: `the solid needs-you button, ${state}: bg-needs-you-on-fill/${alpha * 100} over the yellow block`, kind: "on-fill", paint: r("needs-you-fill"), over: [r("needs-you-fill"), r("needs-you-on-fill", alpha)],
   })),
+  // Diffs (contract §1.4; cross-app decisions §11): a line's text, with its + or − mark, on the
+  // added wash (neutral, 8% of the ink in the ground) and the removed wash (critical-soft).
+  ...[["added", "+"], ["removed", "−"]].flatMap(([line, sign]) => [
+    { id: `body-diff-${line}`, source: `a diff's ${line} line and its ${sign} mark: text-text-body on bg-diff-${line}`, kind: "text-body", paint: r("text-body"), over: [r(`diff-${line}`)] },
+    { id: `diff-${line}`, source: `bg-diff-${line} against the ground: how far the line stands out`, kind: "surface", paint: r(`diff-${line}`), over: GROUND },
+  ]),
   // How far a state moves the surface (reported)
   { id: "hover-ground", source: "bg-state-hover against the ground at rest", kind: "state", paint: r("state-hover"), over: GROUND },
   { id: "hover-raised", source: "bg-state-hover against bg-surface-raised at rest", kind: "state", paint: r("state-hover"), over: RAISED },
@@ -339,6 +345,11 @@ const EXCEPTIONS = [
   { id: "attention-on-soft", modes: "stone", reason: BY_CONTRACT },
   { id: "attention-on-surface", modes: "stone", reason: BY_CONTRACT },
   { id: "running-text-surface", modes: "all", reason: BY_CONTRACT },
+  // Diffs: the added wash is the contract's neutral wash (§1.4, 8% of the ink in the ground), so
+  // body text on it lands where it does on a hover wash. The removed wash is Figma's critical-soft,
+  // the critical Banner's own pair (body-critical-soft, above).
+  { id: "body-diff-added", modes: "stone", reason: BY_CONTRACT },
+  { id: "body-diff-removed", modes: "stone", reason: FIGMA },
 ]
 
 // ── Recipe files, one per component area ─────────────────────────────────────────────────────

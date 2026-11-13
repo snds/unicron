@@ -44,7 +44,8 @@ function ruleBlocks(css) {
  *   light   blocks whose selector list starts `:root, .light` (tiers 2 and 3, stone)
  *   dark    blocks whose selector list starts `.dark` (tiers 2 and 3, graphite)
  *   themes  { app: Map } from `[data-theme="app"]`
- *   theme   the `@theme inline` block
+ *   theme   the `@theme inline` block, and the plain `@theme` block that holds only --radius
+ *           (Tailwind's key for the bare `rounded`, which shares the role's name)
  */
 export function parseTokensCss(css = readBuiltCss()) {
   const out = { root: new Map(), light: new Map(), dark: new Map(), themes: {}, theme: new Map() }
@@ -59,8 +60,8 @@ export function parseTokensCss(css = readBuiltCss()) {
     else if (selector.startsWith(".dark")) add(out.dark, declarations)
     else throw new Error(`dist/tokens.css: unexpected block "${selector}"`)
   }
-  const themeBlock = css.match(/@theme inline \{\n([\s\S]*?)\n\}/)?.[1] ?? ""
-  for (const line of themeBlock.split("\n")) {
+  const themeBlocks = [...css.matchAll(/\n@theme(?: inline)? \{\n([\s\S]*?)\n\}/g)].map((m) => m[1])
+  for (const line of themeBlocks.join("\n").split("\n")) {
     const d = line.match(/^\s*(--[\w-]+):\s*(.+);\s*$/)
     if (d) out.theme.set(d[1], d[2])
   }

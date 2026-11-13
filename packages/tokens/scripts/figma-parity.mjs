@@ -157,6 +157,8 @@ same("radius/control (px)", px("--radius"), snapshot.radius["radius/control"].px
 for (const [name] of parsed.theme) {
   if (name.startsWith("--radius-")) same(`radius/control as Tailwind's ${name} (px)`, px(name, themeVars), snapshot.radius["radius/control"].px)
 }
+// Tailwind's bare `rounded` reads its --radius key: the same corner.
+same("radius/control as Tailwind's --radius, the bare rounded (px)", parsed.theme.has("--radius") ? px("--radius", themeVars) : NaN, snapshot.radius["radius/control"].px)
 // radius/none and radius/round are Tailwind's own rounded-none and rounded-full: nothing is built
 // for them, so only the Figma side is held still.
 same("radius/none (px; Tailwind's rounded-none)", 0, snapshot.radius["radius/none"].px)

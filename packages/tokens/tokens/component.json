@@ -44,7 +44,7 @@
   "sheet": {
     "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up.",
     "compact-height": { "$type": "dimension", "$value": "75dvh" },
-    "compact-radius": { "$type": "dimension", "$value": "1.25rem" },
+    "compact-radius": { "$type": "dimension", "$value": "{radius}", "$description": "The phone sheet's top corners: the one 2px corner (contract §1.6; the sheet container is square, §5.1). A radius knob reads the radius role, never a size of its own." },
     "handle": { "$type": "color", "$value": "color-mix(in oklab, {muted-foreground} 45%, transparent)" },
     "close-size": { "$type": "dimension", "$value": "2.5rem" },
     "regular-width": { "$type": "dimension", "$value": "24rem" },

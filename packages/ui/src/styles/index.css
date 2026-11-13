@@ -14,8 +14,14 @@
 /* The primitives' classes live in this package, not the consuming app, so Tailwind must scan them. */
 @source "../components";
 
-/* Dark inside `.dark`, unless a nearer `.light` box sits between (a light preview in a dark page). */
-@custom-variant dark (&:is(.dark *):not(.dark .light *));
+/*
+ * Dark when the nearest ground box above is `.dark`: inside `.dark` and not inside a `.light` in
+ * it, unless a `.dark` inside that `.light` brings it back, and so on, three dark boxes deep
+ * (dark, light, dark, light, dark): the same reach as the tokens' ground blocks (docs/02-tokens.md
+ * → How the two axes resolve). Each deeper level sits in `:where()`, so the variant keeps the
+ * specificity it always had, `:is(.dark *):not(.dark .light *)`.
+ */
+@custom-variant dark (&:is(.dark *):not(.dark .light *:where(:not(.dark .light .dark *:where(:not(.dark .light .dark .light *:where(:not(.dark .light .dark .light .dark *:where(:not(.dark .light .dark .light .dark .light *))))))))));
 
 /*
  * State, as shadcn's own stylesheet (shadcn/tailwind.css) defines it. Tailwind's built-in

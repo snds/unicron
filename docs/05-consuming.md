@@ -86,8 +86,10 @@ There are two axes, both on `<html>` (or any subtree root):
 <html data-theme="vale" class="dark">
 ```
 
-A nested `.dark` / `.light` box, or a nested `data-theme` box, re-resolves every role inside it
-(one level of ground nesting, the same limit as the `dark:` variant). Toggle the ground with the
+A nested `.dark` / `.light` box, or a nested `data-theme` box, re-resolves every role inside it.
+Ground boxes nest to any depth; a `data-theme` box with no ground class of its own finds its
+ground up to three dark boxes deep, as the `dark:` variant does (docs/02-tokens.md → Two axes).
+Toggle the ground with the
 `dark` class. In a client-only app (Vite,
 Tauri) a few lines do it, and `Toaster` takes the same setting as a prop:
 

@@ -52,11 +52,20 @@ const DEFAULT_APP_KEY = "unicron.default-app"
 const TYPE_KEY = "unicron.type"
 const REM_PX = 16
 
-// The two ground blocks. `.light` mirrors `.dark` so a light box can sit in a dark page, and
-// [data-theme] is in both so a themed box takes its own slots on the ground it sits on. One
-// level of nesting, the same as @unicron/ui's `dark:` variant.
+// The two ground blocks. A box takes the ground of its nearest `.dark` or `.light` box, and
+// `:root` is stone. A `.dark` or `.light` box declares the roles itself, so ground boxes nest to
+// any depth. [data-theme] is in both blocks so a themed box re-reads its own slots, and a themed
+// box with no ground class of its own finds its nearest ground by selector: dark when it sits in
+// `.dark` with no `.light` between, or in `.dark .light .dark` with no `.light` after that, and so
+// on, GROUND_DEPTH dark boxes deep (dark, light, dark, light, dark). @unicron/ui's `dark:` variant
+// has the same reach. Deeper than that, give the themed box its own `dark` or `light` class.
+const GROUND_DEPTH = 3
+const alternations = (n) => Array.from({ length: n }, () => ".dark .light").join(" ")
 const LIGHT_SELECTOR = ":root, .light, [data-theme]"
-const DARK_SELECTOR = ".dark, .dark [data-theme]:not(.light):not(.dark .light *)"
+const DARK_SELECTOR = [
+  ".dark",
+  ...Array.from({ length: GROUND_DEPTH }, (_, k) => `${k ? `${alternations(k)} ` : ""}.dark [data-theme]:not(.light):not(${alternations(k + 1)} *)`),
+].join(", ")
 
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"))
 const jsonFiles = (dir) =>
@@ -338,6 +347,12 @@ for (const { tier, lines } of blocks.light) {
   if (dark) css += block(`${titles[tier]} · dark (graphite)`, DARK_SELECTOR, dark.lines)
 }
 css += `/* ── Tailwind v4 theme map: exposes tier 2 as utilities (bg-surface-ground, text-text-label, bg-background, rounded-lg, h-control …) ── */\n@theme inline {\n${blocks.theme.join("\n")}\n}\n`
+// Tailwind's bare `rounded` reads the theme key --radius, which has the same name as the radius
+// role. In the inline block it would read itself, so it sits in a plain @theme block: Tailwind
+// then writes `border-radius: var(--radius)`, the role, as every other step does, and declares
+// the key on its theme layer with the role's own value (where the role is not declared, as in a
+// shadow root, the corner is still 2px).
+css += `/* ── Tailwind v4 theme key for the bare \`rounded\` class: --radius, named like the role, so not inline ── */\n@theme {\n  --radius: ${flat["--radius"].value};\n}\n`
 
 fs.mkdirSync(out, { recursive: true })
 fs.writeFileSync(path.join(out, "tokens.css"), css)

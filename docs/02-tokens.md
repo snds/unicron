@@ -38,9 +38,14 @@ and agents). Its neutrals are tinted by the primary's hue.
 | Synapse | magenta (352) | synaptic teal (195) |
 
 **Nesting.** Either axis can also be set on a box inside the page: a `dark` or `light` box, a
-`data-theme` box, or both on one element. One level of ground nesting is supported, the same
-limit as `@unicron/ui`'s `dark:` variant: a `.dark` box inside a `.light` box inside a dark page
-is not.
+`data-theme` box, or both on one element. A box takes the ground of its nearest `dark` or `light`
+box.
+
+- A `dark` or `light` box nests to any depth: it declares the roles itself.
+- A `data-theme` box with no ground class of its own finds its nearest ground by selector, up to
+  three dark boxes deep: a page, a box and a box again (`dark`, `light`, `dark`, `light`, `dark`).
+  `@unicron/ui`'s `dark:` variant reaches as far. Deeper than that, the themed box takes the light
+  values: give it its own `dark` or `light` class.
 
 ## Tiers and files
 
@@ -147,7 +152,7 @@ Figma draws no states. These are the system's proposal (build contract §6).
 |---|---|---|---|
 | `state-hover` | 6% of `text-body`, over whatever is underneath | `bg-state-hover` | Hover on a neutral or transparent control or row |
 | `state-pressed` | 10% of `text-body` | `bg-state-pressed` | Pressed |
-| `diff-added` | `primary-soft` | `bg-diff-added` | The wash behind an added line. The `+` mark always shows |
+| `diff-added` | 8% of `text-body` in `surface-ground`: a neutral wash | `bg-diff-added` | The wash behind an added line, the same rule in every app (Synapse's `primary-soft` and `critical-soft` read as one colour). The `+` mark always shows |
 | `diff-removed` | `critical-soft` | `bg-diff-removed` | The wash behind a removed line. The `−` mark always shows |
 
 A solid fill (`primary-fill`, `critical-fill`, the needs-you button) shows hover as itself at 90%
@@ -215,12 +220,21 @@ inside a `.dark` box. The build therefore writes:
 - every colour of tiers 2 and 3 in **both** ground blocks, even when its expression is the same
   in both (an alias has to be declared again wherever its target changes);
 - both ground blocks on `[data-theme]` as well, so a themed box re-reads its slots on the ground
-  it sits on.
+  it sits on. The dark block reaches a themed box whose nearest ground box is `.dark`, three dark
+  boxes deep.
 
 ```css
-:root, .light, [data-theme]                               { /* tiers 2 and 3, stone */ }
-.dark, .dark [data-theme]:not(.light):not(.dark .light *) { /* tiers 2 and 3, graphite */ }
+:root, .light, [data-theme] { /* tiers 2 and 3, stone */ }
+.dark,
+.dark [data-theme]:not(.light):not(.dark .light *),
+.dark .light .dark [data-theme]:not(.light):not(.dark .light .dark .light *),
+.dark .light .dark .light .dark [data-theme]:not(.light):not(.dark .light .dark .light .dark .light *)
+                            { /* tiers 2 and 3, graphite */ }
 ```
+
+`scripts/build.mjs` writes the dark selector (`GROUND_DEPTH`), `scripts/check.mjs` pins it, and
+the playground's browser checks (`apps/playground/tests/foundations.spec.ts`) put themed boxes at
+every depth in a real browser.
 
 An app that re-points a core role in its own layer (`--sidebar: var(--surface-chrome)`) and also
 nests themed boxes repeats the re-point on `[data-theme]`
@@ -288,7 +302,7 @@ monospace`. The tokens only name the families. `@unicron/ui` loads the font file
 |---|---|---|---|
 | `size/control` 48 | `size.control` 3rem | `--size-control` | `h-control`, `size-control`, `min-h-control` |
 | `size/touch-min` 44 | `size.touch-min` 2.75rem | `--size-touch-min` | `min-h-touch-min`, `size-touch-min` |
-| `radius/control` 2 | `radius.base` 0.125rem | `--radius` | every step from `rounded-xs` to `rounded-4xl` is this one 2px corner |
+| `radius/control` 2 | `radius.base` 0.125rem | `--radius` | the bare `rounded` and every step from `rounded-xs` to `rounded-4xl` is this one 2px corner |
 | `radius/none`, `radius/round` | — | — | Tailwind's own `rounded-none`, `rounded-full` |
 | a 1px stroke | `stroke.rule` 1px | `--stroke-rule` | — |
 | a 2px stroke | `stroke.emphasis` 2px | `--stroke-emphasis` | — |
@@ -407,7 +421,10 @@ busy. A component with its own loop stills it in the same layer, by `data-slot`.
 - every semantic colour as `--color-<name>: var(--<name>)`, so `bg-surface-ground`,
   `text-text-label`, `bg-background`, `text-muted-foreground`;
 - the fonts as `--font-sans`, `--font-mono`, `--font-heading`;
-- the radius scale, `--radius-xs` to `--radius-4xl`, each `var(--radius)`;
+- the radius scale, `--radius-xs` to `--radius-4xl`, each `var(--radius)`. Tailwind's bare
+  `rounded` reads a key named `--radius`, the same name as the role, so the build declares it in a
+  small plain `@theme` block after the inline one (an inline key would read itself). The class
+  then reads the role, `var(--radius)`, like every step;
 - the two sizes as `--spacing-control` and `--spacing-touch-min`, which Tailwind's sizing and
   spacing utilities read;
 - the default transition and the `ease-*` utilities ([Motion](#motion)).
@@ -562,7 +579,10 @@ Product-only roles live in the product, after the core import. The documented ex
   surface or an ink built on it will not follow the app or the tint.
 - A role that only points at core roles is the same on both grounds: declare it once, on
   `:root, .light, .dark, [data-theme]`, so it follows a nested box too.
-- A role that differs by ground swaps in `.dark`.
+- A role that differs by ground swaps on the core's two ground selectors, copied as they are
+  ([How the two axes resolve](#how-the-two-axes-resolve)). A plain `.dark` leaves a `data-theme`
+  box in a dark page on the light values while the core roles around it turn dark.
+  `scripts/check.mjs` holds the example to this.
 - Expose your roles to Tailwind with your own `@theme inline` block.
 
 See [05-consuming.md](05-consuming.md).

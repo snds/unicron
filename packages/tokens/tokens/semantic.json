@@ -32,7 +32,7 @@
 
   "state-hover": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 6%, transparent)", "$description": "The hover wash on a neutral or transparent control or row: 6% of the ink, laid over whatever is underneath. Not in Figma, which draws no states. A solid fill shows hover as itself at 90% instead." },
   "state-pressed": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 10%, transparent)", "$description": "The pressed wash: 10% of the ink. Not in Figma. A solid fill shows pressed as itself at 80% instead." },
-  "diff-added": { "$type": "color", "$value": "{primary-soft}", "$description": "The wash behind an added line of a diff, as the Warpcore and Synapse review frames draw it. The + mark always shows: colour never carries the meaning alone." },
+  "diff-added": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 8%, {surface-ground})", "$description": "The wash behind an added line of a diff: a neutral wash, 8% of the ink in the ground, the same rule in every app (cross-app decisions §11: Synapse's primary-soft and critical-soft read as one colour, so an identity tint cannot mark added lines). Not in Figma. The + mark always shows: colour never carries the meaning alone." },
   "diff-removed": { "$type": "color", "$value": "{critical-soft}", "$description": "The wash behind a removed line of a diff. The − mark always shows." },
 
   "background": { "$type": "color", "$value": "{surface-ground}", "$description": "The page. An alias of surface-ground, kept for the shadcn contract." },
