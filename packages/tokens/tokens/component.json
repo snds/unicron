@@ -1,7 +1,13 @@
 {
-  "$description": "Tier 3 · Component knobs. Emitted as --c-*. Each aliases a semantic token or holds a per-component size. Only tokens that core @unicron/ui primitives read belong here; app-specific components keep theirs in the app extension layer.",
+  "$description": "Tier 3 · Component knobs. Emitted as --c-*. Each aliases a semantic token or holds a per-component size. Only tokens that core @unicron/ui primitives read belong here; app-specific components keep theirs in the app extension layer. This file holds the cross-cutting knobs and the ones from before 1.0; each component area adds its own file in tokens/component/ (the build merges the directory, and a file there may re-declare a knob from this one).",
+  "scrim": {
+    "$description": "The opacity of the full-screen dim behind an overlay. The colour is --surface-scrim (bg-surface-scrim); these set how much of it shows, the same number in both grounds (stone's 64% is already inside the colour, so a sheet's scrim draws at about 32% there). A scrim is never opaque and never blurred.",
+    "sheet": { "$type": "number", "$value": 0.5, "$description": "Behind a phone sheet." },
+    "dialog": { "$type": "number", "$value": 0.6, "$description": "Behind a desktop dialog." },
+    "menu": { "$type": "number", "$value": 0.32, "$description": "Behind a menu that dims the screen: quick create, the environment menu." }
+  },
   "icon": {
-    "$description": "Material Symbols variable-font axes. The Icon component reads these; a parent can override them (e.g. an active nav item sets --c-icon-fill: 1).",
+    "$description": "Legacy, removed when the Carbon icon set lands (the Icon component then reads none of them). Material Symbols variable-font axes. The Icon component reads these; a parent can override them (e.g. an active nav item sets --c-icon-fill: 1).",
     "fill": { "$type": "number", "$value": 0 },
     "wght": { "$type": "number", "$value": 400 },
     "grad": { "$type": "number", "$value": 0, "$extensions": { "unicron.modes": { "dark": -25 } }, "$description": "Dark surfaces look heavier, so grade icons down slightly (Material guidance)." },
@@ -149,10 +155,10 @@
     "unread-badge-ink": { "$type": "color", "$value": "{info-foreground}" }
   },
   "progress": {
-    "$description": "Progress: a determinate bar, or one cell per step (segmented). The track is --muted; each fill is a solid held to Lc 30 against it (scripts/contrast.mjs).",
+    "$description": "Progress: a determinate bar, or one cell per step (segmented). The empty part is --line-rule; each fill is a solid held to Lc 30 against it (scripts/contrast.mjs).",
     "height": { "$type": "dimension", "$value": "0.25rem" },
     "segment-gap": { "$type": "dimension", "$value": "0.125rem" },
-    "fill": { "$type": "color", "$value": "{primary}" },
+    "fill": { "$type": "color", "$value": "{secondary-live}", "$description": "The filled part: the app's live colour, as Figma draws it. It was {primary} before 1.0, when primary was an ink." },
     "complete": { "$type": "color", "$value": "{success}", "$description": "The fill once value reaches max (not for a budget)." },
     "warning": { "$type": "color", "$value": "{warning}", "$description": "A budget past 70%." },
     "over": { "$type": "color", "$value": "{destructive}", "$description": "A budget past 90%." }

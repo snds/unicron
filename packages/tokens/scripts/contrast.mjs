@@ -1,412 +1,417 @@
 #!/usr/bin/env node
-// Contrast gate: every pair the primitives render, judged by what it is for. APCA first, WCAG 2
-// reported alongside (docs/02-tokens.md → Contrast).
+// Contrast gate: every pair the system paints, judged by what it is for, in all 8 modes
+// (4 apps × 2 grounds). APCA first, WCAG 2 for borders and rings (docs/02-tokens.md → Contrast).
 //
 // The method is Emphasis Engine's (snds/emphasis-engine, docs/architecture.md): measure outcomes,
 // not variables. A recipe is a pair as a component paints it, through its own opacity modifiers
-// and mixes (`bg-input/30`, `ring-ring/50`, `hover:bg-primary/80`), over the stack it sits on.
-// Its element kind sets its floor. A role is then pointed at the weakest ramp step that clears
-// every recipe it paints; a role with no passing step gets a new tier-1 step.
+// and mixes (a hover wash, a solid at 90%), over the stack it sits on. Its element kind sets its
+// floor.
 //
-// What it reads: dist/tokens.css (run scripts/build.mjs first; `pnpm test` does). It resolves
-// each role's light value from the `:root` (and `:root, .light`) blocks and its dark value from the `.dark` blocks,
-// following var() chains across all three tiers, so the numbers are the ones a browser renders.
+// What it reads: dist/tokens.css (run scripts/build.mjs first; `pnpm test` does). For each mode
+// it takes the variables a browser would see (the app's theme slots, then the ground's roles) and
+// follows var() chains across all three tiers, so the numbers are the ones a browser renders.
 //
-// Colour math is done here: oklch() / oklab() / color-mix(in oklab, …) → OKLab → linear sRGB →
-// gamma sRGB. An out-of-gamut colour is clamped per channel and the row says "gamut-clamped".
-// Translucent layers are composited over the layer below in gamma sRGB, as browsers blend.
+// Figma is the source of truth for the theme values. A Figma value that misses a floor is not
+// changed here and not hidden: it is listed by name under "Exceptions" with what it measures,
+// reported and not gated, for Sean to decide. Everything else is gated. An exception that starts
+// passing fails the run, so the list cannot go stale.
 //
-// APCA Lc comes from the reference `apca-w3` package (devDependency; licensed for checking web
-// content). Nothing from it is copied here. WCAG 2 ratio and OKLCH ΔL are computed below.
+// Recipes: the core table below, plus every file in scripts/recipes/*.mjs (one per component
+// area; see scripts/recipes/README.md).
 //
-// Run: pnpm --filter @unicron/tokens contrast · exit 1 on any APCA floor miss.
+// Colour math is in scripts/lib/color.mjs. APCA Lc comes from the reference `apca-w3` package
+// (devDependency; licensed for checking web content). Nothing from it is copied here.
+//
+// Run: pnpm --filter @unicron/tokens contrast · exit 1 on any miss that is not a named exception.
+//   --rows[=text]         also print one row per recipe and mode (drawn colours, WCAG, APCA),
+//                         for every recipe or only those whose id contains `text`
+//   --print-exceptions    print every miss as an exception entry, to paste and then justify
 
 import fs from "node:fs"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import { APCAcontrast, sRGBtoY } from "apca-w3"
 
+import { composite, difference, hex, oklabL, parseColor, to8, toSrgb, wcagRatio } from "./lib/color.mjs"
+import { allModes, modeVars, parseTokensCss, resolveValue } from "./lib/css.mjs"
+
 const here = path.dirname(fileURLToPath(import.meta.url))
-const cssPath = path.join(here, "..", "dist", "tokens.css")
-if (!fs.existsSync(cssPath)) {
-  console.error("contrast: dist/tokens.css is missing — run `node scripts/build.mjs` first")
-  process.exit(1)
-}
-const css = fs.readFileSync(cssPath, "utf8")
+const args = process.argv.slice(2)
+const rowsArg = args.find((a) => a === "--rows" || a.startsWith("--rows="))
+const printExceptions = args.includes("--print-exceptions")
 
 // ── Floors, by element kind ──────────────────────────────────────────────────────────────────
-// From Emphasis Engine's intent contract (snds/emphasis-engine, src/engine/intent.ts): a floor
-// belongs to what a paint is for, not to a role or a system. Text is judged by APCA first, by use
-// as APCA Bronze does:
-// - Reading text (primary and secondary text: body, descriptions, placeholders, shortcut keys,
-//   inactive tabs) needs Lc 75, Bronze's mark for text under 16px; Unicron's body is 14px. A
-//   recipe drawn at 16px or more says `large` and needs Lc 60.
-// - A short label on a fill or a tint (buttons, badges, status fills) needs Lc 60, the engine's
-//   floor and APCA's minimum for content text. Lc 75 is reported (★) as the target.
-// Non-text keeps the engine's WCAG 1.4.11 ratio: APCA has no calibrated target for 1px lines and
-// rings. WCAG 2's ratio is printed for every pair as the fallback.
-const BRONZE = 75 // reading text under 16px (APCA Bronze)
-const TEXT = 60 // text at 16px and above; labels on fills and tints
+// The text floors are the direction's (design-direction-2026-11 §2, APCA 0.0.98G): the Figma
+// values were solved to them against the ground. A floor belongs to what a paint is for.
 const KINDS = {
-  "text-primary": { metric: "lc", min: BRONZE, reading: true },
-  "text-secondary": { metric: "lc", min: BRONZE, reading: true },
-  "text-on-tint": { metric: "lc", min: TEXT },
-  "on-solid": { metric: "lc", min: TEXT },
-  solid: { metric: "lc", min: 30, rule: "Lc 30 against the page" },
-  "border-control": { metric: "ratio", min: 3, rule: "3:1 (WCAG 1.4.11)" },
-  focus: { metric: "ratio", min: 3, rule: "3:1 as drawn (WCAG 1.4.11)" },
-  // Reported, not gated: what a surface, a state or a separator measures, in OKLCH lightness.
+  "text-body": { metric: "lc", min: 90, rule: "body text" },
+  "text-secondary": { metric: "lc", min: 75, rule: "secondary text" },
+  "text-label": { metric: "lc", min: 60, rule: "labels and coloured text" },
+  "text-display": { metric: "lc", min: 45, rule: "large display, 36px and up" },
+  "on-fill": { metric: "lc", min: 75, rule: "text on a fill" },
+  solid: { metric: "lc", min: 30, rule: "a solid against what it sits on" },
+  // Non-text keeps the WCAG 1.4.11 ratio: APCA has no calibrated target for thin lines and rings.
+  focus: { metric: "ratio", min: 3, rule: "a focus ring or focus border, 3:1 (WCAG 1.4.11)" },
+  "border-error": { metric: "ratio", min: 3, rule: "an error border, 3:1 (WCAG 1.4.11)" },
+  // Reported, not gated.
+  "text-faint": { metric: "lc" }, // the direction sets no target for the faintest ink
+  "border-rest": { metric: "ratio" }, // a field's resting border is a hairline (contract §9.4)
   "border-decorative": { metric: "dL" },
   state: { metric: "dL" },
   surface: { metric: "dL" },
 }
-const TEXT_KINDS = new Set(["text-primary", "text-secondary", "text-on-tint", "on-solid"])
+// Kind names from before 1.0, for recipe files written against the old table. `border-control`
+// has no successor: a resting border is `border-rest` (reported), a focus or error border is
+// `focus` or `border-error` (3:1).
+const KIND_ALIASES = { "text-primary": "text-body", "text-on-tint": "text-label", "on-solid": "on-fill" }
 
 // ── Recipes ──────────────────────────────────────────────────────────────────────────────────
-// Every pair the primitives render, read from packages/ui/src: the paint, the stack it sits on
-// (bottom first), and what it is for. A paint is a role, a role at an opacity (Tailwind's `/30`
-// is color-mix towards transparent), or a two-role mix. Measured as a browser draws it: each
-// layer composited over the one below, then the paint over the top. The table follows Emphasis
-// Engine's shadcn profile (its probe verified those recipes against the same base-nova source)
-// plus the pairs that probe found the profile was missing.
+// A paint is a role, a role at an opacity (Tailwind's `/90` is color-mix towards transparent), or
+// a two-role mix. `over` is the stack it sits on, bottom first. Measured as a browser draws it:
+// each layer composited over the one below, then the paint over the top.
 const r = (role, alpha) => ({ role, alpha })
 const mix = (a, b, k) => ({ mix: [a, b], k })
-const RECIPES = [
-  // Surfaces
-  { id: "card", source: "card: bg-card", kind: "surface", paint: r("card"), over: [r("background")] },
-  { id: "muted", source: "tabs list, toggle on: bg-muted", kind: "surface", paint: r("muted"), over: [r("card")] },
-  { id: "accent", source: "select item: bg-accent", kind: "surface", paint: r("accent"), over: [r("popover")] },
-  { id: "secondary", source: "button, badge: bg-secondary", kind: "surface", paint: r("secondary"), over: [r("card")] },
-  { id: "sidebar", source: "sidebar: bg-sidebar", kind: "surface", paint: r("sidebar"), over: [r("background")] },
 
-  // Primary text
-  { id: "fg-page", source: "text-foreground", kind: "text-primary", paint: r("foreground"), over: [r("background")] },
-  { id: "fg-card", source: "text-card-foreground", kind: "text-primary", paint: r("card-foreground"), over: [r("card")] },
-  { id: "fg-popover", source: "text-popover-foreground", kind: "text-primary", paint: r("popover-foreground"), over: [r("popover")] },
-  { id: "fg-muted", source: "ghost: hover:bg-muted hover:text-foreground", kind: "text-primary", paint: r("foreground"), over: [r("card"), r("muted")] },
-  { id: "fg-accent", source: "select item: bg-accent text-accent-foreground", kind: "text-primary", paint: r("accent-foreground"), over: [r("popover"), r("accent")] },
-  { id: "fg-highlight", source: "menu item: data-highlighted:bg-foreground/10", kind: "text-primary", paint: r("foreground"), over: [r("popover"), r("foreground", 0.1)] },
-  { id: "fg-secondary", source: "button, badge secondary: text-secondary-foreground", kind: "text-primary", paint: r("secondary-foreground"), over: [r("card"), r("secondary")] },
-  { id: "fg-secondary-hover", source: "secondary: hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]", kind: "text-primary", paint: r("secondary-foreground"), over: [r("card"), mix("secondary", "foreground", 0.05)] },
-  { id: "fg-sidebar", source: "sidebar: text-sidebar-foreground", kind: "text-primary", paint: r("sidebar-foreground"), over: [r("sidebar")] },
-  { id: "fg-sidebar-accent", source: "sidebar item: bg-sidebar-accent", kind: "text-primary", paint: r("sidebar-accent-foreground"), over: [r("sidebar"), r("sidebar-accent")] },
+const GROUND = [r("surface-ground")]
+const RAISED = [r("surface-raised")]
+const SOFT = [r("primary-soft")]
+const BASES = [["ground", GROUND], ["raised", RAISED]]
+// The three neutral text levels, and the kind that gates each.
+const LEVELS = [["body", "text-body"], ["secondary", "text-secondary"], ["label", "text-label"]]
 
-  // Support text: descriptions, an empty state's text (level 4)
-  ...["background", "card", "popover", "sidebar"].map((bg) => ({
-    id: `sfg-${bg}`, source: "text-support-foreground; type-support; dialog, sheet, field, item and empty descriptions", kind: "text-secondary", paint: r("support-foreground"), over: [r(bg)],
-  })),
-  { id: "sfg-muted", source: "support text on bg-muted", kind: "text-secondary", paint: r("support-foreground"), over: [r("card"), r("muted")] },
-  { id: "sfg-accent", source: "support text in a selected or highlighted row (bg-accent)", kind: "text-secondary", paint: r("support-foreground"), over: [r("popover"), r("accent")] },
+const CORE = [
+  // ── Figma roles, as the components draw them ──
+  // Surfaces (reported)
+  { id: "raised", source: "bg-surface-raised on the ground: a field, a card, a menu", kind: "surface", paint: r("surface-raised"), over: GROUND },
+  { id: "primary-soft", source: "bg-primary-soft on the ground: a selected row, the current nav item", kind: "surface", paint: r("primary-soft"), over: GROUND },
+  { id: "primary-soft-raised", source: "bg-primary-soft on a raised surface", kind: "surface", paint: r("primary-soft"), over: RAISED },
+  { id: "critical-soft", source: "bg-critical-soft on the ground: a critical banner", kind: "surface", paint: r("critical-soft"), over: GROUND },
 
-  // Secondary text: descriptions, placeholders, shortcut keys, inactive tabs
-  ...["background", "card", "popover", "sidebar"].map((bg) => ({
-    id: `mfg-${bg}`, source: "text-muted-foreground; placeholder:text-muted-foreground", kind: "text-secondary", paint: r("muted-foreground"), over: [r(bg)],
-  })),
-  // On a fill, a fill re-points --muted-foreground at --muted-foreground-on-fill for its content
-  // (@unicron/ui's styles), so secondary text there is painted with that role. One role holding
-  // Lc 75 on the page and on every fill had to be strong enough for the fills, and so sat almost
-  // at primary text's level everywhere else.
-  { id: "mfg-muted", source: "kbd: bg-muted text-muted-foreground; inactive tab on the tabs list", kind: "text-secondary", paint: r("muted-foreground-on-fill"), over: [r("card"), r("muted")] },
-  { id: "mfg-accent", source: "item hover: bg-accent with secondary text", kind: "text-secondary", paint: r("muted-foreground-on-fill"), over: [r("popover"), r("accent")] },
-  { id: "mfg-secondary", source: "secondary text on bg-secondary", kind: "text-secondary", paint: r("muted-foreground-on-fill"), over: [r("card"), r("secondary")] },
-  { id: "mfg-input-dark", source: "placeholder:text-muted-foreground on dark:bg-input/30", kind: "text-secondary", modes: ["dark"], paint: r("muted-foreground"), over: [r("background"), r("input", 0.3)] },
-  { id: "destr-text-card", source: "alert, field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("card")] },
-  { id: "destr-text-page", source: "field error: text-destructive", kind: "text-secondary", paint: r("destructive"), over: [r("background")] },
-  { id: "protected-page", source: "protected value: text-protected", kind: "text-secondary", paint: r("protected"), over: [r("background")] },
-  { id: "destr-text-accent", source: "text-destructive on a selected or highlighted row (bg-accent)", kind: "text-secondary", paint: r("destructive"), over: [r("popover"), r("accent")] },
-  { id: "destr-text-muted", source: "text-destructive on bg-muted", kind: "text-secondary", paint: r("destructive"), over: [r("card"), r("muted")] },
-
-  // Text on a tint
-  { id: "destr-label-light", source: "button, badge destructive: bg-destructive/10 text-destructive", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("destructive", 0.1)] },
-  { id: "destr-label-hover-light", source: "destructive: hover:bg-destructive/20", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("destructive", 0.2)] },
-  { id: "destr-label-dark", source: "destructive: dark:bg-destructive/20", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("destructive", 0.2)] },
-
-  // Pressed (active:) tints differ from hover. A step past hover would sink a destructive label
-  // under Lc 60 (/30 light: Lc 53; /40 dark: Lc 58), so destructive presses to halfway between
-  // rest and hover: /15 in light, /25 in dark. Ghost-destructive hovers on its own tint (/10,
-  // dark /20), so it shows on a muted fill too, and presses the same way.
-  { id: "destr-label-active-light", source: "destructive: active:bg-destructive/15; ghost-destructive: active:bg-destructive/15", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("destructive", 0.15)] },
-  { id: "destr-label-hover-dark", source: "destructive: dark:hover:bg-destructive/30", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("destructive", 0.3)] },
-  { id: "destr-label-active-dark", source: "destructive: dark:active:bg-destructive/25; ghost-destructive: dark:active:bg-destructive/25", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("destructive", 0.25)] },
-  { id: "destr-label-ghost-hover-dark", source: "ghost-destructive: dark:hover:bg-destructive/20 on bg-muted", kind: "text-on-tint", modes: ["dark"], paint: r("destructive"), over: [r("card"), r("muted"), r("destructive", 0.2)] },
-  { id: "destr-label-ghost-hover-muted-light", source: "ghost-destructive: hover:bg-destructive/10 on bg-muted", kind: "text-on-tint", modes: ["light"], paint: r("destructive"), over: [r("card"), r("muted"), r("destructive", 0.1)] },
-  // Primary text on a pressed row or ghost button: the hover fill with 8% foreground mixed in.
-  { id: "fg-pressed", source: "item rows, ghost, outline: active:bg-[color-mix(in_oklch,var(--muted),var(--foreground)_8%)]", kind: "text-primary", paint: r("foreground"), over: [r("card"), mix("muted", "foreground", 0.08)] },
-  // Default presses to /90, between rest and hover (/70 would leave the dark label at Lc 58).
-  { id: "pfg-active", source: "button default: active:bg-primary/90", kind: "on-solid", paint: r("primary-foreground"), over: [r("card"), r("primary", 0.9)] },
-
-  // Labels on solids
-  { id: "pfg", source: "button default: bg-primary text-primary-foreground", kind: "on-solid", paint: r("primary-foreground"), over: [r("card"), r("primary")] },
-  { id: "pfg-hover", source: "button default: hover:bg-primary/80", kind: "on-solid", paint: r("primary-foreground"), over: [r("card"), r("primary", 0.8)] },
-  { id: "spfg", source: "sidebar: bg-sidebar-primary text-sidebar-primary-foreground", kind: "on-solid", paint: r("sidebar-primary-foreground"), over: [r("sidebar"), r("sidebar-primary")] },
-  { id: "warning-fg", source: "warning fill: text-warning-foreground", kind: "on-solid", paint: r("warning-foreground"), over: [r("background"), r("warning")] },
-  { id: "info-fg", source: "info fill: text-info-foreground", kind: "on-solid", paint: r("info-foreground"), over: [r("background"), r("info")] },
-  { id: "protected-fg", source: "protected fill: text-protected-foreground", kind: "on-solid", paint: r("protected-foreground"), over: [r("background"), r("protected")] },
-
-  // Solids
-  { id: "primary-page", source: "bg-primary", kind: "solid", paint: r("primary"), over: [r("background")] },
-  { id: "primary-card", source: "bg-primary on a card", kind: "solid", paint: r("primary"), over: [r("card")] },
-  // Status fills are solids too: the fill, not only its label, has to show against what it sits on.
-  ...["warning", "info"].flatMap((fill) =>
-    ["background", "sidebar"].map((bg) => ({
-      id: `${fill}-on-${bg}`, source: `bg-${fill} on bg-${bg}`, kind: "solid", paint: r(fill), over: [r(bg)],
-    })).concat([{ id: `${fill}-on-accent`, source: `bg-${fill} on a selected row`, kind: "solid", paint: r(fill), over: [r("popover"), r("accent")] }])
-  ),
-
-  // Status roles (success, attention, running): live and finished states in agent UIs. The
-  // foreground is ink on a surface, drawn small (a status word, a count, an icon beside a row), so
-  // it is held to reading text on every surface a status sits on, its own wash included. The fill
-  // carries no text (a dot, an orb, a bar), so it is a solid: it has to show against what it sits on.
-  ...["success", "attention", "running"].flatMap((role) => [
-    ...["background", "card", "sidebar"].map((bg) => ({
-      id: `${role}-text-${bg}`, source: `text-${role}-foreground on bg-${bg}`, kind: "text-secondary", paint: r(`${role}-foreground`), over: [r(bg)],
-    })),
-    { id: `${role}-text-accent`, source: `text-${role}-foreground on a selected row`, kind: "text-secondary", paint: r(`${role}-foreground`), over: [r("popover"), r("accent")] },
-    { id: `${role}-text-surface`, source: `bg-${role}-surface text-${role}-foreground`, kind: "text-secondary", paint: r(`${role}-foreground`), over: [r("card"), r(`${role}-surface`)] },
-    ...["background", "card", "sidebar"].map((bg) => ({
-      id: `${role}-on-${bg}`, source: `bg-${role} (StatusOrb, Progress) on bg-${bg}`, kind: "solid", paint: r(role), over: [r(bg)],
-    })),
-    { id: `${role}-on-accent`, source: `bg-${role} on a selected row`, kind: "solid", paint: r(role), over: [r("popover"), r("accent")] },
-    { id: `${role}-on-surface`, source: `bg-${role} on bg-${role}-surface`, kind: "solid", paint: r(role), over: [r("card"), r(`${role}-surface`)] },
-    { id: `${role}-surface`, source: `bg-${role}-surface on a card`, kind: "surface", paint: r(`${role}-surface`), over: [r("card")] },
+  // The three neutral text levels on every surface they share
+  ...LEVELS.flatMap(([level, kind]) => [
+    { id: `${level}-ground`, source: `text-text-${level} on the ground`, kind, paint: r(`text-${level}`), over: GROUND },
+    { id: `${level}-raised`, source: `text-text-${level} on bg-surface-raised`, kind, paint: r(`text-${level}`), over: RAISED },
+    { id: `${level}-soft`, source: `text-text-${level} in a selected row (bg-primary-soft)`, kind, paint: r(`text-${level}`), over: SOFT },
   ]),
+  { id: "body-critical-soft", source: "a critical banner's title: text-text-body on bg-critical-soft", kind: "text-body", paint: r("text-body"), over: [r("critical-soft")] },
+  { id: "secondary-critical-soft", source: "a critical banner's body: text-text-secondary on bg-critical-soft", kind: "text-secondary", paint: r("text-secondary"), over: [r("critical-soft")] },
+  // The faintest ink (reported: no target)
+  { id: "faint-ground", source: "text-text-faint on the ground: an index number", kind: "text-faint", paint: r("text-faint"), over: GROUND },
+  { id: "faint-raised", source: "text-text-faint on bg-surface-raised", kind: "text-faint", paint: r("text-faint"), over: RAISED },
+  { id: "faint-soft", source: "text-text-faint on the current nav item (bg-primary-soft)", kind: "text-faint", paint: r("text-faint"), over: SOFT },
 
-  // Progress fills on their track (bg-muted), on a card: the filled part has to show against the rest.
-  ...["primary", "success", "warning", "destructive"].map((role) => ({
-    id: `progress-${role}`, source: `progress: bg-(--c-progress-*) = ${role} on bg-muted`, kind: "solid", paint: r(role), over: [r("card"), r("muted")],
-  })),
+  // Identity
+  { id: "primary-text-ground", source: "text-primary-text on the ground", kind: "text-label", paint: r("primary-text"), over: GROUND },
+  { id: "primary-text-raised", source: "text-primary-text on bg-surface-raised", kind: "text-label", paint: r("primary-text"), over: RAISED },
+  { id: "primary-text-soft", source: "text-primary-text, or an icon, on bg-primary-soft", kind: "text-label", paint: r("primary-text"), over: SOFT },
+  { id: "primary-display-ground", source: "text-primary-display on the ground, 36px and up", kind: "text-display", paint: r("primary-display"), over: GROUND },
+  { id: "primary-display-raised", source: "text-primary-display on bg-surface-raised, 36px and up", kind: "text-display", paint: r("primary-display"), over: RAISED },
+  { id: "primary-on-fill", source: "the primary button: bg-primary-fill text-primary-on-fill", kind: "on-fill", paint: r("primary-on-fill"), over: [r("primary-fill")] },
+  { id: "primary-fill-ground", source: "bg-primary-fill on the ground: the primary button, the create button, a switch that is on", kind: "solid", paint: r("primary-fill"), over: GROUND },
+  { id: "primary-fill-raised", source: "bg-primary-fill on bg-surface-raised: the tab indicator, the selected-row edge", kind: "solid", paint: r("primary-fill"), over: RAISED },
+  { id: "primary-edge-soft", source: "the 2px primary-fill edge of a selected row, against bg-primary-soft", kind: "solid", paint: r("primary-fill"), over: SOFT },
 
-  // Control borders: a field has to be findable
-  { id: "input-card", source: "input, select, textarea, checkbox: border-input", kind: "border-control", paint: r("input"), over: [r("card")] },
-  { id: "input-page", source: "border-input", kind: "border-control", paint: r("input"), over: [r("background")] },
-  { id: "input-popover", source: "fields in a popover or dialog: border-input", kind: "border-control", paint: r("input"), over: [r("popover")] },
+  // Live activity
+  { id: "live-ground", source: "text-secondary-live on the ground: live status text", kind: "text-label", paint: r("secondary-live"), over: GROUND },
+  { id: "live-raised", source: "text-secondary-live on bg-surface-raised: an agent message's meta", kind: "text-label", paint: r("secondary-live"), over: RAISED },
+  { id: "live-soft", source: "text-secondary-live in a selected row (bg-primary-soft)", kind: "text-label", paint: r("secondary-live"), over: SOFT },
+  { id: "live-mark-ground", source: "bg-secondary-live on the ground: the live mark", kind: "solid", paint: r("secondary-live"), over: GROUND },
+  { id: "live-mark-raised", source: "bg-secondary-live on bg-surface-raised", kind: "solid", paint: r("secondary-live"), over: RAISED },
+  { id: "live-progress", source: "progress: bg-secondary-live, the filled part, against bg-line-rule, the empty part", kind: "solid", paint: r("secondary-live"), over: [r("line-rule")] },
 
-  // Focus, as the primitives draw it: ring-ring/50 around the control
-  ...["background", "card", "popover", "sidebar"].map((bg) => ({
-    id: `ring-${bg}`, source: "focus-visible:ring-ring/50, outline-ring/50", kind: "focus", paint: r("ring", 0.5), over: [r(bg)],
-  })),
-  // The destructive button and badge use the shared ring (they once drew ring-destructive/20, at
-  // 1.43:1 in light); gated here so a variant can't quietly bring its own back.
-  ...["background", "card", "popover"].map((bg) => ({
-    id: `ring-destructive-${bg}`, source: "button, badge destructive: focus-visible:ring-ring/50 (the shared ring)", kind: "focus", paint: r("ring", 0.5), over: [r(bg)],
-  })),
-  // An invalid field's ring is drawn at rest, beside its border, and has to show as much as focus.
-  ...["background", "card", "popover"].flatMap((bg) => [
-    { id: `ring-invalid-${bg}-light`, source: "aria-invalid:ring-destructive/60", kind: "focus", modes: ["light"], paint: r("destructive", 0.6), over: [r(bg)] },
-    { id: `ring-invalid-${bg}-dark`, source: "dark:aria-invalid:ring-destructive/50", kind: "focus", modes: ["dark"], paint: r("destructive", 0.5), over: [r(bg)] },
-  ]),
-  { id: "ring-muted", source: "tabs: focus-visible:ring-ring/50 on bg-muted", kind: "focus", paint: r("ring", 0.5), over: [r("card"), r("muted")] },
+  // Needs you
+  { id: "needs-you-on-fill", source: "the needs-you block: bg-needs-you-fill text-needs-you-on-fill", kind: "on-fill", paint: r("needs-you-on-fill"), over: [r("needs-you-fill")] },
+  { id: "needs-you-button", source: "the solid needs-you button: bg-needs-you-on-fill text-needs-you-fill", kind: "on-fill", paint: r("needs-you-fill"), over: [r("needs-you-on-fill")] },
+  { id: "needs-you-fill-ground", source: "bg-needs-you-fill on the ground: the block, a strip, a mark", kind: "solid", paint: r("needs-you-fill"), over: GROUND },
+  { id: "needs-you-fill-raised", source: "bg-needs-you-fill on bg-surface-raised", kind: "solid", paint: r("needs-you-fill"), over: RAISED },
 
-  // States (reported): a hover or a fill has to differ from rest
-  { id: "muted-50", source: "table row, dark ghost: hover:bg-muted/50", kind: "state", paint: r("muted", 0.5), over: [r("card")] },
-  { id: "outline-rest", source: "dark:bg-input/30", kind: "state", modes: ["dark"], paint: r("input", 0.3), over: [r("card")] },
-  { id: "outline-hover", source: "dark:hover:bg-input/50", kind: "state", modes: ["dark"], paint: r("input", 0.5), over: [r("card")] },
-  { id: "switch-off", source: "switch: data-unchecked:bg-input (dark: /80)", kind: "state", paint: r("input"), over: [r("card")] },
-  { id: "primary-hover", source: "hover:bg-primary/80 against rest", kind: "state", paint: r("primary", 0.8), over: [r("card")] },
-  { id: "pressed-vs-hover", source: "pressed rows and ghost buttons against hover (bg-muted)", kind: "state", paint: mix("muted", "foreground", 0.08), over: [r("card"), r("muted")] },
-  { id: "destr-tint", source: "bg-destructive/10 (dark /20)", kind: "state", paint: r("destructive", 0.1), over: [r("card")] },
-  { id: "item-highlight", source: "data-highlighted:bg-foreground/10", kind: "state", paint: r("foreground", 0.1), over: [r("popover")] },
+  // Critical
+  { id: "critical-on-fill", source: "the destructive button: bg-critical-fill text-critical-on-fill", kind: "on-fill", paint: r("critical-on-fill"), over: [r("critical-fill")] },
+  { id: "critical-text-ground", source: "text-critical-text on the ground: a field's error line", kind: "text-label", paint: r("critical-text"), over: GROUND },
+  { id: "critical-text-raised", source: "text-critical-text on bg-surface-raised", kind: "text-label", paint: r("critical-text"), over: RAISED },
+  { id: "critical-text-soft", source: "a critical banner's icon: text-critical-text on bg-critical-soft", kind: "text-label", paint: r("critical-text"), over: [r("critical-soft")] },
+  { id: "critical-fill-ground", source: "bg-critical-fill on the ground", kind: "solid", paint: r("critical-fill"), over: GROUND },
+  { id: "critical-fill-raised", source: "bg-critical-fill on bg-surface-raised", kind: "solid", paint: r("critical-fill"), over: RAISED },
 
-  // Accent hues as text. Apps assign the hues (tier 1, not roles) and also draw them as text: an
-  // area's name, a status word, a link. 500 and 400 are fills; text uses 600 in light and 300 in
-  // dark, held to reading text on every neutral surface an app puts it on.
-  // Red's text steps are 700 and 200: drawn at more chroma, its 600 and 300 sit a point short on a
-  // selected row (they stay in tier 1, unchanged, for anything that points at them).
-  ...["blue", "coral", "green", "amber", "red"].flatMap((hue) => [
-    ...["0", "50", "100"].map((step) => ({
-      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 700 : 600} as text on neutral.${step}`, kind: "text-secondary", modes: ["light"], paint: r(`g-${hue}-${hue === "red" ? 700 : 600}`), over: [r(`g-neutral-${step}`)],
-    })),
-    ...["950", "900", "800"].map((step) => ({
-      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 200 : 300} as text on neutral.${step}`, kind: "text-secondary", modes: ["dark"], paint: r(`g-${hue}-${hue === "red" ? 200 : 300}`), over: [r(`g-neutral-${step}`)],
-    })),
-  ]),
+  // Focus and error borders hold 3:1 against both sides of the edge. A field's resting border is
+  // a hairline: reported, not gated (contract §9.4).
+  { id: "field-focus-raised", source: "a text field's focus border: 2px primary-fill, against its bg-surface-raised box", kind: "focus", paint: r("primary-fill"), over: RAISED },
+  { id: "field-focus-ground", source: "a text field's focus border, against the ground outside it", kind: "focus", paint: r("primary-fill"), over: GROUND },
+  { id: "field-error-raised", source: "an invalid field's border: 2px critical-fill, against its bg-surface-raised box", kind: "border-error", paint: r("critical-fill"), over: RAISED },
+  { id: "field-error-ground", source: "an invalid field's border, against the ground outside it", kind: "border-error", paint: r("critical-fill"), over: GROUND },
+  { id: "field-rest-raised", source: "a field's resting border: 1px line-rule, against its bg-surface-raised box", kind: "border-rest", paint: r("line-rule"), over: RAISED },
+  { id: "field-rest-ground", source: "a field's resting border, against the ground outside it", kind: "border-rest", paint: r("line-rule"), over: GROUND },
+  { id: "ring-ground", source: "focus-visible: a solid 2px outline in --ring, on the ground", kind: "focus", paint: r("ring"), over: GROUND },
+  { id: "ring-raised", source: "focus-visible outline on bg-surface-raised", kind: "focus", paint: r("ring"), over: RAISED },
+  { id: "ring-soft", source: "focus-visible outline beside a selected row (bg-primary-soft)", kind: "focus", paint: r("ring"), over: SOFT },
+  { id: "ring-needs-you", source: "focus-visible inside a needs-you block: needs-you-on-fill on bg-needs-you-fill", kind: "focus", paint: r("needs-you-on-fill"), over: [r("needs-you-fill")] },
 
   // Separators (reported)
-  { id: "border-card", source: "border-border", kind: "border-decorative", paint: r("border"), over: [r("card")] },
-  { id: "border-page", source: "border-border", kind: "border-decorative", paint: r("border"), over: [r("background")] },
-  { id: "card-edge", source: "card: ring-1 ring-foreground/10", kind: "border-decorative", paint: r("foreground", 0.1), over: [r("background")] },
+  { id: "rule-ground", source: "border-line-rule on the ground", kind: "border-decorative", paint: r("line-rule"), over: GROUND },
+  { id: "rule-raised", source: "border-line-rule on bg-surface-raised", kind: "border-decorative", paint: r("line-rule"), over: RAISED },
+  { id: "grid-dot-ground", source: "bg-line-grid-dot on the ground: the dot grid, a sheet's grabber", kind: "border-decorative", paint: r("line-grid-dot"), over: GROUND },
+
+  // ── States (contract §6: not drawn in Figma) ──
+  // Hover and pressed are washes of the ink over whatever is underneath. Text must hold its floor
+  // on the washed surface too.
+  ...BASES.flatMap(([base, stack]) =>
+    [["hover", "state-hover"], ["pressed", "state-pressed"]].flatMap(([state, wash]) =>
+      LEVELS.map(([level, kind]) => ({
+        id: `${level}-${base}-${state}`, source: `text-text-${level} on a ${state} row or control (bg-${wash}) over ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind, paint: r(`text-${level}`), over: [...stack, r(wash)],
+      }))
+    )
+  ),
+  ...LEVELS.map(([level, kind]) => ({
+    id: `${level}-soft-hover`, source: `text-text-${level} in a selected row under the pointer (bg-primary-soft, then bg-state-hover)`, kind, paint: r(`text-${level}`), over: [...SOFT, r("state-hover")],
+  })),
+  // The opaque hover and highlight fill (the shadcn `accent`): 8% of the ink in surface-raised.
+  ...LEVELS.map(([level, kind]) => ({
+    id: `${level}-accent`, source: `text-text-${level} on a highlighted menu or list item (bg-accent)`, kind, paint: r(`text-${level}`), over: [r("accent")],
+  })),
+  { id: "critical-text-accent", source: "text-destructive on a highlighted menu item (bg-accent)", kind: "text-label", paint: r("critical-text"), over: [r("accent")] },
+  // A solid shows hover as itself at 90% over what is behind it, and pressed at 80%.
+  ...BASES.flatMap(([base, stack]) =>
+    [["hover", 0.9], ["pressed", 0.8]].flatMap(([state, alpha]) => [
+      { id: `primary-on-fill-${state}-${base}`, source: `the primary button, ${state}: bg-primary-fill/${alpha * 100} over ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "on-fill", paint: r("primary-on-fill"), over: [...stack, r("primary-fill", alpha)] },
+      { id: `critical-on-fill-${state}-${base}`, source: `the destructive button, ${state}: bg-critical-fill/${alpha * 100} over ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "on-fill", paint: r("critical-on-fill"), over: [...stack, r("critical-fill", alpha)] },
+    ])
+  ),
+  ...[["hover", 0.9], ["pressed", 0.8]].map(([state, alpha]) => ({
+    id: `needs-you-button-${state}`, source: `the solid needs-you button, ${state}: bg-needs-you-on-fill/${alpha * 100} over the yellow block`, kind: "on-fill", paint: r("needs-you-fill"), over: [r("needs-you-fill"), r("needs-you-on-fill", alpha)],
+  })),
+  // How far a state moves the surface (reported)
+  { id: "hover-ground", source: "bg-state-hover against the ground at rest", kind: "state", paint: r("state-hover"), over: GROUND },
+  { id: "hover-raised", source: "bg-state-hover against bg-surface-raised at rest", kind: "state", paint: r("state-hover"), over: RAISED },
+  { id: "pressed-vs-hover", source: "bg-state-pressed against bg-state-hover, on bg-surface-raised", kind: "state", paint: r("state-pressed"), over: [...RAISED, r("state-hover")] },
+  { id: "accent-raised", source: "bg-accent against bg-surface-raised: a highlighted item in a menu", kind: "state", paint: r("accent"), over: RAISED },
+  { id: "primary-hover", source: "bg-primary-fill/90 against the fill at rest", kind: "state", paint: r("surface-ground", 0.1), over: [r("primary-fill")] },
+
+  // ── Roles the tokens package solves (not Figma's, not plain aliases) ──
+  // A plain alias (background, foreground, muted-foreground, primary, running, attention …) is
+  // not measured twice: scripts/check.mjs pins each to its Figma role, and that role is above.
+  //
+  // Status roles: done, waiting on you. The foreground is coloured text, on every surface a status
+  // sits on, its own wash included. The fill carries no text (a mark, an orb, a bar), so it is a
+  // solid.
+  ...["success", "attention"].flatMap((role) => [
+    ...BASES.map(([base, stack]) => ({
+      id: `${role}-text-${base}`, source: `text-${role}-foreground on ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "text-label", paint: r(`${role}-foreground`), over: stack,
+    })),
+    { id: `${role}-text-soft`, source: `text-${role}-foreground in a selected row (bg-primary-soft)`, kind: "text-label", paint: r(`${role}-foreground`), over: SOFT },
+    { id: `${role}-text-surface`, source: `bg-${role}-surface text-${role}-foreground`, kind: "text-label", paint: r(`${role}-foreground`), over: [r(`${role}-surface`)] },
+    // `attention` on the ground and on a raised surface is needs-you-fill-ground and -raised, above.
+    ...(role === "attention" ? [] : BASES).map(([base, stack]) => ({
+      id: `${role}-on-${base}`, source: `bg-${role} (a mark, an orb, a bar) on ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "solid", paint: r(role), over: stack,
+    })),
+    { id: `${role}-on-soft`, source: `bg-${role} (a mark, an orb, a bar) in a selected row (bg-primary-soft)`, kind: "solid", paint: r(role), over: SOFT },
+    { id: `${role}-on-surface`, source: `bg-${role} on bg-${role}-surface`, kind: "solid", paint: r(role), over: [r(`${role}-surface`)] },
+    { id: `${role}-surface`, source: `bg-${role}-surface on the ground`, kind: "surface", paint: r(`${role}-surface`), over: GROUND },
+  ]),
+  // Working now: `running` and `running-foreground` are secondary-live, measured above as live-*.
+  // Its wash is the contract's mix (§1.4), so the pairs on it are measured here.
+  { id: "running-text-surface", source: "bg-running-surface text-running-foreground", kind: "text-label", paint: r("running-foreground"), over: [r("running-surface")] },
+  { id: "running-on-surface", source: "bg-running on bg-running-surface", kind: "solid", paint: r("running"), over: [r("running-surface")] },
+  { id: "running-surface", source: "bg-running-surface on the ground", kind: "surface", paint: r("running-surface"), over: GROUND },
+  // Warning and info are fills that hold a label, and inks for a glyph or a digit on a surface.
+  ...["warning", "info"].flatMap((fill) => [
+    { id: `${fill}-fg`, source: `bg-${fill} text-${fill}-foreground`, kind: "on-fill", paint: r(`${fill}-foreground`), over: [r(fill)] },
+    ...BASES.map(([base, stack]) => ({
+      id: `${fill}-on-${base}`, source: `bg-${fill}, or text-${fill}, on ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "text-label", paint: r(fill), over: stack,
+    })),
+    { id: `${fill}-on-soft`, source: `bg-${fill} in a selected row (bg-primary-soft)`, kind: "solid", paint: r(fill), over: SOFT },
+  ]),
+  // The inverted surface (CrownJewel): the ground's colour as ink on the ink's colour.
+  { id: "protected-fg", source: "bg-protected text-protected-foreground", kind: "on-fill", paint: r("protected-foreground"), over: [r("protected")] },
+  // Progress fills that are not the live one (live-progress, above), on the empty part of the bar.
+  ...["success", "warning", "destructive"].map((role) => ({
+    id: `progress-${role}`, source: `progress: bg-(--c-progress-*) = ${role}, against bg-line-rule, the empty part`, kind: "solid", paint: r(role), over: [r("line-rule")],
+  })),
+
+  // ── Legacy accent ramps as text ──
+  // Apps alias the accent hues from their own layers and draw them as text on the legacy neutral
+  // ramp: 600 in light and 300 in dark (red: 700 and 200), held to Lc 75 as before. Not themed,
+  // so measured once per ground.
+  ...["blue", "coral", "green", "amber", "red"].flatMap((hue) => [
+    ...["0", "50", "100"].map((step) => ({
+      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 700 : 600} as text on neutral.${step}`, kind: "text-secondary", themed: false, modes: ["stone"], paint: r(`g-${hue}-${hue === "red" ? 700 : 600}`), over: [r(`g-neutral-${step}`)],
+    })),
+    ...["950", "900", "800"].map((step) => ({
+      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 200 : 300} as text on neutral.${step}`, kind: "text-secondary", themed: false, modes: ["graphite"], paint: r(`g-${hue}-${hue === "red" ? 200 : 300}`), over: [r(`g-neutral-${step}`)],
+    })),
+  ]),
 ]
 
-// mode:recipe id → why it is waived. A waiver that starts passing fails the run, so it is removed.
-const WAIVED = new Map([])
+// ── Emphasis levels ──────────────────────────────────────────────────────────────────────────
+// A floor only says how faint a role may get. The three neutral text levels also have to read
+// apart, or a screen's hierarchy flattens: each at least Lc 10 from the next on every surface
+// they share. The coded gap stands in for the drawn one; apps check the levels as drawn.
+const LEVEL_GAP = 10
+const LEVEL_PAIRS = ["ground", "raised", "soft"].flatMap((s) => [[`body-${s}`, `secondary-${s}`], [`secondary-${s}`, `label-${s}`]])
 
-// ── Resolve the CSS ──────────────────────────────────────────────────────────────────────────
-function declarations(selector) {
-  const map = new Map()
-  // A tier with a dark mode emits its light block on `:root, .light`; the others on `:root`.
-  const re = new RegExp(`(?:^|\\n)${selector.replace(".", "\\.")}(?:, \\.light)? \\{\\n([\\s\\S]*?)\\n\\}`, "g")
-  for (const block of css.matchAll(re)) {
-    for (const line of block[1].split("\n")) {
-      const m = line.match(/^\s*(--[\w-]+):\s*(.+);\s*$/)
-      if (m) map.set(m[1], m[2])
-    }
+// ── Must differ (reported, not gated) ────────────────────────────────────────────────────────
+// Two watch items from the decision record: Lockdown's green can read as "success", and Synapse's
+// magenta sits close to critical red. Each row measures how far apart the two colours are.
+const MUST_DIFFER = [
+  { app: "lockdown", a: "primary-fill", b: "success", why: "the identity green beside the success fill" },
+  { app: "lockdown", a: "primary-text", b: "success-foreground", why: "the identity as text beside success text" },
+  { app: "lockdown", a: "primary-soft", b: "success-surface", why: "a selected row beside a success wash" },
+  { app: "synapse", a: "primary-fill", b: "critical-fill", why: "the identity magenta beside the critical fill" },
+  { app: "synapse", a: "primary-text", b: "critical-text", why: "the identity as text beside error text" },
+  { app: "synapse", a: "primary-soft", b: "critical-soft", why: "a selected row beside a critical banner" },
+  { app: "synapse", a: "primary-fill", b: "critical-soft", why: "the selected-row edge on a critical wash" },
+  { app: "synapse", a: "primary-soft", b: "critical-fill", why: "a critical edge or button on a selected row" },
+]
+// A reading aid, not a floor. ΔEOK is the distance between two colours in OKLab, where about 0.02
+// is the least difference an eye picks up side by side. Under 0.05 two colours read as the same
+// at a glance; under 0.15 they are close enough to be taken for each other when seen apart.
+const SAME = 0.05
+const CLOSE = 0.15
+
+// ── Exceptions (reported, not gated) ─────────────────────────────────────────────────────────
+// A Figma value under its floor. The value is Figma's and stays as it is; the miss is listed with
+// what it measures. `modes` is "all", a ground ("graphite", "stone"), or mode names. The list
+// must match the misses exactly: an entry that no longer misses fails the run.
+const FIGMA = "Figma value, flagged for Sean"
+const ON_STATE = "Figma value under a contract state (§6), flagged for Sean"
+const BY_CONTRACT = "Figma value in a contract role (§1.4), flagged for Sean"
+const g = (app) => `${app} / graphite`
+const st = (app) => `${app} / stone`
+const EXCEPTIONS = [
+  // Figma solved each text role against the ground, with no room to spare (label measures
+  // Lc 60.4 to 60.7 there). On any surface nearer the text's own lightness it lands just under.
+  { id: "label-raised", modes: "graphite", reason: FIGMA },
+  { id: "label-soft", modes: "all", reason: FIGMA },
+  { id: "body-soft", modes: "stone", reason: FIGMA },
+  { id: "body-critical-soft", modes: "stone", reason: FIGMA },
+  { id: "primary-text-raised", modes: [g("warpcore"), g("synapse")], reason: FIGMA },
+  { id: "primary-text-soft", modes: ["graphite", st("lockdown")], reason: FIGMA },
+  { id: "primary-display-raised", modes: [g("vale"), g("lockdown"), g("synapse")], reason: FIGMA },
+  { id: "live-raised", modes: [g("vale"), g("lockdown")], reason: FIGMA },
+  { id: "live-soft", modes: ["graphite", st("warpcore"), st("synapse")], reason: FIGMA },
+  { id: "critical-text-raised", modes: "graphite", reason: FIGMA },
+  { id: "critical-text-soft", modes: "graphite", reason: FIGMA },
+  // In stone, body and secondary text sit Lc 9.6 to 9.8 apart, a little under the 10 that keeps
+  // two levels reading as two.
+  { id: "gap:body-ground/secondary-ground", modes: "stone", reason: FIGMA },
+  { id: "gap:body-raised/secondary-raised", modes: "stone", reason: FIGMA },
+  { id: "gap:body-soft/secondary-soft", modes: "stone", reason: FIGMA },
+  // The solid fills are mid-lightness (OKLCH L about 52 in graphite), so against the graphite
+  // surfaces they measure Lc 19 to 27, under the Lc 30 a solid needs to show by lightness alone.
+  { id: "primary-fill-ground", modes: "graphite", reason: FIGMA },
+  { id: "primary-fill-raised", modes: "graphite", reason: FIGMA },
+  { id: "primary-edge-soft", modes: "graphite", reason: FIGMA },
+  { id: "critical-fill-ground", modes: "graphite", reason: FIGMA },
+  { id: "critical-fill-raised", modes: "graphite", reason: FIGMA },
+  // The yellow is as light as the stone surfaces: it differs from them by hue, not lightness.
+  { id: "needs-you-fill-ground", modes: "stone", reason: FIGMA },
+  { id: "needs-you-fill-raised", modes: "stone", reason: FIGMA },
+  // The same fills as 2px borders: a field's focus border (primary-fill) and its error border
+  // (critical-fill) are under 3:1 against the graphite surfaces.
+  { id: "field-focus-raised", modes: [g("warpcore"), g("vale"), g("synapse")], reason: FIGMA },
+  { id: "field-focus-ground", modes: [g("warpcore"), g("synapse")], reason: FIGMA },
+  { id: "field-error-raised", modes: "graphite", reason: FIGMA },
+  { id: "field-error-ground", modes: "graphite", reason: FIGMA },
+
+  // The contract's states (§6, a proposal for Sean): a hover or pressed wash of the ink, the opaque
+  // highlight fill, a solid at 80% when pressed. Each moves the surface towards the text, and the
+  // Figma values have no room for that.
+  { id: "body-ground-hover", modes: "stone", reason: ON_STATE },
+  { id: "label-ground-hover", modes: "graphite", reason: ON_STATE },
+  { id: "body-ground-pressed", modes: "stone", reason: ON_STATE },
+  { id: "secondary-ground-pressed", modes: "stone", reason: ON_STATE },
+  { id: "label-ground-pressed", modes: "all", reason: ON_STATE },
+  { id: "label-raised-hover", modes: "graphite", reason: ON_STATE },
+  { id: "body-raised-pressed", modes: "stone", reason: ON_STATE },
+  { id: "secondary-raised-pressed", modes: "graphite", reason: ON_STATE },
+  { id: "label-raised-pressed", modes: ["graphite", st("warpcore")], reason: ON_STATE },
+  { id: "body-soft-hover", modes: "stone", reason: ON_STATE },
+  { id: "secondary-soft-hover", modes: ["stone", g("vale"), g("lockdown")], reason: ON_STATE },
+  { id: "label-soft-hover", modes: "all", reason: ON_STATE },
+  { id: "body-accent", modes: "stone", reason: ON_STATE },
+  { id: "label-accent", modes: "graphite", reason: ON_STATE },
+  { id: "critical-text-accent", modes: "graphite", reason: ON_STATE },
+  { id: "primary-on-fill-pressed-ground", modes: [st("lockdown")], reason: ON_STATE },
+  { id: "primary-on-fill-pressed-raised", modes: [st("vale"), st("lockdown")], reason: ON_STATE },
+
+  // Contract §1.4 points `attention` at the yellow on both grounds, and makes the running wash
+  // 14% of the live colour in the ground.
+  { id: "attention-on-soft", modes: "stone", reason: BY_CONTRACT },
+  { id: "attention-on-surface", modes: "stone", reason: BY_CONTRACT },
+  { id: "running-text-surface", modes: "all", reason: BY_CONTRACT },
+]
+
+// ── Recipe files, one per component area ─────────────────────────────────────────────────────
+const recipeDir = path.join(here, "recipes")
+const recipeFiles = fs.existsSync(recipeDir) ? fs.readdirSync(recipeDir).filter((f) => f.endsWith(".mjs")).sort() : []
+const RECIPES = CORE.map((rec) => ({ ...rec, area: "core" }))
+const ALL_EXCEPTIONS = EXCEPTIONS.map((e) => ({ ...e, area: "core" }))
+for (const file of recipeFiles) {
+  const area = path.basename(file, ".mjs")
+  const mod = await import(pathToFileURL(path.join(recipeDir, file)).href)
+  let list = mod.default ?? mod.recipes ?? mod.RECIPES
+  if (typeof list === "function") list = list({ r, mix })
+  if (!Array.isArray(list)) {
+    throw new Error(`recipes/${file}: export default an array of recipes, or a function ({ r, mix }) => recipes (see scripts/recipes/README.md)`)
   }
-  return map
-}
-const light = declarations(":root")
-const darkOnly = declarations(".dark")
-const modes = {
-  light,
-  dark: new Map([...light, ...darkOnly]),
+  for (const rec of list) RECIPES.push({ ...rec, id: `${area}:${rec.id}`, area })
+  for (const e of mod.exceptions ?? mod.EXCEPTIONS ?? []) ALL_EXCEPTIONS.push({ ...e, id: `${area}:${e.id}`, area })
 }
 
-/** `var(--a)` chains → a literal CSS colour string, in one mode. */
-function resolve(value, mode, seen = new Set()) {
-  return value.replace(/var\((--[\w-]+)\)/g, (_, name) => {
-    if (seen.has(name)) throw new Error(`circular reference at ${name}`)
-    const next = modes[mode].get(name)
-    if (next === undefined) throw new Error(`${name} is not defined (${mode})`)
-    return resolve(next, mode, new Set([...seen, name]))
-  })
+// ── Modes ────────────────────────────────────────────────────────────────────────────────────
+const parsed = parseTokensCss()
+const MODES = allModes(parsed)
+if (MODES.length !== 8) throw new Error(`expected 8 modes (4 apps × 2 grounds) in dist/tokens.css, found ${MODES.length}`)
+// No data-theme attribute has to be a mode too: the defaults. Legacy, unthemed recipes run there.
+const DEFAULTS = ["graphite", "stone"].map((ground) => ({ name: `default / ${ground}`, app: null, ground, vars: modeVars(parsed, null, ground) }))
+const short = (mode) => (mode.app ?? "default").slice(0, 2) + "/" + mode.ground[0]
+
+/** Which modes a recipe or an exception names: "all", a ground, an app, "light"/"dark", or mode names. */
+function modeFilter(spec) {
+  if (spec === undefined || spec === "all") return () => true
+  const list = (Array.isArray(spec) ? spec : [spec]).map((s) => String(s).trim())
+  const ground = { light: "stone", dark: "graphite" }
+  return (mode) =>
+    list.some((s) => {
+      const g = ground[s] ?? s
+      return g === mode.ground || s === mode.app || s.replace(/\s*\/\s*/, " / ") === mode.name
+    })
 }
 
-// ── Colour math ──────────────────────────────────────────────────────────────────────────────
-// Internal form: OKLab + alpha. Conversions follow CSS Color 4 (Björn Ottosson's matrices).
-const deg = Math.PI / 180
-
-function oklchToOklab(L, C, h) {
-  return { L, a: C * Math.cos(h * deg), b: C * Math.sin(h * deg) }
-}
-
-function oklabToLinearSrgb({ L, a, b }) {
-  const l_ = L + 0.3963377774 * a + 0.2158037573 * b
-  const m_ = L - 0.1055613458 * a - 0.0638541728 * b
-  const s_ = L - 0.0894841775 * a - 1.291485548 * b
-  const l = l_ ** 3
-  const m = m_ ** 3
-  const s = s_ ** 3
-  return [
-    +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-  ]
-}
-
-const gamma = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)
-const linear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
-
-/** OKLab → gamma sRGB in 0..255 (floats). Flags a gamut clamp. */
-function toSrgb(lab) {
-  const lin = oklabToLinearSrgb(lab)
-  const clipped = lin.some((c) => c < -1e-6 || c > 1 + 1e-6)
-  return { rgb: lin.map((c) => gamma(Math.min(1, Math.max(0, c))) * 255), clipped }
-}
-
-function parseNumber(token, scale = 1) {
-  if (token === "none") return 0
-  if (token.endsWith("%")) return (parseFloat(token) / 100) * scale
-  return parseFloat(token)
-}
-
-/** Split a CSS argument list on top-level commas. */
-function splitArgs(s) {
-  const out = []
-  let depth = 0
-  let cur = ""
-  for (const ch of s) {
-    if (ch === "(") depth++
-    if (ch === ")") depth--
-    if (ch === "," && depth === 0) {
-      out.push(cur.trim())
-      cur = ""
-    } else cur += ch
+/** A paint as written → { role, alpha } or { mix, k }. Strings are allowed: "text-body", "primary-fill/90". */
+function paintOf(p, where) {
+  if (typeof p === "string") {
+    const [role, pct] = p.split("/")
+    return pct === undefined ? { role } : { role, alpha: Number(pct) / 100 }
   }
-  if (cur.trim()) out.push(cur.trim())
-  return out
-}
-
-/** A literal CSS colour → { L, a, b, alpha } in OKLab. */
-function parseColor(str) {
-  const s = str.trim()
-  if (s === "transparent") return { L: 0, a: 0, b: 0, alpha: 0 }
-  let m
-  if ((m = s.match(/^oklch\(\s*([^\s/]+)\s+([^\s/]+)\s+([^\s/)]+)\s*(?:\/\s*([^\s)]+))?\s*\)$/))) {
-    const L = parseNumber(m[1])
-    const C = parseNumber(m[2], 0.4)
-    const h = parseNumber(m[3])
-    const alpha = m[4] === undefined ? 1 : parseNumber(m[4])
-    return { ...oklchToOklab(L, C, h), alpha }
-  }
-  if ((m = s.match(/^oklab\(\s*([^\s/]+)\s+([^\s/]+)\s+([^\s/)]+)\s*(?:\/\s*([^\s)]+))?\s*\)$/))) {
-    const alpha = m[4] === undefined ? 1 : parseNumber(m[4])
-    return { L: parseNumber(m[1]), a: parseNumber(m[2], 0.4), b: parseNumber(m[3], 0.4), alpha }
-  }
-  if ((m = s.match(/^color-mix\(\s*in\s+(oklab|oklch)\s*,(.*)\)$/s))) {
-    const [c1, c2] = splitArgs(m[2])
-    if (!c1 || !c2) throw new Error(`color-mix needs two colours: ${s}`)
-    const part = (arg) => {
-      const pm = arg.match(/^(.*?)\s+([\d.]+)%$/s)
-      return pm ? { color: parseColor(pm[1]), p: parseFloat(pm[2]) / 100 } : { color: parseColor(arg), p: undefined }
-    }
-    let { color: A, p: p1 } = part(c1)
-    let { color: B, p: p2 } = part(c2)
-    if (p1 === undefined && p2 === undefined) p1 = p2 = 0.5
-    else if (p1 === undefined) p1 = 1 - p2
-    else if (p2 === undefined) p2 = 1 - p1
-    const sum = p1 + p2
-    const alphaMultiplier = sum < 1 ? sum : 1
-    p1 /= sum
-    p2 /= sum
-    // Premultiplied interpolation (CSS Color 5 §2.1). Hue-polar mixing in oklch is treated as
-    // oklab mixing here; the tokens only mix towards `transparent`, where it is the same thing.
-    const wA = A.alpha * p1
-    const wB = B.alpha * p2
-    const alpha = wA + wB
-    if (alpha === 0) return { L: 0, a: 0, b: 0, alpha: 0 }
-    return {
-      L: (A.L * wA + B.L * wB) / alpha,
-      a: (A.a * wA + B.a * wB) / alpha,
-      b: (A.b * wA + B.b * wB) / alpha,
-      alpha: alpha * alphaMultiplier,
-    }
-  }
-  throw new Error(`cannot parse colour: ${s}`)
-}
-
-/** Composite a (possibly translucent) foreground over an opaque background, in gamma sRGB. */
-function composite(fg, fgAlpha, bg) {
-  return fg.map((c, i) => c * fgAlpha + bg[i] * (1 - fgAlpha))
-}
-
-const to8 = (rgb) => rgb.map((c) => Math.round(c))
-const hex = (rgb) => "#" + to8(rgb).map((c) => c.toString(16).padStart(2, "0")).join("")
-
-function wcagLuminance(rgb) {
-  const [r, g, b] = rgb.map((c) => linear(c / 255))
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-function wcagRatio(a, b) {
-  const la = wcagLuminance(a)
-  const lb = wcagLuminance(b)
-  const [hi, lo] = la > lb ? [la, lb] : [lb, la]
-  return (hi + 0.05) / (lo + 0.05)
+  if (p && (typeof p.role === "string" || Array.isArray(p.mix))) return p
+  throw new Error(`${where}: a paint is r(role, alpha), mix(a, b, k), or a string such as "primary-fill/90"`)
 }
 
 // ── Measure ──────────────────────────────────────────────────────────────────────────────────
 /** A role, as a literal CSS colour, in one mode. */
 function roleCss(role, mode) {
-  const raw = modes[mode].get(`--${role}`)
-  if (raw === undefined) throw new Error(`--${role} is not a tier-2 role (${mode})`)
-  return resolve(raw, mode)
+  const raw = mode.vars.get(`--${role}`)
+  if (raw === undefined) throw new Error(`--${role} is not a token (${mode.name})`)
+  return resolveValue(raw, mode.vars)
 }
 
 /** A paint → { rgb (0..255), alpha, clipped }. */
 function paintColor(p, mode) {
   const css = p.mix
-    ? `color-mix(in oklch, ${roleCss(p.mix[0], mode)}, ${roleCss(p.mix[1], mode)} ${p.k * 100}%)`
+    ? `color-mix(in oklab, ${roleCss(p.mix[0], mode)}, ${roleCss(p.mix[1], mode)} ${p.k * 100}%)`
     : roleCss(p.role, mode)
   const lab = parseColor(css)
   const { rgb, clipped } = toSrgb(lab)
   return { rgb, alpha: lab.alpha * (p.alpha ?? 1), clipped }
 }
 
-/** The stack, bottom first, flattened to one opaque colour. A translucent base sits on the page. */
+/** The stack, bottom first, flattened to one opaque colour. A translucent base sits on the ground. */
 function flatten(stack, mode) {
   let clipped = false
-  let base = paintColor(stack[0], mode)
+  const base = paintColor(stack[0], mode)
   clipped ||= base.clipped
   let rgb = base.rgb
-  if (base.alpha < 1) rgb = composite(base.rgb, base.alpha, paintColor({ role: "background" }, mode).rgb)
+  if (base.alpha < 1) rgb = composite(base.rgb, base.alpha, paintColor({ role: "surface-ground" }, mode).rgb)
   for (const layer of stack.slice(1)) {
     const c = paintColor(layer, mode)
     clipped ||= c.clipped
@@ -415,114 +420,193 @@ function flatten(stack, mode) {
   return { rgb, clipped }
 }
 
-/** OKLCH lightness of an sRGB colour (0..255). */
-function oklabL(rgb) {
-  const [r, g, b] = rgb.map((c) => linear(c / 255))
-  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
-  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
-  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
-  return 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s
-}
+const label = (p) => (p.mix ? `mix(${p.mix[0]},${p.mix[1]} ${p.k * 100}%)` : p.alpha !== undefined ? `${p.role}/${Math.round(p.alpha * 100)}` : p.role)
 
-const label = (p) => (p.mix ? `mix(${p.mix[0]},${p.mix[1]} ${p.k * 100}%)` : p.alpha !== undefined ? `${p.role}/${p.alpha * 100}` : p.role)
-
+const errors = []
+const seenIds = new Set()
 const rows = []
-let failures = 0
-for (const mode of ["light", "dark"]) {
-  for (const rec of RECIPES) {
-    if (rec.modes && !rec.modes.includes(mode)) continue
-    const kind = KINDS[rec.kind]
-    if (!kind) throw new Error(`${rec.id}: unknown element kind ${rec.kind}`)
-    const under = flatten(rec.over, mode)
-    const p = paintColor(rec.paint, mode)
+for (const rec of RECIPES) {
+  if (seenIds.has(rec.id)) errors.push(`recipe id "${rec.id}" is used twice`)
+  seenIds.add(rec.id)
+  const kindName = KIND_ALIASES[rec.kind] ?? rec.kind
+  const kind = KINDS[kindName]
+  if (!kind) {
+    const hint = rec.kind === "border-control" ? " (it was split: border-rest for a resting border, focus or border-error for one held to 3:1)" : ""
+    throw new Error(`${rec.id}: unknown element kind "${rec.kind}"${hint}. Kinds: ${Object.keys(KINDS).join(", ")}`)
+  }
+  const paint = paintOf(rec.paint, rec.id)
+  const over = (Array.isArray(rec.over) ? rec.over : [rec.over]).map((p) => paintOf(p, rec.id))
+  const wanted = modeFilter(rec.modes)
+  for (const mode of rec.themed === false ? DEFAULTS : MODES) {
+    if (!wanted(mode)) continue
+    const under = flatten(over, mode)
+    const p = paintColor(paint, mode)
     const drawn = to8(composite(p.rgb, p.alpha, under.rgb))
     const bg = to8(under.rgb)
     const lc = Math.abs(APCAcontrast(sRGBtoY(drawn), sRGBtoY(bg)))
     const ratio = wcagRatio(drawn, bg)
     const dL = Math.abs(oklabL(drawn) - oklabL(bg))
-    const floor = kind.min === undefined ? null : kind.reading && rec.large ? TEXT : kind.min
+    const floor = kind.min ?? null
     const value = kind.metric === "lc" ? lc : kind.metric === "ratio" ? ratio : dL
-    const meets = floor === null || value >= floor
-    const waiver = WAIVED.get(`${mode}:${rec.id}`)
-    if (waiver && meets) {
-      console.error(`✗ contrast: ${mode} ${rec.id} now clears its floor — remove its WAIVED entry`)
-      failures++
-    }
-    if (!meets && !waiver) failures++
     rows.push({
-      mode,
-      id: rec.id,
-      kind: rec.kind,
-      metric: kind.metric,
-      paint: label(rec.paint),
-      on: rec.over.map(label).join(">"),
-      fgHex: hex(drawn),
-      bgHex: hex(bg),
-      lc,
-      ratio,
-      dL,
-      floor,
-      status: floor === null ? "info" : !meets ? (waiver ? "WAIVED" : "FAIL") : TEXT_KINDS.has(rec.kind) && lc >= BRONZE && !kind.reading ? "pass ★" : "pass",
-      note: [rec.source, waiver, p.clipped || under.clipped ? "gamut-clamped" : null].filter(Boolean).join("; "),
+      id: rec.id, area: rec.area, mode, kind: kindName, metric: kind.metric, value, floor,
+      meets: floor === null || value >= floor,
+      paint: label(paint), on: over.map(label).join(" > "),
+      fgHex: hex(drawn), bgHex: hex(bg), lc, ratio, dL,
+      note: [rec.source, p.clipped || under.clipped ? "gamut-clamped" : null].filter(Boolean).join("; "),
     })
   }
 }
 
-// ── Emphasis levels ──────────────────────────────────────────────────────────────────────────
-// A floor only says how faint a role may get. Emphasis Engine also places each text role at a
-// level (src/engine/intent.ts; its export carries text levels 1 to 5), and the levels have to read
-// apart, or every lower role reads as one and a screen's hierarchy flattens.
-// Three text levels since the support level: primary (5), support (4), secondary (3), each at least
-// Lc 10 from the next on every surface they share. The coded gap is a stand-in: what the eye gets is
-// the drawn gap, and rendering takes more from 13px support text than from 14px body, so equal
-// drawn steps need uneven coded ones (about 10.5 above support, 14 below in light). Apps check the
-// drawn levels, 12 apart (Synapse: scripts/emphasis-check.sh).
-const LEVEL_GAP = 10
-const SURFACES = [["page", "background"], ["card", "card"], ["popover", "popover"], ["sidebar", "sidebar"]]
-const LEVEL_PAIRS = SURFACES.flatMap(([fg, bg]) => [[`fg-${fg}`, `sfg-${bg}`], [`sfg-${bg}`, `mfg-${bg}`]])
-const gaps = []
-for (const mode of ["light", "dark"]) {
-  for (const [hi, lo] of LEVEL_PAIRS) {
-    const a = rows.find((r) => r.mode === mode && r.id === hi)
-    const b = rows.find((r) => r.mode === mode && r.id === lo)
-    if (!a || !b) throw new Error(`levels: ${mode} ${hi} or ${lo} isn't measured`)
+// Emphasis levels, as rows of their own: the gap is the measure, LEVEL_GAP the floor.
+for (const [hi, lo] of LEVEL_PAIRS) {
+  for (const mode of MODES) {
+    const a = rows.find((row) => row.mode === mode && row.id === hi)
+    const b = rows.find((row) => row.mode === mode && row.id === lo)
+    if (!a || !b) throw new Error(`levels: ${mode.name} ${hi} or ${lo} isn't measured`)
     const gap = a.lc - b.lc
-    if (gap < LEVEL_GAP) failures++
-    gaps.push({ mode, hi, lo, a: a.lc, b: b.lc, gap, meets: gap >= LEVEL_GAP })
+    rows.push({
+      id: `gap:${hi}/${lo}`, area: "core", mode, kind: "level-gap", metric: "gap", value: gap, floor: LEVEL_GAP, meets: gap >= LEVEL_GAP,
+      paint: hi, on: lo, lc: gap, note: `Lc ${a.lc.toFixed(1)} over Lc ${b.lc.toFixed(1)}`,
+    })
+  }
+}
+
+// ── Exceptions against the misses ────────────────────────────────────────────────────────────
+for (const row of rows) {
+  if (row.floor === null) row.status = "info"
+  else if (row.meets) row.status = "pass"
+  else {
+    const exception = ALL_EXCEPTIONS.find((e) => e.id === row.id && modeFilter(e.modes)(row.mode))
+    row.status = exception ? "exception" : "FAIL"
+    row.reason = exception?.reason
+  }
+}
+for (const e of ALL_EXCEPTIONS) {
+  if (!e.reason) errors.push(`exception "${e.id}" has no reason`)
+  const covered = rows.filter((row) => row.id === e.id && modeFilter(e.modes)(row.mode))
+  if (!covered.length) errors.push(`exception "${e.id}" names no measured recipe and mode`)
+  for (const row of covered) {
+    if (row.meets) errors.push(`exception "${e.id}" in ${row.mode.name} now clears its floor (${fmt(row)} against ${floorText(row)}): remove it from the list`)
   }
 }
 
 // ── Print ────────────────────────────────────────────────────────────────────────────────────
-const pad = (s, n, right = false) => (right ? String(s).padStart(n) : String(s).padEnd(n))
-const measure = (r) =>
-  r.metric === "lc" ? `Lc ${r.lc.toFixed(1)}` : r.metric === "ratio" ? `${r.ratio.toFixed(2)}:1` : `ΔL ${r.dL.toFixed(3)}`
-const floorText = (r) => (r.floor === null ? "—" : r.metric === "lc" ? `Lc ${r.floor}` : `${r.floor}:1`)
-const header = `${pad("mode", 5)} ${pad("recipe", 24)} ${pad("kind", 17)} ${pad("drawn", 8)} ${pad("on", 8)} ${pad("measure", 10, true)} ${pad("floor", 6, true)} ${pad("WCAG", 8, true)} ${pad("APCA", 8, true)}  ${pad("", 6)} source`
-console.log(header)
-console.log("-".repeat(header.length))
-for (const r of rows) {
-  console.log(
-    `${pad(r.mode, 5)} ${pad(r.id, 24)} ${pad(r.kind, 17)} ${pad(r.fgHex, 8)} ${pad(r.bgHex, 8)} ${pad(measure(r), 10, true)} ${pad(floorText(r), 6, true)} ${pad(`${r.ratio.toFixed(2)}:1`, 8, true)} ${pad(`Lc ${r.lc.toFixed(0)}`, 8, true)}  ${pad(r.status, 6)} ${r.note}`
-  )
+function fmt(row) {
+  if (row.metric === "ratio") return `${row.value.toFixed(2)}:1`
+  if (row.metric === "dL") return `ΔL ${row.value.toFixed(3)}`
+  return `Lc ${row.value.toFixed(1)}`
 }
-console.log("-".repeat(header.length))
+function floorText(row) {
+  if (row.floor === null) return "—"
+  if (row.metric === "ratio") return `${row.floor}:1`
+  return `Lc ${row.floor}`
+}
+const pad = (s, n, right = false) => (right ? String(s).padStart(n) : String(s).padEnd(n))
+const cell = (row) => {
+  if (!row) return "·"
+  const missed = row.status === "FAIL" || row.status === "exception"
+  // A miss that would round up to its floor is written with one more digit.
+  const lcDigits = missed && Number(row.value.toFixed(1)) >= row.floor ? 2 : 1
+  const n = row.metric === "dL" ? row.value.toFixed(3) : row.metric === "ratio" ? row.value.toFixed(2) : row.value.toFixed(lcDigits)
+  return n + (row.status === "FAIL" ? "!" : row.status === "exception" ? "*" : "")
+}
+
+const columns = MODES
+const head = `${pad("recipe", 34)} ${pad("kind", 17)} ${pad("floor", 6, true)}  ${columns.map((m) => pad(short(m), 7, true)).join(" ")}   source`
+console.log(`contrast: ${RECIPES.length} recipes (${recipeFiles.length ? `core + ${recipeFiles.join(", ")}` : "core"}) in ${MODES.length} modes — ${MODES.map((m) => `${short(m)} = ${m.name}`).join(", ")}`)
+console.log(`each cell is the measure in that mode: APCA Lc for text, fills and solids; a WCAG ratio for focus, error and resting borders; OKLCH ΔL for surfaces, states and separators.  * = named exception, reported   ! = miss`)
+console.log(head)
+console.log("-".repeat(head.length))
+const ids = [...new Set(rows.map((row) => row.id))]
+for (const id of ids) {
+  const mine = rows.filter((row) => row.id === id)
+  const first = mine[0]
+  const cells = columns.map((mode) => {
+    const row = mine.find((x) => x.mode === mode) ?? (first.mode.app === null ? mine.find((x) => x.mode.ground === mode.ground && mode.app === MODES[0].app) : undefined)
+    return pad(cell(row), 7, true)
+  })
+  console.log(`${pad(id, 34)} ${pad(first.kind, 17)} ${pad(floorText(first), 6, true)}  ${cells.join(" ")}   ${first.note}`)
+}
+console.log("-".repeat(head.length))
 console.log(
-  `floors by element kind: reading text Lc ${BRONZE} (APCA Bronze, under 16px) · labels on fills and tints Lc ${TEXT}, ★ = Lc ${BRONZE} · ` +
-    `solid Lc 30 against the page · control border and focus 3:1 as drawn (WCAG 1.4.11) · surfaces, states, separators: OKLCH ΔL, reported`
+  `floors: ${Object.entries(KINDS).filter(([, k]) => k.min !== undefined).map(([name, k]) => `${name} ${k.metric === "ratio" ? `${k.min}:1` : `Lc ${k.min}`}`).join(" · ")} · ` +
+    `level-gap Lc ${LEVEL_GAP} (body over secondary over label, on the same surface) · reported only: ${Object.entries(KINDS).filter(([, k]) => k.min === undefined).map(([name]) => name).join(", ")}`
 )
 
-console.log(`emphasis levels: primary over support over secondary text, each at least Lc ${LEVEL_GAP} from the next on the same surface`)
-for (const g of gaps) {
-  console.log(`${pad(g.mode, 5)} ${pad(`${g.hi} / ${g.lo}`, 32)} Lc ${g.a.toFixed(1)} over Lc ${g.b.toFixed(1)}: ${g.gap.toFixed(1)} apart  ${g.meets ? "pass" : "FAIL"}`)
+if (rowsArg) {
+  const only = rowsArg.split("=")[1]
+  const h = `${pad("mode", 20)} ${pad("recipe", 34)} ${pad("kind", 17)} ${pad("drawn", 8)} ${pad("on", 8)} ${pad("measure", 10, true)} ${pad("floor", 6, true)} ${pad("WCAG", 8, true)} ${pad("APCA", 8, true)}  ${pad("", 9)} paint on stack`
+  console.log(`\n${h}\n${"-".repeat(h.length)}`)
+  for (const row of rows) {
+    if (row.kind === "level-gap" || (only && !row.id.includes(only))) continue
+    console.log(
+      `${pad(row.mode.name, 20)} ${pad(row.id, 34)} ${pad(row.kind, 17)} ${pad(row.fgHex, 8)} ${pad(row.bgHex, 8)} ${pad(fmt(row), 10, true)} ${pad(floorText(row), 6, true)} ${pad(`${row.ratio.toFixed(2)}:1`, 8, true)} ${pad(`Lc ${row.lc.toFixed(0)}`, 8, true)}  ${pad(row.status, 9)} ${row.paint} on ${row.on}`
+    )
+  }
 }
 
-const gatedRows = rows.filter((r) => r.status !== "info")
-const waivedRows = rows.filter((r) => r.status === "WAIVED")
-if (failures) {
-  console.error(`✗ contrast: ${failures} misses (recipes under their floor, or emphasis levels too close)`)
+// Exceptions: each miss by role, mode, measure and floor.
+const excepted = rows.filter((row) => row.status === "exception")
+if (excepted.length) {
+  const exceptedIds = [...new Set(excepted.map((row) => row.id))]
+  console.log(`\nExceptions: ${excepted.length} measures under their floor in ${exceptedIds.length} recipes. Reported, not gated. The values are not changed and not hidden.`)
+  const h = `${pad("recipe", 34)} ${pad("role, on what", 56)} ${pad("floor", 6, true)}  measured, by mode`
+  console.log(`${h}\n${"-".repeat(h.length + 60)}`)
+  // A measure that would round to its floor is written with one more digit, so a miss reads as one.
+  const digits = (row) => (row.metric === "ratio" ? 2 : Number(row.value.toFixed(1)) >= row.floor ? 2 : 1)
+  for (const reason of new Set(excepted.map((row) => row.reason))) {
+    console.log(`── ${reason} ──`)
+    for (const id of exceptedIds) {
+      const mine = excepted.filter((row) => row.id === id && row.reason === reason)
+      if (!mine.length) continue
+      const what = mine[0].kind === "level-gap" ? `${mine[0].paint} over ${mine[0].on}` : `${mine[0].paint} on ${mine[0].on}`
+      const unit = mine[0].metric === "ratio" ? ":1" : ""
+      const measured = mine.map((row) => `${row.mode.name} ${row.value.toFixed(digits(row))}${unit}`).join(" · ")
+      console.log(`${pad(id, 34)} ${pad(what, 56)} ${pad(floorText(mine[0]), 6, true)}  ${measured}`)
+    }
+  }
+}
+
+// Must differ.
+console.log(`\nMust differ (reported, not gated): how far two colours that must not be confused sit apart. ΔEOK is the OKLab distance: under ${SAME} reads as the same at a glance, under ${CLOSE} as close.`)
+{
+  const h = `${pad("mode", 20)} ${pad("pair", 40)} ${pad("a", 8)} ${pad("b", 8)} ${pad("ΔEOK", 6, true)} ${pad("ΔL", 6, true)} ${pad("Δhue", 6, true)}  ${pad("", 6)} what`
+  console.log(`${h}\n${"-".repeat(h.length)}`)
+  for (const pair of MUST_DIFFER) {
+    for (const mode of MODES.filter((m) => m.app === pair.app)) {
+      const a = to8(flatten([paintOf(pair.a)], mode).rgb)
+      const b = to8(flatten([paintOf(pair.b)], mode).rgb)
+      const d = difference(a, b)
+      const verdict = d.dE < SAME ? "same" : d.dE < CLOSE ? "close" : "apart"
+      console.log(`${pad(mode.name, 20)} ${pad(`${pair.a} / ${pair.b}`, 40)} ${pad(hex(a), 8)} ${pad(hex(b), 8)} ${pad(d.dE.toFixed(3), 6, true)} ${pad(d.dL.toFixed(3), 6, true)} ${pad(`${d.dH.toFixed(0)}°`, 6, true)}  ${pad(verdict, 6)} ${pair.why}`)
+    }
+  }
+}
+
+if (printExceptions) {
+  console.log("\n// Misses, as exception entries (justify each before keeping it):")
+  const missed = rows.filter((row) => row.floor !== null && !row.meets)
+  for (const id of new Set(missed.map((row) => row.id))) {
+    const modes = missed.filter((row) => row.id === id).map((row) => row.mode)
+    const all = (ground) => MODES.filter((m) => m.ground === ground).every((m) => modes.includes(m))
+    const names = modes.length === MODES.length ? `"all"` : JSON.stringify([
+      ...["graphite", "stone"].filter(all),
+      ...modes.filter((m) => !all(m.ground)).map((m) => m.name),
+    ])
+    console.log(`  { id: ${JSON.stringify(id)}, modes: ${names}, reason: FIGMA },`)
+  }
+}
+
+const failed = rows.filter((row) => row.status === "FAIL")
+for (const row of failed) errors.push(`${row.id} in ${row.mode.name}: ${fmt(row)} is under its floor of ${floorText(row)} (${row.paint} on ${row.on})`)
+const gated = rows.filter((row) => row.floor !== null)
+if (errors.length) {
+  console.error(`\n✗ contrast: ${errors.length} problem${errors.length === 1 ? "" : "s"}`)
+  for (const e of errors) console.error(`  ${e}`)
   process.exit(1)
 }
 console.log(
-  `✓ contrast: ${gatedRows.length - waivedRows.length} gated recipes clear their floor` +
-    ` (${waivedRows.length} waived, ${rows.length - gatedRows.length} reported only)`
+  `\n✓ contrast: ${gated.length - excepted.length} gated measures clear their floor in ${MODES.length} modes` +
+    ` (${excepted.length} named exceptions reported, ${rows.length - gated.length} measures reported only)`
 )
