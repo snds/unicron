@@ -29,7 +29,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           <Icon className="size-4" name="misuse--outline" />
         ),
         loading: (
-          <Spinner className="size-4" />
+          <Spinner />
         ),
       }}
       style={
