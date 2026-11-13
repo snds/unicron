@@ -460,8 +460,8 @@ measures in each mode, under "Exceptions": reported, not gated. The list has to 
 exactly, so an exception that starts passing fails the run.
 
 The cause is one thing. Figma solved each text role against the **ground**, with almost no room
-to spare: `text-label` measures Lc 60.4 to 60.7 there. On any surface nearer the text's own
-lightness (a raised surface, a selected row, a hover wash) it lands just under.
+to spare: on the graphite ground `text-label` measures Lc 60.4 to 60.7. On any surface nearer the
+text's own lightness (a raised surface, a selected row, a hover wash) it lands just under.
 
 As of 2026-11-13 the run lists 189 measures in 45 recipes. In short:
 

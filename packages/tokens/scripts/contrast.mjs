@@ -277,8 +277,9 @@ const BY_CONTRACT = "Figma value in a contract role (§1.4), flagged for Sean"
 const g = (app) => `${app} / graphite`
 const st = (app) => `${app} / stone`
 const EXCEPTIONS = [
-  // Figma solved each text role against the ground, with no room to spare (label measures
-  // Lc 60.4 to 60.7 there). On any surface nearer the text's own lightness it lands just under.
+  // Figma solved each text role against the ground, with no room to spare (on the graphite
+  // ground, label measures Lc 60.4 to 60.7). On any surface nearer the text's own lightness it
+  // lands just under.
   { id: "label-raised", modes: "graphite", reason: FIGMA },
   { id: "label-soft", modes: "all", reason: FIGMA },
   { id: "body-soft", modes: "stone", reason: FIGMA },
