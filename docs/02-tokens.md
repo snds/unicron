@@ -104,7 +104,7 @@ CSS and can start from the finger's release speed.
 | Role | Value | For |
 |---|---|---|
 | `--motion-stagger` | 50ms (`stagger.step`) | the delay between siblings that enter in turn |
-| `--motion-stagger-max` | 6 (`stagger.max`) | siblings after this many start together |
+| `--motion-stagger-max` | 4 (`stagger.max`) | siblings after this many start together, so a whole list is in within 400ms |
 | `--motion-press-depth` | 0.96 (`press.depth`) | scale of a pressed control |
 | `--motion-press-depth-small` | 0.9 (`press.depth-small`) | scale of a pressed icon-size control |
 

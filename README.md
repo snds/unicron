@@ -33,6 +33,7 @@ pnpm lint                # oxlint
 pnpm lint:tokens         # tiers 2/3 alias lower tiers; no colour literals in packages/ui/src
 pnpm build               # tokens → ui (tsc + styles copy) → playground (vite), in dependency order
 pnpm test                # token round-trip check (core semantic set present, no app roles)
+pnpm --filter playground test:motion   # motion contracts in a real browser (run pnpm build first; needs `playwright install chromium` once)
 pnpm dev                 # builds @unicron/ui (+tokens), then the playground on http://localhost:5180
 ```
 

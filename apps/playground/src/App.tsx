@@ -1,10 +1,13 @@
 import { useTheme } from "next-themes"
 import { Button, Icon, Toaster, Kbd } from "@unicron/ui"
+import { MotionView } from "./motion"
 import { Showcase } from "./showcase"
 
 export function App() {
   const { resolvedTheme, setTheme } = useTheme()
   const dark = resolvedTheme === "dark"
+  // ?view=motion shows the motion contracts on their own page; the browser checks open it directly.
+  const motion = new URLSearchParams(window.location.search).get("view") === "motion"
 
   return (
     <div className="min-h-dvh">
@@ -14,6 +17,14 @@ export function App() {
           every primitive, rendered in light and dark side by side
         </span>
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.assign(motion ? window.location.pathname : "?view=motion")}
+          >
+            <Icon name={motion ? "grid_view" : "animation"} data-icon="inline-start" />
+            {motion ? "Primitives" : "Motion"}
+          </Button>
           <Kbd>{dark ? "dark" : "light"}</Kbd>
           <Button variant="outline" size="sm" onClick={() => setTheme(dark ? "light" : "dark")}>
             <Icon name={dark ? "light_mode" : "dark_mode"} data-icon="inline-start" />
@@ -22,8 +33,9 @@ export function App() {
         </div>
       </header>
 
+      {motion ? <MotionView /> : null}
       {/* Both columns always render; the page theme swaps which column reads as "native". */}
-      <div className="grid grid-cols-1 lg:grid-cols-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2" hidden={motion}>
         {/* `light` keeps this column light when the page is dark, as `dark` does the other way. */}
         <section className="light bg-background text-foreground border-r p-6">
           <h2 className="text-muted-foreground mb-4 text-xs font-medium tracking-wide uppercase">Light</h2>

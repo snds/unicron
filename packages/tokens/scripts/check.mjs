@@ -86,7 +86,9 @@ for (const [name] of durationRoles) {
   const value = ms(literal(name))
   assert.ok(value <= CEILING_MS, `${name} is ${value}ms: no default motion runs longer than ${CEILING_MS}ms`)
 }
-assert.equal(ms(literal("--motion-stagger")) * Number(literal("--motion-stagger-max")) <= CEILING_MS, true, "a full stagger must fit under the ceiling")
+// A staggered list is one motion: the last sibling's delay plus its entrance stays under the ceiling.
+const staggerRun = ms(literal("--motion-stagger")) * Number(literal("--motion-stagger-max")) + ms(literal("--motion-base"))
+assert.ok(staggerRun <= CEILING_MS, `a full stagger runs ${staggerRun}ms (delay of the last sibling + --motion-base): over the ${CEILING_MS}ms ceiling`)
 
 // Springs: each curve starts at 0 and ends at rest, peaks inside its band, and its hand-written
 // duration is the time the solver says it takes to settle (within 1% of rest).

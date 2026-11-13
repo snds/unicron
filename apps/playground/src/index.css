@@ -1,1 +1,16 @@
 @import "@unicron/ui/styles";
+
+/*
+ * The Motion view's "10× slow" switch: the same roles, ten times longer, so a recipe can be
+ * watched. Playground only; it reaches into tier 1 to multiply, which an app never does.
+ */
+[data-motion-speed="slow"] {
+  --motion-press: calc(var(--g-duration-press) * 10);
+  --motion-fast: calc(var(--g-duration-fast) * 10);
+  --motion-base: calc(var(--g-duration-base) * 10);
+  --motion-state: calc(var(--g-duration-state) * 10);
+  --motion-move: calc(var(--g-duration-move) * 10);
+  --motion-stagger: calc(var(--g-stagger-step) * 10);
+  --motion-spring-settle-duration: calc(var(--g-spring-settle-duration) * 10);
+  --motion-spring-firm-duration: calc(var(--g-spring-firm-duration) * 10);
+}

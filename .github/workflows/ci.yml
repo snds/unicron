@@ -30,6 +30,31 @@ jobs:
       # depends on it. Private packages (root, playground) are listed too; only @unicron/* ship.
       - run: pnpm -r pack --dry-run
 
+  # Motion contracts, in a real browser: each recipe in the playground's Motion view moves only what
+  # its contract lists, for no longer than its role, and not at all under reduced motion. The start,
+  # middle and end frames of each are kept as an artifact for review.
+  motion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter playground exec playwright install --with-deps chromium
+      - run: pnpm --filter playground test:motion
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motion-frames
+          path: |
+            apps/playground/test-results
+            apps/playground/playwright-report
+          if-no-files-found: ignore
+
   # Impeccable's design detector (https://github.com/pbakaus/impeccable), read-only and report-only:
   # it scans the primitives' source and the playground and writes its findings to the run summary
   # and a JSON artifact. It never fails the build, and it never runs live mode (URL scans) or

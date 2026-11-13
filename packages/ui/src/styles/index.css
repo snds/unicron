@@ -8,6 +8,7 @@
 @import "@fontsource-variable/inter";
 @import "material-symbols/rounded.css";
 @import "@unicron/tokens/dist/tokens.css";
+@import "./motion.css";
 
 /* The primitives' classes live in this package, not the consuming app, so Tailwind must scan them. */
 @source "../components";
@@ -601,4 +602,45 @@ html:has([data-slot="app-frame"]) body {
     border-style: dashed;
     border-top-color: currentColor;
   }
+}
+
+/*
+ * The same, for one box rather than the whole system: `data-motion="reduced"` on any element puts
+ * everything inside it on the reduced path, whatever the user's setting (a preview, the
+ * playground's switch, a test). `data-motion="off"` removes motion altogether.
+ */
+[data-motion="reduced"],
+[data-motion="reduced"] *,
+[data-motion="reduced"] ::before,
+[data-motion="reduced"] ::after {
+  --tw-enter-translate-x: 0;
+  --tw-enter-translate-y: 0;
+  --tw-enter-scale: 1;
+  --tw-enter-rotate: 0;
+  --tw-exit-translate-x: 0;
+  --tw-exit-translate-y: 0;
+  --tw-exit-scale: 1;
+  --tw-exit-rotate: 0;
+  transition-property: opacity, color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--motion-fast);
+  scroll-behavior: auto;
+}
+[data-motion="reduced"] :is(.animate-spin, .animate-pulse, .animate-ping, .animate-bounce),
+[data-motion="reduced"] [data-slot="status-orb-halo"] {
+  animation: none;
+}
+[data-motion="reduced"] [data-slot="spinner"] {
+  animation: none;
+  opacity: 0.6;
+}
+[data-motion="reduced"] [data-slot="status-orb"][data-state="working"] > [data-slot="status-orb-halo"] {
+  border-style: dashed;
+  border-top-color: currentColor;
+}
+[data-motion="off"],
+[data-motion="off"] *,
+[data-motion="off"] ::before,
+[data-motion="off"] ::after {
+  transition: none !important;
+  animation: none !important;
 }
