@@ -77,11 +77,11 @@ function Palette({ onSelect, onAction, onKeyDown, disabled }: { onSelect: (v: st
       <CommandList>
         <CommandItem value="itm_1" keywords={["GitHub"]} onSelect={onSelect}>
           GitHub
-          <CommandItemAction label="Copy password" icon="content_copy" onAction={() => onAction("itm_1")} disabled={disabled} />
+          <CommandItemAction label="Copy password" icon="copy" onAction={() => onAction("itm_1")} disabled={disabled} />
         </CommandItem>
         <CommandItem value="itm_2" keywords={["Bank"]} onSelect={onSelect}>
           Bank
-          <CommandItemAction label="Copy card number" icon="content_copy" onAction={() => onAction("itm_2")} />
+          <CommandItemAction label="Copy card number" icon="copy" onAction={() => onAction("itm_2")} />
         </CommandItem>
         <CommandItem value="Settings" onSelect={onSelect}>
           Settings

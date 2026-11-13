@@ -45,10 +45,10 @@ export interface ApprovalMatching {
 /** Title template and icon per kind. The component owns the words; hosts pass the kind. */
 export const approvalSheetCopy: Record<ApprovalKind, { title: string; icon: IconName; prompt: string; defaultTier: RiskTier }> = {
   device: { title: "Approve a new device?", icon: "devices", prompt: "Enter the digits shown on the other device", defaultTier: "standard" },
-  agent: { title: "Approve this agent?", icon: "smart_toy", prompt: "Enter the digits shown by the agent", defaultTier: "standard" },
-  "device-code": { title: "Approve a sign-in on this screen?", icon: "tv", prompt: "Enter the digits shown on the screen", defaultTier: "official" },
-  "contact-request": { title: "Approve this contact request?", icon: "group", prompt: "Enter the digits your contact reads to you", defaultTier: "standard" },
-  bridge: { title: "Approve this bridge?", icon: "extension", prompt: "Enter the digits shown on the other device", defaultTier: "tolerated" },
+  agent: { title: "Approve this agent?", icon: "bot", prompt: "Enter the digits shown by the agent", defaultTier: "standard" },
+  "device-code": { title: "Approve a sign-in on this screen?", icon: "screen", prompt: "Enter the digits shown on the screen", defaultTier: "official" },
+  "contact-request": { title: "Approve this contact request?", icon: "user--multiple", prompt: "Enter the digits your contact reads to you", defaultTier: "standard" },
+  bridge: { title: "Approve this bridge?", icon: "extensions", prompt: "Enter the digits shown on the other device", defaultTier: "tolerated" },
 }
 
 export const approvalSheetOriginCopy: Record<ApprovalOrigin, string> = {
@@ -418,7 +418,7 @@ export function ApprovalSheet({
                 {expired ? "Close" : "Deny"}
               </DialogAction>
               {!terminal && (
-                <DialogAction kind="destructive" data-action="report" icon="report" onClick={report}>
+                <DialogAction kind="destructive" data-action="report" icon="warning--hex" onClick={report}>
                   This wasn't me
                 </DialogAction>
               )}

@@ -56,7 +56,7 @@ describe("AppFrameNavItem indicator", () => {
       <AppFrame>
         <AppFrameMain />
         <AppFrameNav aria-label="Places">
-          <AppFrameNavItem icon="forum" label="Conversations" indicator={{ kind: "attention", count: 2 }} />
+          <AppFrameNavItem icon="chat" label="Conversations" indicator={{ kind: "attention", count: 2 }} />
           <AppFrameNavItem icon="home" label="Home" />
         </AppFrameNav>
       </AppFrame>
@@ -70,7 +70,7 @@ describe("AppFrameNavItem indicator", () => {
       <AppFrame>
         <AppFrameMain />
         <AppFrameNav aria-label="Places">
-          <AppFrameNavItem icon="forum" label="Conversations" indicator={{ kind: "unread", count: 14 }} />
+          <AppFrameNavItem icon="chat" label="Conversations" indicator={{ kind: "unread", count: 14 }} />
         </AppFrameNav>
       </AppFrame>
     )
@@ -121,7 +121,7 @@ describe("indicator on a control", () => {
   it("joins an aria-label rather than adding words a label would hide", () => {
     render(
       <Button size="icon" aria-label="Open" indicator={{ kind: "unread" }}>
-        <Icon name="forum" />
+        <Icon name="chat" />
       </Button>
     )
     const button = screen.getByRole("button", { name: "Open, Unread" })
@@ -129,7 +129,7 @@ describe("indicator on a control", () => {
   })
 
   it("puts it on an IconButton: the name carries it, the tooltip stays the label", () => {
-    render(<IconButton icon="forum" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />)
+    render(<IconButton icon="chat" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />)
     const button = screen.getByRole("button", { name: "Open conversation, 3 unread" })
     expect(button.className).toContain("relative")
     expect(button.querySelector('[data-slot="indicator"]')).toHaveAttribute("data-kind", "unread")
@@ -139,7 +139,7 @@ describe("indicator on a control", () => {
     render(
       <ToggleGroup>
         <ToggleGroupItem value="tasks" aria-label="Tasks" indicator={{ kind: "attention", count: 1 }}>
-          <Icon name="task_alt" />
+          <Icon name="task" />
         </ToggleGroupItem>
       </ToggleGroup>
     )

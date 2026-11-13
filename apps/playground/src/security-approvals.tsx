@@ -90,17 +90,17 @@ export function SecurityApprovalsShowcase() {
           <SecretField label="Secret Key" getSecret={secret("A3-K7PQ2M-9XZ4R-W8H6N")} host={demoHost} revealMode="toggle" locked={locked} description="Toggle mode: hides itself after 30 s." />
           <SecretField label="Card number" getSecret={secret("4242424242424242")} host={hostWithoutClipboardRead} format="groups-of-4" clipboardTimer={10} locked={locked} description="A host that cannot read the clipboard: the clear is unconditional." />
           <SecretField label="Recovery code" getSecret={secret("tiger lamp river coat")} host={demoHost} gate="password" format="words" locked={locked} description="Gated: the host confirms it's you before the value moves.">
-            <IconButton icon="open_in_full" label="Large type" size="icon-sm" />
+            <IconButton icon="maximize" label="Large type" size="icon-sm" />
           </SecretField>
           <SecretField label="PIN" getSecret={failing} host={demoHost} revealMode="toggle" description="A failing handle: reveal to see the error state." />
           <SecretField mode="edit" label="New password" value={draft} onChange={setDraft} strength={draft.length < 8 ? "weak" : draft.length < 16 ? "fair" : "strong"} description="Edit mode with the strength word.">
-            <IconButton icon="casino" label="Generate" size="icon-sm" onClick={() => setDraft("Xq7-vL2m-Tz9p-Rw4K")} />
+            <IconButton icon="shuffle" label="Generate" size="icon-sm" onClick={() => setDraft("Xq7-vL2m-Tz9p-Rw4K")} />
           </SecretField>
           <SecretField mode="edit" label="Disabled" value="unchangeable" onChange={() => {}} disabled />
           <SecretField mode="edit" label="With an error" value="12345" onChange={() => {}} strength="weak" error="Choose something longer." />
           <div className="flex items-center gap-2 text-xs">
             <Button size="xs" variant="outline" onClick={() => setLocked((l) => !l)}>
-              <Icon name={locked ? "lock" : "lock_open"} data-icon="inline-start" />
+              <Icon name={locked ? "locked" : "unlocked"} data-icon="inline-start" />
               {locked ? "Unlock" : "Lock the vault"}
             </Button>
             <span className="text-muted-foreground">{log.length ? log.join(" · ") : "Audit: reveal and copy land here."}</span>

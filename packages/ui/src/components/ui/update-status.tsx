@@ -196,17 +196,17 @@ function UpdateStatusRow({
       </div>
       <div data-slot="update-status-row-actions" className="gap-2 flex flex-wrap items-center">
         <Button size="sm" variant="outline" disabled={!canCheckForUpdates(status)} onClick={onCheck}>
-          <Icon name="refresh" data-icon="inline-start" />
+          <Icon name="renew" data-icon="inline-start" />
           {w.check}
         </Button>
         {ready ? (
           <Button size="sm" onClick={onRestart}>
-            <Icon name="restart_alt" data-icon="inline-start" />
+            <Icon name="restart" data-icon="inline-start" />
             {w.restart}
           </Button>
         ) : (
           <Button size="sm" variant="ghost" onClick={onReload}>
-            <Icon name="replay" data-icon="inline-start" />
+            <Icon name="restart" data-icon="inline-start" />
             {w.reload}
           </Button>
         )}
@@ -227,7 +227,7 @@ function UpdateStatusRow({
                 : undefined
             }
           >
-            <Icon name="open_in_new" data-icon="inline-start" />
+            <Icon name="launch" data-icon="inline-start" />
             {w.release}
           </a>
         )}

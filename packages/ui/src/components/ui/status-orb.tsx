@@ -38,11 +38,11 @@ export interface StatusOrbProps extends Omit<React.ComponentProps<"span">, "chil
 
 /** States drawn as a filled glyph rather than a dot and a halo. */
 const GLYPHS: Partial<Record<StatusOrbState, IconName>> = {
-  queued: "schedule",
-  paused: "pause_circle",
-  done: "check_circle",
-  stopped: "stop_circle",
-  failed: "error",
+  queued: "time--filled",
+  paused: "pause--outline--filled",
+  done: "checkmark--filled",
+  stopped: "stop--filled",
+  failed: "warning--filled",
 }
 
 /**
@@ -52,14 +52,14 @@ const GLYPHS: Partial<Record<StatusOrbState, IconName>> = {
  * | state | shape | motion | colour |
  * |---|---|---|---|
  * | idle | small dot | none | muted |
- * | queued | `schedule` glyph (a clock) | none | muted |
+ * | queued | `time--filled` glyph (a clock) | none | muted |
  * | thinking | dot in a soft halo | the halo breathes | running |
  * | working | dot in a ring with a gap | the ring turns | running |
- * | paused | `pause_circle` glyph | none | muted |
+ * | paused | `pause--outline--filled` glyph | none | muted |
  * | needs-you | dot in a solid ring | the ring pulses out | attention |
  * | done | check | none | success |
- * | stopped | `stop_circle` glyph | none | muted |
- * | failed | `error` glyph | none | destructive |
+ * | stopped | `stop--filled` glyph | none | muted |
+ * | failed | `warning--filled` glyph (a circle with an exclamation mark) | none | destructive |
  * | offline | hollow ring | none | muted |
  *
  * Queued, paused and stopped are still: each is waiting or over, so none of them moves. Stopped is
@@ -81,7 +81,7 @@ export function StatusOrb({ state, size = "sm", tooltip = true, label, className
       {...props}
     >
       {glyph ? (
-        <Icon name={glyph} fill data-slot="status-orb-glyph" />
+        <Icon name={glyph} data-slot="status-orb-glyph" />
       ) : (
         <>
           <span data-slot="status-orb-halo" aria-hidden />

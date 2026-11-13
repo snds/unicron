@@ -280,7 +280,7 @@ function CommandItem({
         aria-describedby={describedBy}
       >
         <CommandItemActionContext.Provider value={register}>{children}</CommandItemActionContext.Provider>
-        <Icon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-has-data-[slot=command-item-action]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" name="check" />
+        <Icon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-has-data-[slot=command-item-action]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" name="checkmark" />
       </CommandPrimitive.Item>
       {/* Outside the item, so cmdk's text-derived value never takes these words in. */}
       {action && (

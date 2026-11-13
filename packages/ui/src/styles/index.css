@@ -6,7 +6,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/inter";
-@import "material-symbols/rounded.css";
 @import "@unicron/tokens/dist/tokens.css";
 @import "./motion.css";
 

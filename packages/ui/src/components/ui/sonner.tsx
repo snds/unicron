@@ -6,6 +6,7 @@ import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
 import { Icon } from "../icon"
+import { Spinner } from "./spinner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
@@ -16,19 +17,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       icons={{
         success: (
-          <Icon className="size-4" name="check_circle" />
+          <Icon className="size-4" name="checkmark--outline" />
         ),
         info: (
-          <Icon className="size-4" name="info" />
+          <Icon className="size-4" name="information" />
         ),
         warning: (
-          <Icon className="size-4" name="warning" />
+          <Icon className="size-4" name="warning--alt" />
         ),
         error: (
-          <Icon className="size-4" name="dangerous" />
+          <Icon className="size-4" name="misuse--outline" />
         ),
         loading: (
-          <Icon className="size-4 animate-spin" name="progress_activity" />
+          <Spinner className="size-4" />
         ),
       }}
       style={

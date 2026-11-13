@@ -39,31 +39,31 @@ export const riskTierCopy: Record<RiskTierState, RiskTierCopy> = {
     label: "Built in",
     meaning: "An open, published method such as passkeys or one-time codes. Always on.",
     hint: "Open and always on.",
-    icon: "verified_user",
+    icon: "security",
   },
   official: {
     label: "Verified",
     meaning: "The vendor's own documented flow. On per use, when you are in front of the screen it shows.",
     hint: "The vendor's own flow.",
-    icon: "policy",
+    icon: "rule",
   },
   tolerated: {
     label: "Use with care",
     meaning: "We built this ourselves. The vendor did not publish it, and it may stop working or break the vendor's terms.",
     hint: "Our own bridge, opt-in.",
-    icon: "warning",
+    icon: "warning--alt",
   },
   unverified: {
     label: "Unverified",
     meaning: "This could not be checked against its signed manifest. The action is blocked.",
     hint: "This action is blocked.",
-    icon: "gpp_bad",
+    icon: "rule--cancelled",
   },
   loading: {
     label: "Checking",
     meaning: "Checking the signed manifest.",
     hint: "Checking the signed manifest.",
-    icon: "hourglass_empty",
+    icon: "hourglass",
   },
 }
 
@@ -145,7 +145,7 @@ export function RiskTierBadge({
         aria-describedby={explain ? descId : undefined}
       >
         <span className="sr-only">Risk tier: </span>
-        <Icon name={copy.icon} fill={state !== "loading"} data-icon="inline-start" />
+        <Icon name={copy.icon} data-icon="inline-start" />
         <span data-slot="risk-tier-badge-label">{copy.label}</span>
         <span className="sr-only">. {copy.hint}</span>
       </span>

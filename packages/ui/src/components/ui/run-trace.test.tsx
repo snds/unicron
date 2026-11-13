@@ -116,7 +116,7 @@ describe("RunTrace", () => {
         steps={steps}
         defaultOpen
         marks={[
-          { id: "1", after: "b", label: "Allowed once", icon: "check" },
+          { id: "1", after: "b", label: "Allowed once", icon: "checkmark" },
           { id: "0", label: "Picked up again" },
           { id: "2", after: "gone", label: "Paused for a game", icon: "pause" },
         ]}

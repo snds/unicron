@@ -22,12 +22,12 @@ export function App() {
             size="sm"
             onClick={() => window.location.assign(motion ? window.location.pathname : "?view=motion")}
           >
-            <Icon name={motion ? "grid_view" : "animation"} data-icon="inline-start" />
+            <Icon name={motion ? "grid" : "movement"} data-icon="inline-start" />
             {motion ? "Primitives" : "Motion"}
           </Button>
           <Kbd>{dark ? "dark" : "light"}</Kbd>
           <Button variant="outline" size="sm" onClick={() => setTheme(dark ? "light" : "dark")}>
-            <Icon name={dark ? "light_mode" : "dark_mode"} data-icon="inline-start" />
+            <Icon name={dark ? "sun" : "moon"} data-icon="inline-start" />
             Toggle theme
           </Button>
         </div>

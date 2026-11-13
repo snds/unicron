@@ -1,0 +1,41 @@
+import { Icon, IconButton, type IconName } from "@unicron/ui"
+import { MasterDetail, Row } from "./parts"
+
+// A comment that says <Icon name="home" /> and icon="delete" is not code.
+export function Toolbar({ open, kind, busy, onClose }: { open: boolean; kind: string; busy: boolean; onClose: () => void }) {
+  return (
+    <header className="flex items-center gap-2">
+      <Icon name="home" />
+      <Icon name='email' className="size-4" />
+      <Icon   name = { "copy" }   />
+      <Icon name={`email`} />
+      <Icon name={open ? "chevron--up" : "chevron--down"} />
+      <Icon name={kind === "folder" ? "folder--open" : kind === "search" ? "search" : "document"} tone="muted" />
+      <Icon
+        name={
+          busy
+            ? "hourglass"
+            : "checkmark--outline"
+        }
+      />
+      <Icon name={pick(kind) ?? "help"} />
+      <Icon name={(busy && "renew") || "renew"} />
+      <IconButton label="Close" icon="close" onClick={onClose} />
+      <IconButton label={open ? "Hide" : "Show"} icon={open ? "view--off" : "view"} />
+      <MasterDetail emptyIcon="notebook" emptyLabel="Open a note." />
+      <Row glyph="at" leadingIcon="locked" trailingIcon={busy ? "renew" : undefined} />
+      <Icon name="forward" />
+      <Icon name="progress_activity" className="animate-spin" />
+      {/* Not icons: the same words on other attributes and other elements. */}
+      <input type="search" name="search" placeholder="Search" aria-label="close" />
+      <Field name="mail" variant="link" data-icon="inline-start" />
+      <Glyph name="content_copy" />
+      <p>Press add to continue, then close the "search" panel. Don't delete it.</p>
+      <p title="home">{t("delete")} {kind === "edit" ? "edit" : "info"}</p>
+    </header>
+  )
+}
+
+function pick(kind: string): IconName | undefined {
+  return kind === "mail" ? "email" : undefined
+}

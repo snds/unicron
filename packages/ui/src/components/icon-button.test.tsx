@@ -20,7 +20,7 @@ describe("IconButton", () => {
   })
 
   it("disabled reaches a control passed through render", () => {
-    render(<IconButton label="Pin" icon="keep" disabled render={<Toggle />} />)
+    render(<IconButton label="Pin" icon="pin" disabled render={<Toggle />} />)
     expect(screen.getByRole("button", { name: "Pin" })).toBeDisabled()
   })
 

@@ -26,12 +26,12 @@ describe("StatusOrb", () => {
   })
 
   it("draws queued, paused and stopped as still glyphs of their own, coloured from their own tokens", () => {
-    const glyphs = { queued: "schedule", paused: "pause_circle", stopped: "stop_circle" } as const
+    const glyphs = { queued: "time--filled", paused: "pause--outline--filled", stopped: "stop--filled" } as const
     for (const [state, name] of Object.entries(glyphs)) {
       const { container, unmount } = render(<StatusOrb state={state as keyof typeof glyphs} tooltip={false} />)
       const glyph = container.querySelector('[data-slot="status-orb-glyph"]')
       expect(glyph).toBeInTheDocument()
-      expect(glyph?.textContent).toContain(name)
+      expect(glyph).toHaveAttribute("data-icon-name", name)
       expect(container.querySelector('[data-slot="status-orb-halo"]')).toBeNull()
       expect(css).toContain(`[data-slot="status-orb"][data-state="${state}"] { color: var(--c-status-orb-${state}); }`)
       // Nothing waiting or over moves.
@@ -44,9 +44,9 @@ describe("StatusOrb", () => {
     const names = new Set(statusOrbStates.map((state) => statusOrbCopy[state]))
     expect(names.size).toBe(statusOrbStates.length)
     const { container, rerender } = render(<StatusOrb state="stopped" tooltip={false} />)
-    const stopped = container.querySelector('[data-slot="status-orb-glyph"]')?.textContent
+    const stopped = container.querySelector('[data-slot="status-orb-glyph"]')?.getAttribute("data-icon-name")
     rerender(<StatusOrb state="failed" tooltip={false} />)
-    expect(container.querySelector('[data-slot="status-orb-glyph"]')?.textContent).not.toBe(stopped)
+    expect(container.querySelector('[data-slot="status-orb-glyph"]')?.getAttribute("data-icon-name")).not.toBe(stopped)
     rerender(<StatusOrb state="idle" tooltip={false} />)
     expect(container.querySelector('[data-slot="status-orb-glyph"]')).toBeNull()
   })

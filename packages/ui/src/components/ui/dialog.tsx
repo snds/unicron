@@ -241,10 +241,10 @@ function DialogActions({ className, ...props }: React.ComponentProps<typeof Dial
 
 type DialogActionKind = "confirm" | "cancel" | "destructive"
 const ACTION: Record<DialogActionKind, { variant: "default" | "outline" | "ghost-destructive"; icon: IconName; className?: string }> = {
-  confirm: { variant: "default", icon: "check" },
+  confirm: { variant: "default", icon: "checkmark" },
   cancel: { variant: "outline", icon: "close" },
   // Leads the row, apart from the others; tinted on phones so the icon reads as a control.
-  destructive: { variant: "ghost-destructive", icon: "delete", className: "mr-auto max-sm:bg-destructive/10" },
+  destructive: { variant: "ghost-destructive", icon: "trash-can", className: "mr-auto max-sm:bg-destructive/10" },
 }
 
 /** One action in `DialogActions`. `kind` sets its look and its phone icon; `icon` overrides the icon. */

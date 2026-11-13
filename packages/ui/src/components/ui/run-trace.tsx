@@ -185,7 +185,7 @@ function RunTrace({
             <span className="text-destructive">{copy.failed(failed)}</span>
           </>
         ) : null}
-        <Icon name="keyboard_arrow_down" className="transition-transform in-data-panel-open:rotate-180" />
+        <Icon name="chevron--down" className="transition-transform in-data-panel-open:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent data-slot="run-trace-content" className="flex flex-col gap-1.5">
         {reasoning ? (
@@ -194,7 +194,7 @@ function RunTrace({
             <IconButton
               size="icon-xs"
               variant="ghost-muted"
-              icon={showReasoning ? "visibility_off" : "visibility"}
+              icon={showReasoning ? "view--off" : "view"}
               label={showReasoning ? copy.hideReasoning : copy.showReasoning}
               aria-pressed={!showReasoning}
               onClick={() => setShowReasoning((v) => !v)}
@@ -269,7 +269,7 @@ function RunTraceMark({ mark }: { mark: RunMark }) {
 /** A popover beside the step; on a phone, a sheet from the bottom. */
 function StepDetail({ step }: { step: RunStep }) {
   const { widthClass } = useViewport()
-  const trigger = <IconButton size="icon-xs" variant="ghost-muted" icon="info" label={`${runTraceCopy.details}: ${step.label}`} />
+  const trigger = <IconButton size="icon-xs" variant="ghost-muted" icon="information" label={`${runTraceCopy.details}: ${step.label}`} />
   if (widthClass === "compact") {
     return (
       <Sheet>

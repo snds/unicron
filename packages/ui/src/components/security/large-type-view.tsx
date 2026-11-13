@@ -594,14 +594,14 @@ export function LargeTypeView({
         </div>
 
         <div data-slot="large-type-view-controls" className="flex flex-wrap items-center gap-3 border-t p-4">
-          <IconButton label="Smaller" shortcut="-" icon="remove" variant="outline" disabled={sizeStep <= -SIZE_STEPS} onClick={() => resize(-1)} />
+          <IconButton label="Smaller" shortcut="-" icon="subtract" variant="outline" disabled={sizeStep <= -SIZE_STEPS} onClick={() => resize(-1)} />
           <IconButton label="Larger" shortcut="+" icon="add" variant="outline" disabled={sizeStep >= SIZE_STEPS} onClick={() => resize(1)} />
           <Label className="flex items-center gap-2 text-sm">
             <Switch checked={captionsShown} disabled={highContrast} onCheckedChange={(v) => setCaptionsOn(v)} />
             Captions
           </Label>
           <Button variant="outline" size="sm" disabled={status !== "shown"} onClick={spellOut}>
-            <Icon name="record_voice_over" data-icon="inline-start" />
+            <Icon name="voice-activate" data-icon="inline-start" />
             Spell out
           </Button>
           {allowCopy && (
@@ -623,11 +623,11 @@ export function LargeTypeView({
               {countdown.state === "counting" ? (
                 <span className="text-xs tabular-nums">{countdown.secondsLeft}</span>
               ) : countdown.state === "cleared" ? (
-                <Icon name="check" />
+                <Icon name="checkmark" />
               ) : (
                 <>
-                  <Icon name="content_copy" />
-                  {crown.gated && <Icon name="lock" className="size-3" />}
+                  <Icon name="copy" />
+                  {crown.gated && <Icon name="locked" className="size-3" />}
                 </>
               )}
             </IconButton>
