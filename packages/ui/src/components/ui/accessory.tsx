@@ -65,7 +65,8 @@ const INK: Record<AccessoryTone, { meta: string; title: string; wash: string }> 
     title: "text-needs-you-on-fill",
     wash: "hover:bg-needs-you-on-fill/5 active:bg-needs-you-on-fill/9",
   },
-  critical: { meta: "text-text-body", title: "text-text-body", wash: "hover:bg-state-hover active:bg-state-pressed" },
+  // As the critical Banner draws its text: body ink for the title, secondary for the line with it.
+  critical: { meta: "text-text-secondary", title: "text-text-body", wash: "hover:bg-state-hover active:bg-state-pressed" },
 }
 
 const SWIPE_FALLBACK = 24
@@ -157,7 +158,12 @@ function Accessory({
   const text = (
     <>
       {tone === "live" ? <span data-slot="accessory-live-mark" aria-hidden="true" className="size-(--c-accessory-live-mark) shrink-0 bg-secondary-live" /> : null}
-      {tone === "critical" ? <Icon name="warning--alt" /> : null}
+      {tone === "critical" ? (
+        // The critical Banner's glyph: warning--alt in critical text.
+        <span data-slot="accessory-glyph" aria-hidden="true" className="inline-flex shrink-0 text-critical-text">
+          <Icon name="warning--alt" />
+        </span>
+      ) : null}
       <span className="flex min-w-0 flex-1 flex-col">
         {meta ? (
           <span data-slot="accessory-meta" className={cn("type-overline truncate", ink.meta)}>
@@ -199,7 +205,13 @@ function Accessory({
       data-slot="accessory"
       data-tone={tone}
       data-compact={compact ? "" : undefined}
-      className={cn(strip({ tone }), swipe && "touch-none", className)}
+      className={cn(
+        strip({ tone }),
+        // In the bottom row it takes the room the minimized tab bar gives up.
+        compact && "grow basis-0",
+        swipe && "touch-none",
+        className
+      )}
       onPointerDown={(event) => {
         onPointerDown?.(event)
         if (!swipe || event.button !== 0) return

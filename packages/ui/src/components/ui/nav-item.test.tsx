@@ -141,6 +141,10 @@ describe("NavItem (Figma 15:487)", () => {
     await user.click(button)
     expect(button).toHaveAttribute("aria-expanded", "true")
     expect(screen.queryByRole("button", { name: /Expand|Collapse/ })).toBeNull()
+    // A chevron shows which way it opens.
+    const chevron = button.querySelector('[data-slot="nav-item-chevron"]')!
+    expect(chevron).toHaveAttribute("aria-hidden", "true")
+    expect(chevron.className).not.toContain("-rotate-90")
   })
 
   it("a trailing action is its own button beside the item; with a mouse it shows over the count", () => {
@@ -168,7 +172,7 @@ describe("NavItem (Figma 15:487)", () => {
   it("a swatch is an 8px square of the swatch role in the icon's place", () => {
     render(<NavItem label="Personal" swatch={3} onClick={() => {}} />)
     const swatch = screen.getByRole("button", { name: "Personal" }).querySelector('[data-slot="nav-item-swatch"] > span')!
-    expect(classesOf(swatch)).toEqual(expect.arrayContaining(["size-2", "bg-(--swatch-03)"]))
+    expect(classesOf(swatch)).toEqual(expect.arrayContaining(["size-2", "bg-[color:var(--swatch-03,var(--text-label))]"]))
   })
 
   it("checked outside a checkable section is a checkbox", async () => {

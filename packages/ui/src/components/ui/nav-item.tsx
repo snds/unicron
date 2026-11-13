@@ -127,20 +127,21 @@ function checkableItems(root: HTMLElement | null): HTMLElement[] {
 /** A calendar's, a note's or a persona's colour: one of the twelve swatch roles (contract 5.1b #55). */
 export type NavItemSwatch = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
-// Static, so Tailwind sees every class. The roles are the foundation's `--swatch-01` … `--swatch-12`.
+// Static, so Tailwind sees every class. The roles are the foundation's `--swatch-01` … `--swatch-12`
+// (contract 5.1b #55); until a theme defines them the square falls back to label ink.
 const SWATCH: Record<NavItemSwatch, string> = {
-  1: "bg-(--swatch-01)",
-  2: "bg-(--swatch-02)",
-  3: "bg-(--swatch-03)",
-  4: "bg-(--swatch-04)",
-  5: "bg-(--swatch-05)",
-  6: "bg-(--swatch-06)",
-  7: "bg-(--swatch-07)",
-  8: "bg-(--swatch-08)",
-  9: "bg-(--swatch-09)",
-  10: "bg-(--swatch-10)",
-  11: "bg-(--swatch-11)",
-  12: "bg-(--swatch-12)",
+  1: "bg-[color:var(--swatch-01,var(--text-label))]",
+  2: "bg-[color:var(--swatch-02,var(--text-label))]",
+  3: "bg-[color:var(--swatch-03,var(--text-label))]",
+  4: "bg-[color:var(--swatch-04,var(--text-label))]",
+  5: "bg-[color:var(--swatch-05,var(--text-label))]",
+  6: "bg-[color:var(--swatch-06,var(--text-label))]",
+  7: "bg-[color:var(--swatch-07,var(--text-label))]",
+  8: "bg-[color:var(--swatch-08,var(--text-label))]",
+  9: "bg-[color:var(--swatch-09,var(--text-label))]",
+  10: "bg-[color:var(--swatch-10,var(--text-label))]",
+  11: "bg-[color:var(--swatch-11,var(--text-label))]",
+  12: "bg-[color:var(--swatch-12,var(--text-label))]",
 }
 
 export type NavItemTone = "neutral" | "critical"
@@ -269,11 +270,14 @@ function NavItem({
   const wrapperRole = section?.checkable ? "none" : undefined
 
   // Ink per part, as Figma binds it (Default, then Active).
+  // On the current tile everything is body ink, a critical item too: critical text on the soft
+  // tile falls under the label floor, so there the glyph and the words in the name carry it.
   const ink = {
     index: current ? "text-text-secondary" : "text-text-faint",
-    icon: critical ? "text-critical-text" : current ? "text-text-body" : "text-text-secondary",
-    label: critical ? "text-critical-text" : current ? "text-text-body" : "text-text-secondary",
+    icon: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
+    label: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
     count: current ? "text-text-body" : "text-text-label",
+    description: current ? "text-text-secondary" : "text-text-label",
   }
 
   const content = (
@@ -295,7 +299,7 @@ function NavItem({
           {label}
         </span>
         {description ? (
-          <span id={descriptionId} data-slot="nav-item-description" className="type-caption text-text-label">
+          <span id={descriptionId} data-slot="nav-item-description" className={cn("type-caption", ink.description)}>
             {description}
           </span>
         ) : null}
@@ -311,6 +315,12 @@ function NavItem({
       >
         <NavMark mark={resolved} placement="inline" className={ink.count} />
       </span>
+      {selfDisclosure ? (
+        // The item is its own disclosure: the chevron shows which way it opens.
+        <span data-slot="nav-item-chevron" aria-hidden="true" className={cn("inline-flex shrink-0 text-text-label transition-[rotate] duration-(--motion-fast) ease-(--motion-ease)", !expanded && "-rotate-90")}>
+          <Icon name="chevron--down" size="sm" />
+        </span>
+      ) : null}
     </>
   )
 

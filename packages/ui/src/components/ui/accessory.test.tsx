@@ -109,12 +109,14 @@ describe("Accessory (Figma 20:1713)", () => {
     expect(screen.queryByRole("button", { name: "Dismiss" })).toBeNull()
   })
 
-  it("critical: the soft critical ground with a critical edge, a warning glyph, body ink", () => {
+  it("critical: the critical Banner at strip size: soft ground, critical edge, the glyph in critical text, body title, secondary meta", () => {
     const { container } = render(<Accessory tone="critical" meta="Spend // Paused" title="$10.00 of $10.00 used" />)
     const strip = stripOf(container)
     expect(classesOf(strip)).toEqual(expect.arrayContaining(["bg-critical-soft", "inset-ring", "inset-ring-critical-fill"]))
-    expect(strip.querySelector('[data-icon-name="warning--alt"]')).not.toBeNull()
-    expect(container.querySelector('[data-slot="accessory-meta"]')!.className).toContain("text-text-body")
+    expect(strip.querySelector('[data-slot="accessory-glyph"]')!.className).toContain("text-critical-text")
+    expect(strip.querySelector('[data-slot="accessory-glyph"] [data-icon-name="warning--alt"]')).not.toBeNull()
+    expect(container.querySelector('[data-slot="accessory-meta"]')!.className).toContain("text-text-secondary")
+    expect(container.querySelector('[data-slot="accessory-title"]')!.className).toContain("text-text-body")
   })
 
   it("compact: an action shows only as its glyph, named by its label, or not at all", () => {

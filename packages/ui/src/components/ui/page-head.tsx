@@ -46,6 +46,11 @@ export type PageHeadProps = Omit<React.ComponentProps<"div">, "title"> & {
   count?: number | string
   /** A fact beside the title on its baseline, in the folio role ("THU 11.12", a site's address). */
   meta?: React.ReactNode
+  /**
+   * Where `meta` sits: on the title's baseline (default; the phone frames, Vale's desktop list), or
+   * on its own line under the title (Lockdown's desktop detail: the site and the date added).
+   */
+  metaPosition?: "baseline" | "below"
   /** Makes `meta` a button (go to today, open the site). */
   onMetaClick?: () => void
   /** The meta button's name, when its text is not enough ("Go to today"). */
@@ -140,6 +145,7 @@ function PageHead({
   size = "md",
   count,
   meta,
+  metaPosition = "baseline",
   onMetaClick,
   metaLabel,
   status,
@@ -195,6 +201,24 @@ function PageHead({
   const sideInk = "text-text-label"
   // Above the switcher's stretched button, so they keep their own presses.
   const above = switcher ? "relative z-10" : undefined
+  const metaNode = !meta ? null : onMetaClick ? (
+    <ButtonPrimitive
+      data-slot="page-head-meta"
+      aria-label={metaLabel}
+      onClick={onMetaClick}
+      className={cn(
+        "type-folio hit-area w-fit rounded-sm underline-offset-4 transition-[color] duration-(--motion-fast) ease-(--motion-ease) hover:text-text-body hover:underline",
+        sideInk,
+        above
+      )}
+    >
+      {meta}
+    </ButtonPrimitive>
+  ) : (
+    <span data-slot="page-head-meta" className={cn("type-folio", sideInk)}>
+      {meta}
+    </span>
+  )
 
   return (
     <div
@@ -220,32 +244,14 @@ function PageHead({
               {countText}
             </span>
           ) : null}
-          {meta ? (
-            onMetaClick ? (
-              <ButtonPrimitive
-                data-slot="page-head-meta"
-                aria-label={metaLabel}
-                onClick={onMetaClick}
-                className={cn(
-                  "type-folio hit-area rounded-sm underline-offset-4 transition-[color] duration-(--motion-fast) ease-(--motion-ease) hover:text-text-body hover:underline",
-                  sideInk,
-                  above
-                )}
-              >
-                {meta}
-              </ButtonPrimitive>
-            ) : (
-              <span data-slot="page-head-meta" className={cn("type-folio", sideInk)}>
-                {meta}
-              </span>
-            )
-          ) : null}
+          {metaPosition === "baseline" ? metaNode : null}
           {status ? (
             <span data-slot="page-head-status" className={cn("inline-flex", above)}>
               {status}
             </span>
           ) : null}
         </div>
+        {metaPosition === "below" ? metaNode : null}
         {switcherButtonProps ? (
           // The whole head is the button: stretched over it, under the parts that are their own buttons.
           <ButtonPrimitive

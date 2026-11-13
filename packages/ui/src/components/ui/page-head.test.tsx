@@ -46,6 +46,13 @@ describe("PageHead", () => {
     expect(classesOf(screen.getByRole("heading"))).toContain("type-title")
   })
 
+  it("meta can sit on its own line under the title (a desktop detail head)", () => {
+    const { container } = render(<PageHead size="lg" overline="Login // passkey + code // Steam Guard" title="Steam" meta="store.steampowered.com // added 2024.03.11" metaPosition="below" />)
+    const meta = container.querySelector('[data-slot="page-head-meta"]')!
+    expect(meta.parentElement).toHaveAttribute("data-slot", "page-head-main")
+    expect(classesOf(meta)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
+  })
+
   it("meta as a button, above the switcher", async () => {
     const user = userEvent.setup()
     const onMetaClick = vi.fn()
