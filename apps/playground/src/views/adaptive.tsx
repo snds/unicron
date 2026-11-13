@@ -107,16 +107,9 @@ function Legend({ presentation, container }: { presentation: AdaptivePresentatio
 
 export default function AdaptiveView() {
   return (
+    // Anchored layers first: a menu measures the room it has against the window, so it is
+    // pictured where the window is.
     <div className="flex flex-col gap-10 p-6 max-sm:p-4">
-      <div className="flex flex-wrap gap-6">
-        <Stage label="AdaptiveDialog // desktop: a form dialog" width={960} height={560} app="vale">
-          {(container) => <NewEvent presentation="desktop" container={container} />}
-        </Stage>
-        <Stage label="AdaptiveDialog // phone: a sheet" width={390} height={844} app="vale">
-          {(container) => <NewEvent presentation="sheet" container={container} />}
-        </Stage>
-      </div>
-
       <div className="flex flex-wrap gap-6">
         <Stage label="AdaptiveMenu // desktop: a dropdown menu" width={960} height={560} app="vale">
           {(container) => (
@@ -131,6 +124,15 @@ export default function AdaptiveView() {
               <Folders presentation="sheet" container={container} />
             </div>
           )}
+        </Stage>
+      </div>
+
+      <div className="flex flex-wrap gap-6">
+        <Stage label="AdaptiveDialog // desktop: a form dialog" width={960} height={560} app="vale">
+          {(container) => <NewEvent presentation="desktop" container={container} />}
+        </Stage>
+        <Stage label="AdaptiveDialog // phone: a sheet" width={390} height={844} app="vale">
+          {(container) => <NewEvent presentation="sheet" container={container} />}
         </Stage>
       </div>
 
