@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
@@ -24,9 +26,11 @@ describe("indicator words", () => {
     expect(indicatorLabel(both)).toBe("1 waiting for you, 5 unread")
   })
 
-  it("cap the badge at 9+", () => {
-    expect(indicatorCount(9)).toBe("9")
-    expect(indicatorCount(12)).toBe("9+")
+  it("write counts as decisions §13 does: two digits, capped at 99+", () => {
+    expect(indicatorCount(7)).toBe("07")
+    expect(indicatorCount(12)).toBe("12")
+    expect(indicatorCount(99)).toBe("99")
+    expect(indicatorCount(140)).toBe("99+")
   })
 })
 
@@ -39,7 +43,7 @@ describe("IndicatorMark", () => {
     expect(mark).toHaveAttribute("data-kind", "attention")
     expect(mark).toHaveAttribute("data-shape", "badge")
     expect(mark).toHaveAttribute("aria-hidden")
-    expect(mark.textContent).toBe("1")
+    expect(mark.textContent).toBe("01")
   })
 
   it("is a dot without a count, and nothing when nothing is wanted", () => {
@@ -77,7 +81,7 @@ describe("AppFrameNavItem indicator", () => {
     const button = screen.getByRole("button", { name: "Conversations, 14 unread" })
     const badge = button.querySelector('[data-shape="badge"]')!
     const dot = button.querySelector('[data-shape="dot"]')!
-    expect(badge.textContent).toBe("9+")
+    expect(badge.textContent).toBe("14")
     expect(badge.className).toContain("nav-rail:hidden")
     expect(badge.className).toContain("in-data-[slot=app-frame-pivot]:hidden")
     expect(dot.className).toContain("nav-rail:inline-block")
@@ -155,5 +159,33 @@ describe("indicator on a control", () => {
     rerender(<Button indicator={{ kind: "attention", count: 0 }}>Tasks</Button>)
     button = screen.getByRole("button", { name: "Tasks" })
     expect(button.querySelector('[data-slot="indicator"]')).toBeNull()
+  })
+})
+
+describe("IndicatorMark in the 2026-11 look", () => {
+  const knobs = JSON.parse(readFileSync(resolve(__dirname, "../../../../tokens/tokens/component/chat.json"), "utf8")).indicator
+
+  it("is an ink square for unread and the yellow square for attention, with an ink outline", () => {
+    expect(knobs.unread.$value).toBe("{text-body}")
+    expect(knobs.attention.$value).toBe("{needs-you-fill}")
+    expect(knobs["attention-edge"].$value).toBe("{needs-you-on-fill}")
+    expect(knobs["dot-size"].$value).toBe("0.375rem")
+    const { container, rerender } = render(<IndicatorMark indicator={{ kind: "attention" }} />)
+    const dot = container.querySelector('[data-slot="indicator"]')!
+    expect(dot.className).toContain("ring-(--c-indicator-attention-edge)")
+    rerender(<IndicatorMark indicator={{ kind: "unread" }} />)
+    expect(container.querySelector('[data-slot="indicator"]')!.className).not.toContain("ring-")
+  })
+
+  it("counts on the same fills, in mono, the attention badge outlined inside in ink", () => {
+    expect(knobs["unread-badge-bg"].$value).toBe("{text-body}")
+    expect(knobs["unread-badge-ink"].$value).toBe("{surface-ground}")
+    expect(knobs["attention-badge-bg"].$value).toBe("{needs-you-fill}")
+    expect(knobs["attention-badge-ink"].$value).toBe("{needs-you-on-fill}")
+    const { container } = render(<IndicatorMark indicator={{ kind: "attention", count: 3 }} shape="badge" />)
+    const badge = container.querySelector('[data-slot="indicator"]')!
+    expect(badge.textContent).toBe("03")
+    expect(badge.className).toContain("inset-ring-(--c-indicator-attention-edge)")
+    expect(badge.className).toContain("[font-family:var(--type-overline-family)]")
   })
 })

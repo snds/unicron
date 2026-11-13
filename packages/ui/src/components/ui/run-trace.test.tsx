@@ -152,3 +152,25 @@ describe("RunTrace", () => {
     expect(reasoning.className).not.toMatch(/mask-[tblrxy]-/)
   })
 })
+
+describe("RunTrace in the 2026-11 look", () => {
+  it("draws the running step in the live colour, the rest in body ink, both in mono meta", () => {
+    const live: RunStep[] = [steps[0], { id: "b", label: "Run tests", state: "running", startedAt: T + 2_000 }]
+    render(<RunTrace steps={live} live />)
+    const running = document.querySelector('[data-slot="run-trace-step"][data-state="running"] .type-meta')!
+    expect(running.className).toContain("text-secondary-live")
+    const done = document.querySelector('[data-slot="run-trace-step"][data-state="done"] .type-meta')!
+    expect(done.className).toContain("text-text-body")
+  })
+
+  it("separates the one line's facts with //, says failures in critical ink, and takes the system focus ring", () => {
+    render(<RunTrace steps={steps} />)
+    const trigger = document.querySelector<HTMLElement>('[data-slot="run-trace-trigger"]')!
+    expect(trigger).toHaveTextContent("12s // 3 steps // 1 failed")
+    // The separators are hidden; the name stays the facts.
+    expect(trigger).toHaveAccessibleName("Failed 12s 3 steps 1 failed")
+    expect(screen.getByText("1 failed").className).toContain("text-critical-text")
+    expect(trigger.className).not.toContain("outline-none")
+    expect(trigger.className).toContain("hover:bg-state-hover")
+  })
+})

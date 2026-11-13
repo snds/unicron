@@ -1,4 +1,5 @@
 // Promoted from: hand-raised from the Mercury review (none)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: square marks, unread in ink, attention in the yellow with an ink outline, counts as decisions §13 writes them; contract 5.1; no app PR, no DSA record)
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
@@ -38,9 +39,12 @@ export function indicatorLabel(indicator: IndicatorProp | undefined): string {
     .join(", ")
 }
 
-/** "9+" past nine: the badge stays one size. */
+/**
+ * A count as the four apps write it on a mark (cross-app decisions §13): two digits ("07", "14"),
+ * capped at "99+".
+ */
 export function indicatorCount(count: number): string {
-  return count > 9 ? "9+" : String(count)
+  return count > 99 ? "99+" : String(Math.max(0, Math.floor(count))).padStart(2, "0")
 }
 
 /**
@@ -59,9 +63,12 @@ export function indicatorOnControl(indicator: IndicatorProp | undefined, ariaLab
 }
 
 /**
- * The mark itself, drawn from @unicron/ui's styles by `data-kind` and `data-shape`. `dot` is a dot
- * at the top right of what it marks; `badge` is the count in a pill (a dot when there's no count).
- * Its words are said by the host (`indicatorLabel`), so the mark is hidden from screen readers.
+ * The mark itself, drawn from @unicron/ui's styles by `data-kind` and `data-shape`. `dot` is a
+ * square at the top right of what it marks: unread is a 6px ink square (Figma's Unread mark),
+ * attention the yellow square with a 1px outline in the yellow's ink, so it reads on stone where
+ * the yellow has no lightness contrast. `badge` is the count on the same two fills, square, in
+ * mono (a dot when there's no count). Its words are said by the host (`indicatorLabel`), so the
+ * mark is hidden from screen readers.
  */
 export function IndicatorMark({
   indicator,
@@ -78,7 +85,13 @@ export function IndicatorMark({
       data-kind={top.kind}
       data-shape={badge ? "badge" : "dot"}
       aria-hidden
-      className={cn(className)}
+      className={cn(
+        // The outline in the yellow's ink: a ring outside a dot (it keeps its 6px), an inset ring
+        // inside a badge (it keeps its size). Over the stylesheet's own edge, which is the yellow.
+        top.kind === "attention" && (badge ? "inset-ring inset-ring-(--c-indicator-attention-edge)" : "ring-(length:--stroke-rule) ring-(--c-indicator-attention-edge)"),
+        badge && "[font-family:var(--type-overline-family)]",
+        className
+      )}
       {...props}
     >
       {badge ? indicatorCount(top.count!) : null}
