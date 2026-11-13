@@ -99,7 +99,9 @@ function CalendarEvent({
     <>
       <span aria-hidden="true" data-slot="calendar-event-bar" className={cn("w-0.5 shrink-0 self-stretch", bar)} />
       {compact ? (
-        <span data-slot="calendar-event-text" className="flex min-w-0 flex-1 items-baseline gap-2">
+        // Two sizes share a baseline here, which makes the line box a pixel taller than 20; the
+        // line is held to 20 so the event stays 24 tall, on the grid.
+        <span data-slot="calendar-event-text" className="flex h-5 min-w-0 flex-1 items-baseline gap-2">
           <span data-slot="calendar-event-title" className="type-ui-emphasis text-foreground min-w-0 truncate">
             {title}
           </span>{" "}

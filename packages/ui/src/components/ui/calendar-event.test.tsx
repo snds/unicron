@@ -72,6 +72,7 @@ describe("CalendarEvent (Figma 32:116)", () => {
     expect(event).toHaveAttribute("data-compact")
     expect(classesOf(event)).toEqual(expect.arrayContaining(["hit-area", "py-0.5", "pr-2", "gap-2"]))
     const text = part("calendar-event-text")
+    expect(classesOf(text)).toEqual(expect.arrayContaining(["h-5", "items-baseline"]))
     expect(text.firstElementChild).toHaveAttribute("data-slot", "calendar-event-title")
     expect(classesOf(part("calendar-event-title"))).toContain("truncate")
     expect(part("calendar-event-place")).toBeNull()
