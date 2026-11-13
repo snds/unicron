@@ -48,21 +48,77 @@ supported: a `.dark` box inside a `.light` box inside a dark page is not.
 
 ## Motion
 
-Three semantic roles carry motion; components use these, never a raw duration.
+Semantic roles carry motion; components use these, never a raw duration or curve.
+
+**Durations**
 
 | Role | Value | For |
 |---|---|---|
-| `--motion-fast` | 120ms (`duration.fast`) | hover, press, a dialog or menu appearing |
-| `--motion-base` | 200ms (`duration.base`) | a sheet sliding in, a toast entering or leaving |
-| `--motion-ease` | `cubic-bezier(0.2, 0, 0, 1)` (`ease.standard`) | every transition |
+| `--motion-press` | 100ms (`duration.press`) | a control going down under a press |
+| `--motion-fast` | 120ms (`duration.fast`) | hover, a small state change, anything leaving |
+| `--motion-base` | 200ms (`duration.base`) | a small surface arriving: a dialog, a popover, a toast |
+| `--motion-state` | 280ms (`duration.state`) | a surface changing state: a sheet or a panel opening, a selection moving |
+| `--motion-move` | 400ms (`duration.move`) | travel across the screen |
+| `--motion-tick` | 1000ms (`duration.tick`) | one step of a countdown ring, run linear |
 | `--motion-spin` | 900ms (`duration.spin`) | one turn of a spinner or a working ring; `animate-spin` runs on it |
 | `--motion-pulse` | 1400ms (`duration.pulse`) | one beat of a pulse or a breathing halo; `animate-pulse` runs on it |
 
-120ms is the floor: shorter reads as a jump. The theme map points Tailwind's default transition at
-them (`--default-transition-duration`, `--default-transition-timing-function`), so a bare
-`transition-colors` is on the system. `ease-standard` is the curve as a utility. Where a duration
-must be set by hand, write `duration-(--motion-fast)`. Toasts are moved onto `--motion-base` from
+400ms is the ceiling: no default transition runs longer (`spin`, `pulse` and `tick` are loops, not
+transitions). 120ms is the floor for a change you watch: shorter reads as a jump. A press is the
+one faster role, because the hand is already on the control.
+
+**Curves**
+
+| Role | Value | For |
+|---|---|---|
+| `--motion-ease` | `cubic-bezier(0.2, 0, 0, 1)` (`ease.standard`) | the default: any transition with no better role |
+| `--motion-ease-enter` | the same curve (`ease.standard`) | things arriving |
+| `--motion-ease-exit` | `cubic-bezier(0.32, 0, 0.67, 0)` (`ease.in`) | things leaving, with a shorter duration than the entrance |
+| `--motion-ease-move` | `cubic-bezier(0.65, 0, 0.35, 1)` (`ease.in-out`) | travel and resize |
+| `--motion-ease-emphasis` | `cubic-bezier(0.34, 1.63, 0.64, 1)` (`ease.back`) | a slight overshoot (about 112%) for a rare moment |
+| `--motion-ease-pulse` | `cubic-bezier(0.4, 0, 0.6, 1)` (`ease.pulse`) | a pulse loop |
+
+**Springs**
+
+A spring is a tier 1 token of `$type: "spring"` with `stiffness`, `damping` and `mass`. The builder
+samples it into a CSS `linear()` curve, so a spring is a timing function with a matching duration:
+
+| Role | Spring | Overshoot | Duration role | For |
+|---|---|---|---|---|
+| `--motion-spring-settle` | 256 / 20 (`spring.settle`) | about 8% | `--motion-spring-settle-duration` (400ms) | a thumb or a pill arriving at a new place |
+| `--motion-spring-firm` | 300 / 26 (`spring.firm`) | under 3% | `--motion-spring-firm-duration` (380ms) | a sheet or another large surface; no visible bounce |
+
+```css
+transition: transform var(--motion-spring-firm-duration) var(--motion-spring-firm);
+```
+
+Each duration is the time its spring takes to stay within 1% of rest. `spring.pop` (484 / 19.8,
+about 20% overshoot) exists in tier 1 as `--g-spring-pop` with no role: it is for an app's
+expressive layer, never a default. For JS, `dist/tokens.json` keeps each spring's raw numbers
+(`tokens["--g-spring-settle"].spring`), and `@unicron/tokens/spring` exports the solver the builder
+uses (`springPosition`, `springToLinear`, …), so a gesture in an app runs the same spring as the
+CSS and can start from the finger's release speed.
+
+**Stagger and press**
+
+| Role | Value | For |
+|---|---|---|
+| `--motion-stagger` | 50ms (`stagger.step`) | the delay between siblings that enter in turn |
+| `--motion-stagger-max` | 6 (`stagger.max`) | siblings after this many start together |
+| `--motion-press-depth` | 0.96 (`press.depth`) | scale of a pressed control |
+| `--motion-press-depth-small` | 0.9 (`press.depth-small`) | scale of a pressed icon-size control |
+
+**In Tailwind.** The theme map points Tailwind's default transition at `--motion-fast` and
+`--motion-ease` (`--default-transition-duration`, `--default-transition-timing-function`), so a bare
+`transition-colors` is on the system. The curves and the two springs are utilities: `ease-standard`,
+`ease-enter`, `ease-exit`, `ease-move`, `ease-emphasis`, `ease-spring-settle`, `ease-spring-firm`.
+A duration is written `duration-(--motion-state)`. Toasts are moved onto `--motion-base` from
 `@unicron/ui`'s stylesheet, since sonner's own runs 400ms on plain `ease`.
+
+**Rules.** Animate transform and opacity; anything else needs a reason. Nothing in a default runs
+longer than `--motion-move`. A control used many times a minute gets no visible bounce.
+`pnpm --filter @unicron/tokens test` holds the numbers to this: the ceiling, each spring's overshoot
+band and settle time, and the emphasis curve's peak.
 
 **Reduced motion.** `@unicron/ui`'s stylesheet ends with one system-wide layer for
 `prefers-reduced-motion: reduce`, unlayered so it wins over utilities: entrances and exits

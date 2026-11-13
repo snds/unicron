@@ -14,7 +14,7 @@
   "keywords": ["design-tokens", "dtcg", "tailwindcss", "shadcn", "design-system"],
   "type": "module",
   "sideEffects": ["**/*.css"],
-  "files": ["dist", "tokens", "examples", "README.md", "LICENSE"],
+  "files": ["dist", "tokens", "src", "examples", "README.md", "LICENSE"],
   "publishConfig": {
     "access": "public"
   },
@@ -25,6 +25,10 @@
     "./dist/tokens.json": "./dist/tokens.json",
     "./examples/*": "./examples/*",
     "./tokens/*": "./tokens/*",
+    "./spring": {
+      "types": "./src/spring.d.mts",
+      "default": "./src/spring.mjs"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -32,7 +36,7 @@
     "lint": "node scripts/lint.mjs",
     "test": "node scripts/build.mjs && node scripts/check.mjs && node scripts/contrast.mjs",
     "contrast": "node scripts/contrast.mjs",
-    "typecheck": "node --check scripts/build.mjs && node --check scripts/check.mjs && node --check scripts/lint.mjs && node --check scripts/contrast.mjs"
+    "typecheck": "node --check scripts/build.mjs && node --check scripts/check.mjs && node --check scripts/lint.mjs && node --check scripts/contrast.mjs && node --check src/spring.mjs"
   },
   "devDependencies": {
     "apca-w3": "^0.1.9"

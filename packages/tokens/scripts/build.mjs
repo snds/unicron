@@ -6,6 +6,10 @@
 //   tokens/semantic.json   → --*     roles (the shadcn contract); light = $value, dark = $extensions["unicron.modes"].dark
 //   tokens/component.json  → --c-*   per-component knobs that alias semantic tokens
 //
+// Springs (`$type: "spring"`, `$value: { stiffness, damping, mass }`, tier 1) have no CSS form of
+// their own. Each is sampled into a `linear()` easing curve that runs over its sibling
+// `<name>-duration` token; the raw numbers stay in tokens.json (`spring`) for JS.
+//
 // References use DTCG syntax: "{neutral.0}" (global), "{foreground}" (semantic), "{icon.fill}" (component).
 // They resolve to var(--…) so the cascade stays live (a dark override of a semantic token
 // flows into every component token that aliases it).
@@ -17,6 +21,8 @@
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+
+import { springToLinear } from "../src/spring.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(here, "..")
@@ -62,6 +68,25 @@ for (const tier of tiers) {
   }
 }
 
+/** "400ms" | "0.4s" → milliseconds. */
+function toMs(value, from) {
+  const m = /^([\d.]+)(ms|s)$/.exec(String(value))
+  if (!m) throw new Error(`${from}: expected a duration in ms or s, got ${JSON.stringify(value)}`)
+  return Number(m[1]) * (m[2] === "s" ? 1000 : 1)
+}
+
+/** A spring token → a CSS linear() curve over its sibling `<name>-duration` token. */
+function springCss(tier, p, token, from) {
+  const { stiffness, damping, mass = 1 } = token.$value
+  if (!(stiffness > 0) || !(damping > 0) || !(mass > 0)) {
+    throw new Error(`${from}: a spring needs positive stiffness, damping and mass`)
+  }
+  const siblingPath = [...p.slice(0, -1), `${p.at(-1)}-duration`].join(".")
+  const sibling = tier.tokens.find((t) => t.path.join(".") === siblingPath)
+  if (!sibling) throw new Error(`${from}: spring needs a sibling duration token {${siblingPath}}`)
+  return springToLinear({ stiffness, damping, mass }, toMs(sibling.token.$value, siblingPath))
+}
+
 function resolveRef(ref, from) {
   const css = byPath.get(ref)
   if (!css) throw new Error(`${from}: unresolved reference {${ref}}`)
@@ -92,7 +117,8 @@ for (const tier of tiers) {
     const css = byPath.get(p.join("."))
     const type = token.$type
     const themeOnly = tier.name === "semantic" && type === "fontFamily"
-    const value = toCss(token.$value, type, css)
+    const isSpring = type === "spring" && typeof token.$value === "object"
+    const value = isSpring ? springCss(tier, p, token, css) : toCss(token.$value, type, css)
     const darkRaw = token.$extensions?.[MODES_KEY]?.dark
     const darkValue = darkRaw === undefined ? undefined : toCss(darkRaw, type, css)
 
@@ -102,6 +128,7 @@ for (const tier of tiers) {
       type,
       value,
       ...(darkValue !== undefined && { dark: darkValue }),
+      ...(isSpring && { spring: { mass: 1, ...token.$value } }),
       ...(token.$description && { description: token.$description }),
     }
 
@@ -134,7 +161,15 @@ for (const [step, factor] of Object.entries(theme.radius ?? {})) {
 blocks.theme.push(
   "  --default-transition-duration: var(--motion-fast);",
   "  --default-transition-timing-function: var(--motion-ease);",
-  "  --ease-standard: var(--motion-ease);"
+  "  --ease-standard: var(--motion-ease);",
+  // The other curves and the two default springs as utilities: ease-enter, ease-exit, ease-move,
+  // ease-emphasis, ease-spring-settle, ease-spring-firm. Durations stay as duration-(--motion-*).
+  "  --ease-enter: var(--motion-ease-enter);",
+  "  --ease-exit: var(--motion-ease-exit);",
+  "  --ease-move: var(--motion-ease-move);",
+  "  --ease-emphasis: var(--motion-ease-emphasis);",
+  "  --ease-spring-settle: var(--motion-spring-settle);",
+  "  --ease-spring-firm: var(--motion-spring-firm);"
 )
 
 const titles = {
