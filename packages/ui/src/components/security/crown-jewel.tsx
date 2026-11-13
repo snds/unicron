@@ -443,6 +443,16 @@ export function CrownJewelSurface({
     "--border": "var(--c-crown-jewel-border)",
     "--input": "var(--c-crown-jewel-border)",
     "--ring": "var(--c-crown-jewel-muted-ink)",
+    // The 1.0 roles, which restyled components paint directly (a Skeleton bar is surface-raised,
+    // a rule is line-rule). Without these they keep the page's ground inside the inverted surface.
+    "--surface-ground": "var(--c-crown-jewel-surface)",
+    "--surface-raised": "var(--c-crown-jewel-muted)",
+    "--line-rule": "var(--c-crown-jewel-border)",
+    "--text-body": "var(--c-crown-jewel-ink)",
+    "--text-secondary": "var(--c-crown-jewel-ink)",
+    "--text-label": "var(--c-crown-jewel-muted-ink)",
+    "--primary-fill": "var(--c-crown-jewel-ink)",
+    "--primary-on-fill": "var(--c-crown-jewel-surface)",
   } as React.CSSProperties
 
   return (

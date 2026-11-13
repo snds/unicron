@@ -40,6 +40,13 @@ describe("the re-mapped tier (test 1)", () => {
     expect(s.style.getPropertyValue("--muted")).toBe("var(--c-crown-jewel-muted)")
     expect(s.style.getPropertyValue("--border")).toBe("var(--c-crown-jewel-border)")
     expect(s.style.getPropertyValue("--secondary")).toBe("var(--c-crown-jewel-muted)")
+    // The 1.0 roles are re-mapped too, so a restyled part (Skeleton paints surface-raised) inverts.
+    expect(s.style.getPropertyValue("--surface-ground")).toBe("var(--c-crown-jewel-surface)")
+    expect(s.style.getPropertyValue("--surface-raised")).toBe("var(--c-crown-jewel-muted)")
+    expect(s.style.getPropertyValue("--line-rule")).toBe("var(--c-crown-jewel-border)")
+    expect(s.style.getPropertyValue("--text-body")).toBe("var(--c-crown-jewel-ink)")
+    expect(s.style.getPropertyValue("--text-label")).toBe("var(--c-crown-jewel-muted-ink)")
+    expect(s.style.getPropertyValue("--primary-fill")).toBe("var(--c-crown-jewel-ink)")
 
     // Built by `pnpm tokens:build` (CI runs it before the tests).
     const css = fs.readFileSync(path.resolve(process.cwd(), "..", "tokens", "dist", "tokens.css"), "utf8")

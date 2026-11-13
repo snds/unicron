@@ -88,13 +88,11 @@ Tier 3 under `crown-jewel`; the surface assigns each to the roles listed, inline
 
 | Token | Aliases | Assigned to |
 |---|---|---|
-| `--c-crown-jewel-surface` | `{protected}` | `--background`, `--card`, `--popover`, `--primary-foreground` |
-| `--c-crown-jewel-ink` | `{protected-foreground}` | `--foreground`, `--card-foreground`, `--popover-foreground`, `--primary`, `--secondary-foreground`, `--accent-foreground` |
-| `--c-crown-jewel-muted` | `color-mix(in oklab, {protected-foreground} 12%, transparent)` | `--muted`, `--secondary`, `--accent` |
-| `--c-crown-jewel-muted-ink` | `color-mix(in oklab, {protected-foreground} 72%, transparent)` | `--muted-foreground`, `--ring`; one knob beyond v0.1 so hints keep contrast |
-| `--c-crown-jewel-border` | `color-mix(in oklab, {protected-foreground} 24%, transparent)` | `--border`, `--input` |
-| `--c-crown-jewel-icon-fill` | `1` | `--c-icon-fill` |
-| `--c-crown-jewel-icon-wght` | `500` | `--c-icon-wght` |
+| `--c-crown-jewel-surface` | `{protected}` | `--background`, `--card`, `--popover`, `--primary-foreground`; 1.0 roles `--surface-ground`, `--primary-on-fill` |
+| `--c-crown-jewel-ink` | `{protected-foreground}` | `--foreground`, `--card-foreground`, `--popover-foreground`, `--primary`, `--secondary-foreground`, `--accent-foreground`; 1.0 roles `--text-body`, `--text-secondary`, `--primary-fill` |
+| `--c-crown-jewel-muted` | `color-mix(in oklab, {protected-foreground} 12%, transparent)` | `--muted`, `--secondary`, `--accent`; 1.0 role `--surface-raised` |
+| `--c-crown-jewel-muted-ink` | `color-mix(in oklab, {protected-foreground} 72%, transparent)` | `--muted-foreground`, `--ring`, 1.0 role `--text-label`; one knob beyond v0.1 so hints keep contrast |
+| `--c-crown-jewel-border` | `color-mix(in oklab, {protected-foreground} 24%, transparent)` | `--border`, `--input`; 1.0 role `--line-rule` |
 | `--c-crown-jewel-reveal-lifetime` | `20s` | Read by nested SecretFields (above) |
 | `--c-crown-jewel-gate-attempts` | `3` | Default attempts |
 

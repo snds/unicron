@@ -25,7 +25,7 @@ Composes `badgeVariants` (the pill classes, not the `Badge` element), `Icon`, an
 ```
 risk-tier-badge                 span, data-tier (the resolved state), data-size
 ├─ risk-tier-badge-pill         badgeVariants secondary + tier classes; sr-only "Risk tier: " … ". <hint>"
-│  ├─ (icon)                    Icon, aria-hidden, filled except while loading
+│  ├─ (icon)                    Icon (Carbon), aria-hidden
 │  └─ risk-tier-badge-label     "Built in" · "Verified" · "Use with care" · "Unverified" · "Checking" (never omitted)
 ├─ risk-tier-badge-explain      optional IconButton help → Tooltip with risk-tier-badge-explain-content
 └─ (sr-only)                    the same explain content, always in the tree, for aria-describedby; role="status" on a transition to unverified
@@ -53,10 +53,10 @@ Other `span` props pass through. Exports: `RiskTier`, `RiskTierState`, `riskTier
 | default | Tier tint and ink, icon, word. `standard`: icon and text in the standard ink. `official` and `tolerated`: text stays `foreground`, only the icon takes the ink |
 | explain open | Tooltip in the top layer; `aria-describedby` already points at the sr-only copy |
 | loading | `verified` omitted: muted pill, pulse (none under reduced motion), hourglass, "Checking" |
-| unverified | `verified={false}` or an unknown tier: `destructive` outline, no fill, `gpp_bad`, "Unverified"; hosts block the action |
+| unverified | `verified={false}` or an unknown tier: `destructive` outline, no fill, `rule--cancelled`, "Unverified"; hosts block the action |
 | disabled | n/a for the badge; `explainDisabled` for the help button |
-| reduced motion | Icon fill does not animate |
-| high contrast and forced colors | 1 px border in the current ink, tint dropped, icon weight 600 |
+| reduced motion | The loading pulse stops; nothing else in the badge moves |
+| high contrast and forced colors | 1 px border in the current ink, tint dropped |
 
 ## Behavior and timing
 
