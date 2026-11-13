@@ -77,7 +77,8 @@ export type TileProps = useRender.ComponentProps<"a"> & {
  * Tile: a raised panel with a hairline and a 4px top edge in the primary fill or a swatch. The
  * edge is a bar laid over the top of the panel, so it adds no height. Its content is the caller's:
  * card art (Lockdown), a note card (Vale), a guest card around a QR code. With `href`, `onClick`
- * or `render` the whole tile is the control.
+ * or `render` the whole tile is the control; it then holds inline content only (spans, not
+ * paragraphs or other controls), as a button or a link must.
  */
 function Tile({
   edge = "primary",

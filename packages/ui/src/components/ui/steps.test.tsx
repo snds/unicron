@@ -65,7 +65,9 @@ describe("Steps (contract 5.1b #32)", () => {
       </Steps>
     )
     const row = document.querySelector('[data-slot="step-row"]') as HTMLElement
-    expect(classesOf(row)).toEqual(expect.arrayContaining(["items-baseline", "gap-6", "px-4", "py-5", "rule-t"]))
+    expect(classesOf(row)).toEqual(expect.arrayContaining(["items-baseline", "flex-wrap", "gap-x-6", "px-4", "py-5", "rule-t"]))
+    // On a narrow row the state word (and an action) move under the body together.
+    expect(classesOf(document.querySelector('[data-slot="step-trailing"]') as HTMLElement)).toEqual(expect.arrayContaining(["ml-auto", "shrink-0"]))
     const index = document.querySelector('[data-slot="step-index"]') as HTMLElement
     expect(classesOf(index)).toEqual(expect.arrayContaining(["type-folio", "w-10", "before:content-[counter(step,decimal-leading-zero)]"]))
     expect(index).toHaveAttribute("aria-hidden", "true")

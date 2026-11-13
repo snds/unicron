@@ -12,6 +12,7 @@ import {
   Kbd,
   ToggleGroup,
   ToggleGroupItem,
+  useViewport,
 } from "@unicron/ui"
 import { FieldRow, FieldRowAction, FieldRowValue } from "../../../../packages/ui/src/components/ui/field-row"
 import { ToggleRow } from "../../../../packages/ui/src/components/ui/toggle-row"
@@ -30,6 +31,8 @@ const AUTO_LOCK = ["After 1 minute", "After 5 minutes", "After 15 minutes", "Whe
 export default function FieldRowView() {
   const [autoLock, setAutoLock] = useState("After 5 minutes")
   const [theme, setTheme] = useState<readonly string[]>(["graphite"])
+  // On a phone a row with a control in its value slot stacks, as the apps do (rules 8.5).
+  const phone = useViewport().widthClass === "compact"
   return (
     <div className="flex flex-col gap-10 p-6">
       <Specimen label="Size // default 52, display 64, stacked 64">
@@ -65,7 +68,7 @@ export default function FieldRowView() {
         </FieldRow>
       </Specimen>
 
-      <Specimen label="Settings // a menu behind Change, chips in the value slot, a Toggle Row between">
+      <Specimen label="Settings // a menu behind Change, chips in the value slot (stacked on a phone), a Toggle Row between">
         <FieldRow
           label="Auto-lock"
           action={
@@ -89,7 +92,7 @@ export default function FieldRowView() {
         <FieldRow label="Clipboard" action={<FieldRowAction>Change</FieldRowAction>}>
           Clears after 90 s
         </FieldRow>
-        <FieldRow label="Theme" description="Graphite is the dark ground, Stone the light one.">
+        <FieldRow size={phone ? "stacked" : "default"} label="Theme" description="Graphite is the dark ground, Stone the light one.">
           <ToggleGroup aria-label="Theme" value={theme} onValueChange={setTheme} variant="outline" size="sm">
             <ToggleGroupItem value="system">System</ToggleGroupItem>
             <ToggleGroupItem value="stone">Stone</ToggleGroupItem>
@@ -98,7 +101,7 @@ export default function FieldRowView() {
         </FieldRow>
       </Specimen>
 
-      <Specimen label="Where it applies // the meta slot, before the action">
+      <Specimen label="Where it applies // the meta slot, before the action; under the value when the row is narrow">
         <FieldRow
           label="Quiet hours"
           meta={<FieldRowAction variant="ghost-muted">Only on this device</FieldRowAction>}

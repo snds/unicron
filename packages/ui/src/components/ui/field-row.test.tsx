@@ -23,7 +23,7 @@ describe("FieldRow (Figma 15:512)", () => {
 
   it("pins the drawn sizes: 52 default, 64 display and stacked, no side padding, a top rule", () => {
     const at = (size: "default" | "display" | "stacked") => fieldRowVariants({ size }).split(/\s+/)
-    expect(at("default")).toEqual(expect.arrayContaining(["items-baseline", "py-4", "gap-4"]))
+    expect(at("default")).toEqual(expect.arrayContaining(["items-baseline", "py-4", "gap-x-4", "flex-wrap"]))
     expect(at("display")).toEqual(expect.arrayContaining(["items-baseline", "py-3"]))
     expect(at("stacked")).toEqual(expect.arrayContaining(["items-center", "py-3"]))
     for (const size of ["default", "display", "stacked"] as const) expect(at(size).some((c) => /^p[xlr]-/.test(c))).toBe(false)
@@ -84,10 +84,26 @@ describe("FieldRow (Figma 15:512)", () => {
     expect(classesOf(screen.getByRole("group")).some((c) => c.startsWith("rule-"))).toBe(false)
   })
 
+  it("on a narrow row the meta and the actions move under the value together, at the right", () => {
+    render(
+      <FieldRow label="Quiet hours" meta="Only on this device" action={<FieldRowAction>Change</FieldRowAction>}>
+        22:00 – 07:00
+      </FieldRow>
+    )
+    const trailing = slot(document.body, "field-row-trailing")
+    expect(classesOf(trailing)).toEqual(expect.arrayContaining(["ml-auto", "shrink-0"]))
+    expect(trailing.children[0]).toHaveAttribute("data-slot", "field-row-meta")
+    expect(trailing.children[1]).toHaveAttribute("data-slot", "field-row-actions")
+    // The wrap is decided against 6rem of value, then the value takes what is left.
+    expect(classesOf(slot(document.body, "field-row-body"))).toEqual(expect.arrayContaining(["basis-24", "grow", "min-w-0"]))
+  })
+
   it("cuts a long value in the middle and keeps every character in the DOM", () => {
     render(<FieldRow label="Address">mira.chen.cabin-bookings@fastmail.com</FieldRow>)
     const value = slot(document.body, "field-row-value")
     expect(value).toHaveAttribute("data-truncate", "middle")
+    // The end never paints over what is beside the value, however narrow it gets.
+    expect(classesOf(value)).toContain("overflow-hidden")
     expect(value).toHaveTextContent("mira.chen.cabin-bookings@fastmail.com")
     const [head, tail] = Array.from(value.children)
     // The head shrinks with an ellipsis; the end never does. Neither wraps.

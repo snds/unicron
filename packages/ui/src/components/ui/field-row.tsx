@@ -49,8 +49,10 @@ export function useFieldRow(): FieldRowContextValue | null {
 
 const rowVariants = cva(
   // No left or right padding, as drawn: rows line up with the column they sit in. `inset` adds
-  // the 16px a full-bleed phone row needs.
-  "group/field-row flex min-w-0 gap-4",
+  // the 16px a full-bleed phone row needs. When the row is too narrow for the label, 6rem of value
+  // and the trailing part (meta and actions), the trailing part moves under the value, at the
+  // right, as one piece; on a wide row nothing wraps and the row is as drawn.
+  "group/field-row flex min-w-0 flex-wrap gap-x-4 gap-y-2",
   {
     variants: {
       size: {
@@ -102,7 +104,7 @@ function FieldRowValue({ children, truncate = "middle", keepEnd, className, ...p
     const head = text.slice(0, text.length - keep)
     const tail = text.slice(text.length - keep)
     return (
-      <span data-slot="field-row-value" data-truncate="middle" className={cn("flex min-w-0", className)} {...props}>
+      <span data-slot="field-row-value" data-truncate="middle" className={cn("flex min-w-0 overflow-hidden", className)} {...props}>
         {/* `pre` keeps a space at the cut; the head alone shrinks, with the ellipsis. */}
         <span className="min-w-0 overflow-hidden text-ellipsis whitespace-pre">{head}</span>
         {tail ? <span className="shrink-0 whitespace-pre">{tail}</span> : null}
@@ -327,26 +329,30 @@ function FieldRow({
         {...props}
       >
         {stacked ? (
-          <div data-slot="field-row-body" className="flex min-w-0 flex-1 flex-col gap-1">
+          <div data-slot="field-row-body" className="flex min-w-0 grow basis-24 flex-col gap-1">
             {labelNode}
             {lines}
           </div>
         ) : (
           <>
             {labelNode}
-            <div data-slot="field-row-body" className="flex min-w-0 flex-1 flex-col">
+            <div data-slot="field-row-body" className="flex min-w-0 grow basis-24 flex-col">
               {lines}
             </div>
           </>
         )}
-        {meta ? (
-          <div data-slot="field-row-meta" className="type-overline text-muted-foreground flex shrink-0 items-baseline">
-            {meta}
-          </div>
-        ) : null}
-        {action ? (
-          <div data-slot="field-row-actions" className="flex shrink-0 items-baseline">
-            {action}
+        {meta || action ? (
+          <div data-slot="field-row-trailing" className="ml-auto flex shrink-0 items-baseline gap-4">
+            {meta ? (
+              <div data-slot="field-row-meta" className="type-overline text-muted-foreground flex items-baseline">
+                {meta}
+              </div>
+            ) : null}
+            {action ? (
+              <div data-slot="field-row-actions" className="flex items-baseline">
+                {action}
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>

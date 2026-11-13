@@ -107,7 +107,7 @@ function Step({
       >
         {leading ?? index}
       </span>{" "}
-      <span data-slot="step-body" className="flex min-w-0 flex-1 flex-col gap-1">
+      <span data-slot="step-body" className="flex min-w-0 grow basis-32 flex-col gap-1">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
           <span data-slot="step-title" className="type-subtitle text-foreground min-w-0">
             {title}
@@ -129,25 +129,31 @@ function Step({
           </span>
         ) : null}
       </span>{" "}
-      {word ? (
-        <span
-          data-slot="step-status"
-          data-status={status}
-          className={cn("type-overline shrink-0 text-right", live ? "text-secondary-live" : STATUS_INK[status])}
-        >
-          {word}
-        </span>
-      ) : null}
-      {action && !interactive ? (
-        <span data-slot="step-action" className="-my-2 inline-flex shrink-0">
-          {action}
+      {word || (action && !interactive) ? (
+        // The state word and the action stay together; on a narrow row they move under the body,
+        // at the right, so the title keeps its width.
+        <span data-slot="step-trailing" className="ml-auto flex shrink-0 items-baseline gap-6">
+          {word ? (
+            <span
+              data-slot="step-status"
+              data-status={status}
+              className={cn("type-overline text-right", live ? "text-secondary-live" : STATUS_INK[status])}
+            >
+              {word}
+            </span>
+          ) : null}
+          {action && !interactive ? (
+            <span data-slot="step-action" className="-my-2 inline-flex">
+              {action}
+            </span>
+          ) : null}
         </span>
       ) : null}
     </>
   )
 
   const rowClasses = cn(
-    "flex w-full min-w-0 items-baseline gap-6 px-4 py-5 text-left rule-t",
+    "flex w-full min-w-0 flex-wrap items-baseline gap-x-6 gap-y-2 px-4 py-5 text-left rule-t",
     interactive &&
       "hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50"
   )

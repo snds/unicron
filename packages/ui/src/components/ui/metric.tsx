@@ -58,7 +58,8 @@ export type MetricProps = Omit<useRender.ComponentProps<"a">, "children"> & {
 /**
  * Metric: a label, a number and its change. The 2px ink rule on top groups metrics in a row
  * without boxes (Figma 15:513). `size="hero"` is the one very large number a screen may have
- * (Lockdown Health, Warpcore Spend), with what it is out of beside it.
+ * (Lockdown Health, Warpcore Spend), with what it is out of beside it. A hero number does not
+ * shrink: where it is wider than the screen (Warpcore's "$3.40" on a phone), use the default size.
  *
  * With `href` (or `render`) the whole metric is one link, named by its text in reading order
  * ("Skills 145 +3 this week"), with the hover wash and the focus ring of a control.

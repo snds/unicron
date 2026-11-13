@@ -2,7 +2,7 @@
 // The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
 // them (the integrator's file); then these imports become "@unicron/ui".
 import type { ReactNode } from "react"
-import { Badge, Progress } from "@unicron/ui"
+import { Badge, Progress, useViewport } from "@unicron/ui"
 import { Metric } from "../../../../packages/ui/src/components/ui/metric"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
@@ -20,6 +20,9 @@ function Row({ children }: { children: ReactNode }) {
 }
 
 export default function MetricView() {
+  // Warpcore's spend hero is wider than a phone: there it is the default size (Warpcore brief, Spend).
+  const phone = useViewport().widthClass === "compact"
+  const spend = phone ? "default" : "hero"
   return (
     <div className="flex flex-col gap-10 p-6">
       <Specimen label="As drawn // 175 wide, 104 tall">
@@ -50,12 +53,12 @@ export default function MetricView() {
         <Metric size="hero" valueTone="primary" label="Health // personal + family" value="92" unit="/100" />
       </Specimen>
 
-      <Specimen label="Hero // body ink, a caption and a bar (Warpcore spend)">
+      <Specimen label="Hero // body ink, a caption and a bar (Warpcore spend; the default size on a phone)">
         <div className="flex max-w-[768px] flex-col gap-6">
-          <Metric size="hero" label="Spend // Thursday 11.12" value="$3.40" delta="of $10.00 today">
+          <Metric size={spend} label="Spend // Thursday 11.12" value="$3.40" delta="of $10.00 today">
             <Progress variant="segmented" tone="primary" segments={64} value={3.4} max={10} aria-label="$3.40 of $10.00 today" />
           </Metric>
-          <Metric size="hero" label="Spend // Friday 11.13" value="$8.60" delta="of $10.00 today" badge={<Badge tone="warning">Near cap</Badge>}>
+          <Metric size={spend} label="Spend // Friday 11.13" value="$8.60" delta="of $10.00 today" badge={<Badge tone="warning">Near cap</Badge>}>
             <Progress variant="segmented" tone="budget" segments={64} value={8.6} max={10} aria-label="$8.60 of $10.00 today" />
           </Metric>
         </div>
