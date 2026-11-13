@@ -15,10 +15,11 @@ const LABEL = "type-overline"
 
 // Transparent kinds: an ink wash on hover and a stronger one while pressed or while their menu is open.
 const WASH = "hover:bg-state-hover active:bg-state-pressed aria-expanded:bg-state-pressed"
-// The same two washes on the needs-you yellow, in the ink that sits on it (the page's ink is
-// near-white on graphite, and would lighten the yellow instead of marking it).
+// Two washes on the needs-you yellow too, in the ink that sits on it (the page's ink is near-white
+// on graphite, and would lighten the yellow instead of marking it). 5% and 9%: at 10% the label
+// on the pressed wash measures Lc 74.8, just under the Lc 75 that text on a fill is held to.
 const WASH_ON_NEEDS_YOU =
-  "hover:bg-needs-you-on-fill/6 active:bg-needs-you-on-fill/10 aria-expanded:bg-needs-you-on-fill/10 focus-visible:outline-needs-you-on-fill"
+  "hover:bg-needs-you-on-fill/5 active:bg-needs-you-on-fill/9 aria-expanded:bg-needs-you-on-fill/9 focus-visible:outline-needs-you-on-fill"
 // A 1px edge drawn inside the box, so an outlined button is exactly as wide as a solid one.
 const OUTLINE = "inset-ring inset-ring-foreground text-foreground"
 

@@ -29,14 +29,17 @@ describe("Progress", () => {
     expect(classesOf(container.querySelector('[data-slot="progress-value"]')!)).toContain("type-meta")
   })
 
-  it("a bar is square, sizes from its knob, fills with primary, then success once complete", () => {
+  it("a bar is square, sizes from its knob, takes the bar's fill knob, then success once complete", () => {
     const { container, rerender } = render(<Progress value={50} aria-label="Sync" />)
     const track = container.querySelector('[data-slot="progress-track"]')!
     const fill = container.querySelector('[data-slot="progress-indicator"]')!
     expect(classesOf(track)).toEqual(expect.arrayContaining(["h-(--c-progress-height)", "rounded-none", "bg-(--c-progress-track)"]))
     expect(classesOf(track)).not.toContain("rounded-full")
     expect(classesOf(fill)).toEqual(
-      expect.arrayContaining(["bg-(--c-progress-fill)", "group-data-[fill=complete]/progress:group-data-complete/progress:bg-(--c-progress-complete)"])
+      expect.arrayContaining([
+        "group-data-[fill=complete]/progress:bg-(--c-progress-fill)",
+        "group-data-[fill=complete]/progress:group-data-complete/progress:bg-(--c-progress-complete)",
+      ])
     )
     expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "complete")
     rerender(<Progress value={100} aria-label="Sync" />)
@@ -64,9 +67,9 @@ describe("Progress", () => {
     expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "live")
     const [first] = lit(container)
     const last = cells(container).at(-1)!
-    expect(classesOf(first)).toEqual(expect.arrayContaining(["flex-1", "h-full", "group-data-[fill=live]/progress:bg-(--c-progress-tone-live)"]))
+    expect(classesOf(first)).toEqual(expect.arrayContaining(["flex-1", "h-full", "group-data-[fill=live]/progress:bg-(--c-progress-live)"]))
     expect(classesOf(last)).toContain("bg-(--c-progress-track)")
-    expect(classesOf(last)).not.toContain("bg-(--c-progress-fill)")
+    expect(classesOf(last).some((c) => c.includes("--c-progress-live") || c.includes("--c-progress-primary"))).toBe(false)
     for (const cell of [first, last]) expect(classesOf(cell).some((c) => c.startsWith("rounded"))).toBe(false)
   })
 
@@ -100,6 +103,16 @@ describe("Progress", () => {
     expect(cells(container)).toHaveLength(0)
   })
 
+  it("primary, and a budget under its warning mark, take the primary knob; nothing else competes with it", () => {
+    const { container } = render(<Progress variant="segmented" tone="primary" value={3.4} max={10} aria-label="Spend" />)
+    const classes = classesOf(lit(container)[0])
+    expect(classes).toContain("bg-(--c-progress-primary)")
+    // Every other fill is behind a data-fill or data-level condition, so it cannot win by order.
+    for (const c of classes.filter((c) => c.includes("bg-(--c-progress-") && c !== "bg-(--c-progress-primary)")) {
+      expect(c).toMatch(/^group-data-\[(fill|level)=/)
+    }
+  })
+
   it("tones: primary and live on either variant, critical for a countdown about to run out", () => {
     const fillOf = (props: Pick<React.ComponentProps<typeof Progress>, "variant" | "tone">) => {
       const { unmount } = render(<Progress aria-label="Tone" value={5} max={30} {...props} />)
@@ -119,11 +132,11 @@ describe("Progress", () => {
   it("the critical fill is its own knob on a lit cell and on a bar", () => {
     const { container, rerender } = render(<Progress variant="segmented" tone="critical" value={4} max={30} segments={30} aria-label="Fastmail code" />)
     expect(lit(container)).toHaveLength(4)
-    expect(classesOf(lit(container)[0])).toContain("group-data-[fill=critical]/progress:bg-(--c-progress-tone-critical)")
+    expect(classesOf(lit(container)[0])).toContain("group-data-[fill=critical]/progress:bg-(--c-progress-critical)")
     expect(screen.getByRole("progressbar", { name: "Fastmail code" })).toHaveAttribute("data-tone", "critical")
     rerender(<Progress tone="critical" value={4} max={30} aria-label="Fastmail code" />)
     expect(classesOf(container.querySelector('[data-slot="progress-indicator"]')!)).toContain(
-      "group-data-[fill=critical]/progress:bg-(--c-progress-tone-critical)"
+      "group-data-[fill=critical]/progress:bg-(--c-progress-critical)"
     )
   })
 

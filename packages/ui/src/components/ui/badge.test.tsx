@@ -44,10 +44,12 @@ describe("Badge", () => {
     }
   })
 
-  it("critical, warning and success sit on a soft ground", () => {
+  it("critical and success sit on a soft ground; warning is ink inside a warning edge", () => {
     expect(classesOf({ tone: "critical" })).toEqual(expect.arrayContaining(["bg-critical-soft", "text-foreground", "inset-ring", "inset-ring-critical-fill"]))
-    expect(classesOf({ tone: "warning" })).toEqual(expect.arrayContaining(["bg-warning/15", "text-foreground", "inset-ring", "inset-ring-warning"]))
     expect(classesOf({ tone: "success" })).toEqual(expect.arrayContaining(["bg-success-surface", "text-success-foreground"]))
+    const warning = classesOf({ tone: "warning" })
+    expect(warning).toEqual(expect.arrayContaining(["text-foreground", "inset-ring", "inset-ring-warning"]))
+    expect(warning.some((c) => c.startsWith("bg-"))).toBe(false)
   })
 
   it("the names from before 1.0 still draw, each as a tone", () => {

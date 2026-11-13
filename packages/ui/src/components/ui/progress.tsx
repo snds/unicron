@@ -23,13 +23,13 @@ type ProgressProps = ProgressPrimitive.Root.Props & {
    */
   variant?: ProgressVariant
   /**
-   * `default`: a bar fills in `primary` and turns `success` once complete; a segmented bar fills
-   * in the live colour, because that is what it shows in a row (an agent's run).
+   * `default`: a bar takes the bar's own fill (`--c-progress-fill`) and turns `success` once
+   * complete; a segmented bar is the live colour, because that is what it shows in a row (an
+   * agent's run), and never turns.
+   * `live`: the live colour on either variant.
    * `primary`: the identity colour on either, for a quantity that is not live (a spend, a score).
-   * `live`: the live colour on either.
-   * `budget`: a spend against a cap, `warning` past 70% and `destructive` past 90%.
+   * `budget`: a spend against a cap: `primary`, then `warning` past 70% and `destructive` past 90%.
    * `critical`: the critical fill, for a countdown that is about to run out.
-   * Only `default` on a bar ever turns `success`.
    */
   tone?: ProgressTone
   /**
@@ -54,9 +54,9 @@ function fillOf(variant: ProgressVariant, tone: ProgressTone): Fill {
 }
 
 // The fill's colour, by the root's `data-fill` (and `data-level` for a budget). Each is a knob, so
-// an app re-maps a colour once for every bar.
+// an app re-maps a colour once for every bar. With no `data-fill` it is the primary knob.
 const fill =
-  "bg-(--c-progress-fill) group-data-[fill=complete]/progress:group-data-complete/progress:bg-(--c-progress-complete) group-data-[fill=live]/progress:bg-(--c-progress-tone-live) group-data-[fill=critical]/progress:bg-(--c-progress-tone-critical) group-data-[level=warning]/progress:bg-(--c-progress-warning) group-data-[level=over]/progress:bg-(--c-progress-over)"
+  "bg-(--c-progress-primary) group-data-[fill=complete]/progress:bg-(--c-progress-fill) group-data-[fill=complete]/progress:group-data-complete/progress:bg-(--c-progress-complete) group-data-[fill=live]/progress:bg-(--c-progress-live) group-data-[fill=critical]/progress:bg-(--c-progress-critical) group-data-[level=warning]/progress:bg-(--c-progress-warning) group-data-[level=over]/progress:bg-(--c-progress-over)"
 
 /**
  * Progress: how far along a task is, or how much of something is left. Base UI's Progress gives

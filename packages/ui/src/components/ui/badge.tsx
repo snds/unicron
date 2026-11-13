@@ -36,8 +36,9 @@ const tones = cva(
         // An error ("Failed", "Clash"): the critical banner at badge size. Ink on the soft critical
         // ground inside a critical edge; critical ink on that ground falls under the label floor.
         critical: "bg-critical-soft text-foreground inset-ring inset-ring-critical-fill",
-        // Worth a look, not an error: ink on a warning wash inside a warning edge.
-        warning: "bg-warning/15 text-foreground inset-ring inset-ring-warning",
+        // Worth a look, not an error: ink inside a warning edge. No wash: any tint under body ink
+        // takes it below its floor on stone.
+        warning: "text-foreground inset-ring inset-ring-warning",
         // Finished well ("Passing").
         success: "bg-success-surface text-success-foreground",
       },
