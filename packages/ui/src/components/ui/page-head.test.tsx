@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import { Badge } from "./badge"
+import { Button } from "./button"
 import { PageHead } from "./page-head"
 
 const classesOf = (el: Element) => el.className.split(/\s+/)
@@ -69,9 +70,9 @@ describe("PageHead", () => {
         title="Personal"
         status={<Badge>Read-only</Badge>}
         actions={
-          <button type="button" data-testid="check">
+          <Button size="sm" variant="secondary" data-testid="check">
             Check again
-          </button>
+          </Button>
         }
       />
     )
