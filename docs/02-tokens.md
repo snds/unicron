@@ -115,7 +115,9 @@ CSS and can start from the finger's release speed.
 A duration is written `duration-(--motion-state)`. Toasts are moved onto `--motion-base` from
 `@unicron/ui`'s stylesheet, since sonner's own runs 400ms on plain `ease`.
 
-**Rules.** Animate transform and opacity; anything else needs a reason. Nothing in a default runs
+**Rules.** No motion literals in a primitive: `pnpm lint:tokens` refuses a raw duration, a generic
+or hand-written curve, a tier 1 motion variable and `transition-all` in `packages/ui/src`
+([contributing](06-contributing.md#contracts-not-goodwill)). Animate transform and opacity; anything else needs a reason. Nothing in a default runs
 longer than `--motion-move`. A control used many times a minute gets no visible bounce.
 `pnpm --filter @unicron/tokens test` holds the numbers to this: the ceiling, each spring's overshoot
 band and settle time, and the emphasis curve's peak.

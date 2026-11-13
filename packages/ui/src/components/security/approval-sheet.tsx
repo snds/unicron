@@ -455,7 +455,7 @@ function TimerRing({ remaining, total, urgent, expired, animate }: { remaining: 
         strokeLinecap="round"
         className={cn(
           urgent && !expired ? "stroke-(--c-approval-timer-urgent)" : "stroke-(--c-approval-timer-progress)",
-          animate && "transition-[stroke-dashoffset] duration-1000 ease-linear",
+          animate && "transition-[stroke-dashoffset] duration-(--motion-tick) ease-linear",
           "forced-colors:stroke-[CanvasText]"
         )}
       />

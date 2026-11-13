@@ -103,7 +103,7 @@
   --breakpoint-ultrawide: 160rem;
   /* Live states turn and beat at one rate in every app: the motion roles, not Tailwind's 1s and 2s. */
   --animate-spin: spin var(--motion-spin) linear infinite;
-  --animate-pulse: pulse var(--motion-pulse) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-pulse: pulse var(--motion-pulse) var(--motion-ease-pulse) infinite;
   @keyframes spin {
     to {
       transform: rotate(360deg);
@@ -469,7 +469,7 @@ html:has([data-slot="app-frame"]) body {
     display: block;
     background: currentColor;
     opacity: 0.3;
-    animation: status-orb-breathe var(--motion-pulse) ease-in-out infinite;
+    animation: status-orb-breathe var(--motion-pulse) var(--motion-ease-pulse) infinite;
   }
   /* Working: a ring with a gap, turning. The dot shrinks to clear it. */
   [data-state="working"] > [data-slot="status-orb-halo"] {
@@ -482,7 +482,7 @@ html:has([data-slot="app-frame"]) body {
   [data-state="needs-you"] > [data-slot="status-orb-halo"] {
     display: block;
     border: var(--status-orb-ring) solid currentColor;
-    animation: status-orb-ping var(--motion-pulse) ease-out infinite;
+    animation: status-orb-ping var(--motion-pulse) var(--motion-ease-enter) infinite;
   }
   [data-state="working"] > [data-slot="status-orb-dot"],
   [data-state="needs-you"] > [data-slot="status-orb-dot"] {

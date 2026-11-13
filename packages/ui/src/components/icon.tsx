@@ -98,7 +98,7 @@ export function Icon({
           fontVariationSettings:
             "'FILL' var(--c-icon-fill), 'wght' var(--c-icon-wght), 'GRAD' var(--c-icon-grad), 'opsz' var(--c-icon-opsz)",
           transition:
-            "--c-icon-fill var(--g-duration-base) var(--g-ease-standard), --c-icon-wght var(--g-duration-base) var(--g-ease-standard)",
+            "--c-icon-fill var(--motion-base) var(--motion-ease), --c-icon-wght var(--motion-base) var(--motion-ease)",
         }}
       >
         {name}
