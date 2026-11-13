@@ -102,6 +102,7 @@ function CommandDialog({
   container?: React.ComponentProps<typeof DialogContent>["container"]
   children: React.ReactNode
 }) {
+  const inner = React.useRef<HTMLDivElement>(null)
   return (
     <Dialog {...props}>
       <DialogContent
@@ -118,14 +119,17 @@ function CommandDialog({
         beforeContent={beforeContent}
         container={container}
         // Straight to the search field, so typing right after ⌘K isn't lost.
-        initialFocus={() => document.querySelector<HTMLElement>("[cmdk-input]") ?? true}
+        initialFocus={() => inner.current?.querySelector<HTMLElement>("[cmdk-input]") ?? true}
       >
         {/* Inside the popup, so the dialog takes its accessible name from it. */}
         <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {children}
+        {/* Takes no layout (contents): there so focus finds this palette's field, not another's. */}
+        <div ref={inner} data-slot="command-dialog-inner" className="contents">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   )
@@ -360,7 +364,8 @@ function CommandItemAction({ label, icon, onAction, disabled, className }: Comma
   return (
     <span
       data-slot="command-item-action-wrapper"
-      className={cn("ml-auto inline-flex shrink-0", className)}
+      // A 32px button in a 20px line: it overhangs the row's padding, so the row stays 36 tall.
+      className={cn("-my-1.5 ml-auto inline-flex shrink-0", className)}
       onPointerDown={hold}
       onMouseDown={hold}
       onClick={(e) => e.stopPropagation()}

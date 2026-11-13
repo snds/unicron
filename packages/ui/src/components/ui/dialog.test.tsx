@@ -134,7 +134,7 @@ describe("DialogContent size", () => {
         "w-max",
         "min-w-[min(var(--dialog-min-width),calc(100%-2*var(--c-dialog-margin)))]",
         "max-w-[min(var(--dialog-max-width),calc(100%-2*var(--c-dialog-margin)))]",
-        "max-h-[calc(100dvh-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
+        "max-h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
       ])
     )
     // Not only from sm up: a phone keeps the margin too.
@@ -155,7 +155,7 @@ describe("DialogContent size", () => {
       expect.arrayContaining([
         "[--dialog-min-width:100%]",
         "[--dialog-max-width:100%]",
-        "h-[calc(100dvh-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
+        "h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
       ])
     )
   })

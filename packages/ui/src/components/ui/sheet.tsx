@@ -81,6 +81,24 @@ export type SheetSize = keyof typeof SHEET_SIZES
  */
 export type SheetHeight = "content" | "full"
 
+const TABBABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
+
+/**
+ * Where focus starts when the layer opens from a keyboard or a pointer: its first control, else the
+ * layer itself, never the close button (it is drawn at the top but read last, and focusing it
+ * would also show its tooltip). Opened by touch, Base UI's own choice stands: the layer itself, so
+ * no keyboard springs up.
+ */
+function focusFirstControl(inner: React.RefObject<HTMLElement | null>, popupSlot: string) {
+  return (openType: string) => {
+    if (openType === "touch") return true
+    const el = inner.current
+    if (!el) return true
+    return el.querySelector<HTMLElement>(TABBABLE) ?? el.closest<HTMLElement>(`[data-slot="${popupSlot}"]`) ?? true
+  }
+}
+
 /** What a sheet tells its parts: where it is anchored, and whether it has a close button. */
 const SheetContentContext = React.createContext<{ showCloseButton: boolean }>({ showCloseButton: false })
 
@@ -132,6 +150,7 @@ function SheetContent({
   backdrop = true,
   beforeContent,
   container,
+  initialFocus,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left"
@@ -164,6 +183,7 @@ function SheetContent({
 }) {
   const full = height === "full" || fullscreen
   const context = React.useMemo(() => ({ showCloseButton }), [showCloseButton])
+  const inner = React.useRef<HTMLDivElement>(null)
   return (
     <SheetPortal container={container}>
       {backdrop && <SheetOverlay />}
@@ -172,6 +192,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         data-height={side === "bottom" ? (full ? "full" : "content") : undefined}
+        initialFocus={initialFocus ?? focusFirstControl(inner, "sheet-content")}
         className={cn(
           // Solid and square: the raised surface (as Figma's sheets are drawn), a 1px rule on the
           // edge that faces the page, no shadow, no radius.
@@ -187,14 +208,18 @@ function SheetContent({
           "data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
           SHEET_SIZES[size],
           full &&
-            "data-[side=bottom]:max-h-none data-[side=bottom]:h-[calc(100dvh-var(--c-dialog-titlebar-inset))] data-[side=bottom]:pt-[calc(env(safe-area-inset-top)+0.5rem)]",
+            // Top to bottom of the screen it is fixed to, below an app's title bar, clear of the status bar.
+            "data-[side=bottom]:max-h-none data-[side=bottom]:top-(--c-dialog-titlebar-inset) data-[side=bottom]:pt-[calc(env(safe-area-inset-top)+0.5rem)]",
           className
         )}
         {...props}
       >
         <SheetContentContext.Provider value={context}>
           {side === "bottom" && <SheetGrabber />}
-          {children}
+          {/* Takes no layout (contents): there so focus can find the first control. */}
+          <div ref={inner} data-slot="sheet-inner" className="contents">
+            {children}
+          </div>
         </SheetContentContext.Provider>
         {showCloseButton && <SheetCloseButton label={closeLabel} />}
       </SheetPrimitive.Popup>
@@ -223,6 +248,7 @@ function AdaptiveSheetContent({
   closeLabel = "Close",
   beforeContent,
   container,
+  initialFocus,
   ...props
 }: SheetPrimitive.Popup.Props & {
   /** `wide`: a wider side panel from `sm` up, for content like a photo; on phones it's the same bottom sheet. */
@@ -239,6 +265,7 @@ function AdaptiveSheetContent({
   const close = React.useRef<HTMLDivElement>(null)
   const drag = React.useRef<{ y: number; dy: number } | null>(null)
   const context = React.useMemo(() => ({ showCloseButton }), [showCloseButton])
+  const scroll = React.useRef<HTMLDivElement>(null)
 
   // Dragging the grabber down follows the finger; far enough lets go.
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -272,12 +299,13 @@ function AdaptiveSheetContent({
         data-slot="sheet-content"
         data-side="adaptive"
         data-height={height}
+        initialFocus={initialFocus ?? focusFirstControl(scroll, "sheet-content")}
         className={cn(
           "bg-surface-raised text-text-body type-body fixed z-50 flex flex-col overflow-hidden outline-none transition duration-(--motion-base) ease-enter data-ending-style:opacity-0 data-starting-style:opacity-0",
           // Compact: anchored to the bottom edge, a rule on top, square.
           "max-sm:rule-t max-sm:inset-x-0 max-sm:bottom-0 max-sm:pt-2 max-sm:data-ending-style:translate-y-full max-sm:data-starting-style:translate-y-full",
           height === "full"
-            ? "max-sm:h-[calc(100dvh-var(--c-dialog-titlebar-inset))] max-sm:pt-[calc(env(safe-area-inset-top)+0.5rem)]"
+            ? "max-sm:top-(--c-dialog-titlebar-inset) max-sm:pt-[calc(env(safe-area-inset-top)+0.5rem)]"
             : "max-sm:max-h-(--c-sheet-compact-height)",
           // Regular: a panel on the right, starting below --c-dialog-titlebar-inset (0px by default).
           "sm:rule-l sm:top-(--c-dialog-titlebar-inset) sm:bottom-0 sm:right-0 sm:max-w-full sm:pt-4 sm:data-ending-style:translate-x-[2.5rem] sm:data-starting-style:translate-x-[2.5rem]",
@@ -295,6 +323,7 @@ function AdaptiveSheetContent({
         />
         <SheetContentContext.Provider value={context}>
           <div
+            ref={scroll}
             data-slot="sheet-scroll"
             className={cn(
               "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain",

@@ -50,8 +50,8 @@
     },
     "compact-height": {
       "$type": "dimension",
-      "$value": "calc(100dvh - 3rem)",
-      "$description": "The tallest a content-height bottom sheet gets: the screen less 48px, so the page still shows above it. Past it the sheet's body scrolls. height=\"full\" takes the whole screen instead. Re-declared from component.json, where it was a fixed 75dvh: Figma's sheets hug their content (Vale 05, Lockdown 11)."
+      "$value": "calc(100% - 3rem)",
+      "$description": "The tallest a content-height bottom sheet gets: the screen less 48px (a percentage of a fixed box is of the screen it is fixed to, and unlike 100dvh never runs past a home-screen app's real height), so the page still shows above it. Past it the sheet's body scrolls. height=\"full\" takes the whole screen instead. Re-declared from component.json, where it was a fixed 75dvh: Figma's sheets hug their content (Vale 05, Lockdown 11)."
     }
   },
   "popover": {

@@ -86,7 +86,7 @@ const DIALOG_SIZES = {
   form: "[--dialog-min-width:var(--c-dialog-form-min-width)] [--dialog-max-width:var(--c-dialog-form-max-width)]",
   compose: "[--dialog-min-width:var(--c-dialog-compose-min-width)] [--dialog-max-width:var(--c-dialog-compose-max-width)]",
   viewer: "[--dialog-min-width:var(--c-dialog-viewer-min-width)] [--dialog-max-width:var(--c-dialog-viewer-max-width)]",
-  full: "[--dialog-min-width:100%] [--dialog-max-width:100%] h-[calc(100dvh-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
+  full: "[--dialog-min-width:100%] [--dialog-max-width:100%] h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
 } as const
 
 export type DialogSizeName = keyof typeof DIALOG_SIZES
@@ -108,6 +108,24 @@ export function dialogSizeName(size: DialogSize): DialogSizeName {
   return size in LEGACY_SIZES ? LEGACY_SIZES[size as DialogLegacySize] : (size as DialogSizeName)
 }
 
+const TABBABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
+
+/**
+ * Where focus starts when the layer opens from a keyboard or a pointer: its first control, else the
+ * layer itself, never the close button (it is drawn at the top but read last, and focusing it
+ * would also show its tooltip). Opened by touch, Base UI's own choice stands: the layer itself, so
+ * no keyboard springs up.
+ */
+function focusFirstControl(inner: React.RefObject<HTMLElement | null>, popupSlot: string) {
+  return (openType: string) => {
+    if (openType === "touch") return true
+    const el = inner.current
+    if (!el) return true
+    return el.querySelector<HTMLElement>(TABBABLE) ?? el.closest<HTMLElement>(`[data-slot="${popupSlot}"]`) ?? true
+  }
+}
+
 /** What DialogContent tells its parts: the header keeps clear of the close button only when there is one. */
 const DialogContentContext = React.createContext<{ showCloseButton: boolean }>({ showCloseButton: false })
 
@@ -119,6 +137,7 @@ function DialogContent({
   beforeContent,
   container,
   size = "form",
+  initialFocus,
   ...props
 }: DialogPrimitive.Popup.Props & {
   /** The close button at the top right: a neutral FloatButton with the `close` glyph. On by default. */
@@ -139,6 +158,7 @@ function DialogContent({
 }) {
   const name = dialogSizeName(size)
   const context = React.useMemo(() => ({ showCloseButton }), [showCloseButton])
+  const scroll = React.useRef<HTMLDivElement>(null)
   return (
     <DialogPortal container={container}>
       <DialogOverlay />
@@ -146,11 +166,14 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         data-size={name}
+        initialFocus={initialFocus ?? focusFirstControl(scroll, "dialog-content")}
         className={cn(
           // Solid and square: the raised surface, no shadow, no blur. Centred in the area below
           // --c-dialog-titlebar-inset (0px by default), so an app's title bar strip never overlaps it.
           "bg-surface-raised text-text-body type-body fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded outline-none",
-          "max-h-[calc(100dvh-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
+          // A percentage of a fixed box is of the screen it is fixed to (or a host's frame), and unlike
+          // 100dvh it never runs past a home-screen app's real height.
+          "max-h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
           // As wide as its content, between the size's min and max, never wider than the screen less the margin.
           "w-max min-w-[min(var(--dialog-min-width),calc(100%-2*var(--c-dialog-margin)))] max-w-[min(var(--dialog-max-width),calc(100%-2*var(--c-dialog-margin)))]",
           // Fades in place: no zoom, no slide.
@@ -163,6 +186,7 @@ function DialogContent({
         <DialogContentContext.Provider value={context}>
           {/* The content scrolls here, inside the rule, so nothing that scrolls covers the edge. */}
           <div
+            ref={scroll}
             data-slot="dialog-scroll"
             className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-(--c-dialog-padding) pt-(--c-dialog-padding-top)"
           >

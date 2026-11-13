@@ -303,7 +303,7 @@ describe("Sheet in the 2026-11 look (Figma 32:122 Sheet Header; Vale 05, Lockdow
     expect(popup().className.split(" ")).toContain("data-[side=bottom]:max-h-(--c-sheet-compact-height)")
     rerender(<Review height="full" />)
     expect(popup()).toHaveAttribute("data-height", "full")
-    expect(popup().className.split(" ")).toContain("data-[side=bottom]:h-[calc(100dvh-var(--c-dialog-titlebar-inset))]")
+    expect(popup().className.split(" ")).toContain("data-[side=bottom]:top-(--c-dialog-titlebar-inset)")
   })
 
   it("the body pads 16 at the sides and scrolls", () => {
@@ -362,7 +362,7 @@ describe("AdaptiveSheetContent (2026-11)", () => {
         <AdaptiveSheetContent height="full">{header}</AdaptiveSheetContent>
       </Sheet>
     )
-    expect(popup().className.split(" ")).toContain("max-sm:h-[calc(100dvh-var(--c-dialog-titlebar-inset))]")
+    expect(popup().className.split(" ")).toContain("max-sm:top-(--c-dialog-titlebar-inset)")
   })
 
   it("closes from the FloatButton L at the top right in both forms", () => {
@@ -374,5 +374,24 @@ describe("AdaptiveSheetContent (2026-11)", () => {
     const close = screen.getByRole("button", { name: "Close" })
     expect(close).toHaveAttribute("data-size", "l")
     expect(close.parentElement!.className.split(" ")).toEqual(expect.arrayContaining(["top-4", "right-4", "in-data-[side=adaptive]:max-sm:top-5"]))
+  })
+})
+
+describe("Sheet focus", () => {
+  it("with nothing to focus inside, it focuses itself, never the close button (and its tooltip)", async () => {
+    render(
+      <Sheet open>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Legend</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <p>Skills, checks, harnesses and notes.</p>
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
+    )
+    await vi.waitFor(() => expect(popup()).toHaveFocus())
+    expect(screen.getByRole("button", { name: "Close" })).not.toHaveFocus()
   })
 })

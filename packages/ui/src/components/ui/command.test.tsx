@@ -310,3 +310,23 @@ describe("Command scrolling (VQA 2026-10-28)", () => {
     }
   })
 })
+
+describe("CommandDialog focus", () => {
+  it("starts in its own search field, not another palette's on the page", async () => {
+    render(
+      <>
+        <Command label="Inline">
+          <CommandInput placeholder="Inline field" />
+          <CommandList />
+        </Command>
+        <CommandDialog open>
+          <Command label="Command menu">
+            <CommandInput placeholder="Dialog field" />
+            <CommandList />
+          </Command>
+        </CommandDialog>
+      </>
+    )
+    await vi.waitFor(() => expect(screen.getByPlaceholderText("Dialog field")).toHaveFocus())
+  })
+})
