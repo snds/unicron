@@ -26,7 +26,7 @@ describe("ButtonGroup", () => {
       </ButtonGroup>
     )
     const cls = screen.getByRole("group").className
-    expect(cls).toContain("[&>[data-slot]~[data-slot]]:-ml-(--stroke-rule)")
+    expect(cls).toContain("[&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator])]:-ml-(--stroke-rule)")
     expect(cls).not.toContain("border-l-0")
     expect(cls).toContain("*:focus-visible:z-10")
   })
@@ -38,7 +38,7 @@ describe("ButtonGroup", () => {
         <Button variant="secondary">Down</Button>
       </ButtonGroup>
     )
-    expect(screen.getByRole("group").className).toContain("[&>[data-slot]~[data-slot]]:-mt-(--stroke-rule)")
+    expect(screen.getByRole("group").className).toContain("[&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator])]:-mt-(--stroke-rule)")
   })
 
   it("text and separators are in the new look", () => {

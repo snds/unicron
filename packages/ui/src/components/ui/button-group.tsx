@@ -11,16 +11,17 @@ import { Separator } from "./separator"
 // Joined: the inner corners square off, and each part after the first steps back 1px over the one
 // before. An edge is drawn inside its box (an inset ring or rule), so two outlined buttons side by
 // side would show a 2px seam; overlapping by the edge's width leaves the one 1px line between them.
-// A focused part comes forward, so its ring is never under its neighbour.
+// A focused part comes forward, so its ring is never under its neighbour. A separator stands
+// between two parts on its own 1px and nothing steps over it.
 const buttonGroupVariants = cva(
   "has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-lg flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
     variants: {
       orientation: {
         horizontal:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-lg! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:-ml-(--stroke-rule)",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-lg! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator])]:-ml-(--stroke-rule)",
         vertical:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:-mt-(--stroke-rule)",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator])]:-mt-(--stroke-rule)",
       },
     },
     defaultVariants: {

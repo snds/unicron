@@ -108,7 +108,7 @@ function InputGroupInput({ className, ...props }: React.ComponentProps<"input">)
 }
 
 function InputGroupTextarea({ className, ...props }: React.ComponentProps<"textarea">) {
-  return <textarea data-slot="input-group-control" className={cn(CONTROL, "field-sizing-content resize-none py-3", className)} {...props} />
+  return <textarea data-slot="input-group-control" className={cn(CONTROL, "resize-none py-3", className)} {...props} />
 }
 
 export {

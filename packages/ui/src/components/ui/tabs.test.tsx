@@ -59,6 +59,11 @@ describe("Tabs", () => {
     expect(tab.className).not.toMatch(/bg-primary(\s|$)/)
   })
 
+  it("a tab under 44px takes the 44px touch target", () => {
+    render(<Subject variant="line" />)
+    expect(screen.getByRole("tab", { name: /Characters/ }).className).toContain("hit-area")
+  })
+
   it("takes the stylesheet's one focus ring (no outline-none, no ring of its own)", () => {
     render(<Subject />)
     const tab = screen.getByRole("tab", { name: /Characters/ })

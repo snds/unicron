@@ -76,3 +76,25 @@ describe("Toolbar (contract 5.1b #35)", () => {
     expect(screen.getByRole("button", { name: "Bold" }).className).toContain("h-10")
   })
 })
+
+describe("ToolbarSeparator", () => {
+  it("runs across the toolbar: upright in a row, flat in a column", () => {
+    render(
+      <>
+        <Toolbar aria-label="Row">
+          <ToolbarButton label="A" icon="add" />
+          <ToolbarSeparator />
+          <ToolbarButton label="B" icon="close" />
+        </Toolbar>
+        <Toolbar aria-label="Column" orientation="vertical">
+          <ToolbarButton label="C" icon="add" />
+          <ToolbarSeparator />
+          <ToolbarButton label="D" icon="close" />
+        </Toolbar>
+      </>
+    )
+    const [row, column] = screen.getAllByRole("separator")
+    expect(row).toHaveAttribute("aria-orientation", "vertical")
+    expect(column).toHaveAttribute("aria-orientation", "horizontal")
+  })
+})

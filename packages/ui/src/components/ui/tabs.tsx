@@ -62,9 +62,11 @@ function TabsList({
   )
 }
 
-// Every tab: the overline, label ink, the ink once chosen or under the pointer. Icons 16px.
+// Every tab: the overline, label ink, the ink once chosen or under the pointer. Icons 16px. A tab
+// is 40 (36 inside a segmented list), so on a coarse pointer it takes a 44px target (`hit-area`,
+// on ::before; the line indicator is ::after).
 const TRIGGER = cn(
-  "type-overline relative inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap text-muted-foreground transition-[color,background-color] select-none hover:text-foreground focus-visible:z-10 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-active:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "type-overline hit-area relative inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap text-muted-foreground transition-[color,background-color] select-none hover:text-foreground focus-visible:z-10 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-active:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   // Segmented: each segment fills the list's height inside its 2px; the chosen one is inverted ink.
   "group-data-[variant=default]/tabs-list:h-full group-data-[variant=default]/tabs-list:flex-1 group-data-[variant=default]/tabs-list:rounded-lg group-data-[variant=default]/tabs-list:px-3 group-data-[variant=default]/tabs-list:not-data-active:hover:bg-state-hover group-data-[variant=default]/tabs-list:data-active:bg-foreground group-data-[variant=default]/tabs-list:data-active:text-background",
   // Line: Figma's Top Tab. The label row, 6px, the 2px indicator: label 16px from the top of a

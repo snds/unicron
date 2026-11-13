@@ -8,8 +8,10 @@ import { fieldBoxVariants } from "./input"
 
 /**
  * Several lines in the Text Field's box: 12 / 16 in from its edges, the value in the `ui` role.
- * It starts at `rows` lines and grows with its text where the browser can size a field to its
- * content (`field-sizing`); for growth everywhere, WebKit included, use `TextField multiline`.
+ * It is `rows` lines tall in every engine, and scrolls past them. (It no longer sizes itself to
+ * its text with `field-sizing`: only Chromium does, which ignores `rows` there and starts it at
+ * one line.) For a field that grows with its text everywhere, WebKit included, use
+ * `TextField multiline`.
  */
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
@@ -17,7 +19,7 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
       data-slot="textarea"
       className={cn(
         fieldBoxVariants(),
-        "flex field-sizing-content min-h-control w-full px-4 py-3 placeholder:text-muted-foreground",
+        "flex min-h-control w-full px-4 py-3 placeholder:text-muted-foreground",
         className
       )}
       {...props}

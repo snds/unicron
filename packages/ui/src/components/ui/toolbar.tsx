@@ -65,11 +65,11 @@ function ToolbarGroup({ className, ...props }: ToolbarPrimitive.Group.Props) {
 }
 
 /** A hairline between groups: 20px of the 1px rule, 4px clear of the buttons either side. */
-function ToolbarSeparator({ className, orientation, ...props }: ToolbarPrimitive.Separator.Props) {
+function ToolbarSeparator({ className, ...props }: ToolbarPrimitive.Separator.Props) {
+  // No `orientation` unless given: Base UI then draws it across the toolbar's own direction.
   return (
     <ToolbarPrimitive.Separator
       data-slot="toolbar-separator"
-      orientation={orientation}
       className={cn(
         "shrink-0 bg-line-rule data-[orientation=vertical]:mx-1 data-[orientation=vertical]:h-5 data-[orientation=vertical]:w-px data-[orientation=horizontal]:my-1 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-5",
         className

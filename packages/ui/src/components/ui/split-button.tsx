@@ -8,6 +8,7 @@ import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { Button, type ButtonProps } from "./button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./dropdown-menu"
+import { useDisabledReason } from "./field"
 
 export type SplitButtonProps = Omit<ButtonProps, "children" | "render"> & {
   /** The action's word ("Send"). */
@@ -43,15 +44,28 @@ function SplitButton({
   ...props
 }: SplitButtonProps) {
   const square = size === "sm" || size === "xs" ? "icon-sm" : size === "lg" ? "icon-lg" : "icon"
-  return (
+  // The reason is the pair's, so its line sits under both halves, not inside the action's box.
+  const reason = useDisabledReason(disabled && !loading, disabledReason, props["aria-describedby"])
+  const pair = (
     <div
       data-slot="split-button"
       role="group"
       // The inner corners square off; the two halves sit 1px apart, on the surface.
-      className={cn("inline-flex items-start gap-px [&>:last-child]:rounded-l-none [&_[data-slot=split-button-action]_[data-slot=button]]:rounded-r-none", className)}
+      className={cn(
+        "inline-flex items-start gap-px [&>:last-child]:rounded-l-none [&_[data-slot=split-button-action]_[data-slot=button]]:rounded-r-none",
+        !reason.active && className
+      )}
     >
       <span data-slot="split-button-action" className="inline-flex">
-        <Button variant={variant} size={size} disabled={disabled} loading={loading} disabledReason={disabledReason} {...props}>
+        <Button
+          variant={variant}
+          size={size}
+          disabled={disabled}
+          loading={loading}
+          {...props}
+          aria-describedby={reason.describedBy}
+          focusableWhenDisabled={props.focusableWhenDisabled ?? (reason.active || undefined)}
+        >
           {children}
         </Button>
       </span>
@@ -67,6 +81,13 @@ function SplitButton({
           {menu}
         </DropdownMenuContent>
       </DropdownMenu>
+    </div>
+  )
+  if (!reason.active) return pair
+  return (
+    <div data-slot="split-button-with-reason" className={cn("inline-flex flex-col items-start gap-1", className)}>
+      {pair}
+      {reason.line}
     </div>
   )
 }

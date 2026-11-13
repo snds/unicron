@@ -7,8 +7,16 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
+// A label that follows a checkbox, a radio or a switch (they are `peer`s), or wraps one, names a
+// choice whatever its variant: it takes the choice look by itself.
+const CHOICE_BY_PLACE =
+  "peer-[:is([role=checkbox],[role=radio],[role=switch])]:type-ui peer-[:is([role=checkbox],[role=radio],[role=switch])]:normal-case peer-[:is([role=checkbox],[role=radio],[role=switch])]:text-foreground has-[[role=checkbox],[role=radio],[role=switch]]:type-ui has-[[role=checkbox],[role=radio],[role=switch]]:normal-case has-[[role=checkbox],[role=radio],[role=switch]]:text-foreground"
+
 const labelVariants = cva(
-  "flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+  cn(
+    "flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+    CHOICE_BY_PLACE
+  ),
   {
     variants: {
       variant: {
