@@ -578,7 +578,6 @@ that `success`, `warning` and `info` keep their accent ramps.
 | `--g-blue-*`, `--g-coral-*`, `--g-green-*`, `--g-amber-*`, `--g-red-*` | App layers use them for per-area hues. `amber.550` and `blue.550` were added at 1.0 for `warning` and `info` |
 | `--g-hue-*` | Bare hue angles for an app's tinted surfaces |
 | `muted-foreground-on-fill` | Fills re-point `--muted-foreground` at it. It now equals `muted-foreground`: Figma has one label ink |
-| `--c-icon-*` | The Material Symbols axes. They go when the Carbon icon set replaces the icon font |
 
 Changed in value, not in name: `font.sans` and `font.mono` (Inter and the system mono stack
 became Geist and Geist Mono), `radius.base` (10px became 2px), and every role in the alias table

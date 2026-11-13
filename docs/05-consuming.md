@@ -1,6 +1,6 @@
 # 05 · Consuming unicron
 
-How Mailbird, Synapse and Lockdown use the system. The shape is the same for each: install two
+How Warpcore, Vale (formerly Mailbird), Lockdown and Synapse use the system. The shape is the same for each: install two
 packages, import one stylesheet, add your extension layer, import components.
 
 ## 1. Install
@@ -50,12 +50,12 @@ Peer dependencies: `react@19`, `react-dom@19`. The app also needs `tailwindcss@4
 In your CSS entry (what `main.tsx` imports):
 
 ```css
-@import "@unicron/ui/styles";        /* tailwind + tokens + base layer + icon font + Inter */
+@import "@unicron/ui/styles";        /* tailwind + tokens + base layer + Geist + Geist Mono */
 @import "./app-extension.css";       /* your roles, after the core */
 ```
 
-`@unicron/ui/styles` imports Tailwind, `tw-animate-css`, Inter Variable, Material Symbols
-Rounded, `@unicron/tokens/dist/tokens.css`, registers the `dark` variant on `.dark`, and adds a
+`@unicron/ui/styles` imports Tailwind, `tw-animate-css`, Geist and Geist Mono (as font files,
+so a strict `font-src 'self'` holds), `@unicron/tokens/dist/tokens.css`, registers the `dark` variant on `.dark`, and adds a
 `@source` for the primitives so Tailwind generates their classes from the installed package. This
 is verified against a plain Vite + React app outside the workspace on every release; if your
 bundler still misses classes, add `@source "../node_modules/@unicron/ui/dist/components";` to your
@@ -76,7 +76,19 @@ components. Alias core tokens, swap only in `.dark`, expose to Tailwind with you
 
 ## 4. Switch themes
 
-Toggle the `dark` class on `<html>`. That is all the tokens need. In a client-only app (Vite,
+There are two axes, both on `<html>` (or any subtree root):
+
+- **Your app**: `data-theme="warpcore" | "vale" | "lockdown" | "synapse"`. It picks the app's
+  identity colour and tinted neutrals. Set it once; with no attribute you get warpcore's values.
+- **The ground**: the `dark` class is graphite, `light` (or no class) is stone.
+
+```html
+<html data-theme="vale" class="dark">
+```
+
+A nested `.dark` / `.light` box, or a nested `data-theme` box, re-resolves every role inside it
+(one level of ground nesting, the same limit as the `dark:` variant). Toggle the ground with the
+`dark` class. In a client-only app (Vite,
 Tauri) a few lines do it, and `Toaster` takes the same setting as a prop:
 
 ```tsx
@@ -102,6 +114,34 @@ flash of the wrong theme on load:
 In a client-only React 19 app that same script makes React log, in development only,
 "Encountered a script tag while rendering React component". It is harmless in production, but
 it breaks a "no console errors" bar; prefer the hook above there.
+
+## 4a. Icons (Carbon)
+
+Icons are IBM Carbon, drawn as inline SVG by `<Icon name="…" />`. There is no icon font to load
+and nothing to configure. Coming from Material Symbols (before 1.0):
+
+1. Run `npx unicron-codemod icons <src> --dry` and read its report, then run it once without
+   `--dry`. It rewrites known Material names in `name=` / `icon=` attributes and `icon:` /
+   `iconName:` properties, lists what it could not map, and never guesses. It refuses a second
+   pass on a tree that already has Carbon names.
+2. Run `tsc`: `IconName` no longer accepts Material names, so it finds the rest.
+3. Remove the `material-symbols` dependency and any `--c-icon-*` use. `Icon` lost `fill`, `weight`,
+   `grade` and `opticalSize`; `IconButton` lost `fill`; `Spinner` takes svg props, not Icon props.
+
+The full map, with a note for each choice and the eight names with no Carbon match, is
+`node_modules/@unicron/ui/codemod/MAPPING.md`. For a glyph Carbon lacks, register your own:
+
+```ts
+import { registerIcons } from "@unicron/ui"
+registerIcons({ "mail--forward": "<path d=\"…\"/>" })   // inner SVG markup on a 32 grid
+
+declare module "@unicron/ui" {
+  interface UnicronIconRegistry { "mail--forward": true }
+}
+```
+
+Markup is parsed, never injected: only `path`, `circle`, `rect`, `g` and plain drawing attributes
+survive, so a strict CSP has nothing to object to.
 
 ## 5. Use the components
 

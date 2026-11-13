@@ -1,9 +1,10 @@
 # 01 · Principles
 
-## One system, three products
+## One system, four products
 
-unicron is the shared design system for **Mailbird** (mail, calendar, contacts, notes),
-**Synapse** and **Lockdown** (password manager, passkey provider, authenticator). They look like
+unicron is the shared design system for **Warpcore** (agent work), **Vale** (mail, calendar,
+contacts, notes; formerly Mailbird), **Synapse** and **Lockdown** (password manager, passkey
+provider, authenticator). They look like
 siblings because they draw from the same tokens and primitives, and they behave like natives
 because behaviour follows the platform each one ships on.
 
@@ -22,14 +23,18 @@ tier 1  global     --g-*   raw values                 (theme-agnostic)
 tier 2  semantic   --*     roles = the shadcn contract (light/dark swap here)
 tier 3  component  --c-*   knobs the primitives read   (alias tier 2)
 app extension              roles only one product has (declared by that product)
-primitives                 @unicron/ui: shadcn/ui on Base UI + Material Symbols
+primitives                 @unicron/ui: shadcn/ui on Base UI + IBM Carbon icons
 patterns                   compositions promoted by people from dsa suggestions
 ```
 
 ## Rules we keep
 
 1. **Core stays generic.** If a role only makes sense in one product (`--unread`,
-   `--vertical-mail`, `--surface-chrome`), it is an app extension, not a core token.
+   `--vertical-mail`, `--surface-chrome`), it is an app extension, not a core token. The one
+   named exception (1.0): the four app themes live in the core (`tokens/themes/<app>.json`),
+   because Figma's `Unicron / Theme` collection holds all eight modes and the contrast gate can
+   then measure every app in one place. Each theme sets only the same 28 slots; roles stay
+   generic.
 2. **Primitives are owned source.** They are generated once from shadcn/ui and then edited
    like any code. Regeneration is a diff to review, not a silent overwrite.
 3. **Compose before you create.** A new need is first a composition of primitives (a pattern).
@@ -54,4 +59,4 @@ These are not built yet. They are listed so that nothing product-local grows in 
 | **Crown-jewel styling** | The treatment for secrets that never autofill and never reach agents: distinct surface, lock iconography, extra confirmation. |
 
 They will follow the same rules as every other primitive: tokens only, Base UI behaviour where
-a primitive exists, Material Symbols, and a playground entry in light and dark.
+a primitive exists, Carbon icons, and a playground view in the app themes on both grounds.

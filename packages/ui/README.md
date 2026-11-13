@@ -1,8 +1,9 @@
 # @unicron/ui
 
 React primitives for [unicron](https://github.com/snds/unicron), Sean Sands' shared design system:
-shadcn/ui (`base-nova` style) on Base UI, Material Symbols Rounded icons, Tailwind v4 classes bound
-to `@unicron/tokens`.
+shadcn/ui (`base-nova` style) on Base UI, IBM Carbon icons (inline SVG), Tailwind v4 classes bound
+to `@unicron/tokens`. Ships the `unicron-codemod` bin (`unicron-codemod icons <dir>` moves Material
+icon names to Carbon).
 
 ```bash
 pnpm add @unicron/ui @unicron/tokens
@@ -10,7 +11,7 @@ pnpm add @unicron/ui @unicron/tokens
 
 ```css
 /* your CSS entry */
-@import "@unicron/ui/styles";   /* tailwind + tokens + base layer + Inter + icon font */
+@import "@unicron/ui/styles";   /* tailwind + tokens + base layer + Geist + Geist Mono */
 @import "./app-extension.css";  /* your roles, after the core */
 ```
 

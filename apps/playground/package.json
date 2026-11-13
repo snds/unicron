@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "preview": "vite preview",
-    "test:motion": "playwright test"
+    "test:motion": "playwright test",
+    "shots": "node scripts/shots.mjs"
   },
   "dependencies": {
     "@unicron/tokens": "workspace:*",

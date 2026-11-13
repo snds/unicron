@@ -1,7 +1,7 @@
 # 03 · Components
 
 `@unicron/ui` ships shadcn/ui primitives (`base-nova` style) on Base UI, generated once by the
-shadcn-material transform (icons swapped to Material Symbols Rounded) and then owned as source.
+shadcn-material transform (icons swapped to IBM Carbon) and then owned as source.
 Import everything from the package root:
 
 ```tsx
@@ -14,15 +14,16 @@ same families to decide whether a repeated composition is a **variant** (one fam
 
 | Module | Exports | Family | Base |
 |---|---|---|---|
-| `button` | `Button` (`indicator`: a corner dot and its words in the name), `buttonVariants` | Action | Base UI Button |
+| `button` | `Button` (`variant`: default (Primary), secondary = outline (ink outline), ghost, destructive (critical fill), link, ghost-muted, ghost-destructive, needs-you, needs-you-outline, needs-you-text; `size`: default 40, sm 32, lg 48, icon, icon-sm, icon-lg, inline; `block`; `loading`; `indicator`: a corner mark and its words in the name), `buttonVariants`, `ButtonProps` | Action | Base UI Button |
+| `float-button` | `FloatButton` (`label`, `icon`, `kind`: neutral, primary; `size`: m 44, l 48; `current`; `onLongPress`, `longPressLabel`), `floatButtonVariants`, `floatButtonLongPressKeys`, `FloatButtonProps`, `FloatButtonKind`, `FloatButtonSize` | Action | Tooltip + Base UI Button |
 | `toggle` | `Toggle`, `toggleVariants` | Action | Base UI Toggle |
 | `toggle-group` | `ToggleGroup`, `ToggleGroupItem` (`indicator`, as on Button) | Action | Base UI ToggleGroup |
 | `button-group` | `ButtonGroup`, `ButtonGroupText`, `ButtonGroupSeparator`, `buttonGroupVariants` | Action | div (useRender) |
 | `input` | `Input` | Form | Base UI Input |
 | `textarea` | `Textarea` | Form | textarea |
 | `label` | `Label` | Form | label |
-| `checkbox` | `Checkbox` | Form | Base UI Checkbox |
-| `switch` | `Switch` | Form | Base UI Switch |
+| `checkbox` | `Checkbox` (16 px square, ink fill, inline SVG marks, `indeterminate`) | Form | Base UI Checkbox |
+| `switch` | `Switch` (Figma's Toggle: 44 × 24 track, square 16 px knob) | Form | Base UI Switch |
 | `native-select` | `NativeSelect`, `NativeSelectOption`, `NativeSelectOptGroup` | Form | select |
 | `select` | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` | Form | Base UI Select |
 | `input-group` | `InputGroup`, `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, `InputGroupTextarea` | Form | div |
@@ -31,17 +32,17 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `popover` | `Popover`, `PopoverTrigger`, `PopoverContent`, `PopoverHeader`, `PopoverTitle`, `PopoverDescription`, `PopoverClose` | Overlay | Base UI Popover |
 | `dropdown-menu` | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | Navigation | Base UI Menu |
 | `resizable-panes` | `ResizablePanes`, `ResizablePane`, `ResizableHandle`, `useResizablePanesLayout`, `useResizablePaneRef` | Layout | react-resizable-panels |
-| `spinner` | `Spinner` (`label`, default "Loading"; turns at `--motion-spin`, still under reduced motion) | Feedback | Icon (`progress_activity`) |
+| `spinner` | `Spinner`, `SpinnerProps` (svg props plus `label`, default "Loading"; turns at `--motion-spin`, still under reduced motion) | Feedback | an SVG arc on the icons' 32 grid |
 | `status-orb` | `StatusOrb`, `statusOrbCopy`, `statusOrbStates`, `StatusOrbProps`, `StatusOrbState`, `StatusOrbSize` (ten states told apart by shape and motion as well as colour: queued, paused and stopped are still glyphs; words only in the tooltip and name) | Feedback | span + Icon + Tooltip |
 | `indicator` | `IndicatorMark`, `indicatorCopy`, `indicatorLabel`, `indicatorCount`, `indicatorsOf`, `Indicator`, `IndicatorProp` (the `indicator` prop on `AppFrameNavItem` and `Item`: attention or unread, a dot or a "9+" badge, the count in the name) | Feedback | span |
-| `progress` | `Progress` (`variant`: bar, segmented; `tone`: default, budget), `ProgressTrack`, `ProgressIndicator`, `ProgressLabel`, `ProgressValue`, `progressBudgetThresholds` | Feedback | Base UI Progress |
+| `progress` | `Progress` (`variant`: bar, segmented; `segments`, default 32; `tone`: default, live, primary, budget, critical), `ProgressTrack`, `ProgressIndicator`, `ProgressLabel`, `ProgressValue`, `progressBudgetThresholds`, `progressDefaultSegments` | Feedback | Base UI Progress |
 | `collapsible` | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` | Layout | Base UI Collapsible |
 | `run-trace` | `RunTrace`, `runTraceCopy`, `formatRunDuration`, `RunTraceProps`, `RunStep`, `RunStepState`, `RunMark` (an agent run: open on the current step while live, one line when done; a step can wait on you (`needs-you`); `marks` put answers, stops and pauses between steps in one quiet line each; step detail in a popover, a sheet on a phone) | Feedback | Collapsible + StatusOrb + IconButton + Popover / AdaptiveSheetContent |
-| `skeleton` | `Skeleton`, `skeletonVariants` | Feedback | div |
+| `skeleton` | `Skeleton` (`variant`: default, row = two bars over a hairline), `skeletonVariants` | Feedback | div |
 | `empty` | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | Feedback | div |
 | `sonner` | `Toaster` | Feedback | sonner (+ next-themes) |
 | `avatar` | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarBadge`, `AvatarGroup`, `AvatarGroupCount` | Data Display | Base UI Avatar |
-| `badge` | `Badge`, `badgeVariants` | Data Display | span (useRender) |
+| `badge` | `Badge` (`tone`: neutral, live, needs-you, critical, warning, success; `variant` deprecated), `badgeVariants`, `BadgeTone`, `BadgeVariant` | Data Display | span (useRender) |
 | `item` | `Item`, `ItemMain`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`, `ItemHeader`, `ItemFooter`, `ItemGroup`, `ItemSeparator` | Data Display | div (useRender) |
 | `kbd` | `Kbd`, `KbdGroup` | Data Display | kbd |
 | `separator` | `Separator` | Layout | Base UI Separator |
@@ -50,9 +51,9 @@ same families to decide whether a repeated composition is a **variant** (one fam
 | `dialog` | `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogActions`, `DialogAction`, `DialogTitle`, `DialogDescription`, `DialogClose`, `DialogOverlay`, `DialogPortal` | Overlay | Base UI Dialog |
 | `sheet` | `Sheet`, `SheetTrigger`, `SheetContent`, `AdaptiveSheetContent`, `SheetHeader`, `SheetFooter`, `SheetTitle`, `SheetDescription`, `SheetClose` | Overlay | Base UI Dialog |
 | `command` | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandItemAction`, `CommandShortcut`, `CommandSeparator`, `commandItemActionShortcut`, `CommandMatch`, `CommandItemActionProps` | Overlay (command palette; a known gap in the canonical 62, composed from Dialog + InputGroup + cmdk) | cmdk |
-| `icon` | `Icon`, `IconName`, `IconProps`, `IconTone` | Content | svg + Material Symbols Rounded |
+| `icon` | `Icon`, `IconName`, `CoreIconName`, `IconProps`, `IconSize`, `IconTone`, `UnicronIconRegistry`, `registerIcons`, `isIconName`, `iconNames` | Content | inline SVG, IBM Carbon, curated set (`src/icons/names.json`) |
 | `icon-button` | `IconButton`, `IconButtonProps` (`indicator`: the words follow the label in its name; the tooltip stays the label) | Action | Tooltip + Button (or any `render`) |
-| `check-draw` | `CheckDraw`, `CheckDrawProps` (a check mark that draws itself on mount with the `motion-draw` recipe; decorative, sized by `1em`, coloured by `currentColor`; simply there under reduced motion) | Feedback | An SVG path: the icon font cannot draw a stroke |
+| `check-draw` | `CheckDraw`, `CheckDrawProps` (a check mark that draws itself on mount with the `motion-draw` recipe; decorative, sized by `1em`, coloured by `currentColor`; simply there under reduced motion) | Feedback | An SVG path: the icon set's filled outlines cannot draw a stroke |
 | `chip` | `Chip`, `ChipAction`, `ChipRemove`, `ChipRemoveProps` | Data Display | span (useRender) + Base UI Button + IconButton |
 | `update-status` | `UpdateStatusRow`, `AutoCheckSwitch`, `updateLine`, `canCheckForUpdates`, `updateWords`, `UpdateStatus`, `UpdateState`, `UpdateChannel`, `UpdateWords`, `UpdateStatusRowProps`, `AutoCheckSwitchProps` | Feedback | Button + Icon (status row); Field + Switch (switch row) |
 | `security/code-display` | `CodeDisplay`, `CodeDisplayList`, `groupCode`, `spellCode`, `codeDisplayAnnouncements`, `CodeDisplayProps`, `CodeDisplayCopyRef` | Data Display | Item + IconButton + Badge + Button (spec: [code-display](specs/security/code-display.md)) |
@@ -77,13 +78,27 @@ components) rather than hand-writing.
 - Variants are `cva` objects exported next to the component (`buttonVariants`) so patterns can
   reuse them without wrapping.
 - Icons: pass `<Icon name="…" />` as a child; shadcn's `svg` sizing rules apply unchanged
-  because `Icon` renders an `<svg>`. Mark leading/trailing icons with
-  `data-icon="inline-start|inline-end"` to get the tightened padding.
-- **Pressed is its own state.** Every Button variant and every interactive `Item` row has a pressed (`active:`) fill that differs from its hover fill. Ghost, outline and rows press to the hover fill with 8% foreground mixed in; secondary to 10%; the default button to `bg-primary/90`; destructive to halfway between rest and hover (`/15`, dark `/25`), which keeps its label above Lc 60. Ghost-destructive hovers on its own tint (`bg-destructive/10`, dark `/20`), so the hover shows on a muted footer too, and presses to `/15` (dark `/25`). A press also nudges a button down 1px (not one that opens a menu).
-- **Button** has three axes: `variant`, `size`, and `shape`.
+  because `Icon` renders an `<svg>` and sets its size with `width`/`height`, not a class. 20 px by
+  default; a compact control (Button, Top Tab, chips, inline meta) draws it at 16 px itself. Mark
+  leading/trailing icons with `data-icon="inline-start|inline-end"` to get the tightened padding.
+  A name not in the curated set is a type error: add it to `src/icons/names.json` (a Carbon svg
+  name with 32 px art) and run `pnpm --filter @unicron/ui icons:build`.
+- **One focus ring.** The stylesheet draws it for every element: 2 px solid `--ring` (ink), 2 px
+  clear. A control never writes `outline-none` (a field keeps its 2 px inside border instead).
+  Inside `[data-slot="needs-you"]` or `on-needs-you` the ring takes `needs-you-on-fill`.
+- **Strokes never add height.** An edge on a control or row is `rule-t|r|b|l`, `rule-box`,
+  `rule-box-emphasis`, `edge-l` or `inset-ring`, never a border. A control under 44 px tall takes
+  `hit-area`.
+- **States** (contract §6): neutral and transparent parts take `bg-state-hover` /
+  `bg-state-pressed`; solid fills go to 90 % and 80 %. Selected is `primary-soft` with `edge-l`,
+  never a solid primary. Disabled is 50 % with no pointer events; loading sets `aria-busy` and keeps
+  the label.
+- On the needs-you yellow use the `needs-you*` Button kinds; they carry `on-needs-you`. An
+  icon-only action is a `FloatButton` with a `label`. A long press always has a keyboard path (on
+  `FloatButton`, Shift+Enter).
+- **Button** has `variant`, `size`, `block` and `loading`. The label is `type-overline` (mono caps) at every boxed size; outlined kinds draw their edge inside the box, so every kind is the same width. `shape` is deprecated: `pill` is accepted and draws the 2 px radius.
   - `variant` adds `ghost-muted` and `ghost-destructive` to shadcn's six. `ghost-muted` is a quiet secondary action ("Add holidays and more"). `ghost-destructive` is a destructive action that shouldn't shout, like Delete in a dialog footer. The filled `destructive` is for the one action a dialog exists to confirm.
-  - `shape="pill"` rounds the ends fully, for chips and filter rows. Text pills (`xs`, `sm`) get `px-3`, because the round ends eat into the padding.
-  - A filter chip is a pill `Button` with `aria-pressed`: `secondary` when on, `ghost` when off, with an optional count in muted ink.
+  - Until `FilterChip` lands, a filter chip is a `Button` with `aria-pressed`: `secondary` when on, `ghost` when off, with an optional count in muted ink.
   - `size="inline"` is for a text action inside a line of text ("Your account needs you to **sign in again**"). It has no height, padding, or border of its own, so it sits on the sentence's baseline in its size. Pair it with `variant="link"`. It is underlined at rest: its colour alone is under 3:1 against the sentence around it, so colour can't be the only cue (WCAG 1.4.1). A standalone text action keeps a normal size.
 - **Icon** takes `tone="muted" | "destructive"` when it stands alone, outside a control. Inside a control, it inherits the control's ink, so leave `tone` off. App roles, such as an area's hue, stay in the app's own classes, because the core can't know them.
 - **IconButton** is an icon-only control whose `label` becomes both its accessible name and its tooltip, so the two never drift apart. `tooltip` gives longer text, and `shortcut` adds a `Kbd`. `render` swaps the control: pass a `Toggle` for an on/off tool, or nest the IconButton in `DropdownMenuTrigger render={…}` to open a menu. Pass `icon`, or pass children to size or tint the glyph yourself.
@@ -100,7 +115,7 @@ components) rather than hand-writing.
   - From `sm` up, the actions are text buttons: confirm filled, cancel outlined, destructive a quiet `ghost-destructive` on the far left.
   - On phones, each action is a round 40px icon button (✓, ×, trash), the layout of Apple's sheet controls. Its words stay as its accessible name. `icon` overrides the glyph.
   - Use it when a dialog has a way to back out. A dialog with one action keeps a plain `DialogFooter` with a text button, because a lone ✓ says less than the words.
-- **Menus are frosted glass** (`bg-popover/70` with a backdrop blur), by decision (2026-10-15). Don't override them to solid.
+- **Menus are solid** (`bg-popover`, a 1 px rule). No glass and no `backdrop-blur` anywhere (1.0 contract §1.5, which reverses the 2026-10-15 frosted-glass decision). Backdrops are `scrim-dialog` / `scrim-sheet` / `scrim-menu`.
 - **DialogContent `size`** sets how wide a dialog is from `sm` up. <a name="dialog-widths"></a>Each size is a range, not one width. The dialog fits its content: short content sits at the size's min width, and a long line, a table or a wide field pushes it out to the max width, where text starts to wrap. A dialog is never wider than the screen less 1rem each side, and on phones it is that wide. Every dialog scrolls inside itself when it's taller than the screen, so no dialog sets its own width or scrolling. A dialog with its own layout (a composer's header, body, and footer) still sets its height and padding.
 
     | `size` | Min width | Max width | For |

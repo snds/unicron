@@ -1,156 +1,183 @@
 ---
 name: unicron
-version: 0.1.0
-description: Shared visual identity for Mailbird, Synapse and Lockdown. Calm, cool-neutral, high-contrast, quiet motion.
+version: 1.0.0
+description: Shared visual identity for Warpcore, Vale, Lockdown and Synapse. Square, flat, ink-first; one identity colour per app; quiet motion.
+themes:
+  apps: [warpcore, vale, lockdown, synapse]
+  default: warpcore
+  grounds: { graphite: dark, stone: light }
 colors:
-  neutral:
-    "0": oklch(1 0 0)
-    "50": oklch(0.974 0.003 260)
-    "100": oklch(0.948 0.004 260)
-    "200": oklch(0.91 0.006 260)
-    "400": oklch(0.71 0.01 260)
-    "500": oklch(0.556 0.012 260)
-    "800": oklch(0.26 0.01 260)
-    "900": oklch(0.185 0.008 260)
-    "950": oklch(0.145 0.006 260)
-  primary: "{colors.neutral.900}"
-  secondary: "{colors.neutral.100}"
-  tertiary: oklch(0.6 0.19 255)
-  danger: oklch(0.577 0.245 27.3)
+  # The default app (warpcore). Each app sets the same slots in packages/tokens/tokens/themes/<app>.json.
+  graphite:
+    surface-ground: "#18191D"
+    surface-raised: "#212125"
+    line-rule: "#313238"
+    text-body: "#EFF0F3"
+    text-secondary: "#D3D4D8"
+    text-label: "#B2B4BA"
+    text-faint: "#5F6066"
+    primary-fill: "#5146EE"
+    primary-text: "#A1AEFF"
+    primary-soft: "#1F2343"
+    secondary-live: "#1EC5E4"
+  stone:
+    surface-ground: "#EFF0F5"
+    surface-raised: "#F7F8FD"
+    line-rule: "#D1D2D9"
+    text-body: "#151618"
+    text-secondary: "#3C3D40"
+    text-label: "#67696E"
+    text-faint: "#A3A4AB"
+    primary-fill: "#4837E0"
+    primary-text: "#4E4DCD"
+    primary-soft: "#D5DDFF"
+    secondary-live: "#007491"
+  needs-you: { fill: "#EDE54A", on-fill: "#1C1C1C" }
+  critical: { graphite-fill: "#BE2323", stone-fill: "#B7191C" }
 typography:
-  sans: '"Inter Variable", ui-sans-serif, system-ui, sans-serif'
-  mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
-  body-size: 0.875rem
+  sans: '"Geist Variable", Geist, ui-sans-serif, system-ui, sans-serif'
+  mono: '"Geist Mono Variable", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace'
+  roles: 23
 rounded:
-  base: 0.625rem
-  sm: 0.375rem
-  lg: 0.625rem
-  xl: 0.875rem
+  base: 0.125rem
+  every-step: 0.125rem
+  round: 999px
 spacing:
   unit: 0.25rem
+size:
+  control: 3rem
+  touch-min: 2.75rem
+stroke:
+  rule: 1px
+  emphasis: 2px
 motion:
   fast: 120ms
   base: 200ms
   ease: cubic-bezier(0.2, 0, 0, 1)
 iconography:
-  family: Material Symbols Rounded
-  weight: 400
-  optical-size: 20
+  family: IBM Carbon (inline SVG, 32 px art)
+  sizes: { md: 20px, sm: 16px }
 ---
 
 # unicron — visual identity
 
 ## Overview
 
-unicron is the look that Mailbird (mail, calendar, contacts, notes), Synapse and Lockdown (a
-password manager and authenticator) share. It should feel like a well-made native utility, not a
-marketing site: calm surfaces, strong text contrast, one accent at a time, and motion you only
-notice when it is missing. Brand lives in tokens; behaviour follows the platform. The reference
-point is Apple's first-party productivity apps rendered with shadcn's restraint.
+unicron is the look that Warpcore (agent work), Vale (mail, calendar, contacts, notes), Lockdown (a
+password manager and authenticator) and Synapse share. It is square and flat: hairline rules
+instead of cards and shadows, ink for text and outlines, one identity colour per app, and a single
+yellow for "this needs you". Brand lives in tokens; behaviour follows the platform. The source of
+the drawn values is the Figma file's `Unicron / Theme` collection (8 modes) and `Unicron Type/`
+styles; `@unicron/tokens` checks every built value against a snapshot of it (`figma-parity`).
+
+## Theme model
+
+Two axes, set on `<html>` or any subtree root; components never set either.
+
+- **App**: `data-theme="warpcore" | "vale" | "lockdown" | "synapse"`. With no attribute the values
+  are warpcore's (Figma's default mode).
+- **Ground**: `.dark` is graphite, `:root` / `.light` is stone.
+
+So Figma's mode `vale / graphite` is `<html data-theme="vale" class="dark">`.
 
 ## Colors
 
-- The neutral ramp is slightly cool (hue 260) so long reading sessions feel quiet. Everything
-  structural (`background`, `card`, `popover`, `border`, `muted`) is drawn from it.
-- `primary` is near-black in light mode and near-white in dark mode. It is the default button and
-  the strongest text, never a brand colour.
-- Accent hues (blue, coral, green, amber) exist in tier 1 but are not semantic roles. Apps assign
-  them (one hue per area for wayfinding). The chromatic roles in the core are `destructive`,
-  `warning`, `info` and three status roles.
-- Status roles say one thing in every app, whatever its accent: `success` (green: done),
-  `attention` (amber: waiting on you; not `warning`, which says something is wrong) and `running`
-  (blue: working now). Each has a fill (`bg-success`: a dot, an orb, a bar; no text on it), a
-  foreground (`text-success-foreground`: ink on the page, a card, the sidebar, a selected row and
-  its own wash, Lc 75 or more) and a surface (`bg-success-surface`: a quiet wash). Colour is never
-  the only cue: a status also differs by shape or motion (`StatusOrb`).
-- Dark mode swaps only tier 2. Separators and control borders become translucent white (10% / 35%)
-  so they sit on any dark surface. Accents step one stop lighter (500 → 400) to keep contrast.
-- An accent hue drawn as text (an area's name, a status word, a link) uses its text step: `600` in
-  light, `300` in dark (`blue`, `coral`, `green`, `amber`). They read Lc 75 or more on the page, the
-  chrome and a selected row. `500` and `400` are fills: as text they read Lc 32-67. Red's text
-  steps are `700` and `200` (`--destructive`), because red is drawn at more chroma.
-- Text has three inks, a level apart each, placed as Emphasis Engine places them: `foreground` is
-  text level 5 (titles, body), `support-foreground` level 4 (the lines that explain: descriptions,
-  an empty state's text, `type-support`), `muted-foreground` level 3 (the lines that label: meta,
-  captions, overlines, placeholders, inactive tabs, keys). Drawn in WebKit, they land about 99, 83
-  and 70 in light and 99, 85 and 73 in dark: at least 12 apart, where two inks gave one level for
-  every lower role. Icons inside secondary text take weight 300 so they draw at its level.
-- Before the support level, `foreground` was text level 5 and `muted-foreground` level 3. Secondary text reads Lc 75 or more on every surface and at
-  least Lc 20 under primary text (Lc 81 under 106 on white; Lc 80 under 105 in dark), so it reads
-  as secondary, not as a slightly greyer primary. Inside a fill (`bg-muted`, `bg-accent`,
-  `bg-secondary`, a highlighted or selected item, a key) it takes `muted-foreground-on-fill`, a
-  shade stronger in light mode, so it still reads Lc 75 there; components and apps keep writing
-  `text-muted-foreground`.
-- Control borders are strong enough to find a field (3:1, `neutral.450` in light); separators stay
-  quiet (`neutral.200`). Every pair a component paints is held to its element kind's contrast floor,
-  APCA first (docs/02-tokens.md → Contrast).
+- **Surfaces and lines**: `surface-ground` (the page), `surface-raised` (fields, menus, popovers),
+  `surface-scrim` (behind overlays), `line-rule` (every hairline), `line-grid-dot`.
+- **Text, three levels and a faint**: `text-body` (titles, reading), `text-secondary` (the lines
+  that explain), `text-label` (labels, meta, overlines, placeholders), `text-faint` (never the only
+  way to read something).
+- **Primary is the app's identity**: `primary-fill` / `primary-on-fill` (the one solid action),
+  `primary-text` (identity-coloured words), `primary-soft` (a selected row), `primary-display`.
+- **Secondary is live**: `secondary-live` marks work happening now (agents, sync, progress).
+- **Needs you** is the same yellow in every app and both grounds. It is a block with dark ink, never
+  a small mark on stone (the yellow has no lightness contrast with stone).
+- **Critical** is the same for every app and differs by ground: fill, on-fill, text, soft.
+- **States** (not drawn in Figma; contract §6): hover is `state-hover` (a 6 % ink wash) on neutral
+  parts and 90 % on solid fills; pressed is `state-pressed` (10 %) and 80 %. Selected is
+  `primary-soft` with a 2 px `primary-fill` left edge, never a solid primary.
+- `success`, `warning`, `info` keep their accent ramps. The shadcn names (`background`, `foreground`,
+  `muted`, `border`, `ring`, `sidebar*`, …) still work: each is an alias of a role above.
+- Every pair a component paints is measured in all 8 modes (`pnpm --filter @unicron/tokens
+  contrast`, APCA first). Misses that are Figma's own values are named exceptions, reported for a
+  decision, not hidden.
 
 ## Typography
 
-Inter Variable for everything, including headings (`--font-heading` aliases `--font-sans`). Body
-is 14px. Monospace is the platform stack.
+Geist for words, Geist Mono for labels, numbers and code. Every size is one of 23 **type roles**
+(`type-<role>` utilities that read `--type-<role>-{family,weight,size,leading,tracking}`), never a
+hand-picked size or `text-sm` / `font-medium` in a component:
 
-Every size comes from a **text role**, never a hand-picked pixel size (`text-[11px]`). The roles
-step by about 1.2, so each level reads as one; weight and ink do the rest:
+`display` 72/68 · `display-compact` 48/48 · `title` 32/36 · `lead` 24/32 · `subtitle` 18/28 ·
+`body` 16/24 · `body-strong` · `response` 17/28 · `ui` 15/20 · `ui-emphasis` · `label` 14/20 ·
+`caption` 13/20 · `overline` mono 11/16 caps · `folio` mono 12/20 · `meta` mono 12/20 ·
+`code-inline` mono 15/20 · `code-display` mono 36/40 · `number-hero` 168/148 · `number-metric`
+44/44 · `number-index` 28/32 · `number-count` mono 24/28 · `brand-wordmark` 13/16 · `icon-glyph`.
 
-| Role | Size / leading | Weight | Ink | For |
-|---|---|---|---|---|
-| `type-page-title` | 20 / 28 | 600 | inherits | a screen's subject |
-| `type-section-title` | 16 / 24 | 600 | inherits | a section of a page |
-| `type-group-title` | 14 / 20 | 600 | inherits | a card's heading, a group |
-| `type-body` | 14 / 22 | 400 | inherits | reading text |
-| `type-body-strong` | 14 / 20 | 500 | inherits | the phrase that matters in a row |
-| `type-support` | 13 / 20 | 400 | support (level 4) | what explains the line above |
-| `type-meta` | 12 / 16 | 400, tabular | muted | when, how many, where |
-| `type-overline` | 11 / 16, +0.06em, caps | 500 | muted | a short label above what it names |
-
-`type-measure` caps prose at 72ch. Titles and body inherit their ink so a selected row's accent ink
-reaches them; a single-purpose utility (`text-primary`, `font-medium`) still overrides a role.
+`type-overline` is the only role with a case. Mono and number roles use tabular figures. Mixed
+sizes on one line align on the baseline. The old names stay as aliases: `type-page-title` → title,
+`type-section-title` → subtitle, `type-group-title` → label, `type-support` → caption.
+`type-measure` caps prose at 72ch.
 
 ## Layout
 
-Four-pixel spacing unit. Components are compact (buttons 32px tall by default, 28px small,
-36px large). Group one-subject content in cards; separate sections with whitespace first and a
-`Separator` only when whitespace fails. Scroll areas keep page scroll native.
+A 4 px unit (Tailwind's own); half steps (2, 6, 10, 14) only inside a component. Controls are
+`size-control` (48) tall at most and never smaller than `size-touch-min` (44) to touch: a control
+under 44 px takes `hit-area`, which widens its target on a coarse pointer. Sections are separated by
+space and hairlines, not by fills.
 
-## Elevation & depth
+## Rules, elevation and scrims
 
-Mostly flat. Popovers and menus get a 1px `ring-foreground/10` and a soft shadow; menus blur what
-is behind them. Dialog backdrops are a 10% black wash with a slight blur, not a blackout.
+- **Strokes never add height.** A rule is an inset shadow: `rule-t`, `rule-r`, `rule-b`, `rule-l`,
+  `rule-box` (1 px `line-rule`), `rule-box-emphasis` (2 px, `--rule-color`, default
+  `primary-fill`), `edge-l` (the 2 px selected edge). They compose.
+- **Flat.** No shadows on surfaces, no glass, no `backdrop-blur` anywhere.
+- **Scrims** are `surface-scrim` at a knob: `scrim-sheet` (0.5), `scrim-dialog` (0.6), `scrim-menu`
+  (0.32). Never opaque, never blurred.
+- **Focus** is one rule in the stylesheet: a 2 px solid outline in `--ring` (ink), 2 px clear. Inside
+  a needs-you block it takes `needs-you-on-fill`. Fields draw a 2 px inside border instead.
 
 ## Shapes
 
-Base radius 10px (`--radius`). The Tailwind scale is derived from it (sm 0.6×, md 0.8×, lg 1×,
-xl 1.4×, 2xl 1.8×, 3xl 2.2×, 4xl 2.6×), so one token change re-rounds the whole system. Avatars,
-badges and toggles are fully round; cards and dialogs use `xl`.
+Every radius step is 2 px (`--radius`), so `rounded-*` classes all draw the control radius.
+`rounded-none` and `rounded-full` are Tailwind's own; `rounded-full` is no longer a control shape.
+Marks (unread, live, indicator dots) are squares.
 
-## Components
+## Components and icons
 
-Every primitive comes from shadcn/ui (`base-nova`) on Base UI and uses Material Symbols Rounded
-through the `Icon` component. Icons are variable-font axes (`fill`, `weight`, `grade`, `optical
-size`) driven by `--c-icon-*`, so state changes animate (outline → filled) instead of swapping
-glyphs. Component semantics, anatomy and states are owned by the component docs, not this file.
+Primitives come from shadcn/ui (`base-nova`) on Base UI and are owned source. Icons are IBM Carbon,
+drawn as inline SVG by `Icon` from a curated, typed set (`IconName`); 20 px by default, 16 px inside
+compact controls (the control sets it). Apps register a glyph Carbon lacks with `registerIcons`.
+`unicron-codemod icons <dir>` moves an app from Material names. Component semantics, anatomy and
+states are owned by the component docs (`docs/03-components.md`), not this file.
 
 ## Do's and Don'ts
 
-- Do reach for a semantic token (`bg-background`, `text-muted-foreground`); never a `--g-*` value
-  in a component.
+- Do reach for a role (`bg-surface-raised`, `text-text-label`, `border-line-rule`); never a `--g-*`
+  value in a component, never a colour, px or motion literal in `packages/ui/src`.
 - Do add app-only roles in the app's extension layer, never in the core semantic tier.
-- Don't introduce a second accent inside one surface; one hue carries one meaning.
-- Don't animate layout; animate opacity, transform and the icon axes, at 120–200ms with the
-  standard ease. Live states loop at `--motion-spin` (0.9s a turn) and `--motion-pulse` (1.4s a
-  beat).
-- Do let reduced motion win: with `prefers-reduced-motion`, `@unicron/ui`'s styles stop every loop,
-  let entrances fade in place, and keep a Spinner as a still glyph at reduced opacity.
+- Don't use the identity colour for anything but the one primary action, identity text and
+  selection; live work is `secondary-live`, and only "needs you" is yellow.
+- Don't animate layout; animate opacity and transform on the motion roles. Let reduced motion win.
 - Don't restyle a primitive with `className` overrides to make a new component; add a variant or
   compose a pattern and let `dsa` see it.
 
-## Semantic token list (tier 2, the shadcn contract)
+## Role list (tier 2)
 
-`background` `foreground` `card` `card-foreground` `popover` `popover-foreground` `primary`
-`primary-foreground` `secondary` `secondary-foreground` `muted` `muted-foreground` `accent`
-`accent-foreground` `destructive` `warning` `warning-foreground` `info` `info-foreground`
-`success` `success-foreground` `success-surface` `attention` `attention-foreground`
-`attention-surface` `running` `running-foreground` `running-surface` `border` `input` `ring` `radius` `sidebar` `sidebar-foreground`
-`sidebar-primary` `sidebar-primary-foreground` `sidebar-accent` `sidebar-accent-foreground`
-`sidebar-border` `sidebar-ring` · fonts: `font-sans` `font-mono` `font-heading`.
+Figma roles: `surface-ground` `surface-raised` `surface-scrim` `line-rule` `line-grid-dot`
+`text-body` `text-secondary` `text-label` `text-faint` `primary-fill` `primary-on-fill`
+`primary-text` `primary-soft` `primary-display` `secondary-live` `needs-you-fill` `needs-you-on-fill`
+`critical-fill` `critical-on-fill` `critical-text` `critical-soft`. States and diff: `state-hover`
+`state-pressed` `diff-added` `diff-removed`.
+
+Aliases (the shadcn contract): `background` `foreground` `card` `card-foreground` `popover`
+`popover-foreground` `primary` `primary-foreground` `secondary` `secondary-foreground` `muted`
+`muted-foreground` `muted-foreground-on-fill` `support-foreground` `faint-foreground` `accent`
+`accent-foreground` `destructive` `border` `input` `ring` `protected` `protected-foreground`
+`sidebar` `sidebar-foreground` `sidebar-primary` `sidebar-primary-foreground` `sidebar-accent`
+`sidebar-accent-foreground` `sidebar-border` `sidebar-ring`.
+
+Status: `success` `success-foreground` `success-surface` `warning` `warning-foreground` `info`
+`info-foreground` `attention` `attention-foreground` `attention-surface` `running`
+`running-foreground` `running-surface`. Sizes: `--size-control` `--size-touch-min`; strokes:
+`--stroke-rule` `--stroke-emphasis`; fonts: `font-sans` `font-mono` `font-heading` (an alias of sans).

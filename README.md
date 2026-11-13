@@ -1,7 +1,7 @@
 # unicron
 
 Sean Sands' shared design system. One set of tokens and one set of React primitives that
-Mailbird, Synapse and Lockdown build on. Public, personal, Apache-2.0.
+Warpcore, Vale (formerly Mailbird), Lockdown and Synapse build on. Public, personal, Apache-2.0.
 
 > **A personal project.** Unicron is public so that Sean's apps can install it without logging in.
 > It isn't a community project: pull requests from outside contributors aren't accepted, and issues
@@ -11,8 +11,8 @@ Mailbird, Synapse and Lockdown build on. Public, personal, Apache-2.0.
 | Package | What it is |
 |---|---|
 | `@unicron/tokens` (`packages/tokens`) | Design tokens as DTCG JSON in three tiers (global → semantic → component), built to `dist/tokens.css` (CSS custom properties + a Tailwind v4 `@theme inline` map) and `dist/tokens.json` (flat). |
-| `@unicron/ui` (`packages/ui`) | shadcn/ui primitives (style `base-nova`) on Base UI, with Material Symbols Rounded instead of Lucide. Owned source, compiled with `tsc`, no bundler. |
-| `playground` (`apps/playground`) | Vite + React 19 page that renders every primitive in light and dark, side by side, with a theme toggle. It is also what `dsa` scans. |
+| `@unicron/ui` (`packages/ui`) | shadcn/ui primitives (style `base-nova`) on Base UI, with IBM Carbon icons (inline SVG) instead of Lucide, and the `unicron-codemod` bin. Owned source, compiled with `tsc`, no bundler. |
+| `playground` (`apps/playground`) | Vite + React 19 page: one view per file in `src/views`, with a switcher for the app theme and the ground (graphite, stone), and `scripts/shots.mjs` for screenshots. It is also what `dsa` scans. |
 
 Docs: [principles](docs/01-principles.md) · [tokens](docs/02-tokens.md) · [components](docs/03-components.md) ·
 [patterns](docs/04-patterns.md) · [consuming](docs/05-consuming.md) · [contributing and releasing](docs/06-contributing.md) · [DESIGN.md](DESIGN.md) (visual identity anchor).
@@ -20,7 +20,7 @@ Docs: [principles](docs/01-principles.md) · [tokens](docs/02-tokens.md) · [com
 ## Stack
 
 React 19 · Vite 8 · Tailwind v4 (`@tailwindcss/vite`) · shadcn/ui `base-nova` on `@base-ui/react` ·
-`class-variance-authority` · `clsx` · `tailwind-merge` · Material Symbols Rounded · `oxlint` ·
+`class-variance-authority` · `clsx` · `tailwind-merge` · Geist and Geist Mono · IBM Carbon icons · `oxlint` ·
 TypeScript ~5.9 · pnpm 10 · Node 22 · ESM throughout.
 
 ## Develop
@@ -72,7 +72,7 @@ separator: pnpm 10 forwards `--` literally and dsa then reads it as the director
 shadcn's CLI only ships Lucide, Tabler, Hugeicons, Phosphor and Remix icons, so the primitives
 are produced by a local transform, [`tools/shadcn-material`](tools/shadcn-material/README.md). It
 reads a checkout of `shadcn-ui/ui`, inlines the `base-nova` style classes, swaps every Lucide icon
-for a Material Symbol, and writes the package-relative imports `@unicron/ui` uses:
+for a Carbon icon name, and writes the package-relative imports `@unicron/ui` uses:
 
 ```bash
 git clone --depth 1 https://github.com/shadcn-ui/ui /tmp/shadcn
@@ -91,9 +91,10 @@ packages/tokens/scripts/build.mjs                         tiny builder (Style Di
 packages/tokens/scripts/lint.mjs                          token lint (pnpm lint:tokens)
 packages/tokens/examples/app-extension.css                how an app adds its own roles
 packages/ui/src/components/ui/*.tsx                       the primitives (owned source)
-packages/ui/src/components/icon.tsx                       Material Symbols <Icon>
+packages/ui/src/components/icon.tsx                       Carbon <Icon> (curated set: src/icons/names.json)
+packages/ui/codemod/                                      unicron-codemod (Material → Carbon icon names)
 packages/ui/src/styles/index.css                          Tailwind entry: tokens + base layer
-apps/playground/                                          every primitive, light + dark
+apps/playground/                                          views per file, 4 app themes × 2 grounds
 docs/                                                     principles, tokens, components, patterns, consuming
 dsa.config.json · .github/workflows/ci.yml                analytics wiring · CI
 .changeset/ · .github/workflows/release.yml               changesets · Version Packages PR → tags, GitHub Releases, npm
