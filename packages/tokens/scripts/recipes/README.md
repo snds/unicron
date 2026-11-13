@@ -42,7 +42,12 @@ export default ({ r, mix }) => [
 
 The kind names from before 1.0 still load: `text-primary` (now `text-body`), `text-on-tint`
 (`text-label`), `on-solid` (`on-fill`). `border-control` is gone: a resting border is
-`border-rest`, and a border held to 3:1 is `focus` or `border-error`.
+`border-rest`, and a border held to 3:1 is `focus` or `border-error`. The `large` flag is gone
+too: a floor follows the kind, not the type size, except `text-display`.
+
+Pick the kind by the ink, as the direction does. Text in `text-label`, or in a colour
+(`primary-text`, `secondary-live`, `critical-text`, a status foreground), is `text-label`. Only
+`text-secondary` ink is `text-secondary`.
 
 ## When a recipe misses
 

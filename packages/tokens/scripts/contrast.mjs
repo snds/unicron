@@ -439,8 +439,13 @@ for (const rec of RECIPES) {
   const wanted = modeFilter(rec.modes)
   for (const mode of rec.themed === false ? DEFAULTS : MODES) {
     if (!wanted(mode)) continue
-    const under = flatten(over, mode)
-    const p = paintColor(paint, mode)
+    let under, p
+    try {
+      under = flatten(over, mode)
+      p = paintColor(paint, mode)
+    } catch (error) {
+      throw new Error(`${rec.id} (${mode.name}): ${error.message}`)
+    }
     const drawn = to8(composite(p.rgb, p.alpha, under.rgb))
     const bg = to8(under.rgb)
     const lc = Math.abs(APCAcontrast(sRGBtoY(drawn), sRGBtoY(bg)))
