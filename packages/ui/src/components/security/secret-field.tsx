@@ -876,7 +876,8 @@ function SecretFieldRead({
               aria-labelledby={isRevealed ? spelledNameId : hiddenNameId}
               tabIndex={0}
               className={cn(
-                "text-text-body flex min-w-0 flex-1 items-baseline gap-2 rounded-sm select-none",
+                // Clipped: a narrow row never lets the mask or a long value run under its actions.
+                "text-text-body flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden rounded-sm whitespace-nowrap select-none",
                 mono ? "type-code-inline" : "type-ui",
                 isRevealed && "tracking-(--c-secret-field-letter-spacing)"
               )}
