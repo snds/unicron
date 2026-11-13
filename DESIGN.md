@@ -130,7 +130,9 @@ space and hairlines, not by fills.
 
 - **Strokes never add height.** A rule is an inset shadow: `rule-t`, `rule-r`, `rule-b`, `rule-l`,
   `rule-box` (1 px `line-rule`), `rule-box-emphasis` (2 px, `--rule-color`, default
-  `primary-fill`), `edge-l` (the 2 px selected edge). They compose.
+  `primary-fill`), `edge-l` (the 2 px selected edge). They compose, with each other and with a
+  Tailwind ring, inset ring or shadow, even one that arrives with a state (`focus-visible:ring-2`).
+  On an element with a rule, set a shadow through those utilities, never a raw `box-shadow`.
 - **Flat.** No shadows on surfaces, no glass, no `backdrop-blur` anywhere.
 - **Scrims** are `surface-scrim` at a knob: `scrim-sheet` (0.5), `scrim-dialog` (0.6), `scrim-menu`
   (0.32). Never opaque, never blurred.

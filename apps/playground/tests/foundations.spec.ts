@@ -378,6 +378,20 @@ test("each rule draws its own line, in its own color", async ({ page }) => {
   const selected = await shadow("rule-b edge-l")
   expect(selected).toContain(`${primary} 2px 0px 0px 0px inset`)
   expect(selected).toContain(`${rule} 0px -1px 0px 0px inset`)
+  // A ring or an inset ring that arrives with a state keeps the rules beside it: a state only
+  // changes Tailwind's ring variables, and the rule's list draws every layer.
+  const onState = await shadow("rule-b // + a ring on a state")
+  expect(onState).toContain(`${rule} 0px -1px 0px 0px inset`)
+  expect(onState).toContain(`${primary} 0px 0px 0px 1px`)
+  const invalid = await shadow("rule-box // + an invalid edge")
+  expect(invalid).toContain(`${critical} 0px 0px 0px 2px inset`)
+  expect(invalid).toContain(`${rule} 0px 0px 0px 1px inset`)
+  const pointer = page.locator('[data-rule="edge-l // + a ring under the pointer"] > :first-child')
+  expect(await shadow("edge-l // + a ring under the pointer")).not.toContain(`${primary} 0px 0px 0px 1px,`)
+  await pointer.hover()
+  const hovered = await shadow("edge-l // + a ring under the pointer")
+  expect(hovered).toContain(`${primary} 2px 0px 0px 0px inset`)
+  expect(hovered).toMatch(new RegExp(`${primary.replace(/[()]/g, "\\$&")} 0px 0px 0px 1px(,|$)`))
   // A parent's rule does not leak into a child that has a rule of its own.
   const leaked = await page.evaluate(() => {
     const parent = document.createElement("div")

@@ -584,8 +584,8 @@ html:has([data-slot="app-frame"]) body {
  * `rule-b` with `data-selected:edge-l`, both work. rule-box-emphasis replaces rule-box. The layers
  * do not inherit, so a parent's rule never appears on a child. A layer that is off is an empty
  * inset shadow, so a rule that arrives with a state can be transitioned (`transition-[box-shadow]`).
- * Tailwind's own ring and shadow layers are in the same list, so a ring on the same element
- * still draws.
+ * Tailwind's own ring and shadow layers are in the same list, so a ring or a shadow on the same
+ * element still draws, with a state or without one (the unlayered rule after the utilities).
  *
  * An inset shadow paints over the element's own background and under its children: a child with
  * a fill that reaches the edge covers the line. Put the rule on the part that owns the edge.
@@ -713,6 +713,32 @@ html:has([data-slot="app-frame"]) body {
 }
 @utility edge-l {
   --rule-edge: inset var(--stroke-emphasis) 0 0 0 var(--edge-color, var(--primary-fill));
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+
+/*
+ * One box-shadow for every element that carries a rule. Each rule utility writes the composed list
+ * itself, but a ring, a shadow or an inset ring that arrives with a state (`focus-visible:ring-2`,
+ * `hover:shadow-md`, `aria-invalid:inset-ring-2`, `data-[state=on]:ring-1`) sorts after it in the
+ * utilities layer and writes Tailwind's own list, which has no rule layers: the rules would vanish
+ * while the state is on. This rule is unlayered, so it wins over every utility. A state then only
+ * changes Tailwind's --tw-* variables, and the list keeps drawing every layer.
+ *
+ * So on an element with a rule, set a shadow or a ring with Tailwind's shadow, ring and inset-ring
+ * utilities (they write those variables), never a raw `box-shadow`: this rule would replace it.
+ */
+:where([class*="rule-"], [class*="edge-"]) {
   box-shadow:
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
@@ -937,8 +963,10 @@ html:has([data-slot="app-frame"]) body {
  * nothing loops, slides, grows or turns:
  * - Entrances and exits (tw-animate-css: dialogs, sheets, menus, toasts) fade in place.
  * - Transitions keep only colour and opacity, at --motion-fast.
- * - Loops stop: animate-spin, animate-pulse, animate-ping, animate-bounce. A component with its
- *   own loop (StatusOrb) stills it here too, by data-slot.
+ * - Loops stop: animate-spin, animate-pulse, animate-ping, animate-bounce, with or without a
+ *   variant in front (`group-data-indeterminate/progress:animate-pulse`), so they are matched in
+ *   the class attribute, not by class name. A component with its own loop (StatusOrb) stills it
+ *   here too, by data-slot.
  * - A Spinner can't spin, so it stays as a still glyph at reduced opacity: still busy, not moving.
  * Unlayered, so it wins over every utility without !important.
  */
@@ -958,10 +986,10 @@ html:has([data-slot="app-frame"]) body {
     transition-duration: var(--motion-fast);
     scroll-behavior: auto;
   }
-  .animate-spin,
-  .animate-pulse,
-  .animate-ping,
-  .animate-bounce {
+  [class*="animate-spin"],
+  [class*="animate-pulse"],
+  [class*="animate-ping"],
+  [class*="animate-bounce"] {
     animation: none;
   }
   [data-slot="spinner"] {
@@ -999,7 +1027,7 @@ html:has([data-slot="app-frame"]) body {
   transition-duration: var(--motion-fast);
   scroll-behavior: auto;
 }
-[data-motion="reduced"] :is(.animate-spin, .animate-pulse, .animate-ping, .animate-bounce),
+[data-motion="reduced"] :is([class*="animate-spin"], [class*="animate-pulse"], [class*="animate-ping"], [class*="animate-bounce"]),
 [data-motion="reduced"] [data-slot="status-orb-halo"] {
   animation: none;
 }

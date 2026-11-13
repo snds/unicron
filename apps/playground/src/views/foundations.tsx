@@ -506,7 +506,10 @@ function Shape() {
 
 // ── rules ──────────────────────────────────────────────────────────────────────────────────────
 
-const RULES: { name: string; paint: string }[] = [
+// The last three take a ring that arrives with a state: shown on (`data-state="on"`), or under the
+// pointer. The rule keeps drawing beside the ring (the stylesheet's unlayered rule after the
+// utilities).
+const RULES: { name: string; paint: string; on?: boolean }[] = [
   { name: "rule-t", paint: "rule-t" },
   { name: "rule-r", paint: "rule-r" },
   { name: "rule-b", paint: "rule-b" },
@@ -517,14 +520,17 @@ const RULES: { name: string; paint: string }[] = [
   { name: "rule-box-emphasis // --rule-color", paint: "rule-box-emphasis [--rule-color:var(--critical-fill)]" },
   { name: "edge-l", paint: "edge-l bg-primary-soft" },
   { name: "rule-b edge-l", paint: "rule-b edge-l bg-primary-soft" },
+  { name: "rule-b // + a ring on a state", paint: "rule-b data-[state=on]:ring-1 data-[state=on]:ring-primary-fill", on: true },
+  { name: "rule-box // + an invalid edge", paint: "rule-box data-[state=on]:inset-ring-2 data-[state=on]:inset-ring-critical-fill", on: true },
+  { name: "edge-l // + a ring under the pointer", paint: "edge-l bg-primary-soft hover:ring-1 hover:ring-primary-fill" },
 ]
 
 /** A line of text that hugs its height, with and without a rule: the two heights must match. */
-function RuleRow({ name, paint }: { name: string; paint: string }) {
+function RuleRow({ name, paint, on }: { name: string; paint: string; on?: boolean }) {
   const [ref, height] = useRead((element) => px(getComputedStyle(element).height))
   return (
     <figure data-rule={name} className="min-w-0">
-      <div ref={ref} className={`${paint} type-ui px-4 py-3`}>
+      <div ref={ref} data-state={on ? "on" : undefined} className={`${paint} type-ui px-4 py-3`}>
         Cabin for the 20th, confirmed
       </div>
       <Caption name={name} value={height} />
@@ -541,7 +547,7 @@ function Rules() {
       <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
         <RuleRow name="no rule" paint="" />
         {RULES.map((rule) => (
-          <RuleRow key={rule.name} name={rule.name} paint={rule.paint} />
+          <RuleRow key={rule.name} name={rule.name} paint={rule.paint} on={rule.on} />
         ))}
       </div>
     </Block>

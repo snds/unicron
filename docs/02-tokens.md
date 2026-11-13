@@ -411,7 +411,8 @@ band and settle time, and the emphasis curve's peak.
 `prefers-reduced-motion: reduce`, unlayered so it wins over utilities: entrances and exits
 (tw-animate-css) fade in place instead of sliding, growing or turning; transitions keep only colour
 and opacity, at `--motion-fast`; `animate-spin`, `animate-pulse`, `animate-ping` and
-`animate-bounce` stop; and `Spinner` stays as a still glyph at reduced opacity, so it still reads as
+`animate-bounce` stop, with or without a variant in front (an indeterminate `Progress` pulses
+through `group-data-indeterminate/progress:animate-pulse`); and `Spinner` stays as a still glyph at reduced opacity, so it still reads as
 busy. A component with its own loop stills it in the same layer, by `data-slot`.
 
 ## The Tailwind map
