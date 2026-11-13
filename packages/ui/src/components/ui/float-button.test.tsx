@@ -119,6 +119,42 @@ describe("FloatButton (Figma 20:1690)", () => {
     expect(ref.current).toHaveAttribute("aria-haspopup", "menu")
   })
 
+  it("extended shows its word beside the glyph (contract 5.1b #3): the same height, as wide as it needs, mono caps", () => {
+    render(<FloatButton label="Approve" icon="checkmark" kind="primary" size="l" extended />)
+    const button = screen.getByRole("button", { name: "Approve" })
+    expect(button).toHaveAttribute("data-extended")
+    expect(button.querySelector('[data-slot="float-button-word"]')).toHaveTextContent("Approve")
+    const classes = button.className.split(/\s+/)
+    expect(classes).toEqual(expect.arrayContaining(["h-control", "px-4", "gap-2", "type-overline", "bg-primary", "text-primary-foreground"]))
+    expect(classes).not.toContain("size-control")
+    expect(classesOf({ size: "m", extended: true })).toEqual(expect.arrayContaining(["h-touch-min", "px-4"]))
+    expect(classesOf({ size: "m", extended: true })).not.toContain("size-touch-min")
+  })
+
+  it("an extended button needs no tooltip: its word is there", async () => {
+    const user = userEvent.setup()
+    render(<FloatButton label="Share" icon="share" extended />)
+    await user.tab()
+    expect(screen.getAllByText("Share")).toHaveLength(1)
+  })
+
+  it("an extended button keeps the long press", () => {
+    const onLongPress = vi.fn()
+    render(<FloatButton label="Approve" icon="checkmark" kind="primary" extended onLongPress={onLongPress} />)
+    const button = screen.getByRole("button", { name: "Approve" })
+    expect(button).toHaveAttribute("aria-keyshortcuts", floatButtonLongPressKeys)
+    fireEvent.keyDown(button, { key: "Enter", shiftKey: true })
+    expect(onLongPress).toHaveBeenCalledTimes(1)
+  })
+
+  it("takes the mark every navigation item shares: at the glyph's corner, its words in the name", () => {
+    render(<FloatButton label="Settings" icon="settings" size="l" mark={{ square: true, label: "Update ready" }} />)
+    const button = screen.getByRole("button", { name: "Settings, Update ready" })
+    const glyph = button.querySelector('[data-slot="float-button-glyph"]')!
+    expect(glyph.className).toContain("relative")
+    expect(glyph.querySelector('[data-slot="nav-mark"]')).toHaveAttribute("data-kind", "square")
+  })
+
   it("shows its label as a tooltip on focus", async () => {
     const user = userEvent.setup()
     render(<FloatButton label="Search" icon="search" />)
