@@ -85,13 +85,39 @@
     "base": { "$type": "dimension", "$value": "0.625rem" }
   },
   "duration": {
+    "press": { "$type": "duration", "$value": "100ms", "$description": "A control going down under a finger or a click. The one step under 120ms: the hand is already there, so it must feel immediate." },
     "fast": { "$type": "duration", "$value": "120ms" },
     "base": { "$type": "duration", "$value": "200ms" },
+    "state": { "$type": "duration", "$value": "280ms", "$description": "A surface changing state: a panel opening, a selection moving to a new place." },
+    "move": { "$type": "duration", "$value": "400ms", "$description": "Travel across the screen. The ceiling: no default motion runs longer." },
+    "tick": { "$type": "duration", "$value": "1000ms", "$description": "One step of a countdown ring: a second, run linear, so the ring tracks the clock." },
     "spin": { "$type": "duration", "$value": "900ms", "$description": "One turn of a spinner or a working ring." },
     "pulse": { "$type": "duration", "$value": "1400ms", "$description": "One beat of a pulse or a breathing halo: slow enough to read as alive, not alarming." }
   },
   "ease": {
-    "standard": { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1] }
+    "standard": { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1] },
+    "out": { "$type": "cubicBezier", "$value": [0.33, 1, 0.68, 1], "$description": "Ease-out cubic: quick start, soft landing. Softer than standard." },
+    "in": { "$type": "cubicBezier", "$value": [0.32, 0, 0.67, 0], "$description": "Ease-in cubic: slow start, fast finish. For things leaving." },
+    "in-out": { "$type": "cubicBezier", "$value": [0.65, 0, 0.35, 1], "$description": "Ease-in-out cubic: for travel from one resting place to another." },
+    "back": { "$type": "cubicBezier", "$value": [0.34, 1.63, 0.64, 1], "$description": "Overshoots to about 112% and comes back. For rare moments only." },
+    "pulse": { "$type": "cubicBezier", "$value": [0.4, 0, 0.6, 1], "$description": "The even in-and-out of a pulse loop." }
+  },
+  "spring": {
+    "$description": "Damped springs at mass 1. Built to a CSS linear() curve that runs over the matching -duration token; the raw stiffness and damping are kept in tokens.json for JS. Each duration is the time the spring takes to stay within 1% of rest (scripts/check.mjs holds the two together).",
+    "settle": { "$type": "spring", "$value": { "stiffness": 256, "damping": 20, "mass": 1 }, "$description": "A small thing arriving at a new place, with a slight overshoot (about 8%)." },
+    "settle-duration": { "$type": "duration", "$value": "400ms" },
+    "firm": { "$type": "spring", "$value": { "stiffness": 300, "damping": 26, "mass": 1 }, "$description": "A large surface arriving. Under 3% overshoot, so it reads as physical with no visible bounce." },
+    "firm-duration": { "$type": "duration", "$value": "380ms" },
+    "pop": { "$type": "spring", "$value": { "stiffness": 484, "damping": 19.8, "mass": 1 }, "$description": "A clear bounce (about 20%). Expressive only: no core role points here." },
+    "pop-duration": { "$type": "duration", "$value": "400ms" }
+  },
+  "stagger": {
+    "step": { "$type": "duration", "$value": "50ms", "$description": "The delay between one sibling starting and the next." },
+    "max": { "$type": "number", "$value": 6, "$description": "Siblings after this many start together, so a long list never waits." }
+  },
+  "press": {
+    "depth": { "$type": "number", "$value": 0.96, "$description": "Scale of a pressed control of ordinary size (4% smaller)." },
+    "depth-small": { "$type": "number", "$value": 0.9, "$description": "Scale of a pressed icon-size control (10% smaller): a small target needs a larger change to show." }
   },
   "font": {
     "sans": { "$type": "fontFamily", "$value": ["Inter Variable", "ui-sans-serif", "system-ui", "sans-serif"] },

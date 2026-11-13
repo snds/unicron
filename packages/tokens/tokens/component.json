@@ -69,7 +69,7 @@
     "expiring-at": {"$type": "duration", "$value": "5s", "$description": "Seconds left at which the code turns to the expiring state."},
     "next-at": {"$type": "duration", "$value": "10s", "$description": "Seconds left at which the next code appears beneath the current one."},
     "copy-next-at": {"$type": "duration", "$value": "3s", "$description": "Seconds left under which copy takes the next code instead."},
-    "rollover-duration": {"$type": "duration", "$value": "200ms", "$description": "Literal; tier 2 has no duration role."}
+    "rollover-duration": {"$type": "duration", "$value": "{motion-base}", "$description": "The crossfade from one code to the next."}
   },
   "large-type": {
     "$description": "LargeTypeView (docs/specs/security/large-type-view.md): a secret full screen, grouped in threes, for reading across a room.",

@@ -11,6 +11,10 @@
 //       A reference may point at its own tier or a lower one, never a higher one.
 //       Non-colour component knobs (sizes, axis numbers) may hold a literal: tier 3 exists to
 //       hold per-component sizes (see component.json → $description).
+//       A component knob that times a motion (its name ends in `-duration`) is the exception:
+//       it must be a `{reference}` to a motion role, so no component invents its own speed.
+//       Timers that are behaviour, not motion (`lifetime`, `arm-delay`, `expiring-at`), may
+//       stay literal.
 //   (b) Primitives (packages/ui/src) carry no colour literals: no hex, rgb(), hsl(), oklch(),
 //       oklab() in any .ts/.tsx/.css file. Tailwind arbitrary values that reference a token,
 //       e.g. `bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]`, are fine.
@@ -81,6 +85,9 @@ function checkValue(tier, dotted, label, value, type) {
     if (named) fail(`${tier.file} ${dotted}`, `${label} contains the named colour "${named[0]}"`)
     if (refs.length === 0) fail(`${tier.file} ${dotted}`, `${label} is a colour with no {reference}: "${value}"`)
     return
+  }
+  if (tier.rank === 3 && label === "$value" && /-duration$/.test(dotted) && !bareRef) {
+    fail(`${tier.file} ${dotted}`, `a motion duration must be a {reference} to a motion role (e.g. {motion-base}), got "${value}"`)
   }
   if (tier.rank === 2 && !bareRef) fail(`${tier.file} ${dotted}`, `${label} must be a bare {reference} in the semantic tier, got "${value}"`)
 }
