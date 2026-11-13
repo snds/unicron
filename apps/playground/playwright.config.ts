@@ -10,6 +10,9 @@ import { defineConfig, devices } from "@playwright/test"
 //   PW_EXECUTABLE_PATH=/opt/pw-browsers/chromium pnpm --filter playground test:motion
 // Without it nothing changes: Playwright launches its own browser, as CI does.
 const executablePath = process.env.PW_EXECUTABLE_PATH
+// PW_PORT moves the preview server off 4173, for a machine where two checkouts run these checks
+// at once: with the same port the second run would test the first one's build.
+const port = Number(process.env.PW_PORT ?? 4173)
 
 export default defineConfig({
   testDir: "./tests",
@@ -17,13 +20,13 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: {
-    baseURL: "http://localhost:4173",
+    baseURL: `http://localhost:${port}`,
     ...devices["Desktop Chrome"],
     ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },
   webServer: {
-    command: "vite preview --port 4173 --strictPort",
-    url: "http://localhost:4173",
+    command: `vite preview --port ${port} --strictPort`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: true,
   },
 })
