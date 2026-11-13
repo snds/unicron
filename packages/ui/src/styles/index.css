@@ -5,8 +5,9 @@
  */
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/inter";
-@import "material-symbols/rounded.css";
+/* Geist and Geist Mono, the two families every type role uses (docs/02-tokens.md → Type). */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 @import "@unicron/tokens/dist/tokens.css";
 @import "./motion.css";
 
@@ -257,140 +258,509 @@ html:has([data-slot="app-frame"]) body {
   }
 }
 
-/*
- * Registered so the icon axes interpolate. Without @property, custom properties
- * flip discretely and an icon would snap from outline to filled.
- */
-@property --c-icon-fill {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-@property --c-icon-wght {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 400;
-}
-
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   /*
-   * Secondary text on a fill: a fill re-points --muted-foreground for its own content at the
-   * stronger --muted-foreground-on-fill, so text-muted-foreground still reads APCA Lc 75 on it
-   * while secondary text on the page sits a full emphasis level under primary (docs/02-tokens.md
-   * → Contrast). :where() keeps it at zero specificity, so a class still overrides it.
+   * The ground decides the colour scheme, so the browser's own parts (scrollbars, form controls,
+   * the caret) follow it: stone is light, graphite is dark. `.light` and `.dark` nest, as the
+   * roles do.
+   */
+  :root,
+  .light {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+  /*
+   * Secondary text on a fill: a fill re-points --muted-foreground for its own content at
+   * --muted-foreground-on-fill, so an app whose layer makes that ink stronger keeps label text
+   * readable on its fills (docs/02-tokens.md → Contrast). In the core both names are label ink
+   * (--text-label), so nothing changes here. :where() keeps it at zero specificity, so a class
+   * still overrides it.
    */
   :where(.bg-muted, .bg-accent, .bg-secondary, .bg-sidebar-accent, [data-slot="kbd"], [data-highlighted], [data-selected]) {
     --muted-foreground: var(--muted-foreground-on-fill);
   }
-  /*
-   * An icon's weight follows the text level it sits with. Icon strokes are heavier than text's, so
-   * at the default weight a muted icon drew a notch above the muted text beside it. Inside
-   * secondary text (level 3) icons take weight 300 (--c-icon-wght), and draw at the text's level.
-   */
-  :where(.text-muted-foreground, .type-meta, .type-overline, [data-slot="kbd"]) {
-    --c-icon-wght: 300;
-  }
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: var(--surface-ground);
+    color: var(--text-body);
+    font-family: var(--type-body-family);
+    font-weight: var(--type-body-weight);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-leading);
+    letter-spacing: var(--type-body-tracking);
+    @apply antialiased;
+  }
+  /*
+   * Focus: one ring for every control. A solid ink outline, two pixels wide and two pixels clear
+   * of the control, on keyboard focus only. In the base layer, so a control that draws its own
+   * focus (a text field's inside border) opts out with `outline-none`.
+   */
+  :focus-visible {
+    outline: var(--stroke-emphasis) solid var(--ring);
+    outline-offset: var(--stroke-emphasis);
+  }
+  /*
+   * On the needs-you yellow the ring takes the ink that sits on that fill: the page's ink is
+   * near-white on graphite and would not show. Re-pointing --ring covers every way a control
+   * draws its ring (this rule, `outline-ring`, `ring-ring`). `on-needs-you` does the same for a
+   * yellow fill that is not the Needs You block (a needs-you strip).
+   */
+  [data-slot="needs-you"] {
+    --ring: var(--needs-you-on-fill);
   }
 }
 
 /*
- * Text roles: every size in a product comes from one of these, never a hand-picked pixel size.
- * A screen with two sizes (12 and 14px) and hand-made 11 and 13px labels has nothing that reads
- * as a heading. Ink follows Emphasis Engine's text levels: titles and body inherit (level 5,
- * --foreground), support is level 4 (--support-foreground), meta and overline level 3
- * (--muted-foreground). A step of about 1.2 between sizes makes each level read as a level; weight and ink
- * do the rest. Titles and body inherit their ink, so a selected row's accent ink still reaches
- * them; support, meta and overline are muted by default. Muted inks hold APCA Bronze at their
- * sizes (Lc 75 under 16px). Promoted from snds/synapse (UI review round 2, F14).
+ * Type roles: every piece of text takes one of these 23, never a hand-picked size or weight. One
+ * set serves every app and both grounds. The values are tokens (@unicron/tokens → type.json, read
+ * from the Figma text styles): each role reads --type-<role>-family, -weight, -size, -leading and
+ * -tracking. Every line height is a multiple of 4px.
+ *
+ * A role sets no ink, so text inherits its colour, with two exceptions kept from before 1.0:
+ * type-overline and type-meta default to label ink. A colour class on the same element wins
+ * (`type-overline text-secondary-live`): a single-property utility sorts after these.
+ * Number roles and the mono roles line their figures up (tabular). Mixed sizes on one line align
+ * on the baseline (`items-baseline`).
+ *
+ * Eight of the names (page-title, section-title, group-title, body, body-strong, support, meta,
+ * overline) were promoted from snds/synapse (UI review round 2, F14). The 23 roles are the
+ * 2026-11 design direction (Figma, `Unicron Type/`).
  */
 :root {
-  --type-page-size: 1.25rem;
-  --type-page-leading: 1.75rem;
-  --type-section-size: 1rem;
-  --type-section-leading: 1.5rem;
-  --type-group-size: 0.875rem;
-  --type-group-leading: 1.25rem;
-  --type-body-size: 0.875rem;
-  --type-body-leading: 1.375rem;
-  --type-support-size: 0.8125rem;
-  --type-support-leading: 1.25rem;
-  --type-meta-size: 0.75rem;
-  --type-meta-leading: 1rem;
-  --type-overline-size: 0.6875rem;
-  --type-overline-leading: 1rem;
-  --type-overline-tracking: 0.06em;
   /* The longest line that reads well; prose wider than this is hard to follow back. */
   --type-measure: 72ch;
 }
 
-/* The page's own title: the subject of a screen. */
-@utility type-page-title {
-  font-size: var(--type-page-size);
-  line-height: var(--type-page-leading);
-  font-weight: 600;
-  letter-spacing: -0.012em;
+/* The largest type: a page's name on a wide screen, an empty state's hero. */
+@utility type-display {
+  font-family: var(--type-display-family);
+  font-weight: var(--type-display-weight);
+  font-size: var(--type-display-size);
+  line-height: var(--type-display-leading);
+  letter-spacing: var(--type-display-tracking);
   text-wrap: balance;
 }
-/* A section of a page. */
-@utility type-section-title {
-  font-size: var(--type-section-size);
-  line-height: var(--type-section-leading);
-  font-weight: 600;
-  letter-spacing: -0.006em;
+/* The page's name on a phone. */
+@utility type-display-compact {
+  font-family: var(--type-display-compact-family);
+  font-weight: var(--type-display-compact-weight);
+  font-size: var(--type-display-compact-size);
+  line-height: var(--type-display-compact-leading);
+  letter-spacing: var(--type-display-compact-tracking);
+  text-wrap: balance;
 }
-/* A group or a row's title: a card's heading, a group in a list. */
-@utility type-group-title {
-  font-size: var(--type-group-size);
-  line-height: var(--type-group-leading);
-  font-weight: 600;
+/* A view or section title; a two-word page name on a phone. */
+@utility type-title {
+  font-family: var(--type-title-family);
+  font-weight: var(--type-title-weight);
+  font-size: var(--type-title-size);
+  line-height: var(--type-title-leading);
+  letter-spacing: var(--type-title-tracking);
+  text-wrap: balance;
+}
+/* The line that opens a page or a dialog: its title, a summary sentence. */
+@utility type-lead {
+  font-family: var(--type-lead-family);
+  font-weight: var(--type-lead-weight);
+  font-size: var(--type-lead-size);
+  line-height: var(--type-lead-leading);
+  letter-spacing: var(--type-lead-tracking);
+  text-wrap: pretty;
+}
+/* A row's or a panel's title; the small centred title of a phone screen. */
+@utility type-subtitle {
+  font-family: var(--type-subtitle-family);
+  font-weight: var(--type-subtitle-weight);
+  font-size: var(--type-subtitle-size);
+  line-height: var(--type-subtitle-leading);
+  letter-spacing: var(--type-subtitle-tracking);
 }
 /* Reading text. */
 @utility type-body {
+  font-family: var(--type-body-family);
+  font-weight: var(--type-body-weight);
   font-size: var(--type-body-size);
   line-height: var(--type-body-leading);
-  font-weight: 400;
+  letter-spacing: var(--type-body-tracking);
   text-wrap: pretty;
 }
-/* The one phrase that matters in a row: what to do, what happened. */
+/* The one phrase that matters inside reading text. */
 @utility type-body-strong {
-  font-size: var(--type-body-size);
-  line-height: var(--type-group-leading);
-  font-weight: 500;
+  font-family: var(--type-body-strong-family);
+  font-weight: var(--type-body-strong-weight);
+  font-size: var(--type-body-strong-size);
+  line-height: var(--type-body-strong-leading);
+  letter-spacing: var(--type-body-strong-tracking);
 }
-/* What explains the line above it: a reason, a description. Text level 4 (--support-foreground). */
-@utility type-support {
-  font-size: var(--type-support-size);
-  line-height: var(--type-support-leading);
-  font-weight: 400;
-  color: var(--support-foreground);
+/* What the model wrote: a little larger and looser than body, across the reading column. */
+@utility type-response {
+  font-family: var(--type-response-family);
+  font-weight: var(--type-response-weight);
+  font-size: var(--type-response-size);
+  line-height: var(--type-response-leading);
+  letter-spacing: var(--type-response-tracking);
   text-wrap: pretty;
 }
-/* Facts about a thing: when, how many, where. Numbers line up. */
-@utility type-meta {
-  font-size: var(--type-meta-size);
-  line-height: var(--type-meta-leading);
-  font-weight: 400;
-  color: var(--muted-foreground);
-  font-variant-numeric: tabular-nums;
+/* Text in a control: a menu item, a field's value, a row's label. */
+@utility type-ui {
+  font-family: var(--type-ui-family);
+  font-weight: var(--type-ui-weight);
+  font-size: var(--type-ui-size);
+  line-height: var(--type-ui-leading);
+  letter-spacing: var(--type-ui-tracking);
 }
-/* A label above what it names: a field, a group. Short words only; never a sentence. */
+/* The same, stressed: a name in a row, the current item. */
+@utility type-ui-emphasis {
+  font-family: var(--type-ui-emphasis-family);
+  font-weight: var(--type-ui-emphasis-weight);
+  font-size: var(--type-ui-emphasis-size);
+  line-height: var(--type-ui-emphasis-leading);
+  letter-spacing: var(--type-ui-emphasis-tracking);
+}
+/* A form label, a tab. */
+@utility type-label {
+  font-family: var(--type-label-family);
+  font-weight: var(--type-label-weight);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  letter-spacing: var(--type-label-tracking);
+}
+/* What explains the thing above it: help under a field, a row's preview. */
+@utility type-caption {
+  font-family: var(--type-caption-family);
+  font-weight: var(--type-caption-weight);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  letter-spacing: var(--type-caption-tracking);
+  text-wrap: pretty;
+}
+/* A mono caps label above what it names, with `//` between its parts. Type it in sentence case; the role sets the capitals. It is the only role with a case. Ink: labels (--muted-foreground), unless a colour class says otherwise. */
 @utility type-overline {
+  font-family: var(--type-overline-family);
+  font-weight: var(--type-overline-weight);
   font-size: var(--type-overline-size);
   line-height: var(--type-overline-leading);
-  /* 500, not 600: at 600 the smallest label drew as strong as support text a level above it. */
-  font-weight: 500;
   letter-spacing: var(--type-overline-tracking);
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: var(--muted-foreground);
+}
+/* An index or a running marker: 014, a step, a count beside a title. */
+@utility type-folio {
+  font-family: var(--type-folio-family);
+  font-weight: var(--type-folio-weight);
+  font-size: var(--type-folio-size);
+  line-height: var(--type-folio-leading);
+  letter-spacing: var(--type-folio-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* Facts about a thing: when, how many, where. Ink: labels (--muted-foreground), unless a colour class says otherwise. */
+@utility type-meta {
+  font-family: var(--type-meta-family);
+  font-weight: var(--type-meta-weight);
+  font-size: var(--type-meta-size);
+  line-height: var(--type-meta-leading);
+  letter-spacing: var(--type-meta-tracking);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+/* Code and identifiers in a line: an address, a path, a field's value. */
+@utility type-code-inline {
+  font-family: var(--type-code-inline-family);
+  font-weight: var(--type-code-inline-weight);
+  font-size: var(--type-code-inline-size);
+  line-height: var(--type-code-inline-leading);
+  letter-spacing: var(--type-code-inline-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* A code to read aloud or copy by eye: a one-time code. */
+@utility type-code-display {
+  font-family: var(--type-code-display-family);
+  font-weight: var(--type-code-display-weight);
+  font-size: var(--type-code-display-size);
+  line-height: var(--type-code-display-leading);
+  letter-spacing: var(--type-code-display-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* One number that is the screen: a score, a total. */
+@utility type-number-hero {
+  font-family: var(--type-number-hero-family);
+  font-weight: var(--type-number-hero-weight);
+  font-size: var(--type-number-hero-size);
+  line-height: var(--type-number-hero-leading);
+  letter-spacing: var(--type-number-hero-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* A Metric's value. */
+@utility type-number-metric {
+  font-family: var(--type-number-metric-family);
+  font-weight: var(--type-number-metric-weight);
+  font-size: var(--type-number-metric-size);
+  line-height: var(--type-number-metric-leading);
+  letter-spacing: var(--type-number-metric-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* An index numeral or a group's letter. */
+@utility type-number-index {
+  font-family: var(--type-number-index-family);
+  font-weight: var(--type-number-index-weight);
+  font-size: var(--type-number-index-size);
+  line-height: var(--type-number-index-leading);
+  letter-spacing: var(--type-number-index-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* A count or a code in a list, in mono. */
+@utility type-number-count {
+  font-family: var(--type-number-count-family);
+  font-weight: var(--type-number-count-weight);
+  font-size: var(--type-number-count-size);
+  line-height: var(--type-number-count-leading);
+  letter-spacing: var(--type-number-count-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* The app's name in the App Lockup. */
+@utility type-brand-wordmark {
+  font-family: var(--type-brand-wordmark-family);
+  font-weight: var(--type-brand-wordmark-weight);
+  font-size: var(--type-brand-wordmark-size);
+  line-height: var(--type-brand-wordmark-leading);
+  letter-spacing: var(--type-brand-wordmark-tracking);
+}
+/* A letter standing in for a mark. */
+@utility type-icon-glyph {
+  font-family: var(--type-icon-glyph-family);
+  font-weight: var(--type-icon-glyph-weight);
+  font-size: var(--type-icon-glyph-size);
+  line-height: var(--type-icon-glyph-leading);
+  letter-spacing: var(--type-icon-glyph-tracking);
+}
+
+/*
+ * Names from before 1.0, kept so no class goes silent. Deprecated: use the role on the right.
+ *   type-page-title → type-title · type-section-title → type-subtitle
+ *   type-group-title → type-label · type-support → type-caption (with the support ink it carried)
+ */
+@utility type-page-title {
+  @apply type-title;
+}
+@utility type-section-title {
+  @apply type-subtitle;
+}
+@utility type-group-title {
+  @apply type-label;
+}
+@utility type-support {
+  @apply type-caption;
+  color: var(--support-foreground);
 }
 /* Reading width for prose. */
 @utility type-measure {
   max-width: var(--type-measure);
+}
+
+/*
+ * Rules: hairlines and edges that never add height. A stroke on a part that hugs its content is an
+ * inset shadow, not a border, so a row with a rule is as tall as the same row without one and
+ * stays on the 4px grid. (A box with a fixed height may still use a real border.)
+ *
+ *   rule-t, rule-r, rule-b, rule-l   one hairline: --stroke-rule wide, --line-rule
+ *   rule-box                         a hairline on all four sides
+ *   rule-box-emphasis                the same box at --stroke-emphasis: focus, error, a selected
+ *                                    tile. Colour from --rule-color, or --primary-fill without one
+ *   edge-l                           the --stroke-emphasis left edge of a selected row, in
+ *                                    --primary-fill (or --edge-color)
+ *
+ * They compose: each sets its own layer, and one box-shadow draws them all, so `rule-t rule-b`, or
+ * `rule-b` with `data-selected:edge-l`, both work. rule-box-emphasis replaces rule-box. The layers
+ * do not inherit, so a parent's rule never appears on a child. A layer that is off is an empty
+ * inset shadow, so a rule that arrives with a state can be transitioned (`transition-[box-shadow]`).
+ * Tailwind's own ring and shadow layers are in the same list, so a ring on the same element
+ * still draws.
+ *
+ * An inset shadow paints over the element's own background and under its children: a child with
+ * a fill that reaches the edge covers the line. Put the rule on the part that owns the edge.
+ */
+@property --rule-t {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
+@property --rule-r {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
+@property --rule-b {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
+@property --rule-l {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
+@property --rule-box {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
+@property --rule-edge {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
+
+@utility rule-t {
+  --rule-t: inset 0 var(--stroke-rule) 0 0 var(--line-rule);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility rule-r {
+  --rule-r: inset calc(var(--stroke-rule) * -1) 0 0 0 var(--line-rule);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility rule-b {
+  --rule-b: inset 0 calc(var(--stroke-rule) * -1) 0 0 var(--line-rule);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility rule-l {
+  --rule-l: inset var(--stroke-rule) 0 0 0 var(--line-rule);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility rule-box {
+  --rule-box: inset 0 0 0 var(--stroke-rule) var(--line-rule);
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility rule-box-emphasis {
+  --rule-box: inset 0 0 0 var(--stroke-emphasis) var(--rule-color, var(--primary-fill));
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility edge-l {
+  --rule-edge: inset var(--stroke-emphasis) 0 0 0 var(--edge-color, var(--primary-fill));
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+
+/*
+ * Scrims: the dim behind a sheet, a dialog or a menu. One colour role (--surface-scrim) painted
+ * at an opacity knob, the same number on both grounds (stone's own alpha is already in the role).
+ * The alpha goes into the colour, so `opacity` stays free for the fade in and out. A scrim is
+ * never opaque and never blurred.
+ */
+@utility scrim-sheet {
+  background-color: color-mix(in oklab, var(--surface-scrim) calc(var(--c-scrim-sheet) * 100%), transparent);
+}
+@utility scrim-dialog {
+  background-color: color-mix(in oklab, var(--surface-scrim) calc(var(--c-scrim-dialog) * 100%), transparent);
+}
+@utility scrim-menu {
+  background-color: color-mix(in oklab, var(--surface-scrim) calc(var(--c-scrim-menu) * 100%), transparent);
+}
+
+/*
+ * Touch targets: on a coarse pointer, a control smaller than --size-touch-min still takes a touch
+ * across that size. The control keeps its drawn size; a pseudo-element centred on it widens what
+ * can be hit, in each direction it falls short. It uses ::before, so a control that already draws
+ * with ::before needs its own; and a parent that clips its content clips the wider target too.
+ */
+@utility hit-area {
+  position: relative;
+  @media (pointer: coarse) {
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--size-touch-min));
+      height: max(100%, var(--size-touch-min));
+      translate: -50% -50%;
+    }
+  }
+}
+
+/* A needs-you yellow fill that is not the Needs You block: controls inside take that fill's ink for their focus ring. */
+@utility on-needs-you {
+  --ring: var(--needs-you-on-fill);
 }
 
 @utility no-scrollbar {
@@ -430,7 +800,6 @@ html:has([data-slot="app-frame"]) body {
     width: var(--status-orb-size);
     height: var(--status-orb-size);
     color: var(--c-status-orb-idle);
-    --c-icon-opsz: 20;
   }
   [data-slot="status-orb"][data-size="xs"] {
     --status-orb-size: var(--c-status-orb-size-xs);
@@ -448,10 +817,10 @@ html:has([data-slot="app-frame"]) body {
   [data-slot="status-orb"][data-state="failed"] { color: var(--c-status-orb-failed); }
   [data-slot="status-orb"][data-state="offline"] { color: var(--c-status-orb-offline); }
 
+  /* Marks are squares (docs/02-tokens.md → Radius): no radius on the dot or its halo. */
   [data-slot="status-orb-dot"],
   [data-slot="status-orb-halo"] {
     position: absolute;
-    border-radius: 9999px;
   }
   [data-slot="status-orb-dot"] {
     inset: 20%;
@@ -499,7 +868,6 @@ html:has([data-slot="app-frame"]) body {
   [data-slot="indicator"] {
     display: inline-block;
     flex-shrink: 0;
-    border-radius: 9999px;
   }
   [data-slot="indicator"][data-shape="dot"] {
     width: var(--c-indicator-dot-size);
@@ -524,7 +892,7 @@ html:has([data-slot="app-frame"]) body {
   [data-slot="indicator"][data-shape="badge"][data-kind="attention"] {
     background: var(--c-indicator-attention-badge-bg);
     color: var(--c-indicator-attention-badge-ink);
-    box-shadow: inset 0 0 0 1px var(--c-indicator-attention);
+    box-shadow: inset 0 0 0 var(--stroke-rule) var(--c-indicator-attention);
   }
 }
 @keyframes status-orb-breathe {
