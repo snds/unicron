@@ -11,8 +11,11 @@
 //   --views <a,b>        which views; a view is a file in src/views          default: every view
 //   --themes <a,b>       warpcore, vale, lockdown, synapse                   default: all four
 //   --grounds <a,b>      graphite (dark), stone (light)                      default: both
+//   --modes <a-b,c-d>    exact pairs instead of every theme × ground, as Figma names its modes:
+//                        --modes vale-stone,warpcore-graphite
 //   --sizes <WxH,WxH>    screen sizes in CSS pixels                          default: 1440x900,390x844
 //   --viewport           capture the screen only, not the whole page         default: whole page
+//   --element <selector> capture only the first element that matches, e.g. '[data-slot="button"]'
 //   --chrome             keep the playground's own bar in the picture        default: hidden
 //   --scale <n>          device pixel ratio                                  default: 1
 //   --no-touch           do not treat sizes under 600 wide as a touch phone  default: they are
@@ -24,7 +27,7 @@
 //
 // Examples:
 //   node apps/playground/scripts/shots.mjs shots
-//   node apps/playground/scripts/shots.mjs shots --views list-row,button --themes vale --grounds stone
+//   node apps/playground/scripts/shots.mjs shots --views list-row,button --modes vale-stone,warpcore-graphite
 //   PW_EXECUTABLE_PATH=/opt/pw-browsers/chromium node apps/playground/scripts/shots.mjs /tmp/shots --sizes 390x844
 //
 // What it does: serves apps/playground/dist with `vite preview` on a free port, opens each
@@ -48,7 +51,7 @@ const app = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const THEMES = ["warpcore", "vale", "lockdown", "synapse"]
 const GROUNDS = ["graphite", "stone"]
 const FLAGS = new Set(["viewport", "chrome", "no-touch", "help"])
-const VALUES = new Set(["views", "themes", "grounds", "sizes", "scale", "wait", "css", "jobs", "base-url", "timeout"])
+const VALUES = new Set(["views", "themes", "grounds", "modes", "sizes", "element", "scale", "wait", "css", "jobs", "base-url", "timeout"])
 
 /** With a message: say what is wrong and stop. Without one: print the notes at the top of this file. */
 function usage(message) {
@@ -188,6 +191,14 @@ async function main() {
   if (views.length === 0) usage("no views: none given and none found in src/views")
   const themes = oneOf("themes", options.themes ? list(options.themes) : THEMES, THEMES)
   const grounds = oneOf("grounds", options.grounds ? list(options.grounds) : GROUNDS, GROUNDS)
+  if (options.modes && (options.themes || options.grounds)) usage("give --modes, or --themes and --grounds, not both")
+  const modes = options.modes
+    ? list(options.modes).map((mode) => {
+        const match = /^([a-z]+)[-/]([a-z]+)$/.exec(mode)
+        if (!match || !THEMES.includes(match[1]) || !GROUNDS.includes(match[2])) usage(`--modes: "${mode}" is not <theme>-<ground>, such as vale-stone`)
+        return { theme: match[1], ground: match[2] }
+      })
+    : themes.flatMap((theme) => grounds.map((ground) => ({ theme, ground })))
   const sizes = list(options.sizes ?? "1440x900,390x844").map((size) => {
     const match = /^(\d+)x(\d+)$/.exec(size)
     if (!match) usage(`--sizes: "${size}" is not WIDTHxHEIGHT`)
@@ -209,8 +220,8 @@ async function main() {
   process.once("SIGINT", () => void stop().then(() => process.exit(130)))
 
   const shots = []
-  for (const size of sizes) for (const view of views) for (const theme of themes) for (const ground of grounds) shots.push({ size, view, theme, ground })
-  console.log(`shots: ${shots.length} pictures (${views.length} views × ${themes.length} themes × ${grounds.length} grounds × ${sizes.length} sizes) → ${out}`)
+  for (const size of sizes) for (const view of views) for (const { theme, ground } of modes) shots.push({ size, view, theme, ground })
+  console.log(`shots: ${shots.length} pictures (${views.length} views × ${modes.length} modes × ${sizes.length} sizes) → ${out}`)
 
   const failures = []
   let next = 0
@@ -237,7 +248,9 @@ async function main() {
         await page.goto(`${server.url}/?${query}`, { waitUntil: "load", timeout })
         if (css) await page.addStyleTag({ content: css })
         await settle(page, { view, theme, ground, wait: options.wait, timeout })
-        await page.screenshot({ path: path.join(out, name), fullPage: !options.viewport, animations: "disabled", caret: "hide", timeout })
+        const picture = { path: path.join(out, name), animations: "disabled", caret: "hide", timeout }
+        if (options.element) await page.locator(options.element).first().screenshot(picture)
+        else await page.screenshot({ ...picture, fullPage: !options.viewport })
         console.log(`  ✓ ${name}${problems.length ? `  (page errors: ${problems.join(" | ")})` : ""}`)
       } catch (error) {
         const reason = String(error?.message ?? error).split("\n")[0]

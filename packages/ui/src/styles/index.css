@@ -741,7 +741,7 @@ html:has([data-slot="app-frame"]) body {
  * Touch targets: on a coarse pointer, a control smaller than --size-touch-min still takes a touch
  * across that size. The control keeps its drawn size; a pseudo-element centred on it widens what
  * can be hit, in each direction it falls short. It uses ::before, so a control that already draws
- * with ::before needs its own.
+ * with ::before needs its own; and a parent that clips its content clips the wider target too.
  */
 @utility hit-area {
   position: relative;
