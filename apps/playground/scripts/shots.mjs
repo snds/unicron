@@ -185,7 +185,7 @@ async function main() {
   const out = path.resolve(positional[0])
 
   const known = fs.existsSync(path.join(app, "src", "views"))
-    ? fs.readdirSync(path.join(app, "src", "views")).filter((file) => /\.tsx$/.test(file) && !/\.test\.tsx$/.test(file)).map((file) => file.replace(/\.tsx$/, "")).sort()
+    ? fs.readdirSync(path.join(app, "src", "views")).filter((file) => /^[^_].*\.tsx$/.test(file) && !/\.test\.tsx$/.test(file)).map((file) => file.replace(/\.tsx$/, "")).sort()
     : []
   const views = options.views ? list(options.views) : known
   if (views.length === 0) usage("no views: none given and none found in src/views")

@@ -10,7 +10,8 @@ import { expect, test, type Page } from "@playwright/test"
 const viewsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../src/views")
 const VIEW_FILES = fs
   .readdirSync(viewsDir)
-  .filter((file) => /\.tsx$/.test(file) && !/\.test\.tsx$/.test(file))
+  // The same rule as src/registry.ts: a leading "_" marks shared parts, not a view.
+  .filter((file) => /^[^_].*\.tsx$/.test(file) && !/\.test\.tsx$/.test(file))
   .map((file) => file.replace(/\.tsx$/, ""))
   .sort()
 

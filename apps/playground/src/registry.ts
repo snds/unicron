@@ -1,5 +1,7 @@
 // The view registry. Every file in ./views/*.tsx is a view, reachable as ?view=<file name>.
 // Nothing else registers one: add a file, and it is in the picker and in scripts/shots.mjs.
+// Not views: a file whose name starts with "_" (parts that views share), a *.test.tsx, and
+// anything in a folder under ./views.
 //
 // A view file exports one React component. Any of these is found, in this order:
 //   export default function …        the default export
@@ -23,7 +25,7 @@ export interface PlaygroundView {
 /** The view shown when the address names none. */
 export const DEFAULT_VIEW = "foundations"
 
-const modules = import.meta.glob<ViewModule>(["./views/*.tsx", "!./views/*.test.tsx"])
+const modules = import.meta.glob<ViewModule>(["./views/*.tsx", "!./views/_*.tsx", "!./views/*.test.tsx"])
 
 function isComponent(value: unknown): value is ComponentType {
   if (typeof value === "function") return true
