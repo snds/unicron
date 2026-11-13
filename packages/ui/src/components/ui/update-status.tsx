@@ -178,11 +178,13 @@ function UpdateStatusRow({
   const row = rowClasses("auto")
   return (
     <div data-slot="update-status-row" data-state={status.state} className={cn(row.root, className)} {...props}>
-      <div className={cn(row.inner, "flex-wrap @max-lg/row:items-start")}>
+      <div className={cn(row.inner, "@max-lg/row:items-start")}>
         <div className={row.body}>
           <span data-slot="update-status-row-label" className={row.label}>
             {w.label ?? updateWords.label}
           </span>
+          {/* The value column: the version, the one status line, then the actions as a line of
+              words (Field Row's action, in the overline role; this row has two or three). */}
           <div data-slot="update-status-row-text" className="flex min-w-0 flex-1 flex-col gap-1">
             <p data-slot="update-status-row-version" className="type-code-inline text-text-body break-words">
               {w.version(appName, status.version, w.channel(status.channel))}
@@ -199,46 +201,45 @@ function UpdateStatusRow({
             >
               {w.line(status, appName)}
             </p>
+            <div data-slot="update-status-row-actions" className="flex flex-wrap items-baseline gap-x-4 gap-y-2 pt-2">
+              <TextAction disabled={!canCheckForUpdates(status)} onClick={onCheck}>
+                {w.check}
+              </TextAction>
+              {ready ? <TextAction onClick={onRestart}>{w.restart}</TextAction> : <TextAction onClick={onReload}>{w.reload}</TextAction>}
+              {link && (
+                // A link drawn as a text action: it goes somewhere, so it keeps the link role.
+                <a
+                  data-slot="update-status-row-release"
+                  href={link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="type-overline text-text-body hit-area -mx-1 rounded px-1 whitespace-nowrap underline-offset-4 hover:bg-state-hover hover:underline active:bg-state-pressed"
+                  onClick={
+                    onOpenLink
+                      ? (event) => {
+                          event.preventDefault()
+                          onOpenLink(link)
+                        }
+                      : undefined
+                  }
+                >
+                  {w.release}
+                </a>
+              )}
+            </div>
+            {ready && restartNote && (
+              <p data-slot="update-status-row-note" className="type-meta text-text-label">
+                {restartNote}
+              </p>
+            )}
+            {error && (
+              <p data-slot="update-status-row-error" role="alert" className="type-caption text-critical-text">
+                {error}
+              </p>
+            )}
           </div>
         </div>
-        {/* Field Row's actions: words in the overline role. On a phone they take their own line. */}
-        <div data-slot="update-status-row-actions" className={cn(row.actions, "flex-wrap @max-lg/row:basis-full @max-lg/row:pt-1")}>
-          <TextAction disabled={!canCheckForUpdates(status)} onClick={onCheck}>
-            {w.check}
-          </TextAction>
-          {ready ? <TextAction onClick={onRestart}>{w.restart}</TextAction> : <TextAction onClick={onReload}>{w.reload}</TextAction>}
-          {link && (
-            // A link drawn as a text action: it goes somewhere, so it keeps the link role.
-            <a
-              data-slot="update-status-row-release"
-              href={link}
-              target="_blank"
-              rel="noreferrer"
-              className="type-overline text-text-body hit-area -mx-1 rounded px-1 whitespace-nowrap underline-offset-4 hover:bg-state-hover hover:underline active:bg-state-pressed"
-              onClick={
-                onOpenLink
-                  ? (event) => {
-                      event.preventDefault()
-                      onOpenLink(link)
-                    }
-                  : undefined
-              }
-            >
-              {w.release}
-            </a>
-          )}
-        </div>
       </div>
-      {ready && restartNote && (
-        <p data-slot="update-status-row-note" className="type-meta text-text-label pb-4">
-          {restartNote}
-        </p>
-      )}
-      {error && (
-        <p data-slot="update-status-row-error" role="alert" className="type-caption text-critical-text pb-4">
-          {error}
-        </p>
-      )}
     </div>
   )
 }

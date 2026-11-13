@@ -39,13 +39,13 @@
     },
     "revealed-bg": {
       "$type": "color",
-      "$value": "color-mix(in oklab, {text-body} 8%, transparent)",
-      "$description": "Behind a shown value: an ink wash, so a shown secret reads as out in the open. Was a warning tint before 1.0; the direction keeps colour for state."
+      "$value": "{surface-raised}",
+      "$description": "Behind a shown value, with a hairline round it (rule-box): a raised chip, so a shown secret reads as out in the open on the page and in a sheet. Body ink on it holds Lc 90 in every mode; an ink wash did not on stone. Was a warning tint before 1.0."
     },
     "meter-weak": {
       "$type": "color",
-      "$value": "{critical-fill}",
-      "$description": "The strength rule's cells for Weak. The word is always beside them."
+      "$value": "{critical-text}",
+      "$description": "The strength rule's cells for Weak: the critical ink, which holds Lc 30 as a solid on both grounds (the critical fill does not on graphite). The word is always beside them."
     },
     "meter-fair": {
       "$type": "color",
@@ -54,8 +54,8 @@
     },
     "meter-strong": {
       "$type": "color",
-      "$value": "{primary-fill}",
-      "$description": "The strength rule's cells for Strong."
+      "$value": "{primary-text}",
+      "$description": "The strength rule's cells for Strong: the identity ink, which holds Lc 30 as a solid on both grounds (the identity fill does not on graphite)."
     }
   },
   "code": {
@@ -111,13 +111,18 @@
   "crown-jewel": {
     "hover": {
       "$type": "color",
-      "$value": "color-mix(in oklab, {protected-foreground} 6%, transparent)",
-      "$description": "state-hover inside the inverted surface: the same 6% wash in the surface's own ink."
+      "$value": "color-mix(in oklab, {protected-foreground} 3%, transparent)",
+      "$description": "state-hover inside the inverted surface, in the surface's own ink. 3%, not the page's 6%: on the light inverted ground a 6% wash takes body ink under Lc 90."
     },
     "pressed": {
       "$type": "color",
-      "$value": "color-mix(in oklab, {protected-foreground} 10%, transparent)",
-      "$description": "state-pressed inside the inverted surface."
+      "$value": "color-mix(in oklab, {protected-foreground} 4%, transparent)",
+      "$description": "state-pressed inside the inverted surface. 4%, for the same reason as hover."
+    },
+    "muted-ink": {
+      "$type": "color",
+      "$value": "color-mix(in oklab, {protected-foreground} 76%, transparent)",
+      "$description": "Assigned to --muted-foreground and --text-label inside. 76% (was 72%): label ink on the inverted ground holds Lc 60 in all eight modes."
     }
   }
 }

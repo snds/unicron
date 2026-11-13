@@ -74,3 +74,20 @@ describe("RiskTierBadge: the closed vocabulary", () => {
     expect(pill.className).toContain("motion-reduce:animate-none")
   })
 })
+
+describe("RiskTierBadge 1.0: Badge's square mono caps, a tone per state", () => {
+  it("built in and verified are quiet, use with care is the warning tone, unverified the critical one", () => {
+    const pill = (tier: RiskTier, verified?: boolean) => {
+      const { container, unmount } = render(<RiskTierBadge tier={tier} verified={verified} />)
+      const cls = container.querySelector('[data-slot="risk-tier-badge-pill"]')!.className
+      unmount()
+      return cls
+    }
+    expect(pill("standard", true)).toContain("type-overline")
+    expect(pill("standard", true)).toContain("rule-box")
+    expect(pill("official", true)).toContain("text-text-body")
+    expect(pill("tolerated", true)).toContain("inset-ring-warning")
+    expect(pill("standard", false)).toContain("inset-ring-critical-fill")
+    expect(pill("standard", true)).not.toMatch(/rounded-full/)
+  })
+})

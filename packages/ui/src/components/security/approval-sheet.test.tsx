@@ -219,3 +219,73 @@ describe("ApprovalSheet: the other states", () => {
     }
   })
 })
+
+describe("ApprovalSheet 1.0: the review look and the matching modes", () => {
+  it("the frame is named by the request's own words; the overline carries the time left as MM:SS", async () => {
+    setup({ title: "Steam on a Windows PC", overline: "Sign-in request", matching: { mode: "none" }, expiresAt: Date.now() + 100_000 })
+    await arm()
+    expect(dialog()).toHaveAccessibleName("Steam on a Windows PC")
+    expect(screen.getByRole("timer")).toHaveTextContent("01:40 left")
+    expect(dialog().querySelector('[data-slot="review-overline"]')).toHaveTextContent("Sign-in request")
+  })
+
+  it("matching none: the yes is live once armed, named by the gate's route, and focus stays on the no", async () => {
+    const { onApprove } = setup({ matching: { mode: "none" }, approveLabel: "Approve with Touch ID", approveIcon: "fingerprint-recognition" })
+    expect(approve()).toBeDisabled()
+    await arm()
+    expect(approve()).toBeEnabled()
+    expect(approve()).toHaveAccessibleName(/Approve with Touch ID/)
+    expect(document.activeElement).not.toBe(approve())
+    expect(screen.queryAllByRole("textbox")).toHaveLength(0)
+    fireEvent.click(approve()!)
+    expect(onApprove).toHaveBeenCalledTimes(1)
+  })
+
+  it("matching compare: the code in groups, They match / They don't match; the no denies as a mismatch", async () => {
+    const { onDeny } = setup({ kind: "bridge", matching: { mode: "compare", code: "482913" } })
+    await arm()
+    const code = dialog().querySelector('[data-slot="approval-sheet-match-code"]')!
+    expect(code).toHaveTextContent("482")
+    expect(code).toHaveTextContent("913")
+    expect(screen.getByRole("button", { name: /They match/ })).toBeEnabled()
+    expect(deny()).toHaveTextContent("They don't match")
+    fireEvent.click(deny())
+    expect(onDeny).toHaveBeenCalledWith("mismatch")
+  })
+
+  it("a refused device code still renders no approve control whatever the matching mode", async () => {
+    setup({ kind: "device-code", origin: "push", matching: { mode: "none" } })
+    await arm()
+    expect(document.querySelector('[data-action="approve"]')).toBeNull()
+  })
+
+  it("dismiss=keep: Escape decides nothing; the host is asked to close", async () => {
+    const { onDeny, onOpenChange } = setup({ dismiss: "keep" })
+    await arm()
+    fireEvent.keyDown(dialog(), { key: "Escape" })
+    expect(onDeny).not.toHaveBeenCalled()
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it("the countdown rule turns critical in the last 20 s; the overline's words turn critical at 10", async () => {
+    setup({ expiresAt: Date.now() + 25_000 })
+    await arm()
+    const lit = () => Array.from(dialog().querySelectorAll('[data-slot="progress-segment"]')).filter((c) => !c.className.includes("--c-progress-track"))
+    expect(lit()[0]!.className).toContain("--c-progress-live")
+    await advance(5_000)
+    expect(lit()[0]!.className).toContain("--c-progress-critical")
+    expect(screen.getByRole("timer")).not.toHaveClass("text-critical-text")
+    await advance(10_000)
+    expect(screen.getByRole("timer")).toHaveClass("text-critical-text")
+  })
+
+  it("the facts are Field Rows: overline label, mono value, a rule on top", async () => {
+    setup()
+    await arm()
+    const rows = dialog().querySelectorAll('[data-slot="approval-sheet-context-row"]')
+    expect(rows).toHaveLength(4)
+    expect(rows[0]!.className).toContain("rule-t")
+    expect(within(rows[0] as HTMLElement).getByText("What")).toHaveClass("type-overline")
+    expect(within(rows[0] as HTMLElement).getByText("Sign in to the vault")).toHaveClass("type-code-inline")
+  })
+})

@@ -892,7 +892,7 @@ function SecretFieldRead({
                 data-slot="secret-field-revealed"
                 className={cn(
                   "min-w-0 truncate",
-                  isRevealed && "-mx-1 bg-(--c-secret-field-revealed-bg) px-1 contrast-more:bg-transparent forced-colors:bg-transparent"
+                  isRevealed && "rule-box -mx-1 bg-(--c-secret-field-revealed-bg) px-1 contrast-more:bg-transparent forced-colors:bg-transparent"
                 )}
               />
               <span id={hiddenNameId} className="sr-only">
