@@ -93,7 +93,7 @@ function AppFrameNav({ className, ...props }: React.ComponentProps<"nav">) {
     <nav
       data-slot="app-frame-nav"
       className={cn(
-        "bg-popover/70 ring-foreground/10 flex gap-0.5 rounded-full p-1 shadow-lg ring-1 backdrop-blur-2xl backdrop-saturate-150",
+        "bg-popover ring-foreground/10 flex gap-0.5 rounded-full p-1 shadow-lg ring-1",
         className
       )}
       {...props}
@@ -133,7 +133,7 @@ function AppFrameNavItem({
       aria-current={current ? "page" : undefined}
       className={cn(
         "text-foreground hover:bg-muted focus-visible:ring-ring/50 flex size-11 w-(--c-app-frame-nav-item-width) shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-3 focus-visible:ring-inset nav-rail:w-full in-data-[slot=app-frame-pivot]:w-full in-data-[slot=app-frame-pivot]:rounded-lg",
-        "aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:[--c-icon-fill:1]",
+        "aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground",
         className
       )}
       {...props}

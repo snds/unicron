@@ -181,8 +181,10 @@ describe("SelectContent width", () => {
     expect(cls).toEqual(expect.arrayContaining(["w-(--anchor-width)", "min-w-(--c-menu-min-width)"]))
   })
 
-  it("is a menu's frosted glass", async () => {
+  it("is a solid menu surface, never frosted glass (contract 1.5: no blur)", async () => {
     const cls = await open()
-    expect(cls).toEqual(expect.arrayContaining(["bg-popover/70", "before:backdrop-blur-2xl"]))
+    expect(cls).toContain("bg-popover")
+    expect(cls).not.toContain("bg-popover/70")
+    expect(cls.some((name) => name.includes("backdrop-blur"))).toBe(false)
   })
 })
