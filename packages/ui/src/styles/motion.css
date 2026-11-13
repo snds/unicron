@@ -4,6 +4,9 @@
  *
  *   motion-press, motion-press-sm   a control going down under a press
  *   motion-pop                      a small surface arriving from its anchor and leaving faster
+ *   motion-pop-fast                 the same, short both ways (a tooltip)
+ *   motion-pop-glass                the same for a frosted-glass surface, which must not fade itself
+ *   motion-fade                     a backdrop behind a surface
  *   motion-slide (+ -from-*)        a surface arriving from an edge on the firm spring
  *   motion-collapse                 a panel opening by height
  *   motion-stagger                  children entering in turn
@@ -55,6 +58,76 @@
     scale: var(--motion-pop-from);
   }
   .motion-pop[data-ending-style] {
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-exit);
+  }
+
+  /* Small and met often (a tooltip, a menu): the same pop, short both ways. */
+  .motion-pop-fast {
+    transition-duration: var(--motion-fast);
+  }
+  /* Base UI marks a popup that should not animate (a tooltip moving between neighbours). */
+  .motion-pop[data-instant],
+  .motion-pop-glass[data-instant] {
+    transition-property: none;
+  }
+
+  /*
+   * pop, for a frosted-glass surface (menus, select). Fading the surface itself would switch its
+   * backdrop blur off for the length of the fade: a blur only sees what is behind its nearest
+   * faded ancestor. So the surface only scales, and the fade happens one level down, on the glass
+   * layer (::before) and on the content. Its ring and shadow are there from the first frame.
+   * Opened or closed from the keyboard, it does not animate: the highlight is already on an item.
+   */
+  .motion-pop-glass {
+    --motion-pop-from: 0.96;
+    transform-origin: var(--transform-origin, center);
+    transition-property: scale;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-enter);
+  }
+  .motion-pop-glass::before,
+  .motion-pop-glass > * {
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-enter);
+  }
+  .motion-pop-glass[data-starting-style],
+  .motion-pop-glass[data-ending-style] {
+    scale: var(--motion-pop-from);
+  }
+  .motion-pop-glass[data-starting-style]::before,
+  .motion-pop-glass[data-ending-style]::before,
+  .motion-pop-glass[data-starting-style] > *,
+  .motion-pop-glass[data-ending-style] > * {
+    opacity: 0;
+  }
+  .motion-pop-glass[data-ending-style],
+  .motion-pop-glass[data-ending-style]::before,
+  .motion-pop-glass[data-ending-style] > * {
+    transition-timing-function: var(--motion-ease-exit);
+  }
+  .motion-pop-glass:has(:focus-visible),
+  .motion-pop-glass:has(:focus-visible)::before,
+  .motion-pop-glass:has(:focus-visible) > * {
+    transition-property: none;
+  }
+
+  /* ── fade ──────────────────────────────────────────────────────────────────────────────────── */
+  /* A backdrop behind a surface: opacity only, in step with the surface it sits behind. */
+  .motion-fade {
+    transition-property: opacity;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-enter);
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  .motion-fade[data-starting-style],
+  .motion-fade[data-ending-style] {
+    opacity: 0;
+  }
+  .motion-fade[data-ending-style] {
     transition-duration: var(--motion-fast);
     transition-timing-function: var(--motion-ease-exit);
   }
@@ -198,7 +271,9 @@
   .motion-press:active,
   .motion-press-sm:active,
   .motion-pop[data-starting-style],
-  .motion-pop[data-ending-style] {
+  .motion-pop[data-ending-style],
+  .motion-pop-glass[data-starting-style],
+  .motion-pop-glass[data-ending-style] {
     scale: none;
   }
   .motion-pop {
@@ -225,7 +300,9 @@
   .motion-press:active,
   .motion-press-sm:active,
   .motion-pop[data-starting-style],
-  .motion-pop[data-ending-style] {
+  .motion-pop[data-ending-style],
+  .motion-pop-glass[data-starting-style],
+  .motion-pop-glass[data-ending-style] {
     scale: none;
   }
   .motion-pop {

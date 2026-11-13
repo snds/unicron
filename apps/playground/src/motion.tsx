@@ -3,7 +3,42 @@
 // data-contract, data-trigger and data-specimen, so what is documented, shown and tested is one
 // thing. Specimens are plain boxes on purpose: a recipe is shown on its own, not on a component.
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
-import { Button, CheckDraw, Kbd, motionContracts, useShake, type MotionContractId } from "@unicron/ui"
+import {
+  Button,
+  CheckDraw,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Kbd,
+  motionContracts,
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  useShake,
+  type MotionContractId,
+} from "@unicron/ui"
 
 type Mode = "full" | "reduced"
 
@@ -239,6 +274,88 @@ function ShakeSpecimen() {
   )
 }
 
+const SELECT_ITEMS = { general: "General", code: "Code", deep: "Deep" }
+
+function DialogSpecimen() {
+  return (
+    <Dialog>
+      <DialogTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Open dialog
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete thread?</DialogTitle>
+          <DialogDescription>This cannot be undone.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter showCloseButton>
+          <Button variant="destructive">Delete</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function PopoverSpecimen() {
+  return (
+    <Popover>
+      <PopoverTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Route details
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverHeader>
+          <PopoverTitle>Route</PopoverTitle>
+          <PopoverDescription>Runs locally, and falls back when the desktop is off.</PopoverDescription>
+        </PopoverHeader>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function TooltipSpecimen() {
+  return (
+    <Tooltip>
+      <TooltipTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Hover me
+      </TooltipTrigger>
+      <TooltipContent>Tooltips explain, never hide required info.</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function MenuSpecimen() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Options
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Thread</DropdownMenuLabel>
+          <DropdownMenuItem>Archive</DropdownMenuItem>
+          <DropdownMenuItem>Snooze</DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function SelectSpecimen() {
+  return (
+    <Select items={SELECT_ITEMS} defaultValue="general">
+      <SelectTrigger data-trigger aria-label="Model">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="general">General</SelectItem>
+        <SelectItem value="code">Code</SelectItem>
+        <SelectItem value="deep">Deep</SelectItem>
+      </SelectContent>
+    </Select>
+  )
+}
+
 const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   press: () => <PressSpecimen />,
   pop: () => <ToggleSpecimen className="motion-pop" label="A small surface" />,
@@ -247,6 +364,11 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   stagger: () => <StaggerSpecimen />,
   draw: () => <DrawSpecimen />,
   shake: () => <ShakeSpecimen />,
+  dialog: () => <DialogSpecimen />,
+  popover: () => <PopoverSpecimen />,
+  tooltip: () => <TooltipSpecimen />,
+  menu: () => <MenuSpecimen />,
+  select: () => <SelectSpecimen />,
 }
 
 function Fact({ term, children }: { term: string; children: ReactNode }) {
@@ -281,30 +403,36 @@ export function MotionView() {
         </Button>
       </div>
       <TokenStrip />
-      <h3 className="mb-3 text-sm font-medium">Recipes</h3>
-      <div className="grid gap-4 md:grid-cols-2">
-        {motionContracts.map((contract) => (
-          <article key={contract.id} data-contract={contract.id} className="rounded-xl border p-4">
-            <header className="mb-3">
-              <h4 className="text-sm font-medium capitalize">{contract.id}</h4>
-              <p className="text-muted-foreground font-mono text-xs">{contract.recipe}</p>
-            </header>
-            <div className="mb-4 flex min-h-24 flex-wrap items-start gap-3">{SPECIMENS[contract.id]()}</div>
-            <dl className="grid gap-1 text-xs">
-              <Fact term="Trigger">{contract.trigger}</Fact>
-              <Fact term="Moves">{contract.properties.join(", ")}</Fact>
-              <Fact term="Runs">
-                up to <code>{contract.duration}</code> on {contract.easing.map((e) => e.replace("--motion-", "")).join(", ")}
-                {"stagger" in contract ? `, ${contract.stagger} apart` : ""}
-              </Fact>
-              <Fact term="Met">{contract.frequency}</Fact>
-              <Fact term="Interrupted">{contract.interrupted}</Fact>
-              <Fact term="Reduced">{contract.reduced}</Fact>
-              {"exception" in contract ? <Fact term="Exception">{contract.exception}</Fact> : null}
-            </dl>
-          </article>
-        ))}
-      </div>
+      {(["Recipes", "Components"] as const).map((group) => (
+        <section key={group} className="mb-8">
+          <h3 className="mb-3 text-sm font-medium">{group}</h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            {motionContracts
+              .filter((contract) => ("surfaces" in contract) === (group === "Components"))
+              .map((contract) => (
+                <article key={contract.id} data-contract={contract.id} className="rounded-xl border p-4">
+                  <header className="mb-3">
+                    <h4 className="text-sm font-medium capitalize">{contract.id}</h4>
+                    <p className="text-muted-foreground font-mono text-xs">{contract.recipe}</p>
+                  </header>
+                  <div className="mb-4 flex min-h-24 flex-wrap items-start gap-3">{SPECIMENS[contract.id]()}</div>
+                  <dl className="grid gap-1 text-xs">
+                    <Fact term="Trigger">{contract.trigger}</Fact>
+                    <Fact term="Moves">{contract.properties.join(", ")}</Fact>
+                    <Fact term="Runs">
+                      up to <code>{contract.duration}</code> on {contract.easing.map((e) => e.replace("--motion-", "")).join(", ")}
+                      {"stagger" in contract ? `, ${contract.stagger} apart` : ""}
+                    </Fact>
+                    <Fact term="Met">{contract.frequency}</Fact>
+                    <Fact term="Interrupted">{contract.interrupted}</Fact>
+                    <Fact term="Reduced">{contract.reduced}</Fact>
+                    {"exception" in contract ? <Fact term="Exception">{contract.exception}</Fact> : null}
+                  </dl>
+                </article>
+              ))}
+          </div>
+        </section>
+      ))}
     </div>
   )
 }
