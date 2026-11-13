@@ -50,8 +50,11 @@ describe("motion tokens and reduced motion", () => {
     expect(blockDepth, `${opened} @layer blocks before it; the reduced-motion layer must sit at the top level`).toBe(0)
   })
 
-  it("stops every loop and stills the spinner at reduced opacity", () => {
-    for (const loop of [".animate-spin", ".animate-pulse", ".animate-ping", ".animate-bounce"]) expect(reduced).toContain(loop)
+  it("stops every loop, with or without a variant in front, and stills the spinner at reduced opacity", () => {
+    // Matched in the class attribute, so `group-data-indeterminate/progress:animate-pulse` stops
+    // too (a rule on `.animate-pulse` would miss it).
+    for (const loop of ["animate-spin", "animate-pulse", "animate-ping", "animate-bounce"]) expect(reduced).toContain(`[class*="${loop}"]`)
+    expect(reduced).toMatch(/\[class\*="animate-bounce"\] \{\s*animation: none;/)
     expect(reduced).toMatch(/\[data-slot="spinner"\] \{\s*animation: none;\s*opacity: [\d.]+;/)
   })
 
