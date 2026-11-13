@@ -33,6 +33,15 @@ describe("Icon", () => {
     expect(icon.outerHTML).not.toMatch(/font|style=/)
   })
 
+  it("has no fill prop, and nothing a caller passes overrides the current color", () => {
+    // @ts-expect-error -- `fill` is gone in 1.0: a filled glyph is a name of its own (star--filled).
+    const typed = <Icon name="star" fill />
+    expect(typed.props.name).toBe("star")
+    const untyped = { fill: "red" } as Record<string, unknown>
+    const { container } = render(<Icon name="star" {...untyped} />)
+    expect(svg(container)).toHaveAttribute("fill", "currentColor")
+  })
+
   it("is 20 px by default, 16 px at sm, or the number given", () => {
     const size = (ui: React.ReactElement) => {
       const icon = svg(render(ui).container)

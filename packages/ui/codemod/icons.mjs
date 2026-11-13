@@ -448,8 +448,81 @@ export function transformIcons(source, options) {
     else if (sameWord.has(at.name)) report.sameWord.push({ ...at, to: map[at.name], text: lineText(token.s) })
   }
 
+  // ── props that are gone in 1.0 ────────────────────────────────────────────────────────────────
+  // Icon lost Material Symbols' `fill`, `weight`, `grade` and `opticalSize`; IconButton lost `fill`.
+  // In the apps `fill` often carries a state (pinned, a favourite, the current item), and Carbon
+  // draws a filled glyph as a name of its own. So where the glyph is a literal and the curated set
+  // has its filled form, `fill` becomes that name: bare `fill` (or `fill={true}`) picks it,
+  // `fill={expr}` picks it when the expression holds (`name={expr ? "pin--filled" : "pin"}`), and
+  // `fill={false}` just goes. Every other use is listed, by line, with what to do.
+  report.filled = []
+  report.removedProps = []
+  const propTags = new Set([...tagSet, "IconButton"])
+  const nameAttribute = (tag) => (tag === "IconButton" ? "icon" : "name")
+  const filledOf = (name) => {
+    for (const candidate of [`${name}--filled`, name.replace(/--outline$/, "--filled")]) {
+      if (candidate !== name && carbonNames?.has(candidate)) return candidate
+    }
+    return null
+  }
+  const replaced = new Map() // a name literal's token index → its new text, quotes included
+  const removedRanges = []
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].t !== "jsxOpen" || !propTags.has(tokens[i].v)) continue
+    const tag = tokens[i].v
+    const attrs = new Map()
+    for (let j = i + 1; j < tokens.length && tokens[j].t !== "jsxEnd"; j = after(j)) if (tokens[j].t === "jsxAttr") attrs.set(tokens[j].v, j)
+    for (const prop of ["fill", "weight", "grade", "opticalSize"]) {
+      const a = attrs.get(prop)
+      if (a === undefined || (tag === "IconButton" && prop !== "fill")) continue
+      const valued = isP(a + 1, "=")
+      const value = valued ? a + 2 : -1
+      const braced = valued && isP(value, "{")
+      const end = !valued ? tokens[a].e : braced ? tokens[tokens[value].m].e : tokens[value].e
+      const expr = braced ? source.slice(tokens[value].e, tokens[tokens[value].m].s).trim() : null
+      const at = { ...where(tokens[a].s), name: prop, tag, text: lineText(tokens[a].s) }
+      if (prop !== "fill") {
+        report.removedProps.push({ ...at, hint: "Carbon has one weight and one size of drawing: delete it." })
+        continue
+      }
+      // The glyph, if it is a literal: its Carbon name after this run, and that name's filled form.
+      const n = attrs.get(nameAttribute(tag))
+      const literal = n !== undefined && isP(n + 1, "=") && tokens[n + 2]?.t === "str" ? n + 2 : -1
+      const glyph = literal < 0 ? null : tokens[literal].v
+      const base = glyph === null ? null : Object.hasOwn(map, glyph) ? map[glyph] : carbonNames?.has(glyph) ? glyph : null
+      const filled = base ? filledOf(base) : null
+      const on = !valued || expr === "true"
+      const off = expr === "false"
+      const stringFill = valued && !braced
+      if (stringFill || (braced && /^["'`]/.test(expr))) {
+        report.removedProps.push({ ...at, hint: "a paint, not a state: delete it; the icon takes the text color (set a text color class)." })
+        continue
+      }
+      if (off || (filled && literal >= 0)) {
+        removedRanges.push({ s: tokens[a - 1].e, e: end })
+        if (!off) {
+          const quote = source[tokens[literal].s]
+          const simple = /^[!\w$.?[\]]+$/.test(expr ?? "")
+          const text = on ? `${quote}${filled}${quote}` : `{${simple ? expr : `(${expr})`} ? "${filled}" : "${base}"}`
+          replaced.set(literal, text)
+          report.filled.push({ ...at, name: glyph, to: on ? filled : `${expr} ? ${filled} : ${base}` })
+        }
+        continue
+      }
+      report.removedProps.push({
+        ...at,
+        hint: !base
+          ? "the glyph is not a literal here: if fill marks a state, pick the glyph's --filled name when the state holds (star--filled, pin--filled), or show the state another way."
+          : `"${base}" has no filled form in the curated set: show the state another way (a different glyph, aria-pressed with a fill, a mark), then delete it.`,
+      })
+    }
+  }
+  const finalEdits = edits.filter((edit) => ![...replaced.keys()].some((k) => edit.s === tokens[k].s + 1))
+  for (const [k, text] of replaced) finalEdits.push({ s: tokens[k].s, e: tokens[k].e, to: text })
+  for (const range of removedRanges) finalEdits.push({ ...range, to: "" })
+
   let output = source
-  for (const edit of edits.sort((x, y) => y.s - x.s)) output = output.slice(0, edit.s) + edit.to + output.slice(edit.e)
+  for (const edit of finalEdits.sort((x, y) => y.s - x.s)) output = output.slice(0, edit.s) + edit.to + output.slice(edit.e)
   return { output, ...report }
 }
 

@@ -15,7 +15,14 @@ export type IconSize = "md" | "sm" | number
 
 const SIZES = { md: 20, sm: 16 } as const
 
-export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name" | "children"> {
+/**
+ * An icon's props: the svg's own, less `name`, `children` and `fill`. The fill is always the
+ * current text color. Material Symbols' `fill`, `weight`, `grade` and `opticalSize` props are gone
+ * in 1.0, so passing one is a type error that names it ("Property 'fill' does not exist"). A filled
+ * glyph is a name of its own in Carbon (`star--filled`, `pin--filled`); `unicron-codemod icons`
+ * rewrites `fill` to it where the curated set has one, and lists every other use.
+ */
+export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name" | "children" | "fill"> {
   /** A Carbon icon name from the curated set, e.g. "arrow--right", or a name the app registered. */
   name: IconName
   /**
@@ -57,12 +64,14 @@ export function Icon({ name, size = "md", label, tone, className, ...props }: Ic
       viewBox="0 0 32 32"
       width={px}
       height={px}
-      fill="currentColor"
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
       className={cn("shrink-0", tone && TONES[tone], className)}
       {...props}
+      // After the spread: an untyped `fill` from a caller still written for Material Symbols
+      // cannot override the current color.
+      fill="currentColor"
     >
       {nodes}
     </svg>

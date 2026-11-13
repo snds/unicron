@@ -88,6 +88,50 @@ describe("JSX attributes", () => {
   })
 })
 
+describe("props that are gone in 1.0", () => {
+  it("turns fill into the glyph's filled name, bare or behind a state", () => {
+    assert.equal(run(`<Icon name="keep" fill={current.pinned} size="sm" />`).output, `<Icon name={current.pinned ? "pin--filled" : "pin"} size="sm" />`)
+    assert.equal(run(`<Icon name="star" fill label="favourite" />`).output, `<Icon name="star--filled" label="favourite" />`)
+    assert.equal(run(`<Icon name='check_circle' fill={true} />`).output, `<Icon name='checkmark--filled' />`)
+    assert.equal(run(`<IconButton icon="star" aria-pressed={active} fill={active} />`).output, `<IconButton icon={active ? "star--filled" : "star"} aria-pressed={active} />`)
+    assert.equal(run(`<Icon\n  name="notifications"\n  fill={armed && !pinned}\n/>`).output, `<Icon\n  name={(armed && !pinned) ? "notification--filled" : "notification"}\n/>`)
+    assert.equal(run(`<Icon name="keep" fill={false} />`).output, `<Icon name="pin" />`)
+    const { filled } = run(`<Icon name="keep" fill={current.pinned} />`)
+    assert.deepEqual(filled.map((e) => [e.line, e.name, e.to]), [[1, "keep", "current.pinned ? pin--filled : pin"]])
+  })
+
+  it("lists every fill, weight, grade and opticalSize it cannot turn into a name, and leaves them", () => {
+    const source = [
+      `<>`,
+      `<Icon name="mail" fill={armed} weight={300} grade={0} opticalSize={20} />`,
+      `<Icon name={kind} fill={current} />`,
+      `<Icon name="keep" fill="red" />`,
+      `<IconButton icon="mail" weight={300} />`,
+      `<Avatar fill />`,
+      `</>`,
+    ].join("\n")
+    const result = run(source)
+    assert.deepEqual(result.removedProps.map((e) => [e.line, e.tag, e.name]), [
+      [2, "Icon", "fill"], [2, "Icon", "weight"], [2, "Icon", "grade"], [2, "Icon", "opticalSize"],
+      [3, "Icon", "fill"],
+      [4, "Icon", "fill"],
+    ])
+    assert.match(result.removedProps[0].hint, /"email" has no filled form/)
+    assert.match(result.removedProps[4].hint, /not a literal/)
+    assert.match(result.removedProps[5].hint, /a paint, not a state/)
+    assert.match(result.output, /fill=\{armed\} weight=\{300\} grade=\{0\} opticalSize=\{20\}/)
+    assert.match(result.output, /<Avatar fill \/>/)
+  })
+
+  it("says so in the command's report", () => {
+    const dir = tree({ "a.tsx": `export const A = () => <><Icon name="keep" fill={on} /><Icon name="mail" weight={300} /></>\n` })
+    const result = cli("icons", dir, "--dry")
+    assert.equal(result.status, 0)
+    assert.match(result.stdout, /`fill` became the glyph's filled name: 1 site\n  a\.tsx:1:\d+  <Icon keep> now on \? pin--filled : pin/)
+    assert.match(result.stdout, /Props gone in 1\.0 \(fill, weight, grade, opticalSize\), fix by hand: 1 site\n  a\.tsx:1:\d+  <Icon weight>/)
+  })
+})
+
 describe("maps, lists, tuples and functions", () => {
   const result = run(fixture("maps.ts.txt"), { jsx: false })
 

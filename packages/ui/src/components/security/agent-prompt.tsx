@@ -35,7 +35,7 @@ export interface AgentPromptOption {
 export const agentPromptCopy: Record<AgentPromptKind, { title: string; icon: IconName; options: AgentPromptOption[] }> = {
   permission: {
     title: "Allow?",
-    icon: "stop-sign",
+    icon: "user--feedback",
     options: [
       { id: "allow", label: "Allow" },
       { id: "deny", label: "Deny" },

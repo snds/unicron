@@ -153,7 +153,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 /** A status role as it's drawn: its fill (a dot), its ink on the page, and its ink on its own wash. */
 const STATUS_CLASSES = {
   success: { fill: "bg-success", ink: "text-success-foreground", surface: "bg-success-surface", icon: "checkmark--outline" },
-  attention: { fill: "bg-attention", ink: "text-attention-foreground", surface: "bg-attention-surface", icon: "stop-sign" },
+  attention: { fill: "bg-attention", ink: "text-attention-foreground", surface: "bg-attention-surface", icon: "user--feedback" },
   running: { fill: "bg-running", ink: "text-running-foreground", surface: "bg-running-surface", icon: "in-progress" },
 } as const
 

@@ -126,9 +126,21 @@ and nothing to configure. Coming from Material Symbols (before 1.0):
    `--dry`. It rewrites known Material names in `name=` / `icon=` attributes and `icon:` /
    `iconName:` properties, lists what it could not map, and never guesses. It refuses a second
    pass on a tree that already has Carbon names.
-2. Run `tsc`: `IconName` no longer accepts Material names, so it finds the rest.
-3. Remove the `material-symbols` dependency and any `--c-icon-*` use. `Icon` lost `fill`, `weight`,
-   `grade` and `opticalSize`; `IconButton` lost `fill`; `Spinner` takes svg props, not Icon props.
+   Where `fill` marked a state (pinned, a favourite, the current item) and Carbon has a filled
+   form of the glyph, it writes that name (`name={pinned ? "pin--filled" : "pin"}`); it lists
+   every other `fill`, `weight`, `grade` and `opticalSize` it leaves, by file and line.
+2. Run `tsc`: `IconName` no longer accepts Material names, so it finds the rest. `Icon` lost
+   `fill`, `weight`, `grade` and `opticalSize`, so tsc names each one still passed
+   ("Property 'fill' does not exist"). Where `fill` was the only cue for a state, keep the cue:
+   pick the `--filled` name, or show the state another way; do not just delete the prop.
+3. **Names that arrive as data.** Neither step reaches a name a server sends or a saved template
+   stores: cast to `IconName`, it draws an empty box marked `data-icon-missing`. Change names a
+   server or a build step writes at their source, with the map. Translate names already stored
+   once, when they are read, with `iconFromMaterial()` from `@unicron/ui` (it returns `null` for a
+   name with no match, and for anything that is not a Material name), and store the Carbon name.
+   MAPPING.md → Names that arrive as data has the details.
+4. Remove the `material-symbols` dependency and any `--c-icon-*` use. `IconButton` lost `fill`;
+   `Spinner` takes svg props, not Icon props.
 
 The full map, with a note for each choice and the eight names with no Carbon match, is
 `node_modules/@unicron/ui/codemod/MAPPING.md`. For a glyph Carbon lacks, register your own:

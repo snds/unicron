@@ -2,6 +2,7 @@
 export { cn } from "./lib/utils"
 export { Icon, type CoreIconName, type IconName, type IconProps, type IconSize, type IconTone, type UnicronIconRegistry } from "./components/icon"
 export { iconNames, isIconName, registerIcons } from "./icons/registry"
+export { iconFromMaterial } from "./icons/material"
 export { Chip, ChipAction, ChipRemove, type ChipRemoveProps } from "./components/chip"
 export { IconButton, type IconButtonProps } from "./components/icon-button"
 export { CheckDraw, type CheckDrawProps } from "./components/check-draw"

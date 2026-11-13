@@ -16,6 +16,8 @@ const USAGE = `unicron-codemod icons <dir> [options]
 
 Renames Material Symbols icon names to Carbon names (@unicron/ui 1.0) in every source file under <dir>.
 It rewrites string literals in icon positions only, keeps the formatting, and never guesses.
+On <Icon> and <IconButton> it turns fill into the glyph's filled name where Carbon has one
+(name={on ? "pin--filled" : "pin"}), and lists every fill, weight, grade and opticalSize it leaves.
 Run it once, on a clean tree, then let the type checker find the rest.
 
   --dry              change nothing; print what would change
@@ -93,7 +95,7 @@ export function runIcons(dir, options = {}) {
   const { map, notes, carbonNames, sameWord, carbon } = loadMap(extraMap)
   const root = path.resolve(dir)
   const files = fs.statSync(root).isDirectory() ? walk(root, new Set(ext)) : [root]
-  const report = { dir: root, dry, carbon, files: files.length, changed: [], rewrites: [], unchanged: [], unmapped: [], unknown: [], left: [], likely: [], sameWord: [], alreadyCarbon: [], unreadable: [], refused: false, written: 0 }
+  const report = { dir: root, dry, carbon, files: files.length, changed: [], rewrites: [], unchanged: [], unmapped: [], unknown: [], left: [], likely: [], sameWord: [], filled: [], removedProps: [], alreadyCarbon: [], unreadable: [], refused: false, written: 0 }
   const pending = []
   const sources = files.map((file) => ({ file, source: fs.readFileSync(file, "utf8"), jsx: !/\.[mc]?ts$/.test(file) }))
   const sharedAliases = sharedTypeAliases(sources, types)
@@ -115,6 +117,8 @@ export function runIcons(dir, options = {}) {
     report.left.push(...tag(result.left))
     report.likely.push(...tag(result.likely))
     report.sameWord.push(...tag(result.sameWord))
+    report.filled.push(...tag(result.filled))
+    report.removedProps.push(...tag(result.removedProps))
     report.alreadyCarbon.push(...tag(result.carbon))
     if (result.output !== source) {
       report.changed.push(rel)
@@ -156,6 +160,8 @@ function print(report, { verbose = false } = {}) {
     out.push(`${title}: ${n(list.length, "site")}`)
     for (const entry of list) out.push(`  ${line(entry)}`)
   }
+  section("`fill` became the glyph's filled name", report.filled, (e) => `${at(e)}  <${e.tag} ${e.name}> now ${e.to}`)
+  section("Props gone in 1.0 (fill, weight, grade, opticalSize), fix by hand", report.removedProps, (e) => `${at(e)}  <${e.tag} ${e.name}>  ${e.hint}  ${e.text}`)
   section("No Carbon match, fix by hand", report.unmapped, (e) => `${at(e)}  "${e.name}"${e.note ? `  ${e.note}` : ""}`)
   section("Not a name in the map or the curated set, check by hand", report.unknown, (e) => `${at(e)}  "${e.name}"`)
   const to = (e) => (e.to === null ? "no Carbon match" : e.to === e.name ? "same name in Carbon" : `would be "${e.to}"`)
