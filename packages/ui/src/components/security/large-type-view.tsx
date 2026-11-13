@@ -5,6 +5,7 @@
 "use client"
 
 import * as React from "react"
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
@@ -592,9 +593,9 @@ export function LargeTypeView({
         </div>
       }
     >
-      <p data-slot="large-type-view-notice" className={cn("type-caption", shoulder ? "text-text-body" : "text-text-secondary")}>
+      <DialogPrimitive.Description data-slot="large-type-view-notice" className={cn("type-caption", shoulder ? "text-text-body" : "text-text-secondary")}>
         {shoulder ? "Anyone who can see your screen can read this." : "Shown in large type. Press Escape to hide it."}
-      </p>
+      </DialogPrimitive.Description>
       {status === "loading" && (
         <div data-slot="large-type-view-canvas" aria-busy className="flex flex-wrap gap-(--c-large-type-group-gap)">
           <Skeleton className="h-16 w-40" />

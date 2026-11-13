@@ -424,3 +424,10 @@ describe("CrownJewelGate 1.0: the question frame and SecretField's edit box", ()
     expect(onConfirm).toHaveBeenCalledWith({ level: "password", password: "right" })
   })
 })
+
+describe("CrownJewelGate 1.0: the reason is the dialog's description", () => {
+  it("is read with the dialog's name", () => {
+    render(<CrownJewelGate open level="password" reason="To show the recovery phrase for Ledger" onConfirm={() => {}} />)
+    expect(screen.getByRole("dialog", { name: "Confirm it's you" })).toHaveAccessibleDescription("To show the recovery phrase for Ledger")
+  })
+})

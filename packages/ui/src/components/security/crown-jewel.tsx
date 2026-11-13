@@ -5,6 +5,7 @@
 "use client"
 
 import * as React from "react"
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
@@ -219,9 +220,10 @@ export function CrownJewelGate({
       }
     >
       <form id={formId} onSubmit={submit} className="flex flex-col gap-4">
-        <p data-slot="crown-jewel-gate-reason" className="type-body text-text-body">
+        {/* The dialog's description, as before: the reason is read with its name. */}
+        <DialogPrimitive.Description data-slot="crown-jewel-gate-reason" className="type-body text-text-body">
           {reason}
-        </p>
+        </DialogPrimitive.Description>
         <div data-slot="crown-jewel-gate-step" className="flex flex-col gap-2">
           {level === "password" ? (
             <SecretField
@@ -530,7 +532,7 @@ export function CrownJewelSurface({
           </div>
         }
       >
-        <p className="type-body text-text-body">A secret that could unlock everything else, so it follows stricter rules.</p>
+        <DialogPrimitive.Description className="type-body text-text-body">A secret that could unlock everything else, so it follows stricter rules.</DialogPrimitive.Description>
         <ul className="type-body text-text-secondary flex list-disc flex-col gap-1.5 pl-5">
           {biometricName === null ? (
             <li>To use it, show it in full or export it, you type your account password, every time.</li>
