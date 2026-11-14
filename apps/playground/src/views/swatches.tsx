@@ -28,7 +28,7 @@ const SWATCHES: Swatch[] = [
 
 // ── the twelve ─────────────────────────────────────────────────────────────────────────────────
 
-function Chip({ swatch }: { swatch: Swatch }) {
+function SwatchSquare({ swatch }: { swatch: Swatch }) {
   const [ref, value] = useRead((element) => colorText(getComputedStyle(element).backgroundColor))
   return (
     <figure data-swatch={swatch.role} className="min-w-0">
@@ -108,7 +108,7 @@ export default function SwatchesView() {
       <Block id="swatches" overline={`Roles // ${count(SWATCHES.length)}`} title="The twelve">
         <div className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 lg:grid-cols-6">
           {SWATCHES.map((swatch) => (
-            <Chip key={swatch.role} swatch={swatch} />
+            <SwatchSquare key={swatch.role} swatch={swatch} />
           ))}
         </div>
       </Block>

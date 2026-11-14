@@ -12,8 +12,8 @@ function Specimen({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function RunTraceView() {
-  const [t0] = useState(() => Date.now() - 134_000)
+// The sample runs, built outside the view so its first element is the page, not a step's detail line.
+function sampleRuns(t0: number) {
   const live: RunStep[] = [
     { id: "a", label: "Read sdk/src/login.ts", state: "done", startedAt: t0, endedAt: t0 + 2_000 },
     { id: "b", label: "Edit sdk/src/login.ts", state: "done", startedAt: t0 + 2_000, endedAt: t0 + 19_000 },
@@ -31,6 +31,12 @@ export default function RunTraceView() {
   const stopped: RunStep[] = [
     { id: "a", label: "Nightly dependency audit", state: "stopped", startedAt: t0, endedAt: t0 + 192_000 },
   ]
+  return { live, waiting, failed, stopped }
+}
+
+export default function RunTraceView() {
+  const [t0] = useState(() => Date.now() - 134_000)
+  const { live, waiting, failed, stopped } = sampleRuns(t0)
 
   return (
     <div className="flex flex-col gap-10 p-6">
