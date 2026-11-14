@@ -1,9 +1,10 @@
-// Owned component (not generated): the security set's own copies of three shared looks, until the
-// shared parts land beside them: the Field Row look (Figma 15:512, data-b's FieldRow), a text action
-// in the overline role (Field Row's bare "Copy"), and the review frame (Sheet Header 32:122 on a
-// phone, the dialog of Lockdown's Desktop / 09 from the sm breakpoint up; overlays' Sheet and
-// AdaptiveDialog). Internal: not exported from the package root. Each part says where the shared
-// one takes over.
+// Owned component (not generated): the security set's own three looks beside the shared parts: the
+// Field Row look (Figma 15:512, data-b's FieldRow), a text action in the overline role (Field Row's
+// bare "Copy"), and the review frame (Sheet Header 32:122 on a phone, the dialog of Lockdown's
+// Desktop / 09 wider; overlays' Sheet and AdaptiveDialog). They read the shared parts' own knobs
+// and rules (the Field Row's label column, the Dialog's sizes, margin and `full` rule, the
+// adaptive layers' width class), so they cannot drift from them; what the shared parts still lack
+// for a full swap is listed on each part. Internal: not exported from the package root.
 // Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 15:512, 32:122; no app PR, no DSA record)
 "use client"
 
@@ -13,8 +14,9 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "../../lib/utils"
 import { formatCountdown } from "../../lib/format"
-import { useMediaQuery } from "../../lib/motion/use-reduced-motion"
 import { Icon, type IconName } from "../icon"
+import { useViewport } from "../use-viewport"
+import { useFittedSize } from "../ui/dialog-size"
 import { FloatButton } from "../ui/float-button"
 import { Spinner } from "../ui/spinner"
 
@@ -58,7 +60,11 @@ export const TextAction = React.forwardRef<HTMLButtonElement, TextActionProps>(f
       ref={ref}
       data-slot="text-action"
       className={cn(
-        "type-overline hit-area -mx-1 inline-flex shrink-0 items-center gap-1 rounded px-1 whitespace-nowrap select-none",
+        // The word gives the action its baseline. With `items-center` and a glyph first, the box
+        // took its baseline from the glyph's bottom edge, so "Show" and "Copy" sat 4px above the
+        // label and value they share a row with, and the row grew a pixel. The glyph and the
+        // spinner centre themselves and stay out of the baseline.
+        "type-overline hit-area -mx-1 inline-flex shrink-0 items-baseline gap-1 rounded px-1 whitespace-nowrap select-none [&>[data-slot=spinner]]:self-center [&>svg]:self-center",
         "transition-[background-color,color] duration-(--motion-fast) hover:bg-state-hover active:bg-state-pressed",
         "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
@@ -111,7 +117,8 @@ export function rowClasses(size: RowSize) {
     ),
     label: cn(
       "type-overline text-text-label",
-      stacked ? "min-w-0" : "w-(--c-security-row-label-width) shrink-0",
+      // The shared Field Row's own label column (140): one knob for every row that draws the look.
+      stacked ? "min-w-0" : "w-(--c-field-row-label-width) shrink-0",
       (auto || displayAuto) && "@max-lg/row:w-auto"
     ),
     actions: "flex shrink-0 items-baseline gap-4",
@@ -122,10 +129,16 @@ export function rowClasses(size: RowSize) {
 
 export type ReviewSize = "question" | "review" | "viewer"
 
+/**
+ * The dialog form's width: the shared Dialog's own size (its `--c-dialog-<size>-min-width` knob:
+ * question 480, review 560, viewer 960), never wider than the screen less --c-dialog-margin on
+ * each side (48 in all, contract 5.1c C10). One set of knobs for every dialog: the review frame
+ * had its own widths and a 32px cap, and had drifted from the shared Dialog.
+ */
 const WIDTH: Record<ReviewSize, string> = {
-  question: "sm:w-[min(var(--c-review-question-width),calc(100vw-(--spacing(8))))]",
-  review: "sm:w-[min(var(--c-review-width),calc(100vw-(--spacing(8))))]",
-  viewer: "sm:w-[min(var(--c-review-viewer-width),calc(100vw-(--spacing(8))))]",
+  question: "data-[form=dialog]:w-[min(var(--c-dialog-question-min-width),calc(100%-2*var(--c-dialog-margin)))]",
+  review: "data-[form=dialog]:w-[min(var(--c-dialog-review-min-width),calc(100%-2*var(--c-dialog-margin)))]",
+  viewer: "data-[form=dialog]:w-[min(var(--c-dialog-viewer-min-width),calc(100%-2*var(--c-dialog-margin)))]",
 }
 
 export interface ReviewFrameProps extends Omit<DialogPrimitive.Popup.Props, "title" | "className" | "children"> {
@@ -155,11 +168,24 @@ export interface ReviewFrameProps extends Omit<DialogPrimitive.Popup.Props, "tit
 }
 
 /**
- * The frame a security decision opens in. On a phone, a sheet from the bottom edge: square,
- * `surface-raised` with a hairline on top, the 36 × 4 grabber, Sheet Header's overline, `lead`
- * title and a 48 float button to close, over the sheet scrim. From the sm breakpoint up, a dialog
- * of the size's width, centred, with a hairline all round and the dialog scrim. No blur, no shadow.
- * Swap for overlays' `AdaptiveDialog` (with `SheetHeader`) once it lands; the props map one to one.
+ * The frame a security decision opens in. It takes the form every adaptive layer takes, at the
+ * same width (`useViewport`'s compact class, under 600: it used a CSS breakpoint at 640, so
+ * between 600 and 639 it was a full-width sheet while every other layer was a dialog).
+ *
+ * - Compact: a sheet from the bottom edge: square, `surface-raised` with a hairline on top, the
+ *   36 × 4 grabber, Sheet Header's overline, `lead` title and a 48 float button to close, over
+ *   the sheet scrim.
+ * - Wider: a dialog of the size's width (the shared Dialog's knobs), centred, with a hairline all
+ *   round and the dialog scrim, 24 clear of the screen on every side (--c-dialog-margin). Where
+ *   the screen is too narrow for the size it draws `full`, the whole screen less the margin both
+ *   ways, as the shared Dialog does (`data-size-asked` keeps the name it was given).
+ *
+ * No blur, no shadow. The form is on the frame as `data-form`, and the parts inside read it
+ * (`group-data-[form=dialog]/review:`), so nothing in a review depends on a CSS breakpoint.
+ *
+ * Still its own frame, not overlays' `AdaptiveDialog`: that one lacks a fixed slot between the
+ * header and the scrolling body (the countdown rule), a ref to its close control (large type
+ * focuses it first) and a full-screen phone form without the grabber.
  */
 export function ReviewFrame({
   open,
@@ -176,38 +202,62 @@ export function ReviewFrame({
   closeOnOutsideClick = false,
   children,
   bodyClassName,
+  ref,
   ...popupProps
 }: ReviewFrameProps) {
-  const wide = useMediaQuery("(min-width: 40rem)")
+  const sheet = useViewport().widthClass === "compact"
+  const [popup, setPopup] = React.useState<HTMLElement | null>(null)
+  // The frame measures itself, and a part (large type) holds a ref to it too: both get the node.
+  const attach = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      setPopup(node)
+      if (typeof ref === "function") ref(node)
+      else if (ref) ref.current = node
+    },
+    [ref]
+  )
+  // Below the size's own width the dialog is `full`. A sheet has no size to fit.
+  const fitted = useFittedSize(size, sheet ? null : popup, undefined)
+  const full = !sheet && fitted === "full"
   return (
     <DialogPrimitive.Root open={open} onOpenChange={(next) => onOpenChange(next)} disablePointerDismissal={!closeOnOutsideClick} modal>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop
           data-slot="review-scrim"
-          className="scrim-sheet sm:scrim-dialog fixed inset-0 z-50 transition-opacity duration-(--motion-fast) data-ending-style:opacity-0 data-starting-style:opacity-0"
+          className={cn(
+            sheet ? "scrim-sheet" : "scrim-dialog",
+            "fixed inset-0 z-50 transition-opacity duration-(--motion-fast) data-ending-style:opacity-0 data-starting-style:opacity-0"
+          )}
         />
         <DialogPrimitive.Popup
+          ref={attach}
           data-slot="review-frame"
-          data-size={size}
+          data-form={sheet ? "sheet" : "dialog"}
+          data-size={full ? "full" : size}
+          // The size it was asked for, when the screen is too narrow for it and it draws `full`.
+          data-size-asked={full ? size : undefined}
           className={cn(
-            "bg-surface-raised text-text-body fixed z-50 flex flex-col overflow-hidden outline-none",
+            "group/review bg-surface-raised text-text-body fixed z-50 flex flex-col overflow-hidden outline-none",
             "transition-[opacity,translate] duration-(--motion-base) ease-enter data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-opacity",
             // A phone: a sheet from the bottom edge, square, a hairline on top; or the whole screen.
             fullscreenOnPhone
-              ? "max-sm:inset-0 max-sm:h-dvh max-sm:pt-[env(safe-area-inset-top)]"
-              : "max-sm:rule-t max-sm:inset-x-0 max-sm:bottom-0 max-sm:max-h-[calc(100dvh-var(--c-review-sheet-top-gap))] max-sm:data-ending-style:translate-y-full max-sm:data-starting-style:translate-y-full",
-            // Wider: a dialog in the middle, the one 2px corner, a hairline all round.
-            "sm:rule-box sm:top-1/2 sm:left-1/2 sm:max-h-[calc(100dvh-(--spacing(8)))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded",
-            WIDTH[size]
+              ? "data-[form=sheet]:inset-0 data-[form=sheet]:h-dvh data-[form=sheet]:pt-[env(safe-area-inset-top)]"
+              : "data-[form=sheet]:rule-t data-[form=sheet]:inset-x-0 data-[form=sheet]:bottom-0 data-[form=sheet]:max-h-[calc(100dvh-var(--c-review-sheet-top-gap))] data-[form=sheet]:data-ending-style:translate-y-full data-[form=sheet]:data-starting-style:translate-y-full",
+            // Wider: a dialog in the middle (of the area under an app's own title bar, as the shared
+            // Dialog), the one 2px corner, a hairline all round, the margin clear on every side.
+            "data-[form=dialog]:rule-box data-[form=dialog]:top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] data-[form=dialog]:left-1/2 data-[form=dialog]:max-h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))] data-[form=dialog]:-translate-x-1/2 data-[form=dialog]:-translate-y-1/2 data-[form=dialog]:rounded",
+            WIDTH[size],
+            // `full`: the whole screen less the margin, in height too.
+            full && "data-[form=dialog]:h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]"
           )}
           {...popupProps}
         >
           <div
             data-slot="review-header"
-            className={cn("flex shrink-0 flex-col items-center gap-2 px-4 pt-2 pb-2 sm:items-stretch sm:px-6 sm:pt-5 sm:pb-0")}
+            className="flex shrink-0 flex-col items-center gap-2 px-4 pt-2 pb-2 group-data-[form=dialog]/review:items-stretch group-data-[form=dialog]/review:px-6 group-data-[form=dialog]/review:pt-5 group-data-[form=dialog]/review:pb-0"
           >
             {/* The grabber: a mark, not a control (the close button and Escape close the sheet). */}
-            {!fullscreenOnPhone && <span aria-hidden data-slot="review-grabber" className="bg-line-grid-dot h-1 w-9 shrink-0 sm:hidden" />}
+            {!fullscreenOnPhone && <span aria-hidden data-slot="review-grabber" className="bg-line-grid-dot h-1 w-9 shrink-0 group-data-[form=dialog]/review:hidden" />}
             <div className="flex w-full items-center gap-3">
               <div className="flex min-w-0 flex-1 flex-col">
                 {overline !== undefined && overline !== null && (
@@ -222,7 +272,7 @@ export function ReviewFrame({
               {showClose && (
                 <DialogPrimitive.Close
                   data-slot="review-close"
-                  render={<FloatButton ref={closeRef} label={closeLabel} icon="close" size={wide ? "m" : "l"} />}
+                  render={<FloatButton ref={closeRef} label={closeLabel} icon="close" size={sheet ? "l" : "m"} />}
                 />
               )}
             </div>
@@ -230,14 +280,18 @@ export function ReviewFrame({
           {headerAfter}
           <div
             data-slot="review-body"
-            className={cn("flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pt-4 sm:px-6", !footer && "pb-[calc(--spacing(10)+env(safe-area-inset-bottom))] sm:pb-6", bodyClassName)}
+            className={cn(
+              "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pt-4 group-data-[form=dialog]/review:px-6",
+              !footer && "pb-[calc(--spacing(10)+env(safe-area-inset-bottom))] group-data-[form=dialog]/review:pb-6",
+              bodyClassName
+            )}
           >
             {children}
           </div>
           {footer && (
             <div
               data-slot="review-footer"
-              className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-[calc(--spacing(10)+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 sm:pb-6"
+              className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-[calc(--spacing(10)+env(safe-area-inset-bottom))] group-data-[form=dialog]/review:px-6 group-data-[form=dialog]/review:pt-6 group-data-[form=dialog]/review:pb-6"
             >
               {footer}
             </div>
@@ -251,7 +305,7 @@ export function ReviewFrame({
 /** The countdown rule under a review's header: 30 cells by default, critical near the end. Decorative; the words carry the time. */
 export function ReviewCountdownRule({ children }: { children: React.ReactNode }) {
   return (
-    <div data-slot="review-countdown" aria-hidden className="shrink-0 px-4 pt-2 sm:px-6 sm:pt-4">
+    <div data-slot="review-countdown" aria-hidden className="shrink-0 px-4 pt-2 group-data-[form=dialog]/review:px-6 group-data-[form=dialog]/review:pt-4">
       {children}
     </div>
   )

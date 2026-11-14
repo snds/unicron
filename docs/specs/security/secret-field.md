@@ -4,7 +4,7 @@ _Spec v0.4 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5
 
 ## 1.0: the 2026-11 look (contract 5.1a, 5.1b row 49)
 
-**Read mode is a Field Row** (Figma 15:512): no box. A 1px `line-rule` on top, drawn inside (`rule-t`). The label is `type-overline` in `text-label` in a 140 column (`--c-security-row-label-width`) on the value's baseline; the value is `type-code-inline` in `text-body` (the mask is 12 dots, spaced by `--c-secret-field-mask-spacing`), clipped so it never runs under the actions; the actions are **words** in `type-overline`, `text-body`, no box (`TextAction`, a Base UI button with `hit-area`). A shown value sits on a raised chip with a hairline (`--c-secret-field-revealed-bg` = `{surface-raised}`, `rule-box`). The clipboard's countdown is visible words beside the actions, in `secondary-live` because it is running now: "Clears in 28 s", then "Cleared".
+**Read mode is a Field Row** (Figma 15:512): no box. A 1px `line-rule` on top, drawn inside (`rule-t`). The label is `type-overline` in `text-label` in a 140 column (`--c-field-row-label-width`, the shared Field Row's own knob) on the value's baseline; the value is `type-code-inline` in `text-body` (the mask is 12 dots, spaced by `--c-secret-field-mask-spacing`), clipped so it never runs under the actions; the actions are **words** in `type-overline`, `text-body`, no box (`TextAction`, a Base UI button with `hit-area`). A shown value sits on a raised chip with a hairline (`--c-secret-field-revealed-bg` = `{surface-raised}`, `rule-box`). The clipboard's countdown is visible words beside the actions, in `secondary-live` because it is running now: "Clears in 28 s", then "Cleared".
 
 | Prop | Values | Notes |
 |---|---|---|
@@ -28,7 +28,7 @@ _Spec v0.4 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5
 
 Unchanged: the host contract (`SecretFieldHost`, `SecretFieldReferenceHost`, `copyRef`, `clipboardHolds`, `gate`), every timer, the one-revealed rule, hide on blur, lock and leaving the viewport, the gated-reveal-is-a-toggle rule, Cmd/Ctrl+C, the spelled name, the announcements and every name. The ring countdown, the icon buttons and their tooltips are gone; the tooltip's words ("Copied · clears in 28 s, even if you copy something else") are now the copy control's description.
 
-Tokens added in `tokens/component/security.json`: `--c-security-row-label-width`, `--c-secret-field-mask-spacing`; re-declared there: `revealed-bg`, `meter-weak`, `meter-fair`, `meter-strong`. Removed in 1.0 (no longer read): `--c-secret-field-copy-track`, `--c-secret-field-copy-progress`.
+Tokens added in `tokens/component/security.json`: `--c-secret-field-mask-spacing` (the label column reads the shared `--c-field-row-label-width`; `--c-security-row-label-width` was removed on 2026-11-14); re-declared there: `revealed-bg`, `meter-weak`, `meter-fair`, `meter-strong`. Removed in 1.0 (no longer read): `--c-secret-field-copy-track`, `--c-secret-field-copy-progress`.
 
 ## Purpose and the user job
 

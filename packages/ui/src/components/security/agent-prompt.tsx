@@ -421,7 +421,8 @@ export function AgentPrompt({
         {more ? <span className={cn("type-overline", ink)}>{`// +${more}`}</span> : null}
         {tier ? (
           <span className="ml-auto flex items-center">
-            <RiskTierBadge tier={tier} verified={verified} />
+            {/* On the yellow the badge takes the yellow's ink: the page's ink is near-white on graphite (1.15:1 there). */}
+            <RiskTierBadge tier={tier} verified={verified} surface={asking ? "needs-you" : "page"} />
           </span>
         ) : null}
       </header>

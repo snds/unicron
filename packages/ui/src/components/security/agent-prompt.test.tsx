@@ -148,9 +148,12 @@ describe("AgentPrompt", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Waiting for you")
   })
 
-  it("shows its risk tier", () => {
+  it("shows its risk tier, in the yellow's ink while it asks", () => {
     render(<AgentPrompt kind="permission" tier="tolerated" verified onAnswer={() => {}} />)
     expect(screen.getByText("Use with care")).toBeInTheDocument()
+    const badge = document.querySelector('[data-slot="risk-tier-badge"]')!
+    expect(badge).toHaveAttribute("data-surface", "needs-you")
+    expect(badge.querySelector('[data-slot="risk-tier-badge-pill"]')!.className).toContain("text-needs-you-on-fill")
   })
 
   it("shows key hints only with a fine pointer, each the key of its meaning", () => {

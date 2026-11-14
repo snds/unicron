@@ -979,7 +979,14 @@ function SecretFieldRead({
                 {label}, hidden
               </span>
               <span id={spelledNameId} ref={spelledEl} className="sr-only" />
-              {phase === "loading" && <Skeleton data-slot="secret-field-loading" className="h-4 flex-1 self-center" />}
+              {phase === "loading" && (
+                // The bar sits in a box one text line tall with the line's own baseline (an invisible
+                // letter in the value's role). Alone, the bar gave the value no text baseline, so the
+                // row lined the label up with the bar's bottom edge and grew 8px while it loaded.
+                <span data-slot="secret-field-loading-line" className="flex min-w-0 flex-1 items-center before:invisible before:w-0 before:overflow-hidden before:content-['x']">
+                  <Skeleton data-slot="secret-field-loading" className="h-4 flex-1" />
+                </span>
+              )}
               {!isRevealed && phase !== "loading" && (
                 <>
                   <span aria-hidden className="tracking-(--c-secret-field-mask-spacing) contrast-more:hidden forced-colors:hidden">

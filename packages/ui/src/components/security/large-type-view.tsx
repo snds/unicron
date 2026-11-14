@@ -581,7 +581,7 @@ export function LargeTypeView({
             <span data-slot="large-type-view-timer" className="type-overline text-secondary-live whitespace-nowrap">
               {status === "shown" ? `Hides in ${formatClock(secondsLeft)}` : status === "expired" ? "Hidden" : ""}
             </span>
-            <span className="type-meta text-text-label hidden items-center gap-1 sm:inline-flex">
+            <span className="type-meta text-text-label hidden items-center gap-1 group-data-[form=dialog]/review:inline-flex">
               <Kbd>Esc</Kbd> hides
             </span>
             <Button onClick={() => onOpenChange?.(false)}>Done</Button>

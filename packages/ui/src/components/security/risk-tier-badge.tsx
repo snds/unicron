@@ -90,6 +90,12 @@ export interface RiskTierBadgeProps extends Omit<React.ComponentProps<"span">, "
   disclosures?: string[]
   /** A tier is a fact, not a control, so only the explain button can be disabled. */
   explainDisabled?: boolean
+  /**
+   * What the badge sits on. `needs-you`: the yellow of an asking AgentPrompt. The word, the glyph
+   * and the edge then take the ink that sits on that fill; the page's own inks are near-white on
+   * graphite and cannot be read on the yellow. Default `page`.
+   */
+  surface?: "page" | "needs-you"
 }
 
 /**
@@ -116,6 +122,13 @@ const TIER_CLASSES: Record<RiskTierState, string> = {
 }
 
 /**
+ * On the needs-you yellow every state but the blocked one is the yellow's own ink inside a 1px
+ * edge of that ink: the word and the glyph still tell the tiers apart, as they must anywhere.
+ * `unverified` keeps its critical tile, which brings its own ground and its own ink.
+ */
+const ON_NEEDS_YOU = "text-needs-you-on-fill inset-ring inset-ring-needs-you-on-fill"
+
+/**
  * Say in one word how much trust a path carries. The word is always present, the icon is
  * decorative, and the colour never carries the meaning alone.
  */
@@ -126,6 +139,7 @@ export function RiskTierBadge({
   explain = false,
   disclosures = [],
   explainDisabled = false,
+  surface = "page",
   className,
   ...props
 }: RiskTierBadgeProps) {
@@ -133,6 +147,7 @@ export function RiskTierBadge({
   const state: RiskTierState = verified === undefined ? "loading" : verified === false || !known ? "unverified" : tier
   const copy = riskTierCopy[state]
   const descId = React.useId()
+  const onYellow = surface === "needs-you"
 
   // "Risk tier unverified…" is announced only when the state becomes unverified after a check,
   // never on first render (a page load is not news).
@@ -144,13 +159,14 @@ export function RiskTierBadge({
   }, [state])
 
   return (
-    <span data-slot="risk-tier-badge" data-tier={state} data-size={size} className={cn("inline-flex items-center gap-2", className)} {...props}>
+    <span data-slot="risk-tier-badge" data-tier={state} data-size={size} data-surface={surface} className={cn("inline-flex items-center gap-2", className)} {...props}>
       <span
         data-slot="risk-tier-badge-pill"
         className={cn(
           badgeVariants({ tone: TIER_TONE[state] }),
           size === "md" ? "h-(--c-risk-tier-height-md) px-2" : "h-(--c-risk-tier-height-sm)",
           TIER_CLASSES[state],
+          onYellow && state !== "unverified" && ON_NEEDS_YOU,
           // High contrast and forced colours: the inset edges are dropped by the browser, so a real
           // 1px border in the tier ink takes their place, and any tint goes.
           "contrast-more:border contrast-more:border-current contrast-more:bg-transparent forced-colors:border forced-colors:border-current forced-colors:bg-transparent"
@@ -171,7 +187,7 @@ export function RiskTierBadge({
                   data-slot="risk-tier-badge-explain"
                   icon="help"
                   aria-label={`What does ${copy.label} mean?`}
-                  className="text-text-label hover:text-text-body"
+                  className={onYellow ? "text-needs-you-on-fill" : "text-text-label hover:text-text-body"}
                   disabled={explainDisabled || state === "loading"}
                   aria-describedby={descId}
                 />

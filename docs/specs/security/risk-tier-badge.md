@@ -6,6 +6,8 @@ _Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §2.9 risk tiers, §5.7;
 
 The pill is `Badge` (round 1): mono caps (`type-overline`), square on the 2px corner, 20 tall (`md`: 24, `--c-risk-tier-height-md`), a 16px glyph. The tone sorts the states and never carries them alone: **Built in** and **Checking** neutral (label ink in a hairline box; Checking pulses, not under reduced motion), **Verified** neutral in body ink, **Use with care** the warning tone, **Unverified** the critical tone. No tier takes the live colour or the identity colour: neither is about trust. Under high contrast and forced colours a real 1px border in the tier ink replaces the inset edges, which the browser drops. The explain control is a 16px `help` glyph with the explain content as its tooltip and, as before, its description.
 
+**On the needs-you yellow** (`surface="needs-you"`, 2026-11-14): an asking `AgentPrompt` draws the badge in its header, on the yellow. The page's inks are near-white on graphite and read 1.15:1 there, so on that surface the word, the glyph and the 1px edge take `needs-you-on-fill`; the word and the glyph still tell the tiers apart. **Unverified** keeps its critical tile, which brings its own ground. The contrast gate holds the pair (`security:tier-on-needs-you`).
+
 The `--c-risk-tier-*-ink` and `-bg` knobs are removed in 1.0 (no longer read).
 
 ## Purpose and the user job

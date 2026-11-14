@@ -47,7 +47,7 @@ function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 }
 
-/** The dim behind a sheet: --surface-scrim at --c-scrim-sheet (50%). Never opaque, never blurred. */
+/** The dim behind a sheet: --surface-scrim at --c-scrim-sheet (50% on graphite, the role's own 64% on stone). Never opaque, never blurred. */
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   return (
     <SheetPrimitive.Backdrop

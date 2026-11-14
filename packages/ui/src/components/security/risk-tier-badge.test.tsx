@@ -25,6 +25,29 @@ describe("RiskTierBadge: the closed vocabulary", () => {
     expect(screen.getByText("Unverified")).toBeVisible()
   })
 
+  // An asking AgentPrompt is the needs-you yellow. The page's inks are near-white on graphite
+  // (1.15:1 on the yellow), so there the word, the glyph and the edge take the yellow's own ink.
+  it.each(riskTiers)("surface=needs-you draws %s in the ink that sits on the yellow", (tier) => {
+    const { container } = render(<RiskTierBadge tier={tier} verified surface="needs-you" />)
+    expect(container.querySelector('[data-slot="risk-tier-badge"]')).toHaveAttribute("data-surface", "needs-you")
+    const pill = container.querySelector('[data-slot="risk-tier-badge-pill"]')!
+    const classes = pill.className.split(/\s+/)
+    expect(classes).toEqual(expect.arrayContaining(["text-needs-you-on-fill", "inset-ring", "inset-ring-needs-you-on-fill"]))
+    for (const page of ["text-foreground", "text-text-body", "text-muted-foreground", "inset-ring-warning"]) expect(classes).not.toContain(page)
+    // The word still says the tier.
+    expect(pill).toHaveTextContent(riskTierCopy[tier].label)
+  })
+
+  it("on the yellow the blocked state keeps its own critical tile; on the page nothing changes", () => {
+    const { container, rerender } = render(<RiskTierBadge tier="official" verified={false} surface="needs-you" />)
+    const pill = () => container.querySelector('[data-slot="risk-tier-badge-pill"]')!
+    expect(pill().className).toContain("bg-critical-soft")
+    expect(pill().className).not.toContain("text-needs-you-on-fill")
+    rerender(<RiskTierBadge tier="tolerated" verified />)
+    expect(container.querySelector('[data-slot="risk-tier-badge"]')).toHaveAttribute("data-surface", "page")
+    expect(pill().className).not.toContain("needs-you")
+  })
+
   it("reads Checking until the host has verified the manifest", () => {
     const { container } = render(<RiskTierBadge tier="official" />)
     expect(container.querySelector('[data-slot="risk-tier-badge"]')).toHaveAttribute("data-tier", "loading")

@@ -27,7 +27,7 @@ function PopoverClose({ ...props }: PopoverPrimitive.Close.Props) {
  * Solid and square, like every overlay: the raised surface, a 1px rule, the 2px corner, no shadow
  * and no blur. `--c-popover-width` sets its width; it never outgrows the space on screen, and
  * scrolls when it is taller than that space. `scrim` dims the page behind it with the menu scrim
- * (--c-scrim-menu, 32%): an environment picker, a quick create.
+ * (--c-scrim-menu: 32% on graphite, the role's 64% on stone): an environment picker, a quick create.
  */
 /**
  * Where focus starts when a popover opens: its first control that is not the header's close

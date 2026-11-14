@@ -406,28 +406,36 @@ export function ApprovalSheet({
         // DOM order is the tab order the spec asks for (Approve → Deny → This wasn't me). On a phone
         // the two answers share the last line (the no left, the yes right) under the report action;
         // wider, one line: the report action apart on the left, then the no and the yes. Inert until armed.
+        //
+        // On a phone the no hugs its word and the yes takes the rest, 16 apart, as Lockdown
+        // Mobile / 11 draws them (Deny 126, Approve 216 of 358). Two equal columns left "Approve
+        // with Face ID" 4px of room at 390 and pushed it out of the fill at 360. Should even that
+        // not fit (320), the label takes a second line, and the no grows to the same height.
         <div
           data-slot="approval-sheet-actions"
           aria-busy={!armed || busy}
-          className={cn("grid grid-cols-2 gap-3 sm:flex sm:flex-row-reverse sm:items-center", !armed && "pointer-events-none")}
+          className={cn(
+            "grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-3 group-data-[form=dialog]/review:flex group-data-[form=dialog]/review:flex-row-reverse group-data-[form=dialog]/review:items-center",
+            !armed && "pointer-events-none"
+          )}
         >
           {showApprove && (
-            <div className="col-start-2 row-start-2">
-              <Button ref={approveRef} data-action="approve" block disabled={approveDisabled} aria-disabled={approveDisabled} loading={busy} onClick={approve}>
+            <div className="col-start-2 row-start-2 flex">
+              <Button ref={approveRef} data-action="approve" block wrap disabled={approveDisabled} aria-disabled={approveDisabled} loading={busy} onClick={approve}>
                 {approveIcon && !busy && <Icon name={approveIcon} size="sm" />}
                 {yes}
                 {approveDisabled && !busy && <span className="hidden line-through forced-colors:inline"> Locked</span>}
               </Button>
             </div>
           )}
-          <div className={cn("row-start-2", showApprove ? "col-start-1" : "col-span-2")}>
-            <Button ref={denyRef} data-action="deny" variant="secondary" block disabled={busy && !expired} onClick={deny}>
+          <div className={cn("row-start-2 flex", showApprove ? "col-start-1" : "col-span-2")}>
+            <Button ref={denyRef} data-action="deny" variant="secondary" block wrap disabled={busy && !expired} onClick={deny}>
               <Icon name="close" size="sm" />
               {no}
             </Button>
           </div>
           {!terminal && (
-            <div className="col-span-2 row-start-1 justify-self-start sm:mr-auto">
+            <div className="col-span-2 row-start-1 justify-self-start group-data-[form=dialog]/review:mr-auto">
               <Button data-action="report" variant="ghost-destructive" onClick={report}>
                 <Icon name="warning--hex" size="sm" />
                 {approvalSheetWords.report}

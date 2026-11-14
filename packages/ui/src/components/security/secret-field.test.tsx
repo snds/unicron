@@ -673,9 +673,9 @@ describe("SecretField 1.0: the Field Row look", () => {
 
   it("size pins the layout: default keeps the label column, stacked puts it over the value", () => {
     const { container, rerender } = render(<SecretField label="Password" size="default" getSecret={() => Promise.resolve(bytes())} host={fakeHost()} />)
-    expect(container.querySelector('[data-slot="secret-field-label"]')!.className).toContain("w-(--c-security-row-label-width)")
+    expect(container.querySelector('[data-slot="secret-field-label"]')!.className).toContain("w-(--c-field-row-label-width)")
     rerender(<SecretField label="Password" size="stacked" getSecret={() => Promise.resolve(bytes())} host={fakeHost()} />)
-    expect(container.querySelector('[data-slot="secret-field-label"]')!.className).not.toContain("w-(--c-security-row-label-width)")
+    expect(container.querySelector('[data-slot="secret-field-label"]')!.className).not.toContain("w-(--c-field-row-label-width)")
     expect(container.querySelector('[data-slot="secret-field"]')).toHaveAttribute("data-size", "stacked")
   })
 })

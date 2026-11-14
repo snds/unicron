@@ -279,6 +279,21 @@ describe("ApprovalSheet 1.0: the review look and the matching modes", () => {
     expect(screen.getByRole("timer")).toHaveClass("text-critical-text")
   })
 
+  // Lockdown Mobile / 11: Deny hugs (126), Approve fills (216), 16 apart. Two equal columns pushed
+  // "Approve with Face ID" out of its fill at 360 (the browser check in tests/shell.spec.ts measures it).
+  it("on a phone the no hugs its word and the yes takes the rest; a label that still cannot fit wraps", async () => {
+    setup({ matching: { mode: "none" }, approveLabel: "Approve with Face ID", approveIcon: "fingerprint-recognition" })
+    await arm()
+    const actions = dialog().querySelector('[data-slot="approval-sheet-actions"]') as HTMLElement
+    const classes = actions.className.split(/\s+/)
+    expect(classes).toEqual(expect.arrayContaining(["grid", "grid-cols-[auto_minmax(0,1fr)]", "gap-x-4", "gap-y-3"]))
+    expect(classes).not.toContain("grid-cols-2")
+    for (const action of ["approve", "deny"]) {
+      const button = actions.querySelector(`[data-action="${action}"]`) as HTMLElement
+      expect(button.className.split(/\s+/)).toEqual(expect.arrayContaining(["w-full", "h-auto", "min-h-10", "whitespace-normal"]))
+    }
+  })
+
   it("the facts are Field Rows: overline label, mono value, a rule on top", async () => {
     setup()
     await arm()
