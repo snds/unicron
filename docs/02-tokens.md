@@ -2,8 +2,9 @@
 
 Source of truth: the JSON files in `packages/tokens/tokens/`, in the
 [DTCG](https://tr.designtokens.org/format/) format. `pnpm tokens:build` writes
-`packages/tokens/dist/tokens.css` and `dist/tokens.json`. Nothing reads the JSON directly at
-runtime; everything reads the CSS custom properties.
+`packages/tokens/dist/tokens.css`, `dist/plain.css` ([Plain CSS](#plain-css-for-a-page-with-no-tailwind))
+and `dist/tokens.json`. Nothing reads the JSON directly at runtime; everything reads the CSS custom
+properties.
 
 The colour, type and size values are Figma's (the file "Unicron explorations", read on
 2026-11-13). `pnpm test` fails if a built value differs from Figma's
@@ -51,7 +52,7 @@ box.
 
 | Tier | File | CSS prefix | Holds | Example |
 |---|---|---|---|---|
-| 1 Global | `global.json` | `--g-` | Raw values: the theme slots (default app), the shared needs-you, critical and scrim colours, sizes, strokes, radius base, durations, easing, font stacks, and the legacy ramps | `--g-theme-stone-ground: #EFF0F5` |
+| 1 Global | `global.json` | `--g-` | Raw values: the theme slots (default app), the shared needs-you, critical and scrim colours, the twelve swatches, sizes, strokes, radius base, durations, easing, font stacks, and the legacy ramps | `--g-theme-stone-ground: #EFF0F5` |
 | 1, per app | `themes/<app>.json` | `--g-theme-` | The same 28 theme slots, with that app's values | `[data-theme="vale"] { --g-theme-stone-ground: #ECF1F4 }` |
 | 2 Semantic | `semantic.json` | `--` | Roles. Figma's theme roles, plus the shadcn/ui and sidebar contracts as aliases of them. Light = `$value`; dark = `$extensions["unicron.modes"].dark` | `--surface-ground: var(--g-theme-stone-ground)` / `.dark { --surface-ground: var(--g-theme-graphite-ground) }` |
 | Type roles | `type.json` | `--type-` | 23 text styles, five variables each | `--type-body-size: 1rem` |
@@ -211,6 +212,49 @@ app's colour, for the one primary action of a screen. Code that used `text-prima
   its dark text, but a small yellow mark does not: give it a shape, or use
   `text-attention-foreground`.
 
+### Swatches
+
+Twelve colours for things a person colours: a calendar, a note, a label, a persona, a kind in a
+graph (build contract 5.1b #55). Not in Figma; the same in every app.
+
+| Role | Tailwind | Hue | Stone | Graphite |
+|---|---|---|---|---|
+| `swatch-01` | `bg-swatch-01`, `text-swatch-01` | red, 25° | `#BF534F` | `#FF9F97` |
+| `swatch-02` | `bg-swatch-02` | orange, 55° | `#B55E07` | `#FCA466` |
+| `swatch-03` | `bg-swatch-03` | ochre, 85° | `#967000` | `#E0B24B` |
+| `swatch-04` | `bg-swatch-04` | olive, 115° | `#737C00` | `#B4C158` |
+| `swatch-05` | `bg-swatch-05` | green, 145° | `#318639` | `#7DCB80` |
+| `swatch-06` | `bg-swatch-06` | jade, 175° | `#00856E` | `#3ACEAE` |
+| `swatch-07` | `bg-swatch-07` | teal, 205° | `#00828D` | `#0BCBDB` |
+| `swatch-08` | `bg-swatch-08` | azure, 235° | `#007DAF` | `#54C3FD` |
+| `swatch-09` | `bg-swatch-09` | blue, 265° | `#4E73CA` | `#98B9FF` |
+| `swatch-10` | `bg-swatch-10` | violet, 295° | `#8166C4` | `#C1ADFF` |
+| `swatch-11` | `bg-swatch-11` | plum, 325° | `#A45AA8` | `#E8A0EB` |
+| `swatch-12` | `bg-swatch-12` | rose, 355° | `#B8537F` | `#FF9AC2` |
+
+- **How they were made.** The hues are 30° apart in OKLCH, starting at the system's red angle
+  (`hue.red`, 25°). For each hue and ground, the lightness is the one that holds APCA Lc 62 (the
+  floor for coloured text, 60, plus 2) against the lowest-contrast of the eight surfaces of that
+  ground: `surface-ground` and `surface-raised` in all four apps. The chroma is 0.14 on stone and
+  0.13 on graphite, or the most sRGB allows at that lightness where it is less (ochre, olive,
+  jade, teal and azure on stone; red, blue and violet on graphite). So the twelve read as one family of equal
+  weight, and each carries its hue as far as the gamut lets it.
+- **Where they come from.** Tier 1 holds one hex per ground, named by hue:
+  `swatch.<hue>.{stone,graphite}` → `--g-swatch-red-stone`. Tier 2 numbers them: `swatch-01`
+  reads the stone value in light and the graphite value in dark.
+- **How they are held.** `scripts/recipes/foundation.mjs` gates each swatch as text (Lc 60) on the
+  ground and on a raised surface, and as a mark (Lc 30) on `primary-soft` (a current nav item, a
+  selected row) and under the hover and pressed washes, in all 8 modes: no exception.
+  `scripts/check.mjs` holds the hues 30° apart, neighbours apart (ΔEOK 0.05 or more, so no two
+  read as one at a glance) and every swatch clear of the needs-you yellow (ΔEOK 0.1 or more).
+- **Use.** A 2px bar (a calendar event), a 2px edge (`edge-t` with `--edge-color`), an 8px square
+  beside a name. A swatch holds as words too, where an app needs that. It is never a fill behind
+  text and never a status: the meaning of a swatch is the person's, so the name always shows
+  beside it. A thing with no colour takes the neutral bar (`line-rule`) and no square.
+- **Mapping is the app's.** A calendar's server colour maps to the nearest swatch by OKLCH hue;
+  past twelve the swatches repeat. The red of the set sits by `critical` (on graphite they read
+  alike); it marks a person's calendar, never an error.
+
 ## How the two axes resolve
 
 A custom property keeps the value it computed on the element that declared it. So
@@ -239,6 +283,34 @@ every depth in a real browser.
 An app that re-points a core role in its own layer (`--sidebar: var(--surface-chrome)`) and also
 nests themed boxes repeats the re-point on `[data-theme]`
 ([App extension layer](#app-extension-layer)).
+
+## Plain CSS, for a page with no Tailwind
+
+`@unicron/tokens/plain.css` (`dist/plain.css`) is the same set of custom properties as
+`tokens.css`, every tier in every mode, for a page that has no Tailwind and may load nothing it
+does not own: Lockdown's in-page extension frames (build contract 5.1b #54).
+
+- **Flat.** Rules of custom properties only, on the same selectors as `tokens.css`. No `@theme`,
+  no nested rule, no `@import`, no `url()`, no font file. A page whose policy is only
+  `style-src 'self'` can link it from its own origin.
+- **By the roles' own names.** `var(--surface-raised)`, `var(--text-body)`, `var(--swatch-03)`.
+  Tailwind's `--color-*` names are not in it. The font roles, which `tokens.css` hands to
+  Tailwind, are root variables here: `--font-sans`, `--font-mono`, `--font-heading`. The fonts
+  themselves load from the page's own origin.
+- **The same two axes,** plus one ground for a frame: a root with the class `system` follows the
+  browser's light or dark setting (`prefers-color-scheme`), with no script. It is the one
+  `@media` block in the file.
+
+```html
+<html data-theme="lockdown" class="system">   <!-- or class="dark", class="light" -->
+  <link rel="stylesheet" href="plain.css">
+```
+
+`scripts/check.mjs` parses the file (whole comments, flat rules, the one `@media` block, nothing
+to fetch), checks it declares what `tokens.css` declares, and resolves every role and knob in the
+8 modes, the no-attribute defaults and on a `system` root against `tokens.css`. The playground's
+Plain CSS view (`?view=plain-css`) loads it in a frame per mode under `style-src 'self'` and
+compares every colour with the page's own `tokens.css`.
 
 ## Type roles
 
@@ -420,7 +492,7 @@ busy. A component with its own loop stills it in the same layer, by `data-slot`.
 `dist/tokens.css` ends with an `@theme inline { … }` block that exposes tier 2 to Tailwind v4:
 
 - every semantic colour as `--color-<name>: var(--<name>)`, so `bg-surface-ground`,
-  `text-text-label`, `bg-background`, `text-muted-foreground`;
+  `text-text-label`, `bg-background`, `text-muted-foreground`, `bg-swatch-01`;
 - the fonts as `--font-sans`, `--font-mono`, `--font-heading`;
 - the radius scale, `--radius-xs` to `--radius-4xl`, each `var(--radius)`. Tailwind's bare
   `rounded` reads a key named `--radius`, the same name as the role, so the build declares it in a
@@ -533,7 +605,8 @@ file in that folder. The format is in
 [`scripts/recipes/README.md`](../packages/tokens/scripts/recipes/README.md). One file is temporary:
 `legacy-fields.mjs` measures what the field classes from before 1.0 still paint (Input, Textarea,
 Select's trigger, NativeSelect, InputGroup, Toggle's invalid ring) until the primitives round
-restyles them as TextField.
+restyles them as TextField. `foundation.mjs` measures the twelve swatches
+([Swatches](#swatches)).
 
 `pnpm --filter @unicron/tokens test` runs it (so CI does). It prints one line per recipe, with the
 measure in each of the 8 modes, then the exceptions and the must-differ rows, and fails on any
