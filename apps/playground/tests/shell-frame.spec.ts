@@ -10,7 +10,7 @@ const view = (page: Page) => page.locator('[data-slot="playground-view"]')
 async function open(page: Page, name: string, theme: string) {
   await page.goto(`/?view=${name}&theme=${theme}&ground=graphite&chrome=0`)
   await expect(view(page)).toHaveAttribute("data-view-state", "ready")
-  // The checks below measure text. Before Geist loads, the fallback font is wider on some machines.
+  // The checks below measure text, so the fonts must be in before they run.
   await page.evaluate(() => document.fonts.ready)
 }
 
@@ -658,9 +658,21 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
   test("Warpcore: top tabs 28 apart; the chips 16 under the head and the first row at y 248 (Desktop / 01)", async ({ page }) => {
     await open(page, "shell-warpcore", "warpcore")
     // All 19 desktop frames: tab boxes at x 276, 374, 472 (70 wide, 28 between). They were 32 apart.
-    const tabs = await page.locator('[data-slot="top-tab"]').evaluateAll((all) => all.map((el) => el.firstElementChild!.getBoundingClientRect().left))
-    expect(tabs.slice(0, 3).map((x) => Math.round(x))).toEqual([276, 374, 473])
-    expect(Math.round((tabs[1] - tabs[0]) * 100) / 100 - Math.round(((await page.locator('[data-slot="top-tab"]').first().evaluate((el) => el.firstElementChild!.getBoundingClientRect().width)) as number) * 100) / 100).toBeCloseTo(28, 1)
+    // The gap and the first tab's x are layout, and are pinned exactly. A later tab's x also carries
+    // the label's glyph widths, which differ by a few px between machines (this container draws the
+    // first tab 70.27 wide and the tabs at 276, 374, 473; the CI runner drew 276, 377, 477), so a
+    // tab's width is held to Figma's 70 within 4 px instead.
+    const tabs = await page.locator('[data-slot="top-tab"]').evaluateAll((all) =>
+      all.slice(0, 3).map((el) => {
+        const r = el.firstElementChild!.getBoundingClientRect()
+        return { left: r.left, right: r.right, width: r.width }
+      }),
+    )
+    expect(Math.round(tabs[0].left)).toBe(276)
+    expect(tabs[1].left - tabs[0].right).toBeCloseTo(28, 1)
+    expect(tabs[2].left - tabs[1].right).toBeCloseTo(28, 1)
+    // CHAT and DOCS are 70 wide in the frames; TASKS carries a count and is wider.
+    for (const tab of tabs.slice(0, 2)) expect(Math.abs(tab.width - 70)).toBeLessThanOrEqual(4)
     const list = page.locator('[data-slot="app-frame-list"]')
     const head = await box(list.locator('[data-slot="page-head"]'))
     const chips = await box(list.locator('[data-slot="filter-chip-group"]'))
