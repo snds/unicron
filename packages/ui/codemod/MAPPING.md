@@ -49,13 +49,16 @@ const icon = iconFromMaterial(stored) ?? (isIconName(stored) ? stored : "documen
 
 Translate only what was written before the switch. A name in both sets (see *Same word*) means the Material drawing in old data and the Carbon one in new data, so mark the stored data with a version, or translate it in one migration, rather than on every read.
 
-## Same word, different drawing (8)
+## Same word, different drawing (11)
 
 These Material names are also names in the curated Carbon set, but the right Carbon icon has another name. The type checker accepts the old name, so a use the codemod could not reach compiles and draws the wrong thing. The codemod lists every such use it leaves.
 
 | Material | Becomes | Carbon's icon of the old name is |
 |---|---|---|
+| `badge` | `user--identification` | a variant of the same idea |
+| `category` | `categories` | a variant of the same idea |
 | `error` | `warning` | a slashed circle (reads as blocked) |
+| `history` | `recently-viewed` | a variant of the same idea |
 | `pin` | `string-integer` | a pushpin |
 | `rule` | `test-tool` | a shield with lines |
 | `send` | `send--alt` | a paper plane pointing right (kept for a Sent folder) |
@@ -208,8 +211,8 @@ These Material names are also names in the curated Carbon set, but the right Car
 | `health_and_safety` | `health-cross` | Lockdown 3, Synapse 2 | Carbon has no shield with a cross. The cross keeps 'health' and 'safety net'. |
 | `help` | `help` | ui 2, Vale 2, Lockdown 3, Synapse 8 |  |
 | `hide_image` | `no-image` | Vale 2 |  |
-| `history` | `history` | Vale 2, Lockdown 1, Synapse 2 |  |
-| `history_edu` | `history` | Synapse 1 | Carbon has no scroll and quill. Used once, for a project's history. |
+| `history` | `recently-viewed` | Vale 2, Lockdown 1, Synapse 2 | Carbon's `recently-viewed` is the same drawing as Material's history: a clock with an arrow turning back around it. Carbon's own `history` is a dotted circle, so it is not used here (it stays in the set). Synapse names `recently-viewed` for History. |
+| `history_edu` | `recently-viewed` | Synapse 1 | Carbon has no scroll and quill. Used once, for a project's history, so it takes the same clock as history. |
 | `home` | `home` | ui 6, Lockdown 3, Synapse 1 |  |
 | `hourglass_empty` | `hourglass` | ui 1, Synapse 3 |  |
 | `hourglass_top` | `hourglass` | Lockdown 1, Synapse 7, Warpcore 4 |  |
@@ -235,8 +238,8 @@ These Material names are also names in the curated Carbon set, but the right Car
 | `language` | `language` | Synapse 1 |  |
 | `laptop_mac` | `laptop` | Vale 1, Synapse 1 |  |
 | `layers` | `layers` | Synapse 1 |  |
-| `left_panel_close` | `open-panel--filled--left` | Vale 1, Synapse 1, Warpcore 1 | The filled panel shows that it is open. Pairs with Figma's `open-panel--filled--right`. |
-| `left_panel_open` | `open-panel--left` | Vale 1, Synapse 1, Warpcore 1 |  |
+| `left_panel_close` | `side-panel--close` | Vale 1, Synapse 1, Warpcore 1 | The same drawing as Material's: a panel on the left and an arrow pointing into it. Synapse names `side-panel--close` for collapsing its sidebar. The right-hand pair keeps Figma's `open-panel--right` glyphs. |
+| `left_panel_open` | `side-panel--open` | Vale 1, Synapse 1, Warpcore 1 | The same drawing as Material's: a panel on the left and an arrow pointing out of it (Synapse's `side-panel--open`). |
 | `legend_toggle` | `legend` | Synapse 1 |  |
 | `library_books` | `document` | Warpcore 3 | Used only by Warpcore's Library, which Figma draws as Docs with `document`. |
 | `license` | `license` | Lockdown 3 |  |
