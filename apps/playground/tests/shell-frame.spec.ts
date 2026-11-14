@@ -10,6 +10,8 @@ const view = (page: Page) => page.locator('[data-slot="playground-view"]')
 async function open(page: Page, name: string, theme: string) {
   await page.goto(`/?view=${name}&theme=${theme}&ground=graphite&chrome=0`)
   await expect(view(page)).toHaveAttribute("data-view-state", "ready")
+  // The checks below measure text. Before Geist loads, the fallback font is wider on some machines.
+  await page.evaluate(() => document.fonts.ready)
 }
 
 /** The column showing now: the frame's one scroller on a phone. */
