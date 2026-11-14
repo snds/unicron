@@ -579,6 +579,10 @@ html:has([data-slot="app-frame"]) body {
  *                                    tile. Colour from --rule-color, or --primary-fill without one
  *   edge-l                           the --stroke-emphasis left edge of a selected row, in
  *                                    --primary-fill (or --edge-color)
+ *   edge-t, edge-b                   the same edge along the top or the bottom: today's date when
+ *                                    another day is picked (edge-b), a tab or tile marked from above
+ *                                    (edge-t). Each has its own layer, so they compose with edge-l
+ *                                    and the rules; --edge-color colours every edge on the element
  *
  * They compose: each sets its own layer, and one box-shadow draws them all, so `rule-t rule-b`, or
  * `rule-b` with `data-selected:edge-l`, both work. rule-box-emphasis replaces rule-box. The layers
@@ -620,6 +624,16 @@ html:has([data-slot="app-frame"]) body {
   inherits: false;
   initial-value: inset 0 0 0 0 transparent;
 }
+@property --rule-edge-t {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
+@property --rule-edge-b {
+  syntax: "*";
+  inherits: false;
+  initial-value: inset 0 0 0 0 transparent;
+}
 
 @utility rule-t {
   --rule-t: inset 0 var(--stroke-rule) 0 0 var(--line-rule);
@@ -627,6 +641,8 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
@@ -642,6 +658,8 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
@@ -657,6 +675,8 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
@@ -672,6 +692,8 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
@@ -687,6 +709,8 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
@@ -702,6 +726,8 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
@@ -717,6 +743,42 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility edge-t {
+  --rule-edge-t: inset 0 var(--stroke-emphasis) 0 0 var(--edge-color, var(--primary-fill));
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
+    var(--rule-box),
+    var(--rule-t),
+    var(--rule-r),
+    var(--rule-b),
+    var(--rule-l),
+    var(--tw-ring-offset-shadow, 0 0 transparent),
+    var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow, 0 0 transparent);
+}
+@utility edge-b {
+  --rule-edge-b: inset 0 calc(var(--stroke-emphasis) * -1) 0 0 var(--edge-color, var(--primary-fill));
+  box-shadow:
+    var(--tw-inset-shadow, 0 0 transparent),
+    var(--tw-inset-ring-shadow, 0 0 transparent),
+    var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
@@ -743,6 +805,8 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
     var(--rule-edge),
+    var(--rule-edge-t),
+    var(--rule-edge-b),
     var(--rule-box),
     var(--rule-t),
     var(--rule-r),
