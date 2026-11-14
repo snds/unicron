@@ -26,6 +26,8 @@
   "files": [
     "dist",
     "vendor",
+    "bin",
+    "!bin/**/*.test.mjs",
     "codemod",
     "!codemod/test",
     "!codemod/sync.mjs",
@@ -39,7 +41,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "unicron-codemod": "./codemod/cli.mjs"
+    "unicron-codemod": "./codemod/cli.mjs",
+    "unicron-sources": "./bin/unicron-sources.mjs"
   },
   "exports": {
     ".": {
@@ -86,7 +89,7 @@
     "icons:check": "node scripts/build-icons.mjs --check && node codemod/sync.mjs --check",
     "sonner:build": "node scripts/build-sonner.mjs",
     "sonner:check": "node scripts/build-sonner.mjs --check",
-    "test": "pnpm icons:check && pnpm sonner:check && node --test \"codemod/**/*.test.mjs\" && vitest run"
+    "test": "pnpm icons:check && pnpm sonner:check && node --test \"codemod/**/*.test.mjs\" \"bin/**/*.test.mjs\" && vitest run"
   },
   "peerDependencies": {
     "react": "^19.0.0",

@@ -7,3 +7,9 @@ The icon drawings in this package (dist/icons/data.gen.js) are from IBM Carbon
 (@carbon/icons, https://github.com/carbon-design-system/carbon), Copyright IBM Corp.,
 licensed under the Apache License, Version 2.0. Each drawing is Carbon's 32 px art,
 unchanged, stored as the inner markup of its SVG.
+
+The toast module in this package (vendor/sonner.js) is sonner
+(https://github.com/emilkowalski/sonner), Copyright (c) 2023 Emil Kowalski, MIT. It is the
+published module less the <style> tag it adds to the page as it loads; its rules ship in
+dist/styles instead. scripts/build-sonner.mjs makes it, and the full licence text is at the
+top of the file.
