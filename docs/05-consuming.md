@@ -29,17 +29,23 @@ pnpm add https://github.com/snds/unicron/releases/download/%40unicron%2Fui%401.0
 The tag is part of the URL, URL-encoded (`@` → `%40`, `/` → `%2F`); the file is
 `unicron-<package>-<version>.tgz`. `@unicron/ui` declares `@unicron/tokens` as an exact-version
 dependency. From npm that resolves on its own; from tarballs the registry does not have it, so
-pin it with an override so pnpm resolves the dependency to the same tarball. In a pnpm workspace
-the override lives in `pnpm-workspace.yaml`:
+pin it with an override so pnpm resolves the dependency to the same tarball. The override lives in
+`pnpm-workspace.yaml`, in every pnpm repo. A single-package repo can have that file too, with
+nothing else in it:
 
 ```yaml
 overrides:
   "@unicron/tokens": https://github.com/snds/unicron/releases/download/%40unicron%2Ftokens%401.0.0/unicron-tokens-1.0.0.tgz
 ```
 
-In a single-package repo, the same entry goes under `"pnpm": { "overrides": { … } }` in
-`package.json`. Without it, pnpm looks for `@unicron/tokens@1.0.0` on the registry and the install
-fails. One override means one copy of the tokens, so the app and `@unicron/ui` read the same CSS.
+Without it, pnpm looks for `@unicron/tokens@1.0.0` on the registry and the install fails. One
+override means one copy of the tokens, so the app and `@unicron/ui` read the same CSS.
+
+- **pnpm 10.6 or later** reads the override from `pnpm-workspace.yaml` (the four apps pin 10.28).
+- **Not in `package.json`**, under `"pnpm": { "overrides": { … } }`. pnpm 11 and later ignore that
+  field with a warning, and the install then fails as above. Only pnpm 10 and older read it;
+  before 10.6 it is the one place that works.
+- **npm needs no override.** The tokens tarball you install also serves `@unicron/ui`'s dependency.
 
 Bumping is then editing the two URLs (and the override, when tokens moved too). The lockfile
 records each tarball's hash, so a later install cannot pick up different bytes. Pin exact versions and bump inside the
@@ -193,9 +199,17 @@ sonner in `pnpm test`), and `@unicron/ui/styles` carries sonner's rules as a fil
 **Import `toast` from `@unicron/ui`, not from `sonner`.** The Toaster listens to the copy, so a
 toast raised with sonner's own `toast` never shows in it, and importing `sonner` yourself brings
 the `<style>` tag back. The Toaster warns in the console, once, when it finds that tag on the page.
-(Base UI's scroll area also tries one tag, for hiding scrollbars; the stylesheet's `no-scrollbar`
-utility already covers it.) A browser check loads the Toaster under `style-src 'self'`, and
-another counts the style tags on a page (`apps/playground/tests/parts.spec.ts`).
+
+Base UI adds one tag of its own, to hide a scrollbar: in a scroll area, and in a select's list as
+it opens. `ScrollArea` and `SelectContent` tell Base UI not to, and the stylesheet's `no-scrollbar`
+utility hides the bar instead. If your app uses a Base UI scroll area or select directly, do the
+same: wrap the app in `<CSPProvider disableStyleElements>` from `@base-ui/react/csp-provider` and
+put `no-scrollbar` on the part that scrolls.
+
+Browser checks hold this: the Toaster, a `ScrollArea` and a `Select` are loaded under
+`style-src 'self'` and the policy must refuse nothing of theirs
+(`apps/playground/tests/parts.spec.ts`), and every view is checked for a `<style>` tag
+(`shell.spec.ts`).
 
 ## 4a. Icons (Carbon)
 

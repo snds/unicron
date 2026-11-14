@@ -29,7 +29,7 @@ An app-extension layer is the set of tokens and components that belong to one ap
 - **Figma parity and the contrast gate** run in `pnpm test`. `figma-parity` compares every built theme value, type role, size and the radius with the checked-in Figma read-out (`tokens/figma/theme-2026-11.json`). The contrast gate measures every recipe (core plus each area's `scripts/recipes/<area>.mjs`) in all 8 modes. A miss that is Figma's own value goes in that file's `exceptions` with a reason, so it is reported for a decision, never silently passed; anything else fails. `node packages/tokens/scripts/contrast.mjs --print-exceptions` prints the current list.
 - **Playground and browser checks.** A view is a file in `apps/playground/src/views/` (picked up with no registration; a file starting with `_` is shared parts). The address is the state: `?view=<name>&theme=<app>&ground=<graphite|stone>`. `pnpm --filter playground test:motion` runs every spec in `apps/playground/tests/` against the built playground, in a real browser:
   - `motion.spec.ts`: each motion contract moves only what it lists, for no longer than its role, and not at all under reduced motion.
-  - `shell.spec.ts`: the address, the switcher, and every view mounts with no page error.
+  - `shell.spec.ts`: the address, the switcher, and every view mounts with no page error and with no `<style>` tag left in the page.
   - `foundations.spec.ts`: the 8 Figma modes reach the pixels, the type roles match, rules add no height, scrims are never opaque, nothing blurs a backdrop.
   - `shell-frame.spec.ts`: the four shells at phone, short, medium and desktop sizes; the scrolled chrome; toasts; the shrink order; pull to refresh.
   - `parts.spec.ts`: one check per review finding, so a fixed defect stays fixed.
@@ -54,7 +54,9 @@ An app-extension layer is the set of tokens and components that belong to one ap
 6. **A header** that says where it came from ([Provenance](#provenance)).
 7. **It works under a strict policy and in WebKit.** No `<style>` tag at run time, no `style`
    attribute written into markup, nothing from a `data:` URL (Lockdown's web vault runs
-   `style-src 'self'`). The Mac apps run in WKWebView: nothing Chromium-only.
+   `style-src 'self'`). A Base UI part that adds a tag to hide a scrollbar sits inside
+   `CSPProvider disableStyleElements` and takes `no-scrollbar`, as `ScrollArea` does. The Mac apps
+   run in WKWebView: nothing Chromium-only.
 
 ### Docs that move with a change
 

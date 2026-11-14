@@ -75,7 +75,7 @@ was restyled; [07 · Migrating to 1.0](07-migrating-to-1.0.md) lists what change
 | `radio-group` | `RadioGroup`, `RadioGroupItem` (a 16px square; chosen is an ink square inside), `RadioRow` (a choice with a sentence; `rule`) | Form | Base UI RadioGroup, Radio. 1.0 |
 | `switch` | `Switch` (Figma's Toggle: a 44 × 24 track and a square knob; one size) | Form | Base UI Switch |
 | `toggle-row` | `ToggleRow` (Switch's props, plus `label`, `description`, `badge`, `meta`, `rule`, `inset`, `disabledReason`; the whole row is the target) | Form | Base UI Switch. 1.0 |
-| `select` | `Select`, `SelectTrigger` (`size`: default 48, sm 40), `SelectValue`, `SelectContent` (`width`), `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` | Form | Base UI Select |
+| `select` | `Select`, `SelectTrigger` (`size`: default 48, sm 40), `SelectValue`, `SelectContent` (`width`, `alignItemWithTrigger`), `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` | Form | Base UI Select |
 | `native-select` | `NativeSelect` (`size`: default, sm), `NativeSelectOption`, `NativeSelectOptGroup` | Form | select |
 | `filter-chip` | `FilterChip` (`value`, `count`, `active`; `kind`: toggle, trigger, button), `FilterChipGroup` (`type`: single, multiple; `scroll`, `action`, `label`), `filterChipVariants` | Form | Base UI Button. 1.0 |
 
@@ -200,6 +200,11 @@ transform (README → Regenerating components) rather than hand-writing.
 - **Works under a strict policy.** No component adds a `<style>` tag at run time, writes a `style`
   attribute into static markup, or loads a font or an image from a `data:` URL. Setting a style
   through React's `style` prop is fine. Lockdown's web vault runs with `style-src 'self'`.
+  Base UI adds a tag of its own to hide a scrollbar, in a scroll area and in a select's list.
+  `ScrollArea` and `SelectContent` tell it not to (Base UI's `CSPProvider`, `disableStyleElements`),
+  and the `no-scrollbar` utility hides the bar. That setting reaches everything inside the two: a
+  Base UI part of your own placed there adds no tag either, and gets no nonce from a
+  `CSPProvider` further up.
 
 **Edges and space**
 
@@ -343,6 +348,8 @@ The mark is `aria-hidden`; its words are in the host's name. The older `indicato
   line of plain text, or when the list has to match the menus beside it. Past about 15 options,
   use a combobox. Pass `items` (value → label) to `Select`, so the trigger shows the label before
   the list has opened. Label it with `Label htmlFor` pointing at an `id` on `SelectTrigger`.
+  `SelectContent alignItemWithTrigger` lays the chosen option over the trigger (a pointer only);
+  a list taller than the screen then scrolls behind an arrow, with no bar.
 - **A radio shows a square inside; a checkbox shows a check.** Both are 16px squares, ink when
   chosen. `RadioRow` is a choice with a sentence.
 
