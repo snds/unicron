@@ -179,6 +179,41 @@ describe("SwipeRow (contract §6.4)", () => {
     expect(offsetOf(container)).toBe(0)
   })
 
+  it("closing an open row from inside the edge stops at rest: it never runs on into the leading action", () => {
+    const { container, calls } = vale()
+    // Open on the trailing side, then a long right swipe that starts 10 px from the screen's edge.
+    swipe(root(container), 360, 360 - 24 - 130)
+    expect(offsetOf(container)).toBe(-240)
+    swipe(root(container), 10, 10 + 375, { up: false })
+    // Mid-drag: at rest, the leading tile not shown, nothing armed.
+    expect(offsetOf(container)).toBe(0)
+    expect(root(container)).not.toHaveAttribute("data-armed")
+    fireEvent.pointerUp(root(container), { pointerId: 1, clientX: 385, clientY: 40 })
+    expect(offsetOf(container)).toBe(0)
+    expect(root(container)).not.toHaveAttribute("data-open")
+    expect(calls.read).not.toHaveBeenCalled()
+  })
+
+  it("the same swipe clear of the edge may carry an open row on to the leading action", () => {
+    const { container, calls } = vale()
+    swipe(root(container), 360, 360 - 24 - 130)
+    expect(offsetOf(container)).toBe(-240)
+    // From x 40: 240 back to rest, then past the full-swipe line (234) on the leading side.
+    swipe(root(container), 40, 40 + 24 + 240 + 250)
+    expect(calls.read).toHaveBeenCalledTimes(1)
+  })
+
+  it("a row open on its leading side closes from the edge, and never goes further out", () => {
+    const { container, calls } = vale()
+    swipe(root(container), 40, 40 + 24 + 50)
+    expect(offsetOf(container)).toBe(80)
+    // A press on the open tile, inside the edge, dragged right: the row stays where it rested.
+    swipe(root(container), 10, 10 + 24 + 300, { up: false })
+    expect(offsetOf(container)).toBe(80)
+    fireEvent.pointerUp(root(container), { pointerId: 1, clientX: 334, clientY: 40 })
+    expect(calls.read).not.toHaveBeenCalled()
+  })
+
   it("the click that ends a swipe is not a tap on the row; a tap on an open row closes it and does nothing else", () => {
     const { container, calls } = vale()
     const main = screen.getByRole("button", { name: "Mira Chen Cabin for the 20th, confirmed" })

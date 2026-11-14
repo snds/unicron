@@ -1,5 +1,5 @@
-// Popover, solid and square, with PopoverHeader (overline, title, close); one over the menu
-// scrim (Warpcore's environment picker, rules 8.13). View: ?view=popover
+// Popover, solid and square, with PopoverHeader (overline, title; a close when asked for); one
+// over the menu scrim (Warpcore's environment picker, rules 8.13). View: ?view=popover
 import {
   Button,
   FloatButton,
@@ -27,12 +27,12 @@ export default function PopoverView() {
   return (
     <div className="flex flex-col gap-10 p-6 max-sm:p-4">
       <div className="flex flex-wrap gap-10">
-        <Specimen label="PopoverHeader // overline, title, close (Warpcore U-08)">
+        <Specimen label="PopoverHeader // overline, title, and a close when asked for (Warpcore U-08)">
           <div className="h-[340px] w-[360px] max-w-full">
             <Popover open modal={false}>
               <PopoverTrigger render={<Button variant="secondary" />}>Who answers</PopoverTrigger>
               <PopoverContent align="start">
-                <PopoverHeader overline="Who answers // 03" title="Pick a model" />
+                <PopoverHeader overline="Who answers // 03" title="Pick a model" showCloseButton />
                 <div className="flex flex-col">
                   <Choice name="Claude Opus 5.5" meta="Anthropic" />
                   <Choice name="qwen3-32b" meta="Local" />
@@ -48,7 +48,7 @@ export default function PopoverView() {
             <Popover open modal={false}>
               <PopoverTrigger render={<Button variant="secondary" />}>Workspace context</PopoverTrigger>
               <PopoverContent align="start">
-                <PopoverHeader showCloseButton={false}>
+                <PopoverHeader>
                   <PopoverTitle>Workspace context</PopoverTitle>
                   <PopoverDescription>What the model reads before it answers in this chat.</PopoverDescription>
                 </PopoverHeader>

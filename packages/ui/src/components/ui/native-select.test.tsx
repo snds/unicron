@@ -24,9 +24,10 @@ describe("NativeSelect", () => {
     expect(select).toHaveValue("space")
   })
 
-  it("sm is 40 tall, for a row", () => {
+  it("sm is 40 tall, for a row, and the 44px touch minimum on a coarse pointer", () => {
     render(<Subject size="sm" />)
     expect(screen.getByRole("combobox").className).toContain("data-[size=sm]:h-10")
+    expect(screen.getByRole("combobox").className.split(" ")).toContain("data-[size=sm]:pointer-coarse:h-touch-min")
   })
 
   it("disabled dims the chevron with it", () => {

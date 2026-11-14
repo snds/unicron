@@ -202,11 +202,11 @@ function SheetContent({
           "data-[side=right]:rule-l data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:pt-4",
           "data-[side=top]:rule-b data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:pt-4 data-[side=top]:pb-4",
           // They slide 40px from their edge as they fade; under reduced motion they only fade.
-          "data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
+          "data-[side=bottom]:data-ending-style:translate-y-10 data-[side=bottom]:data-starting-style:translate-y-10 data-[side=left]:data-ending-style:-translate-x-10 data-[side=left]:data-starting-style:-translate-x-10 data-[side=right]:data-ending-style:translate-x-10 data-[side=right]:data-starting-style:translate-x-10 data-[side=top]:data-ending-style:-translate-y-10 data-[side=top]:data-starting-style:-translate-y-10",
           SHEET_SIZES[size],
           full &&
             // Top to bottom of the screen it is fixed to, below an app's title bar, clear of the status bar.
-            "data-[side=bottom]:max-h-none data-[side=bottom]:top-(--c-dialog-titlebar-inset) data-[side=bottom]:pt-[calc(env(safe-area-inset-top)+0.5rem)]",
+            "data-[side=bottom]:max-h-none data-[side=bottom]:top-(--c-dialog-titlebar-inset) data-[side=bottom]:pt-[calc(env(safe-area-inset-top)+--spacing(2))]",
           className
         )}
         {...props}
@@ -309,10 +309,10 @@ function AdaptiveSheetContent({
           // Compact: anchored to the bottom edge, a rule on top, square.
           "max-sm:rule-t max-sm:inset-x-0 max-sm:bottom-0 max-sm:pt-2 max-sm:data-ending-style:translate-y-full max-sm:data-starting-style:translate-y-full",
           height === "full"
-            ? "max-sm:top-(--c-dialog-titlebar-inset) max-sm:pt-[calc(env(safe-area-inset-top)+0.5rem)]"
+            ? "max-sm:top-(--c-dialog-titlebar-inset) max-sm:pt-[calc(env(safe-area-inset-top)+--spacing(2))]"
             : "max-sm:max-h-(--c-sheet-compact-height)",
           // Regular: a panel on the right, starting below --c-dialog-titlebar-inset (0px by default).
-          "sm:rule-l sm:top-(--c-dialog-titlebar-inset) sm:bottom-0 sm:right-0 sm:max-w-full sm:pt-4 sm:data-ending-style:translate-x-[2.5rem] sm:data-starting-style:translate-x-[2.5rem]",
+          "sm:rule-l sm:top-(--c-dialog-titlebar-inset) sm:bottom-0 sm:right-0 sm:max-w-full sm:pt-4 sm:data-ending-style:translate-x-10 sm:data-starting-style:translate-x-10",
           wide ? "sm:w-(--c-sheet-wide-width)" : "sm:w-(--c-sheet-regular-width)"
         )}
         {...props}
@@ -444,14 +444,21 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   )
 }
 
+/**
+ * The sentence that describes the sheet to assistive tech. `size="caption"` (the default) is the
+ * note Figma draws under a review's rows (Lockdown Mobile / 11: caption role, 13/20, secondary
+ * ink). `size="body"` is for a question whose sentence is its whole content.
+ */
 function SheetDescription({
   className,
+  size = "caption",
   ...props
-}: SheetPrimitive.Description.Props) {
+}: SheetPrimitive.Description.Props & { size?: "caption" | "body" }) {
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("type-body text-text-secondary break-words", className)}
+      data-size={size}
+      className={cn(size === "body" ? "type-body" : "type-caption", "text-text-secondary break-words", className)}
       {...props}
     />
   )

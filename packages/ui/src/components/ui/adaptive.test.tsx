@@ -71,6 +71,8 @@ describe("AdaptiveDialog", () => {
     expect(dialog).toHaveAttribute("data-slot", "dialog-content")
     expect(dialog).toHaveAttribute("data-size", "form")
     expect(dialog).toHaveAccessibleDescription("Sat Nov 20 to Mon Nov 22.")
+    // The `description` of an adaptive dialog is its main sentence: the body role, not the note's caption.
+    expect(screen.getByText("Sat Nov 20 to Mon Nov 22.").className.split(" ")).toContain("type-body")
     expect(screen.getByText("New event // personal")).toHaveAttribute("data-slot", "dialog-overline")
     expect(document.querySelector('[data-slot="dialog-footer"]')).toContainElement(screen.getByRole("button", { name: "Save event" }))
   })
@@ -290,6 +292,16 @@ describe("AdaptivePopover", () => {
     const popover = screen.getByRole("dialog", { name: "Legend" })
     expect(popover).toHaveAttribute("data-slot", "popover-content")
     expect(screen.getByText("Graph // 04 kinds")).toHaveAttribute("data-slot", "popover-overline")
+    // A popover closes on an outside press: no close button unless asked for.
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull()
+  })
+
+  it("showCloseButton adds the popover's FloatButton M on a desktop", () => {
+    render(
+      <AdaptivePopover presentation="desktop" defaultOpen showCloseButton title="Legend" trigger={<Button>Legend</Button>}>
+        <p>Skills, checks, harnesses and notes.</p>
+      </AdaptivePopover>
+    )
     expect(screen.getByRole("button", { name: "Close" })).toHaveAttribute("data-size", "m")
   })
 

@@ -1,4 +1,11 @@
 // Public surface of @unicron/ui. One line per primitive module; add new modules here.
+//
+// A module that also exports helpers for its sibling files and its tests is listed by name, so the
+// helpers do not become public API of a 1.0 package (each would need a major to change):
+// adaptive (textOfNode), input (fieldTextOnTouch), rail (resolveNavMark, nameWithMark,
+// markKeyShortcuts, rovingTarget), sonner (waitingToasts, toasterVisibleToasts,
+// toasterVisibleToastsPhone), text-field (textFieldMessageRows). A new export of one of those
+// modules is public only once it is named here. index.test.ts holds the list of what stays out.
 export { cn } from "./lib/utils"
 export { Icon, type CoreIconName, type IconName, type IconProps, type IconSize, type IconTone, type UnicronIconRegistry } from "./components/icon"
 export { iconNames, isIconName, registerIcons } from "./icons/registry"
@@ -34,7 +41,27 @@ export {
   type ViewportDetailPlacement,
 } from "./components/use-viewport"
 export * from "./components/ui/accessory"
-export * from "./components/ui/adaptive"
+export {
+  AdaptiveDialog,
+  AdaptiveMenu,
+  AdaptiveMenuCheckboxItem,
+  AdaptiveMenuGroup,
+  AdaptiveMenuItem,
+  AdaptiveMenuRadioGroup,
+  AdaptiveMenuRadioItem,
+  AdaptiveMenuSeparator,
+  AdaptivePopover,
+  OverflowMenu,
+  overflowMenuLabel,
+  useAdaptiveSheet,
+  useLayerOpen,
+  type AdaptiveDialogProps,
+  type AdaptiveMenuItemProps,
+  type AdaptiveMenuProps,
+  type AdaptivePopoverProps,
+  type AdaptivePresentation,
+  type OverflowMenuProps,
+} from "./components/ui/adaptive"
 export * from "./components/ui/app-frame"
 export * from "./components/ui/app-lockup"
 export * from "./components/ui/artifact-card"
@@ -66,7 +93,10 @@ export * from "./components/ui/highlight"
 export * from "./components/ui/initial-tile"
 export * from "./components/ui/input-group"
 export * from "./components/ui/indicator"
-export * from "./components/ui/input"
+export {
+  fieldBoxVariants,
+  Input,
+} from "./components/ui/input"
 export * from "./components/ui/item"
 export * from "./components/ui/kbd"
 export * from "./components/ui/label"
@@ -82,7 +112,20 @@ export * from "./components/ui/popover"
 export * from "./components/ui/progress"
 export * from "./components/ui/prose"
 export * from "./components/ui/radio-group"
-export * from "./components/ui/rail"
+export {
+  formatNavCount,
+  NavMark,
+  NavMarkTooltipKeys,
+  Rail,
+  RailItem,
+  railItemVariants,
+  type NavMarkPlacement,
+  type NavMarkProp,
+  type NavMarkResolved,
+  type NavMarkTone,
+  type RailItemProps,
+  type RailItemState,
+} from "./components/ui/rail"
 export * from "./components/ui/resizable-panes"
 export * from "./components/ui/run-trace"
 export * from "./components/ui/scroll-area"
@@ -92,7 +135,13 @@ export * from "./components/ui/separator"
 export * from "./components/ui/settings-frame"
 export * from "./components/ui/sheet"
 export * from "./components/ui/skeleton"
-export * from "./components/ui/sonner"
+export {
+  toast,
+  toastDurations,
+  Toaster,
+  type ToastAction,
+  type ToastOptions,
+} from "./components/ui/sonner"
 export * from "./components/ui/spinner"
 export * from "./components/ui/split-button"
 export * from "./components/ui/status-orb"
@@ -103,7 +152,15 @@ export * from "./components/ui/switch"
 export * from "./components/ui/tab-bar"
 export * from "./components/ui/table"
 export * from "./components/ui/tabs"
-export * from "./components/ui/text-field"
+export {
+  SearchField,
+  TextField,
+  type SearchFieldProps,
+  type TextFieldMultilineProps,
+  type TextFieldNumberProps,
+  type TextFieldProps,
+  type TextFieldTextProps,
+} from "./components/ui/text-field"
 export * from "./components/ui/textarea"
 export * from "./components/ui/tile"
 export * from "./components/ui/toggle-group"

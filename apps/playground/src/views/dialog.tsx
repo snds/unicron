@@ -153,7 +153,7 @@ function MergeDialog({ container }: { container: HTMLElement }) {
           <DialogTitle>Merge two notes into memory-tiers.md</DialogTitle>
         </DialogHeader>
         <DialogBody>
-          <DialogDescription>Both notes say how long a baton keeps its history. The merged note keeps the newer rule and links the older one.</DialogDescription>
+          <DialogDescription size="body">Both notes say how long a baton keeps its history. The merged note keeps the newer rule and links the older one.</DialogDescription>
           <FieldRow size={rowSize} label="Keep">knowledge/decisions/memory-tiers.md</FieldRow>
           <FieldRow size={rowSize} label="Fold in">knowledge/notes/baton-history.md</FieldRow>
         </DialogBody>

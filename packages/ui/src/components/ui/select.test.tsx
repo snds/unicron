@@ -216,4 +216,11 @@ describe("Select in the 2026-11 look", () => {
     expect(code.querySelector('[data-icon-name="checkmark"]')).not.toBeNull()
     expect(screen.getByRole("option", { name: "General" }).querySelector('[data-icon-name="checkmark"]')).toBeNull()
   })
+
+  it("an item is 40 tall, and the 44px touch minimum on a coarse pointer, as a menu row", async () => {
+    render(<Subject />)
+    await openList()
+    const cls = screen.getByRole("option", { name: "Code" }).className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["min-h-10", "pointer-coarse:min-h-touch-min"]))
+  })
 })

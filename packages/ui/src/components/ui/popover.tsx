@@ -104,16 +104,20 @@ function PopoverContent({
 }
 
 /**
- * The top of a popover (contract §5.1b row 18): an overline, a title and a close button, the
- * dialog's header at a popover's size. Give it `overline` and `title`, or compose it from
- * `PopoverTitle` and `PopoverDescription` as children. The close is a neutral FloatButton M (44),
- * as tall as the overline and the subtitle-role title together; `showCloseButton={false}` drops it.
+ * The top of a popover (contract §5.1b row 18): an overline over a title, as Figma draws the one
+ * popover it has (Warpcore's environment picker, cw-07: the overline, then the title in the
+ * ui-emphasis role, 16 + 20 = 36 tall, and no close button). Give it `overline` and `title`, or
+ * compose it from `PopoverTitle` and `PopoverDescription` as children.
+ *
+ * A popover closes on a press outside it and on Escape, so the close button is off by default.
+ * `showCloseButton` adds it, a neutral FloatButton M (44), for a popover that stays open on an
+ * outside press.
  */
 function PopoverHeader({
   className,
   overline,
   title,
-  showCloseButton = true,
+  showCloseButton = false,
   closeLabel = "Close",
   children,
   ...props
@@ -122,7 +126,7 @@ function PopoverHeader({
   overline?: React.ReactNode
   /** The title. It names the popover for assistive tech. */
   title?: React.ReactNode
-  /** The close button at the right. On by default. */
+  /** The close button at the right. Off by default: a popover closes on an outside press. */
   showCloseButton?: boolean
   /** The close button's accessible name and tooltip. */
   closeLabel?: string
@@ -145,7 +149,7 @@ function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
   return (
     <PopoverPrimitive.Title
       data-slot="popover-title"
-      className={cn("type-subtitle text-text-body break-words", className)}
+      className={cn("type-ui-emphasis text-text-body break-words", className)}
       {...props}
     />
   )

@@ -170,7 +170,7 @@ function AdaptiveDialog({
             <SheetTitle>{title}</SheetTitle>
           </SheetHeader>
           <SheetBody>
-            {description ? <SheetDescription>{description}</SheetDescription> : null}
+            {description ? <SheetDescription size="body">{description}</SheetDescription> : null}
             {children}
           </SheetBody>
           {footer ? <SheetFooter>{footer}</SheetFooter> : null}
@@ -188,7 +188,7 @@ function AdaptiveDialog({
         </DialogHeader>
         {description || children ? (
           <DialogBody>
-            {description ? <DialogDescription>{description}</DialogDescription> : null}
+            {description ? <DialogDescription size="body">{description}</DialogDescription> : null}
             {children}
           </DialogBody>
         ) : null}
@@ -219,6 +219,10 @@ export interface AdaptivePopoverProps {
   scrim?: boolean
   /** The sheet's height on a phone. */
   height?: SheetHeight
+  /**
+   * The close button. By default the phone sheet shows it and the desktop popover does not: a
+   * popover closes on an outside press (Figma's environment picker draws none).
+   */
   showCloseButton?: boolean
   closeLabel?: string
   container?: React.ComponentProps<typeof PopoverContent>["container"]
@@ -243,7 +247,7 @@ function AdaptivePopover({
   align,
   scrim = false,
   height = "content",
-  showCloseButton = true,
+  showCloseButton,
   closeLabel = "Close",
   container,
   className,
@@ -254,7 +258,7 @@ function AdaptivePopover({
     return (
       <Sheet open={open} defaultOpen={defaultOpen} onOpenChange={change}>
         <SheetTrigger render={trigger} />
-        <SheetContent side="bottom" height={height} data-adaptive="popover" showCloseButton={showCloseButton} closeLabel={closeLabel} container={container} className={className}>
+        <SheetContent side="bottom" height={height} data-adaptive="popover" showCloseButton={showCloseButton ?? true} closeLabel={closeLabel} container={container} className={className}>
           <SheetHeader>
             {overline ? <SheetOverline>{overline}</SheetOverline> : null}
             <SheetTitle>{title}</SheetTitle>
@@ -268,7 +272,7 @@ function AdaptivePopover({
     <Popover open={open} defaultOpen={defaultOpen} onOpenChange={change}>
       <PopoverTrigger render={trigger} />
       <PopoverContent side={side} align={align} scrim={scrim} container={container} data-adaptive="popover" className={className}>
-        <PopoverHeader overline={overline} title={title} showCloseButton={showCloseButton} closeLabel={closeLabel} />
+        <PopoverHeader overline={overline} title={title} showCloseButton={showCloseButton ?? false} closeLabel={closeLabel} />
         {children}
       </PopoverContent>
     </Popover>

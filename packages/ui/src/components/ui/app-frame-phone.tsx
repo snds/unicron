@@ -7,10 +7,11 @@ import { createPortal } from "react-dom"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { mergeProps } from "@base-ui/react/merge-props"
 
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { Accessory, type AccessoryProps } from "./accessory"
-import { AppFrameTabBarContext, readLength, stripStateFor, useAppFrame } from "./app-frame-context"
+import { AppFrameTabBarContext, stripStateFor, useAppFrame } from "./app-frame-context"
 import type { PageHeadSwitcher } from "./page-head"
 import { TopBar } from "./top-bar"
 

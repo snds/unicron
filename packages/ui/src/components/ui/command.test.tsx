@@ -266,8 +266,22 @@ describe("Command in the 2026-11 look", () => {
       expect.arrayContaining(["rule-box", "focus-within:rule-box-emphasis", "min-h-control", "bg-surface-raised"])
     )
     const input = screen.getByRole("combobox")
-    expect(input.className.split(" ")).toEqual(expect.arrayContaining(["outline-none", "focus-visible:outline-none", "type-body"]))
+    expect(input.className.split(" ")).toEqual(expect.arrayContaining(["outline-none", "focus-visible:outline-none"]))
     expect(box.querySelector('[data-icon-name="search"]')).not.toBeNull()
+  })
+
+  it("the search field has SearchField's numbers: 16 in, 8 to the glyph in the secondary ink, the value in the ui role (16px on touch)", () => {
+    render(<Palette />)
+    const box = document.querySelector('[data-slot="command-input-wrapper"]') as HTMLElement
+    const cls = box.className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["px-4", "gap-2", "rounded-lg"]))
+    expect(cls).not.toContain("px-3")
+    expect(cls).not.toContain("gap-3")
+    const input = screen.getByRole("combobox").className.split(" ")
+    expect(input).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:text-(length:--type-body-size)", "placeholder:text-muted-foreground"]))
+    expect(input).not.toContain("type-body")
+    const glyph = box.querySelector('[data-icon-name="search"]')!.parentElement as HTMLElement
+    expect(glyph.className.split(" ")).toContain("text-support-foreground")
   })
 
   it("labels each group with an overline that names the group", () => {

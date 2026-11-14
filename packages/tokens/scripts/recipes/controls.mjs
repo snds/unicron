@@ -37,6 +37,11 @@ export const recipes = [
   { id: "btn-muted", source: "button ghost-muted at rest: text-muted-foreground", kind: "text-label", paint: r("muted-foreground"), over: [r("surface-ground")] },
   { id: "btn-ghost-critical", source: "button ghost-destructive at rest: text-destructive", kind: "text-label", paint: r("destructive"), over: [r("surface-ground")] },
   { id: "btn-link", source: "button link: text-primary-text", kind: "text-label", paint: r("primary-text"), over: [r("surface-ground")] },
+  // Pressed, the link's label takes the body ink, underlined. It used to dim to 80% of
+  // primary-text, which no recipe saw: Lc 43 to 45 on graphite, under the label floor. These two
+  // hold the pressed paint on both surfaces a link sits on.
+  { id: "btn-link-press-ground", source: "button link, pressed: active:text-text-body active:underline on the ground", kind: "text-body", paint: r("text-body"), over: [r("surface-ground")] },
+  { id: "btn-link-press-raised", source: "button link, pressed, on a raised surface (a dialog, a menu): active:text-text-body on bg-surface-raised", kind: "text-body", paint: r("text-body"), over: [r("surface-raised")] },
   // The three kinds on the needs-you yellow.
   { id: "btn-ny", source: "button needs-you: bg-needs-you-on-fill text-needs-you-fill", kind: "on-fill", paint: r("needs-you-fill"), over: [...NEEDS_YOU, r("needs-you-on-fill")] },
   { id: "btn-ny-hover", source: "button needs-you: hover:bg-needs-you-on-fill/90", kind: "on-fill", paint: r("needs-you-fill"), over: [...NEEDS_YOU, r("needs-you-on-fill", 0.9)] },

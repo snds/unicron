@@ -289,6 +289,24 @@ describe("Sheet in the 2026-11 look (Figma 32:122 Sheet Header; Vale 05, Lockdow
     expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
   })
 
+  it("a description is the caption note of Lockdown Mobile / 11; size=\"body\" keeps the body role", () => {
+    render(
+      <Sheet open>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Steam on a Windows PC</SheetTitle>
+          </SheetHeader>
+          <SheetDescription>Not you? Deny, and Lockdown locks this login.</SheetDescription>
+          <SheetDescription size="body">Claude Code is running the check against main.</SheetDescription>
+        </SheetContent>
+      </Sheet>
+    )
+    const note = screen.getByText(/Not you/).className.split(" ")
+    expect(note).toEqual(expect.arrayContaining(["type-caption", "text-text-secondary"]))
+    expect(note).not.toContain("type-body")
+    expect(screen.getByText(/Claude Code is running/).className.split(" ")).toContain("type-body")
+  })
+
   it("starts focus in the content; the close button is last in the tab order", async () => {
     render(<Review />)
     const close = screen.getByRole("button", { name: "Close" })

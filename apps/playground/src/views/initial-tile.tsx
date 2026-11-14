@@ -21,7 +21,7 @@ export default function InitialTileView() {
           <InitialTile initials="SB" size="s" />
         </div>
       </Specimen>
-      <Specimen label="Avatar // square on the 2px corner: sm 24, default 32, lg 40">
+      <Specimen label="Avatar // square on the 2px corner: sm 24, default 32, lg 40; a badge in the ink, or live for presence">
         <div className="flex items-end gap-4">
           <Avatar size="sm">
             <AvatarFallback>MC</AvatarFallback>
@@ -32,6 +32,10 @@ export default function InitialTileView() {
           <Avatar size="lg">
             <AvatarFallback>MC</AvatarFallback>
             <AvatarBadge />
+          </Avatar>
+          <Avatar size="lg">
+            <AvatarFallback>TP</AvatarFallback>
+            <AvatarBadge tone="live" />
           </Avatar>
           <AvatarGroup>
             <Avatar>

@@ -74,6 +74,11 @@ export const recipes = [
 
   // ── InitialTile, Avatar
   { id: "tile-initials", source: "initial tile, avatar fallback: the initials, text-foreground on bg-surface-raised", kind: "text-body", paint: r("foreground"), over: RAISED },
+  // The badge on an avatar: a square mark with a 2px ground ring, so the ground is what it is seen against.
+  { id: "avatar-badge", source: "avatar badge (neutral): bg-text-body inside ring-background, as the unread mark", kind: "solid", paint: r("text-body"), over: GROUND },
+  { id: "avatar-badge-live", source: "avatar badge tone=live: bg-secondary-live inside ring-background (presence)", kind: "solid", paint: r("secondary-live"), over: GROUND },
+  { id: "avatar-badge-glyph", source: "avatar badge (neutral) holding a glyph: text-surface-ground on bg-text-body", kind: "solid", paint: r("surface-ground"), over: [r("text-body")] },
+  { id: "avatar-badge-live-glyph", source: "avatar badge tone=live holding a glyph: text-surface-ground on bg-secondary-live", kind: "solid", paint: r("surface-ground"), over: [r("secondary-live")] },
 
   // ── Progress: the tones added in round 2, and the tick
   ...SURFACES.flatMap(([on, bg]) => [

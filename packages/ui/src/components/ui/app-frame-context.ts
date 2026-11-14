@@ -4,6 +4,7 @@
 
 import * as React from "react"
 
+import { readLength } from "../../lib/length"
 import { classifyViewport, useViewport, type Viewport, type ViewportWidth } from "../use-viewport"
 import type { PageHeadSwitcher } from "./page-head"
 
@@ -56,17 +57,6 @@ const MINIMIZE_FALLBACK = 64
  */
 export function nextMinimized(minimized: boolean, scrollTop: number, threshold: number): boolean {
   return minimized ? scrollTop > MINIMIZE_RESTORE_AT : scrollTop > threshold
-}
-
-/** A size token read off the element, in px, or the fallback without the stylesheet. */
-export function readLength(el: Element, name: string, fallback: number): number {
-  if (typeof getComputedStyle !== "function") return fallback
-  const raw = getComputedStyle(el).getPropertyValue(name).trim()
-  const match = /^([\d.]+)(px|rem)$/.exec(raw)
-  if (!match) return fallback
-  const n = Number.parseFloat(match[1])
-  if (!Number.isFinite(n)) return fallback
-  return match[2] === "px" ? n : n * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
 }
 
 export interface ScrollMinimizeOptions {

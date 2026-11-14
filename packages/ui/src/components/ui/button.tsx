@@ -42,7 +42,10 @@ const variants = cva(
         // Text only. The same padding as the boxed kinds, so it lines up beside one.
         ghost: cn("text-foreground", WASH),
         destructive: "bg-critical-fill text-critical-on-fill hover:bg-critical-fill/90 active:bg-critical-fill/80",
-        link: "text-primary-text underline-offset-4 hover:underline active:text-primary-text/80",
+        // Pressed, the label takes the body ink, underlined: a press that differs from the hover and
+        // reads on every ground. It used to dim to 80%, which fell under the label floor on every
+        // graphite ground (Lc 43 to 45) and which no contrast recipe measured.
+        link: "text-primary-text underline-offset-4 hover:underline active:text-text-body active:underline",
         // Quiet secondary actions ("Add holidays and more"): ghost, in label ink until hovered.
         "ghost-muted": cn("text-muted-foreground hover:text-foreground aria-expanded:text-foreground", WASH),
         // A destructive action that shouldn't shout (Delete in a dialog footer): ghost, in critical

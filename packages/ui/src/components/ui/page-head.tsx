@@ -6,6 +6,7 @@ import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { mergeProps } from "@base-ui/react/merge-props"
 
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { formatNavCount } from "./rail"
@@ -74,16 +75,6 @@ const TITLE: Record<PageHeadSize, string> = {
 
 const SWIPE_FALLBACK = 48
 const EDGE_FALLBACK = 24
-
-/** A size token read off the element, in px, or the fallback without the stylesheet. */
-function readLength(el: Element, name: string, fallback: number): number {
-  if (typeof getComputedStyle !== "function") return fallback
-  const raw = getComputedStyle(el).getPropertyValue(name).trim()
-  const match = /^([\d.]+)(px|rem)$/.exec(raw)
-  if (!match) return fallback
-  const n = Number.parseFloat(match[1])
-  return match[2] === "px" ? n : n * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
-}
 
 /** The switcher's swipe and its keys, as button handlers. */
 function useSwitcherGestures(onSwipe: ((direction: PageHeadSwipe) => void) | undefined) {

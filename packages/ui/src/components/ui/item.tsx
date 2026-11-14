@@ -14,18 +14,28 @@ import { cn } from "../../lib/utils"
 import { IndicatorMark, indicatorLabel, type IndicatorProp } from "./indicator"
 import { Separator } from "./separator"
 
+/** True inside an `ItemGroup`: its rows are the list's items. */
+const ItemGroupContext = React.createContext(false)
+
+/**
+ * A list of rows (`role="list"`). Each `Item` in it is a list item: a plain row takes the role
+ * itself, and a row drawn as a link or a button, which keeps that role, sits in a list-item box of
+ * its own. So assistive tech hears "list, 3 items" and then each link.
+ */
 function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      role="list"
-      data-slot="item-group"
-      className={cn(
-        // Rows sit edge to edge: each draws its own rule on top, so the list needs no gaps.
-        "group/item-group flex w-full flex-col",
-        className
-      )}
-      {...props}
-    />
+    <ItemGroupContext.Provider value={true}>
+      <div
+        role="list"
+        data-slot="item-group"
+        className={cn(
+          // Rows sit edge to edge: each draws its own rule on top, so the list needs no gaps.
+          "group/item-group flex w-full flex-col",
+          className
+        )}
+        {...props}
+      />
+    </ItemGroupContext.Provider>
   )
 }
 
@@ -33,15 +43,21 @@ function ItemSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof Separator>) {
+  const inGroup = React.useContext(ItemGroupContext)
   return (
     <Separator
       data-slot="item-separator"
       orientation="horizontal"
       className={cn("my-0", className)}
+      // A list owns list items only: between its rows the hairline is decoration, not a separator.
+      {...(inGroup ? { role: "none", "aria-orientation": undefined, "aria-hidden": true } : null)}
       {...props}
     />
   )
 }
+
+/** Tags that carry no role of their own, so the row can be the list item itself. */
+const PLAIN_TAGS = new Set(["div", "span", "section", "article"])
 
 // The generic row (Figma 9:181's grammar): a 1px rule on top, drawn inside it so it adds no height
 // (rule-t). Selected (data-selected="true") is the soft primary fill with the 2px primary edge on
@@ -52,7 +68,10 @@ const ROW_STATES = cn(
   "[a,button]:hover:bg-state-hover [a,button]:active:bg-state-pressed has-[>[data-slot=item-main]:hover]:bg-state-hover has-[>[data-slot=item-main]:active]:bg-state-pressed",
   // A selected row under the pointer keeps its soft fill with the wash laid on it.
   "data-[selected=true]:bg-primary-soft data-[selected=true]:edge-l [a,button]:data-[selected=true]:hover:bg-[color-mix(in_oklab,var(--primary-soft),var(--text-body)_6%)] [a,button]:data-[selected=true]:active:bg-[color-mix(in_oklab,var(--primary-soft),var(--text-body)_10%)]",
-  "focus-visible:-outline-offset-2 has-[>[data-slot=item-main]:focus-visible]:outline-2 has-[>[data-slot=item-main]:focus-visible]:-outline-offset-2 has-[>[data-slot=item-main]:focus-visible]:outline-ring"
+  "focus-visible:-outline-offset-2 has-[>[data-slot=item-main]:focus-visible]:outline-2 has-[>[data-slot=item-main]:focus-visible]:-outline-offset-2 has-[>[data-slot=item-main]:focus-visible]:outline-ring",
+  // A row that is the control (a link, a button, or one whose ItemMain covers it) is never under
+  // the 44px touch minimum on a coarse pointer, whatever its size (contract 6.6).
+  "[a,button]:pointer-coarse:min-h-touch-min has-[>[data-slot=item-main]]:pointer-coarse:min-h-touch-min"
 )
 
 const itemVariants = cva(
@@ -99,10 +118,17 @@ function Item({
   ...props
 }: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants> & { indicator?: IndicatorProp }) {
   const said = indicatorLabel(indicator)
-  return useRender({
+  const inGroup = React.useContext(ItemGroupContext)
+  const tag = render === undefined ? "div" : React.isValidElement(render) && typeof render.type === "string" ? render.type : null
+  // In an ItemGroup: a plain row is the list item; an <li> already is one; anything else (a link,
+  // a button, a component) keeps its own role inside a list-item box.
+  const plain = tag !== null && PLAIN_TAGS.has(tag)
+  const boxed = inGroup && !plain && tag !== "li"
+  const row = useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
       {
+        role: inGroup && plain ? "listitem" : undefined,
         className: cn(itemVariants({ variant, size, className })),
         children: said ? (
           <>
@@ -123,6 +149,12 @@ function Item({
       size,
     },
   })
+  if (!boxed) return row
+  return (
+    <div role="listitem" data-slot="item-listitem" className="flex w-full min-w-0">
+      {row}
+    </div>
+  )
 }
 
 const itemMediaVariants = cva(

@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { AppFrame, AppFrameColumn, AppFrameDetail, AppFrameList, AppFrameMain, pullOffsetFor } from "./app-frame"
+import { AppFrame, AppFrameColumn, AppFrameDetail, AppFrameList, AppFrameMain } from "./app-frame"
+import { pullOffsetFor } from "./app-frame-pull"
 import { Button } from "./button"
 
 const originalMatchMedia = window.matchMedia

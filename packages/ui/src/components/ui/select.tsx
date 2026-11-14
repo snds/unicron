@@ -182,9 +182,10 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        // 40 tall, the value in the `ui` role. The highlighted item takes the opaque accent; the
-        // chosen one shows a check at the end, in the ink.
-        "type-ui relative flex min-h-10 w-full cursor-default items-center gap-2 rounded-lg py-2.5 pr-10 pl-3 text-foreground outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        // 40 tall, and the 44px touch minimum on a coarse pointer, as a menu row (contract 6.6). The
+        // value in the `ui` role. The highlighted item takes the opaque accent; the chosen one shows
+        // a check at the end, in the ink.
+        "type-ui relative flex min-h-10 w-full cursor-default items-center gap-2 rounded-lg py-2.5 pr-10 pl-3 text-foreground outline-hidden select-none pointer-coarse:min-h-touch-min data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

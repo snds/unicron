@@ -4,6 +4,7 @@
 
 import * as React from "react"
 
+import { joinIds } from "../../lib/ids"
 import { cn } from "../../lib/utils"
 import type { FieldRowRule } from "./field-row"
 import { Switch } from "./switch"
@@ -14,11 +15,6 @@ const RULE: Record<FieldRowRule, string> = {
   bottom: "rule-b",
   both: "rule-t rule-b",
   none: "",
-}
-
-function joinIds(...ids: Array<string | false | null | undefined>): string | undefined {
-  const list = ids.filter(Boolean).join(" ")
-  return list || undefined
 }
 
 type SwitchProps = React.ComponentProps<typeof Switch>

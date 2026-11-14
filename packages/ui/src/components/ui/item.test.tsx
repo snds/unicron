@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import { Item, ItemContent, ItemDescription, ItemGroup, ItemMain, ItemTitle } from "./item"
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemMain, ItemSeparator, ItemTitle } from "./item"
 
 // 1.0: the contract's washes (state-hover, state-pressed) replace the muted fills, so pressed still
 // differs from hover (6% and 10% of the ink).
@@ -70,5 +70,72 @@ describe("Item as the generic row (2026-11)", () => {
   it("its focus ring is drawn just inside it", () => {
     render(<Item render={<button type="button" />}>Drafts</Item>)
     expect(screen.getByRole("button", { name: "Drafts" }).className).toContain("focus-visible:-outline-offset-2")
+  })
+})
+
+describe("ItemGroup is a list whose rows are its items", () => {
+  it("a plain row is the list item; a link or a button keeps its role inside a list-item box", () => {
+    render(
+      <ItemGroup>
+        <Item>Personal</Item>
+        <Item render={<a href="#drafts" />}>Drafts</Item>
+        <Item render={<button type="button" />}>Sent</Item>
+        <Item>
+          <ItemMain>Archive</ItemMain>
+        </Item>
+      </ItemGroup>
+    )
+    const list = screen.getByRole("list")
+    const items = screen.getAllByRole("listitem")
+    expect(items).toHaveLength(4)
+    // Every child of the list is a list item: nothing the list may not own.
+    expect(Array.from(list.children).every((child) => child.getAttribute("role") === "listitem")).toBe(true)
+    expect(items[0]).toHaveAttribute("data-slot", "item")
+    expect(items[1]).toHaveAttribute("data-slot", "item-listitem")
+    expect(items[1]).toContainElement(screen.getByRole("link", { name: "Drafts" }))
+    expect(screen.getByRole("link", { name: "Drafts" })).toHaveAttribute("data-slot", "item")
+    expect(items[2]).toContainElement(screen.getByRole("button", { name: "Sent" }))
+    // A row whose ItemMain covers it is a plain box: it is the item, the button is inside it.
+    expect(items[3]).toHaveAttribute("data-slot", "item")
+  })
+
+  it("the box around a link fills the list's width, so the row is as wide as before", () => {
+    render(
+      <ItemGroup>
+        <Item render={<a href="#drafts" />}>Drafts</Item>
+      </ItemGroup>
+    )
+    expect(screen.getByRole("listitem").className.split(" ")).toEqual(expect.arrayContaining(["flex", "w-full", "min-w-0"]))
+  })
+
+  it("outside a group a row has no list role and no box", () => {
+    const { container } = render(<Item render={<a href="#drafts" />}>Drafts</Item>)
+    expect(screen.queryByRole("listitem")).toBeNull()
+    expect(container.firstElementChild).toBe(screen.getByRole("link", { name: "Drafts" }))
+  })
+
+  it("a separator between rows is decoration there: the list owns list items only", () => {
+    render(
+      <ItemGroup>
+        <Item>Personal</Item>
+        <ItemSeparator />
+        <Item>Work</Item>
+      </ItemGroup>
+    )
+    expect(screen.queryByRole("separator")).toBeNull()
+    const hairline = document.querySelector('[data-slot="item-separator"]') as HTMLElement
+    expect(hairline).toHaveAttribute("role", "none")
+    expect(hairline).not.toHaveAttribute("aria-orientation")
+  })
+
+  it("a row that is the control is never under the 44px touch minimum on a coarse pointer", () => {
+    render(
+      <Item size="sm" render={<a href="#drafts" />}>
+        Drafts
+      </Item>
+    )
+    expect(screen.getByRole("link", { name: "Drafts" }).className.split(" ")).toEqual(
+      expect.arrayContaining(["[a,button]:pointer-coarse:min-h-touch-min", "has-[>[data-slot=item-main]]:pointer-coarse:min-h-touch-min"])
+    )
   })
 })

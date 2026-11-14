@@ -6,6 +6,7 @@ import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva } from "class-variance-authority"
 
+import { readLength } from "../../lib/length"
 import { rubberBand } from "../../lib/motion/rubber-band"
 import { useReducedMotion } from "../../lib/motion/use-reduced-motion"
 import { cn } from "../../lib/utils"
@@ -152,16 +153,6 @@ const FALLBACK = { reveal: 24, edge: 24, tile: 80, snap: 0.5, full: 0.6 }
 function readKnob(el: Element, name: string): string {
   if (typeof getComputedStyle !== "function") return ""
   return getComputedStyle(el).getPropertyValue(name).trim()
-}
-
-function readLength(el: Element, name: string, fallback: number): number {
-  const match = /^(-?[\d.]+)(px|rem)$/.exec(readKnob(el, name))
-  if (!match) return fallback
-  const n = Number.parseFloat(match[1])
-  if (!Number.isFinite(n)) return fallback
-  if (match[2] === "px") return n
-  const root = Number.parseFloat(getComputedStyle(el.ownerDocument.documentElement).fontSize)
-  return n * (Number.isFinite(root) && root > 0 ? root : 16)
 }
 
 function readShare(el: Element, name: string, fallback: number): number {
@@ -326,10 +317,13 @@ function SwipeRow({
   }, [restSide, close])
 
   /** Where the row may be for a raw travel: 0 on a side with nothing, resisting past its furthest. */
-  function constrain(raw: number, d: Drag): number {
+  function constrain(travelled: number, d: Drag): number {
+    // A press that starts inside the back edge never carries the row further toward the leading
+    // action than where it rested (rule 7.3.4): from rest, and from open on the trailing side, it
+    // stops at 0, so closing an open row from the edge cannot run on into the leading action.
+    const raw = travelled > 0 && !d.clearOfEdge ? Math.min(travelled, Math.max(d.base, 0)) : travelled
     const side = raw < 0 ? trailing : leading ? [leading] : []
     if (raw === 0 || side.length === 0) return 0
-    if (raw > 0 && d.base === 0 && !d.clearOfEdge) return 0
     const travel = Math.abs(raw)
     const open = side.length * d.tile
     const last = raw < 0 ? outer : leading

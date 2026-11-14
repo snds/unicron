@@ -120,6 +120,13 @@ describe("Button sizes", () => {
     expect(classes).not.toContain("hit-area")
   })
 
+  it("a pressed link takes the body ink, underlined, and never a dimmed ink", () => {
+    const classes = classesOf({ variant: "link" })
+    expect(classes).toEqual(expect.arrayContaining(["text-primary-text", "hover:underline", "active:underline", "active:text-text-body"]))
+    // Dimmed to 80% the ink fell under the label floor on graphite (Lc 43 to 45), unseen by the gate.
+    expect(classes.some((name) => /^active:text-\S+\/\d+$/.test(name))).toBe(false)
+  })
+
   it("the corner is the control radius, and shape=\"pill\" no longer rounds it", () => {
     expect(classesOf({})).toContain("rounded-lg")
     const pill = classesOf({ shape: "pill" })

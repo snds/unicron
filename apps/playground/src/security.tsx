@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
 import {
   Button,
   CodeDisplay,
@@ -9,6 +8,7 @@ import {
   CrownJewelSurface,
   Icon,
   LargeTypeView,
+  toast,
   type CrownJewelProof,
 } from "@unicron/ui"
 

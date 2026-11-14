@@ -4,11 +4,11 @@
 
 import * as React from "react"
 
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { rubberBand } from "../../lib/motion/rubber-band"
 import { useReducedMotion } from "../../lib/motion/use-reduced-motion"
 import { Icon } from "../icon"
-import { readLength } from "./app-frame-context"
 
 const THRESHOLD_FALLBACK = 64
 const MAX_FALLBACK = 128

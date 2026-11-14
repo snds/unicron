@@ -3,9 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { useState } from "react"
 
-import { AppFrame, AppFrameAccessory, AppFrameBottomRow, AppFrameColumn, AppFrameMain, toastPlacementFor, stripStateFor } from "./app-frame"
+import { AppFrame, AppFrameAccessory, AppFrameBottomRow, AppFrameColumn, AppFrameMain, toastPlacementFor } from "./app-frame"
+import { stripStateFor } from "./app-frame-context"
 import { Button } from "./button"
-import { toast, toastDurations, Toaster, toasterVisibleToasts, waitingToasts } from "./sonner"
+import { toast, toastDurations, Toaster, toasterVisibleToasts, toasterVisibleToastsPhone, waitingToasts } from "./sonner"
 import { TabBar, TabBarItem } from "./tab-bar"
 
 const list = () => document.querySelector("[data-sonner-toaster]") as HTMLElement
@@ -309,6 +310,73 @@ describe("the phone's status-strip slot (contract 5.1c C6)", () => {
     expect(list()).toHaveAttribute("data-y-position", "top")
     expect(accessory()).not.toHaveAttribute("data-yield")
     expect(frame().style.getPropertyValue("--frame-toast-top")).toMatch(/px$/)
+  })
+
+  it("one toast at a time on a phone, so the bottom never holds three bars; the rest wait and come in order", async () => {
+    // A toast on its way out is still in the page for its exit; `up` is what stands in the slot.
+    const up = () => toasts().filter((t) => t.getAttribute("data-removed") !== "true")
+    const wait = () =>
+      act(async () => {
+        await new Promise((r) => setTimeout(r, 120))
+      })
+    render(<Phone strip="none" />)
+    const ids: (string | number)[] = []
+    act(() => {
+      for (const name of ["Archived Budget for audits", "Copied the password for Steam", "Saved Steam"]) ids.push(toast(name))
+    })
+    await settle()
+    expect(toasterVisibleToastsPhone).toBe(1)
+    expect(up().map((t) => t.textContent)).toEqual(["Archived Budget for audits"])
+    expect(waitingToasts()).toBe(2)
+    // The first leaves: the second takes the slot, the third still waits.
+    act(() => {
+      toast.dismiss(ids[0])
+    })
+    await wait()
+    expect(up().map((t) => t.textContent)).toEqual(["Copied the password for Steam"])
+    expect(waitingToasts()).toBe(1)
+    act(() => {
+      toast.dismiss(ids[1])
+    })
+    await wait()
+    expect(up().map((t) => t.textContent)).toEqual(["Saved Steam"])
+    expect(waitingToasts()).toBe(0)
+  })
+
+  it("a strip that gave way stays away while the next toast takes the slot", async () => {
+    render(<Phone strip="syncing" />)
+    const ids: (string | number)[] = []
+    act(() => {
+      ids.push(toast("Archived Budget for audits"), toast("Saved Steam"))
+    })
+    await settle()
+    expect(accessory()).toHaveAttribute("data-yield")
+    act(() => {
+      toast.dismiss(ids[0])
+    })
+    // Never back between the two: the strip yields until the queue is empty.
+    for (let i = 0; i < 6; i++) {
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 60))
+      })
+      expect(accessory()).toHaveAttribute("data-yield")
+    }
+    expect(screen.getByText("Saved Steam")).toBeInTheDocument()
+  })
+
+  it("a toast that is up is changed in place, never queued behind itself", async () => {
+    render(<Phone strip="none" />)
+    act(() => {
+      toast("Saving Steam", { id: "save" })
+    })
+    await settle()
+    act(() => {
+      toast.success("Saved Steam", { id: "save" })
+    })
+    await settle()
+    expect(waitingToasts()).toBe(0)
+    expect(toasts()).toHaveLength(1)
+    expect(screen.getByText("Saved Steam")).toBeInTheDocument()
   })
 
   it("dismissing a waiting toast takes it out of the queue", async () => {

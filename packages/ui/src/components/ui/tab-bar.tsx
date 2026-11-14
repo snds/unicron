@@ -6,6 +6,7 @@ import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { AppFrameTabBarContext } from "./app-frame-context"
@@ -31,17 +32,6 @@ interface TabBarContextValue {
 }
 
 const TabBarContext = React.createContext<TabBarContextValue | null>(null)
-
-/** A size token read off the element, in px, or the fallback without the stylesheet. */
-function readLength(el: Element, name: string, fallback: number): number {
-  if (typeof getComputedStyle !== "function") return fallback
-  const raw = getComputedStyle(el).getPropertyValue(name).trim()
-  const match = /^([\d.]+)(px|rem)$/.exec(raw)
-  if (!match) return fallback
-  const n = Number.parseFloat(match[1])
-  if (!Number.isFinite(n)) return fallback
-  return match[2] === "px" ? n : n * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
-}
 
 const SCRUB_FALLBACK_SLOP = 8
 

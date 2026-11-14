@@ -20,8 +20,8 @@ import {
   AppFrameTopBar,
   FoldPanes,
   StatusItem,
-  shrinkFor,
 } from "./app-frame"
+import { shrinkFor } from "./app-frame-context"
 import { Accessory } from "./accessory"
 import { NavItem, NavSection } from "./nav-item"
 import { Input } from "./input"

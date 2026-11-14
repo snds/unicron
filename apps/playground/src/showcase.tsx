@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { SecurityShowcase } from "./security"
 import { SecurityApprovalsShowcase } from "./security-approvals"
-import { toast } from "sonner"
 import {
   Avatar,
   AvatarBadge,
@@ -122,6 +121,7 @@ import {
   TabsList,
   TabsTrigger,
   Textarea,
+  toast,
   Toggle,
   ToggleGroup,
   ToggleGroupItem,

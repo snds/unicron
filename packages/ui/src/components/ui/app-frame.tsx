@@ -3,6 +3,7 @@
 "use client"
 
 import * as React from "react"
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { DETAIL_MIN_WIDTH, useViewport } from "../use-viewport"
 import {
@@ -12,7 +13,6 @@ import {
   isBookFold,
   isExpandedWidth,
   isPhoneLayout,
-  readLength,
   shrinkFor,
   useAppFrame,
   useBoxViewport,
@@ -1132,15 +1132,13 @@ export {
 }
 
 // The frame's parts live beside it; they are one family, and one import.
-// The frame's state for apps; the context objects and the helpers the parts share stay inside.
+// The frame's state for apps. The context objects and the helpers the parts share (frameLayoutFor,
+// nextMinimized, shrinkFor, stripStateFor, pullOffsetFor) stay inside: sibling files and tests
+// import them from app-frame-context and app-frame-pull, which are not public subpaths.
 export {
   MINIMIZE_RESTORE_AT,
-  frameLayoutFor,
   isExpandedWidth,
   isPhoneLayout,
-  nextMinimized,
-  shrinkFor,
-  stripStateFor,
   toastPlacementFor,
   useAppFrame,
   useScrollMinimize,
@@ -1154,7 +1152,7 @@ export {
   type ScrollMinimizeOptions,
   type ShrinkInput,
 } from "./app-frame-context"
-export { pullOffsetFor, usePullToRefresh, type PullState, type PullToRefreshOptions } from "./app-frame-pull"
+export { usePullToRefresh, type PullState, type PullToRefreshOptions } from "./app-frame-pull"
 export * from "./app-frame-phone"
 export * from "./app-frame-desktop"
 export * from "./app-frame-focus"

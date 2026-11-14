@@ -9,6 +9,8 @@
 import * as React from "react"
 import type { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
+import { readLength } from "../../lib/length"
+
 /**
  * Sizes by name (cross-app decisions §14; contract §5.1b row 15). Each is a range between two
  * knobs, `--c-dialog-<size>-min-width` and `-max-width`; both are the drawn width by default, so a
@@ -57,15 +59,6 @@ export function dialogSizeName(size: DialogSize): DialogSizeName {
   return size in LEGACY_SIZES ? LEGACY_SIZES[size as DialogLegacySize] : (size as DialogSizeName)
 }
 
-/** A length knob read off the element, in px; NaN when it is missing or not a plain px or rem value. */
-function readKnob(el: Element, name: string): number {
-  if (typeof getComputedStyle !== "function") return Number.NaN
-  const match = /^([\d.]+)(px|rem)$/.exec(getComputedStyle(el).getPropertyValue(name).trim())
-  if (!match) return Number.NaN
-  const n = Number.parseFloat(match[1])
-  return match[2] === "px" ? n : n * (Number.parseFloat(getComputedStyle(el.ownerDocument.documentElement).fontSize) || 16)
-}
-
 export type PortalContainer = DialogPrimitive.Portal.Props["container"]
 
 /**
@@ -100,8 +93,8 @@ export function useFittedSize(name: DialogSizeName, popup: HTMLElement | null, c
     if (!view) return
     const box = containerElement(container)
     const measure = () => {
-      const width = readKnob(popup, `--c-dialog-${name}-min-width`)
-      const margin = readKnob(popup, "--c-dialog-margin")
+      const width = readLength(popup, `--c-dialog-${name}-min-width`, Number.NaN)
+      const margin = readLength(popup, "--c-dialog-margin", Number.NaN)
       if (!Number.isFinite(width) || !Number.isFinite(margin)) return setFits(true)
       setFits(availableWidth(box, view) - 2 * margin >= width)
     }

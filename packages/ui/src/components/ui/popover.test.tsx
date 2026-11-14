@@ -117,11 +117,19 @@ describe("Popover in the 2026-11 look", () => {
     expect(cls.some((c) => /shadow|blur|ring-|zoom|rounded-(lg|xl)/.test(c))).toBe(false)
   })
 
-  it("PopoverHeader: an overline, a title that names the popover, and a FloatButton M that closes it", async () => {
+  it("PopoverHeader: an overline over a title in the ui-emphasis role, as Figma's environment picker draws it, and no close button", () => {
     render(<Picker />)
     expect(screen.getByRole("dialog", { name: "Pick a model" })).toBeInTheDocument()
     expect(screen.getByText("Who answers // 03").className.split(" ")).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
-    expect(screen.getByRole("heading", { name: "Pick a model" }).className.split(" ")).toContain("type-subtitle")
+    const title = screen.getByRole("heading", { name: "Pick a model" }).className.split(" ")
+    expect(title).toContain("type-ui-emphasis")
+    expect(title).not.toContain("type-subtitle")
+    // A popover closes on an outside press and on Escape, so the header draws no close by default.
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull()
+  })
+
+  it("showCloseButton adds a FloatButton M that closes it", async () => {
+    render(<Picker showCloseButton />)
     const close = screen.getByRole("button", { name: "Close" })
     expect(close).toHaveAttribute("data-size", "m")
     await userEvent.click(close)
@@ -129,13 +137,8 @@ describe("Popover in the 2026-11 look", () => {
   })
 
   it("starts focus on its first control, never on the header's close button", async () => {
-    render(<Picker />)
+    render(<Picker showCloseButton />)
     await vi.waitFor(() => expect(screen.getByRole("textbox", { name: "Search models" })).toHaveFocus())
-  })
-
-  it("showCloseButton={false} leaves the close out", () => {
-    render(<Picker showCloseButton={false} />)
-    expect(screen.queryByRole("button", { name: "Close" })).toBeNull()
   })
 
   it("scrim dims the page behind with the menu scrim, never opaque or blurred", () => {

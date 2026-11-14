@@ -19,6 +19,7 @@ import {
   type DialogSize,
 } from "./dialog"
 import { Icon, type IconName } from "../icon"
+import { fieldBoxVariants, fieldTextOnTouch } from "./input"
 
 /**
  * What a search is matched against. `value` is cmdk's default: an item's `value` and its
@@ -136,9 +137,11 @@ function CommandDialog({
 }
 
 /**
- * The search field, in the Text Field box: the raised surface, a 1px rule, 48 tall, the search glyph
- * at the start. Focus draws the field's 2px inside border in the primary fill, and no outer ring
- * (contract §6.2).
+ * The search field. It is the Text Field box itself (`fieldBoxVariants`), with SearchField's
+ * numbers, so a search field looks the same in the command menu as anywhere else: the raised
+ * surface, a 1px rule, 48 tall, 16 in from the sides, the search glyph in the secondary ink 8 from
+ * the value, the value in the `ui` role (16px on a touch screen, so iOS does not zoom). Focus draws
+ * the field's 2px inside border in the primary fill, and no outer ring (contract §6.2).
  */
 function CommandInput({
   className,
@@ -147,15 +150,16 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="bg-surface-raised text-text-body rule-box focus-within:rule-box-emphasis flex min-h-control shrink-0 items-center gap-3 rounded px-3"
+      className={cn(fieldBoxVariants({ focus: "within" }), "flex min-h-control shrink-0 cursor-text items-center gap-2 px-4")}
     >
-      <span className="text-text-label flex shrink-0">
+      <span className="text-support-foreground flex shrink-0">
         <Icon name="search" />
       </span>
       <CommandPrimitive.Input
         data-slot="command-input"
         className={cn(
-          "type-body placeholder:text-text-label min-w-0 flex-1 bg-transparent py-3 outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          fieldTextOnTouch,
+          "type-ui text-foreground placeholder:text-muted-foreground min-w-0 flex-1 self-stretch bg-transparent outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         {...props}

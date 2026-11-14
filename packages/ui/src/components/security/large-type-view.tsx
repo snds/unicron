@@ -7,6 +7,7 @@
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { Button } from "../ui/button"
@@ -150,21 +151,6 @@ export function spellValue(value: string, groupSize: number, caseSensitive = tru
   return groupValue(value, groupSize)
     .map((g) => g.map((ch) => speakChar(ch, caseSensitive)).join(", "))
     .join(", pause, ")
-}
-
-function readPx(el: Element | null, name: string, fallbackPx: number): number {
-  if (!el || typeof getComputedStyle !== "function") return fallbackPx
-  try {
-    const raw = getComputedStyle(el).getPropertyValue(name).trim()
-    const m = /^(-?\d*\.?\d+)(rem|px|em)?$/.exec(raw)
-    if (!m) return fallbackPx
-    const n = Number(m[1])
-    if (m[2] === "px") return n
-    const root = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-    return n * root
-  } catch {
-    return fallbackPx
-  }
 }
 
 function readStoredStep(): number {
@@ -468,8 +454,8 @@ export function LargeTypeView({
 
   const fontSize = React.useMemo(() => {
     const el = popupRef.current
-    const min = readPx(el, "--c-large-type-min-size", 40)
-    const max = readPx(el, "--c-large-type-max-size", 96)
+    const min = el ? readLength(el, "--c-large-type-min-size", 40) : 40
+    const max = el ? readLength(el, "--c-large-type-max-size", 96) : 96
     const n = value?.length ?? 0
     const g = Math.max(1, Math.ceil(n / groupSize))
     const em = n * CHAR_EM + Math.max(0, n - g) * 0.1 + Math.max(0, g - 1) * 1.5

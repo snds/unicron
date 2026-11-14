@@ -7,6 +7,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva } from "class-variance-authority"
 
 import { formatCountdown } from "../../lib/format"
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { useFrameAnnouncement } from "./app-frame-context"
@@ -72,16 +73,6 @@ const INK: Record<AccessoryTone, { meta: string; title: string; wash: string }> 
 }
 
 const SWIPE_FALLBACK = 24
-
-/** A size token read off the element, in px, or the fallback without the stylesheet. */
-function readLength(el: Element, name: string, fallback: number): number {
-  if (typeof getComputedStyle !== "function") return fallback
-  const raw = getComputedStyle(el).getPropertyValue(name).trim()
-  const match = /^([\d.]+)(px|rem)$/.exec(raw)
-  if (!match) return fallback
-  const n = Number.parseFloat(match[1])
-  return match[2] === "px" ? n : n * (Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
-}
 
 /**
  * Watches one press from where it starts to where it lifts, anywhere on the page: a swipe often

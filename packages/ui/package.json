@@ -25,6 +25,7 @@
   ],
   "files": [
     "dist",
+    "vendor",
     "codemod",
     "!codemod/test",
     "!codemod/sync.mjs",
@@ -65,8 +66,12 @@
       "default": "./dist/components/security/*.js"
     },
     "./app-frame-context": null,
-    "./dialog-size": null,
+    "./app-frame-deprecated": null,
+    "./app-frame-desktop": null,
+    "./app-frame-focus": null,
+    "./app-frame-phone": null,
     "./app-frame-pull": null,
+    "./dialog-size": null,
     "./*": {
       "types": "./dist/components/ui/*.d.ts",
       "import": "./dist/components/ui/*.js",
@@ -75,11 +80,13 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/copy-styles.mjs",
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.json && node scripts/copy-styles.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "icons:build": "node scripts/build-icons.mjs && node codemod/sync.mjs",
     "icons:check": "node scripts/build-icons.mjs --check && node codemod/sync.mjs --check",
-    "test": "pnpm icons:check && node --test \"codemod/**/*.test.mjs\" && vitest run"
+    "sonner:build": "node scripts/build-sonner.mjs",
+    "sonner:check": "node scripts/build-sonner.mjs --check",
+    "test": "pnpm icons:check && pnpm sonner:check && node --test \"codemod/**/*.test.mjs\" && vitest run"
   },
   "peerDependencies": {
     "react": "^19.0.0",

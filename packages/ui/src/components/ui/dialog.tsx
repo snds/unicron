@@ -256,14 +256,26 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   )
 }
 
+/**
+ * The sentence that describes the dialog to assistive tech. `size="caption"` (the default) is the
+ * note Figma draws under a review's rows (Lockdown Desktop / 09: caption role, 13/20, secondary
+ * ink). `size="body"` is for a question whose sentence is its whole content, as `ConfirmDialog`
+ * and `AdaptiveDialog`'s `description` draw it.
+ */
 function DialogDescription({
   className,
+  size = "caption",
   ...props
-}: DialogPrimitive.Description.Props) {
+}: DialogPrimitive.Description.Props & { size?: "caption" | "body" }) {
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("type-body text-text-secondary *:[a]:hover:text-text-body *:[a]:underline *:[a]:underline-offset-3", className)}
+      data-size={size}
+      className={cn(
+        size === "body" ? "type-body" : "type-caption",
+        "text-text-secondary *:[a]:hover:text-text-body *:[a]:underline *:[a]:underline-offset-3",
+        className
+      )}
       {...props}
     />
   )

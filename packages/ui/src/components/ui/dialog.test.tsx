@@ -493,20 +493,38 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
     expect(popup().className.split(" ")).toContain("overflow-hidden")
   })
 
-  it("a description reads in the body role and secondary ink, and describes the dialog", () => {
+  it("a description is the caption note Figma draws under a review's rows, in secondary ink, and describes the dialog", () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Steam on a Windows PC</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>Not you? Deny, and Lockdown locks this login until you change the password.</DialogDescription>
+        </DialogContent>
+      </Dialog>
+    )
+    const dialog = screen.getByRole("dialog", { name: "Steam on a Windows PC" })
+    expect(dialog).toHaveAccessibleDescription("Not you? Deny, and Lockdown locks this login until you change the password.")
+    const classes = screen.getByText(/Not you/).className.split(" ")
+    expect(classes).toEqual(expect.arrayContaining(["type-caption", "text-text-secondary"]))
+    expect(classes).not.toContain("type-body")
+  })
+
+  it('size="body" keeps the body role, for a question whose sentence is its content', () => {
     render(
       <Dialog open>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Steam for good?</DialogTitle>
           </DialogHeader>
-          <DialogDescription>It can't be brought back from Recently deleted.</DialogDescription>
+          <DialogDescription size="body">It can't be brought back from Recently deleted.</DialogDescription>
         </DialogContent>
       </Dialog>
     )
-    const dialog = screen.getByRole("dialog", { name: "Delete Steam for good?" })
-    expect(dialog).toHaveAccessibleDescription("It can't be brought back from Recently deleted.")
-    expect(screen.getByText(/brought back/).className.split(" ")).toEqual(expect.arrayContaining(["type-body", "text-text-secondary"]))
+    const classes = screen.getByText(/brought back/).className.split(" ")
+    expect(classes).toEqual(expect.arrayContaining(["type-body", "text-text-secondary"]))
+    expect(classes).not.toContain("type-caption")
   })
 })
 

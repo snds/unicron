@@ -5,6 +5,7 @@
 import * as React from "react"
 import { cva } from "class-variance-authority"
 
+import { joinIds } from "../../lib/ids"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { OverflowMenu, overflowMenuLabel, textOfNode, type OverflowMenuProps } from "./adaptive"
@@ -21,12 +22,6 @@ const RULE: Record<FieldRowRule, string> = {
   bottom: "rule-b",
   both: "rule-t rule-b",
   none: "",
-}
-
-/** Space-separated ids, without the empty ones; undefined when there are none. */
-function joinIds(...ids: Array<string | false | null | undefined>): string | undefined {
-  const list = ids.filter(Boolean).join(" ")
-  return list || undefined
 }
 
 interface FieldRowContextValue {

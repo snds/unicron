@@ -90,7 +90,7 @@ export default function SheetView() {
                   <SheetTitle>Add baseline drift check</SheetTitle>
                 </SheetHeader>
                 <SheetBody>
-                  <SheetDescription>Claude Code is running the check against main. It writes nothing until you approve.</SheetDescription>
+                  <SheetDescription size="body">Claude Code is running the check against main. It writes nothing until you approve.</SheetDescription>
                 </SheetBody>
                 <SheetFooter>
                   <Button variant="secondary">Stop</Button>
@@ -111,7 +111,7 @@ export default function SheetView() {
                 <SheetTitle>identity.unique</SheetTitle>
               </SheetHeader>
               <SheetBody>
-                <SheetDescription>Every persona has one id. Two personas in this workspace share the id “reviewer”.</SheetDescription>
+                <SheetDescription size="body">Every persona has one id. Two personas in this workspace share the id “reviewer”.</SheetDescription>
               </SheetBody>
               <SheetFooter>
                 <Button variant="secondary">Open in Checks</Button>

@@ -58,13 +58,19 @@ function AvatarFallback({
   )
 }
 
-function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
+/**
+ * A mark on an avatar. A mark, so a square (contract 1.6), and never the solid primary fill, which
+ * a screen keeps for its one primary action (rules 2.5.1). `tone="neutral"` (the default) is the
+ * body ink, as Figma's unread mark; `tone="live"` is `secondary-live`, for presence.
+ */
+function AvatarBadge({ className, tone = "neutral", ...props }: React.ComponentProps<"span"> & { tone?: "neutral" | "live" }) {
   return (
     <span
       data-slot="avatar-badge"
+      data-tone={tone}
       className={cn(
-        // A mark, so a square (contract 1.6).
-        "absolute right-0 bottom-0 z-10 inline-flex items-center justify-center bg-primary text-primary-foreground ring-2 ring-background select-none",
+        "absolute right-0 bottom-0 z-10 inline-flex items-center justify-center text-surface-ground ring-2 ring-background select-none",
+        tone === "live" ? "bg-secondary-live" : "bg-text-body",
         "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
         "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
         "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",

@@ -21,8 +21,9 @@
 //       A component knob's colour reads a role, never tier 1: `{needs-you-fill}` (the role), not
 //       `{needs-you.fill}` (the raw value).
 //       Two files in tokens/component/ may not declare the same knob.
-//       A component knob for a corner (a dimension whose name ends in `-radius`) is the one 2px
-//       corner: it must be the bare reference `{radius}`, so no component draws a rounder part.
+//       A component knob for a corner (a dimension whose last name part is `radius`: `x-radius`
+//       or `x.radius`) is the one 2px corner: it must be the bare reference `{radius}`, so no
+//       component draws a rounder part.
 //   (t) Theme files (tokens/themes/<app>.json) hold the theme slots of global.json, all of them
 //       and nothing else: a raw six-digit hex each, with the Figma variable id in `$description`.
 //       The defaults in global.json follow the same rule.
@@ -39,6 +40,21 @@
 //       and no `transition-all`, which animates whatever happens to change. Write a motion role:
 //       `duration-(--motion-base)`, `ease-exit`, `var(--motion-ease-move)`. `ease-linear` is
 //       allowed: it is for a value that tracks a real quantity (a countdown, a progress bar).
+//   (d) Primitives carry no raw values in their classes either (contract section 7 "No raw
+//       values"; .ts and .tsx, tests excluded):
+//       - no px or rem number in an arbitrary value (`w-[13px]`, `rounded-[9px]`, `text-[13px]`).
+//         A token is fine there: `var(--…)`, Tailwind's `--spacing(n)`, a `(--knob)` shorthand.
+//       - no colour from Tailwind's own palette (`bg-red-500`, `text-white`, `border-black/10`):
+//         the palette is not themed. Write a role (`bg-critical-fill`, `text-text-body`).
+//       - no raw type: `text-xs` … `text-9xl`, `font-medium` and the other weights, `leading-*`.
+//         Write a type role (`type-ui`, `type-caption`). `leading-(--token)` and
+//         `leading-[inherit]` are fine.
+//       - no `rounded-full`: the corner is 2px and marks are squares (contract 1.6). The named
+//         exceptions are in ROUND_ALLOWED below, each with its reason.
+//       - no blur and no drop shadow: `backdrop-blur*`, `backdrop-filter`, `blur-*`, `shadow-sm`
+//         … `shadow-2xl`, `drop-shadow-*`, `text-shadow-*`, a coloured shadow. `shadow-none` is
+//         fine, and so is an inset shadow built from tokens (`shadow-[inset_…var(--…)]`): that is
+//         how a stroke is drawn without adding height.
 //
 // Run: pnpm lint:tokens (root) · exit 1 with every violation listed, 0 when clean.
 
@@ -140,7 +156,7 @@ function checkValue(tier, file, dotted, label, value, type) {
   if (tier.rank === 3 && label === "$value" && /-duration$/.test(dotted) && !bareRef) {
     fail(`${file} ${dotted}`, `a motion duration must be a {reference} to a motion role (e.g. {motion-base}), got "${value}"`)
   }
-  if (tier.rank === 3 && label === "$value" && /-radius$/.test(dotted) && !(bareRef && refs[0] === "radius")) {
+  if (tier.rank === 3 && label === "$value" && /(^|[.-])radius$/.test(dotted) && !(bareRef && refs[0] === "radius")) {
     fail(`${file} ${dotted}`, `a corner knob must be {radius}, the one 2px corner (contract §1.6), got "${value}"`)
   }
   if (tier.rank === 2 && !bareRef) fail(`${file} ${dotted}`, `${label} must be a bare {reference} in the semantic tier, got "${value}"`)
@@ -260,6 +276,66 @@ for (const file of files) {
   })
 }
 
+// ── (d) no raw values in the primitives' classes ───────────────────────────────────────────────
+// Read from the source as text. A comment may name a class it rules out, so comment lines, a
+// trailing `// …` and a `{/* … */}` are left out.
+const PALETTE = "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone"
+const COLOR_PREFIX = "bg|text|border(?:-[trblxyse])?|ring|ring-offset|inset-ring|outline|fill|stroke|decoration|divide|from|via|to|shadow|inset-shadow|accent|caret|placeholder"
+const CLASS_RULES = [
+  [
+    new RegExp(`(?<![\\w-])(?:${COLOR_PREFIX})-(?:(?:${PALETTE})-(?:50|[1-9]00|950)|white|black)(?:\\/\\d+)?(?![\\w-])`, "g"),
+    "a colour from Tailwind's palette, which is not themed; write a role (bg-surface-raised, text-text-body, bg-critical-fill …)",
+  ],
+  [/(?<![\w-])text-(?:xs|sm|base|lg|xl|[2-9]xl)(?![\w-])/g, "a raw type size; write a type role (type-ui, type-caption …)"],
+  [/(?<![\w-])font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)(?![\w-])/g, "a raw font weight; write a type role (type-ui-emphasis, type-body-strong …)"],
+  [/(?<![\w-])leading-(?!\(|\[inherit\])[\w[.][^\s"'`]*/g, "a raw line height; a type role sets it (leading-(--token) and leading-[inherit] are fine)"],
+  [/(?<![\w-])(?:backdrop-blur(?:-[\w[\]().-]+)?|backdrop-filter|blur-[\w[(][^\s"'`]*)(?![\w-])/g, "a blur; nothing in the system is blurred (contract 1.5)"],
+  [/(?<![\w-])(?:drop-shadow|text-shadow)(?:-[\w[(][^\s"'`]*)?(?![\w-])/g, "a drop shadow; surfaces are solid with a 1px rule"],
+  [/(?<![\w-])(?:inset-)?shadow-(?!none(?![\w-])|\[inset_)[\w[(][^\s"'`]*/g, "a shadow; surfaces are solid with a 1px rule (shadow-none and a token-built shadow-[inset_…] stroke are fine)"],
+]
+// `rounded-full` by name: file, how many times, and why it is round.
+const ROUND_ALLOWED = []
+const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
+// An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not
+// inside var(…) or --spacing(…).
+const ARBITRARY = /(?<![\w-])[\w:/.()=,&>~+*@-]*-\[([^\]\s]+)\]/g
+const RAW_LENGTH = /(?<![\w.])-?\d*\.?\d+(?:px|rem)(?![\w-])/g
+const stripTokens = (value) => {
+  let out = value
+  // Innermost first, so a var() or --spacing() inside a calc() is taken out whole.
+  for (let i = 0; i < 4; i++) out = out.replace(/(?:var|--spacing)\([^()]*\)/g, "")
+  return out
+}
+let classFiles = 0
+const roundSeen = new Map()
+for (const file of files) {
+  if (!/\.tsx?$/.test(file) || /\.test\.tsx?$/.test(file) || file.includes(`${path.sep}test${path.sep}`)) continue
+  classFiles++
+  const rel = path.relative(repoRoot, file)
+  fs.readFileSync(file, "utf8").split("\n").forEach((raw, i) => {
+    const trimmed = raw.trim()
+    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return
+    const line = raw.replace(/\s\/\/ .*$/, "").replace(/\{\/\*.*?\*\/\}/g, "")
+    for (const [pattern, why] of CLASS_RULES) {
+      for (const hit of line.match(pattern) ?? []) fail(`${rel}:${i + 1}`, `raw value ${hit} — ${why}`)
+    }
+    for (const hit of line.match(ROUND) ?? []) {
+      roundSeen.set(rel, (roundSeen.get(rel) ?? 0) + 1)
+      if (!ROUND_ALLOWED.some((entry) => entry.file === rel)) fail(`${rel}:${i + 1}`, `raw value ${hit} — the corner is 2px and marks are squares (contract 1.6); a round part needs a named exception in ROUND_ALLOWED`)
+    }
+    for (const match of line.matchAll(ARBITRARY)) {
+      for (const hit of stripTokens(match[1]).match(RAW_LENGTH) ?? []) {
+        fail(`${rel}:${i + 1}`, `raw value ${hit} in ${match[0]} — a length is a spacing step (w-10, --spacing(2)) or a knob (w-(--c-…), var(--…))`)
+      }
+    }
+  })
+}
+// The list of round parts has to match the source exactly: an entry nothing uses must go.
+for (const entry of ROUND_ALLOWED) {
+  const seen = roundSeen.get(entry.file) ?? 0
+  if (seen !== entry.count) fail(`lint.mjs ROUND_ALLOWED ${entry.file}`, `lists ${entry.count} rounded-full, the file has ${seen}; keep the list exact`)
+}
+
 if (errors.length) {
   console.error(`✗ token lint: ${errors.length} violation${errors.length === 1 ? "" : "s"}`)
   for (const e of errors) console.error(`  ${e}`)
@@ -268,5 +344,5 @@ if (errors.length) {
 console.log(
   `✓ token lint: ${checked} tier-2/3 tokens alias lower tiers (${TIERS[2].files.length} component file${TIERS[2].files.length === 1 ? "" : "s"}); ` +
     `${themeFiles.length} theme files hold the ${slotPaths.length} slots; ${typeTokens.length} type roles; ` +
-    `${files.length} files in packages/ui/src carry no colour literals, ${motionFiles} carry no motion literals`
+    `${files.length} files in packages/ui/src carry no colour literals, ${motionFiles} carry no motion literals, ${classFiles} carry no raw values in their classes`
 )
