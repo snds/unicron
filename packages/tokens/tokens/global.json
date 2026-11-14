@@ -143,6 +143,57 @@
       "stone": { "$type": "color", "$value": "#FFD9D3", "$description": "Figma critical/soft (VariableID:30:2328) in every stone mode." }
     }
   },
+  "swatch": {
+    "$description": "Twelve colours for things a person colours: calendars, notes, labels, personas, graph kinds (contract 5.1b #55). Evenly spaced OKLCH hues 30° apart, starting at the system's red hue angle (hue.red, 25). Each is solved per ground, the same for every app: the lightness that holds APCA Lc 62 (60, the floor for coloured text, plus 2) against the lowest-contrast of the eight surfaces it can sit on (surface-ground and surface-raised in all four apps), at a chroma of 0.14 on stone and 0.13 on graphite, or less where sRGB has no room at that lightness. So a swatch holds as text, and as a 2px bar, edge or mark (Lc 30) with room to spare. A swatch is a colour for data, never a status; it is never a fill behind text. Not in Figma.",
+    "red": {
+      "graphite": { "$type": "color", "$value": "#FF9F97", "$description": "swatch-01 (red) on graphite: oklch(0.798 0.116 25.1), hue 25. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#BF534F", "$description": "swatch-01 (red) on stone: oklch(0.579 0.140 24.6), hue 25. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "orange": {
+      "graphite": { "$type": "color", "$value": "#FCA466", "$description": "swatch-02 (orange) on graphite: oklch(0.794 0.130 54.8), hue 55. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#B55E07", "$description": "swatch-02 (orange) on stone: oklch(0.574 0.139 55.3), hue 55. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "ochre": {
+      "graphite": { "$type": "color", "$value": "#E0B24B", "$description": "swatch-03 (ochre) on graphite: oklch(0.786 0.130 84.6), hue 85. Lc 62.0 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#967000", "$description": "swatch-03 (ochre) on stone: oklch(0.568 0.116 84.9), hue 85. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "olive": {
+      "graphite": { "$type": "color", "$value": "#B4C158", "$description": "swatch-04 (olive) on graphite: oklch(0.779 0.131 115.4), hue 115. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#737C00", "$description": "swatch-04 (olive) on stone: oklch(0.560 0.127 114.7), hue 115. Lc 62.2 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "green": {
+      "graphite": { "$type": "color", "$value": "#7DCB80", "$description": "swatch-05 (green) on graphite: oklch(0.773 0.131 145.0), hue 145. Lc 62.5 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#318639", "$description": "swatch-05 (green) on stone: oklch(0.550 0.139 145.0), hue 145. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "jade": {
+      "graphite": { "$type": "color", "$value": "#3ACEAE", "$description": "swatch-06 (jade) on graphite: oklch(0.767 0.131 174.7), hue 175. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#00856E", "$description": "swatch-06 (jade) on stone: oklch(0.551 0.104 174.8), hue 175. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "teal": {
+      "graphite": { "$type": "color", "$value": "#0BCBDB", "$description": "swatch-07 (teal) on graphite: oklch(0.769 0.130 205.0), hue 205. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#00828D", "$description": "swatch-07 (teal) on stone: oklch(0.554 0.095 205.2), hue 205. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "azure": {
+      "graphite": { "$type": "color", "$value": "#54C3FD", "$description": "swatch-08 (azure) on graphite: oklch(0.777 0.130 234.8), hue 235. Lc 62.0 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#007DAF", "$description": "swatch-08 (azure) on stone: oklch(0.557 0.119 235.4), hue 235. Lc 62.2 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "blue": {
+      "graphite": { "$type": "color", "$value": "#98B9FF", "$description": "swatch-09 (blue) on graphite: oklch(0.788 0.107 264.7), hue 265. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#4E73CA", "$description": "swatch-09 (blue) on stone: oklch(0.571 0.141 264.9), hue 265. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "violet": {
+      "graphite": { "$type": "color", "$value": "#C1ADFF", "$description": "swatch-10 (violet) on graphite: oklch(0.795 0.116 294.8), hue 295. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#8166C4", "$description": "swatch-10 (violet) on stone: oklch(0.579 0.141 294.8), hue 295. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "plum": {
+      "graphite": { "$type": "color", "$value": "#E8A0EB", "$description": "swatch-11 (plum) on graphite: oklch(0.800 0.129 325.3), hue 325. Lc 62.1 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#A45AA8", "$description": "swatch-11 (plum) on stone: oklch(0.582 0.141 325.3), hue 325. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+    },
+    "rose": {
+      "graphite": { "$type": "color", "$value": "#FF9AC2", "$description": "swatch-12 (rose) on graphite: oklch(0.801 0.129 355.1), hue 355. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
+      "stone": { "$type": "color", "$value": "#B8537F", "$description": "swatch-12 (rose) on stone: oklch(0.582 0.139 355.0), hue 355. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+    }
+  },
   "scrim": {
     "$description": "The full-screen dim behind sheets, dialogs and menus (Figma surface/scrim, VariableID:54:50), the same for every app. Graphite is opaque black; stone carries 64% alpha inside the colour, as Figma stores it. The layer's own opacity is a tier 3 knob (--c-scrim-sheet, -dialog, -menu), the same number in both grounds.",
     "graphite": { "$type": "color", "$value": "#000000", "$description": "Figma surface/scrim (VariableID:54:50) in every graphite mode." },

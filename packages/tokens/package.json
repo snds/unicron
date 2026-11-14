@@ -22,6 +22,8 @@
     ".": "./dist/tokens.json",
     "./tokens.css": "./dist/tokens.css",
     "./dist/tokens.css": "./dist/tokens.css",
+    "./plain.css": "./dist/plain.css",
+    "./dist/plain.css": "./dist/plain.css",
     "./dist/tokens.json": "./dist/tokens.json",
     "./examples/*": "./examples/*",
     "./tokens/*": "./tokens/*",

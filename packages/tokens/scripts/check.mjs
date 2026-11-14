@@ -18,7 +18,8 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { springOvershoot, springPosition, springSettleTime } from "../src/spring.mjs"
-import { parseTokensCss } from "./lib/css.mjs"
+import { difference, oklabToOklch, parseColor, toSrgb } from "./lib/color.mjs"
+import { parseTokensCss, resolveValue } from "./lib/css.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const css = fs.readFileSync(path.join(here, "..", "dist", "tokens.css"), "utf8")
@@ -355,4 +356,157 @@ console.log(
   `✓ round-trip: ${APPS.length} app themes × ${slotNames.length} slots (default ${defaultApp}), ${Object.keys(FIGMA_ROLES).length} Figma roles on both grounds, ` +
     `${Object.keys(ALIASES).length} aliases pinned, ${colors} colours of tiers 2 and 3 on both grounds, ${TYPE_ROLES.length} type roles, theme map complete, ` +
     `${STATUS.length} status roles, ${MOTION.length} motion roles (${durationRoles.length} durations ≤ ${CEILING_MS}ms, ${springs.length} springs in band), no app roles`
+)
+
+// ── Swatches (contract 5.1b #55) ─────────────────────────────────────────────────────────────
+// Twelve roles, swatch-01 … swatch-12, each reading a tier 1 value per ground (global.json →
+// swatch, named by hue) and the same in every app. Their hues are evenly spaced: 30° apart from
+// the system's red hue angle (hue.red). Neighbours must not read as one colour at a glance, and
+// none may pass for the needs-you yellow. Their contrast is gated in scripts/recipes/foundation.mjs.
+const SWATCHES = ["red", "orange", "ochre", "olive", "green", "jade", "teal", "azure", "blue", "violet", "plum", "rose"]
+// Two colours closer than this in OKLab read as one at a glance (the reading aid of contrast.mjs).
+const SWATCH_SAME = 0.05
+// No swatch may pass for the needs-you yellow (Vale U23: "the yellow of the set is an ochre").
+const SWATCH_NEEDS_YOU = 0.1
+let swatchMeasures = 0
+{
+  const start = Number(literal("--g-hue-red"))
+  assert.ok(Number.isFinite(start), "--g-hue-red must be a hue angle")
+  const rgb = (name) => toSrgb(parseColor(root.get(name))).rgb
+  const needsYou = rgb("--g-needs-you-fill")
+  for (const ground of ["stone", "graphite"]) {
+    const colors = SWATCHES.map((hue, i) => {
+      const n = String(i + 1).padStart(2, "0")
+      const raw = `--g-swatch-${hue}-${ground}`
+      assert.match(root.get(raw) ?? "", /^#[0-9A-F]{6}$/, `${raw}: a swatch is a raw six-digit hex`)
+      const role = `--swatch-${n}`
+      assert.equal((ground === "stone" ? light : dark).get(role), `var(${raw})`, `${role} (${ground}) must read ${raw}`)
+      assert.equal(theme.get(`--color-swatch-${n}`), `var(${role})`, `missing --color-swatch-${n} in @theme`)
+      const want = (start + 30 * i) % 360
+      const { h } = oklabToOklch(parseColor(root.get(raw)))
+      const off = Math.min(Math.abs(h - want), 360 - Math.abs(h - want))
+      assert.ok(off <= 2, `${raw}: hue ${h.toFixed(1)}° is ${off.toFixed(1)}° off ${want}°; the twelve are 30° apart from hue.red`)
+      return { raw, rgb: rgb(raw) }
+    })
+    colors.forEach((a, i) => {
+      const b = colors[(i + 1) % colors.length]
+      const near = difference(a.rgb, b.rgb).dE
+      assert.ok(near >= SWATCH_SAME, `${a.raw} and ${b.raw} are ΔEOK ${near.toFixed(3)} apart: under ${SWATCH_SAME}, they read as one colour`)
+      const yellow = difference(a.rgb, needsYou).dE
+      assert.ok(yellow >= SWATCH_NEEDS_YOU, `${a.raw} is ΔEOK ${yellow.toFixed(3)} from the needs-you yellow: under ${SWATCH_NEEDS_YOU}`)
+      swatchMeasures += 2
+    })
+  }
+}
+
+// ── The plain sheet (contract 5.1b #54): dist/plain.css, published as @unicron/tokens/plain.css ─
+// For a page with no Tailwind (the extension's in-page frames). Held to:
+//   - nothing to load and nothing Tailwind-only: no @import, url(), @font-face, @theme, @apply …
+//   - it parses: whole comments, then flat rules of custom properties only, no style rule inside
+//     another, and one @media (prefers-color-scheme: dark) block for the `system` ground
+//   - the same custom properties as tokens.css outside its Tailwind blocks, plus the font roles
+//   - every role and knob resolves to the same value as tokens.css in every mode (the 8, and no
+//     data-theme), and a `system` root takes the graphite values while the browser prefers dark
+let plainChecked = 0
+{
+  const plainCss = fs.readFileSync(path.join(here, "..", "dist", "plain.css"), "utf8")
+  const SYSTEM = ":root.system:not(.light), :root.system:not(.light) [data-theme]:not(.light):not(:root.system .light *)"
+  const MEDIA = "@media (prefers-color-scheme: dark)"
+
+  // Nothing to fetch, nothing a strict style-src would refuse, nothing only Tailwind reads.
+  const bare = plainCss.replace(/\/\*[\s\S]*?\*\//g, "")
+  assert.ok(!/\/\*|\*\//.test(bare), "plain.css: a comment is not closed where it should be")
+  for (const banned of [/@import/i, /url\(/i, /@font-face/i, /@theme/i, /@apply/i, /@utility/i, /@layer/i, /@custom-variant/i, /@source/i, /@plugin/i, /expression\(/i, /\bdata:/i, /&/]) {
+    assert.ok(!banned.test(bare), `plain.css must not contain ${banned}: it loads under style-src 'self' with no build step`)
+  }
+
+  // Parse it: rules of custom properties, and one @media block of the same.
+  const parsedPlain = { root: new Map(), themes: {}, light: new Map(), dark: new Map(), system: new Map() }
+  let at = 0
+  const ws = () => {
+    while (at < bare.length && /\s/.test(bare[at])) at++
+  }
+  const rule = (inMedia) => {
+    const open = bare.indexOf("{", at)
+    assert.ok(open > at, `plain.css: expected a rule at offset ${at}`)
+    const selector = bare.slice(at, open).trim().replace(/\s+/g, " ")
+    const close = bare.indexOf("}", open)
+    assert.ok(close > open, `plain.css: "${selector}" is not closed`)
+    const body = bare.slice(open + 1, close)
+    assert.ok(!body.includes("{"), `plain.css: "${selector}" holds a nested rule; the sheet is flat`)
+    const declarations = new Map()
+    for (const part of body.split(";")) {
+      if (!part.trim()) continue
+      const d = /^\s*(--[\w-]+)\s*:\s*(\S[\s\S]*?)\s*$/.exec(part)
+      assert.ok(d, `plain.css: "${selector}" holds "${part.trim()}", which is not a custom property`)
+      let depth = 0
+      for (const ch of d[2]) {
+        depth += ch === "(" ? 1 : ch === ")" ? -1 : 0
+        assert.ok(depth >= 0, `plain.css: ${d[1]} has a ")" with no "("`)
+      }
+      assert.equal(depth, 0, `plain.css: ${d[1]} leaves a "(" open`)
+      declarations.set(d[1], d[2])
+    }
+    at = close + 1
+    const app = /^\[data-theme="([\w-]+)"\]$/.exec(selector)?.[1]
+    let target
+    if (inMedia) target = selector === SYSTEM ? parsedPlain.system : null
+    else if (app) target = parsedPlain.themes[app] ??= new Map()
+    else target = { ":root": parsedPlain.root, [LIGHT]: parsedPlain.light, [DARK]: parsedPlain.dark }[selector]
+    assert.ok(target, `plain.css: unexpected selector "${selector}"${inMedia ? ` inside ${MEDIA}` : ""}`)
+    for (const [k, v] of declarations) target.set(k, v)
+  }
+  let medias = 0
+  for (ws(); at < bare.length; ws()) {
+    if (bare.startsWith("@", at)) {
+      const open = bare.indexOf("{", at)
+      const prelude = bare.slice(at, open).trim().replace(/\s+/g, " ")
+      assert.equal(prelude, MEDIA, `plain.css: the one at-rule allowed is "${MEDIA}"`)
+      medias++
+      at = open + 1
+      for (ws(); bare[at] !== "}"; ws()) {
+        assert.ok(at < bare.length, `plain.css: "${MEDIA}" is not closed`)
+        rule(true)
+      }
+      at++
+    } else rule(false)
+  }
+  assert.equal(medias, 1, `plain.css: expected one "${MEDIA}" block`)
+  assert.deepEqual(Object.keys(parsedPlain.themes), APPS, "plain.css: expected one [data-theme] block per app")
+
+  // The same custom properties as tokens.css outside @theme, and the font roles.
+  const FONT_ROLES = ["--font-sans", "--font-mono", "--font-heading"]
+  const names = (b) => new Set([...b.root.keys(), ...Object.values(b.themes).flatMap((m) => [...m.keys()]), ...b.light.keys(), ...b.dark.keys()])
+  const inTokens = names(built)
+  const inPlain = names(parsedPlain)
+  for (const name of [...inTokens, ...FONT_ROLES]) assert.ok(inPlain.has(name), `plain.css is missing ${name}`)
+  for (const name of inPlain) assert.ok(inTokens.has(name) || FONT_ROLES.includes(name), `plain.css declares ${name}, which tokens.css does not`)
+  assert.deepEqual([...parsedPlain.system.keys()], [...parsedPlain.dark.keys()], "plain.css: the system block must re-declare every graphite role and knob")
+  for (const name of [...built.light.keys(), ...built.dark.keys()]) {
+    if (!parsedPlain.dark.has(name) && built.dark.has(name)) assert.fail(`plain.css: ${name} is missing from the dark block`)
+  }
+
+  // Every role and knob, in every mode, resolves as it does from tokens.css.
+  const tokenFonts = new Map(FONT_ROLES.map((name) => [name, theme.get(name)]))
+  const vars = (b, app, ground, extra = new Map()) =>
+    new Map([...b.root, ...extra, ...(app ? b.themes[app] : []), ...b.light, ...(ground === "graphite" ? b.dark : ground === "system-dark" ? b.system : [])])
+  const checked = [...new Set([...built.light.keys(), ...built.dark.keys(), ...FONT_ROLES])]
+  for (const app of [null, ...APPS]) {
+    for (const ground of ["stone", "graphite"]) {
+      const want = vars(built, app, ground, tokenFonts)
+      const got = vars(parsedPlain, app, ground)
+      const system = vars(parsedPlain, app, ground === "graphite" ? "system-dark" : "stone")
+      for (const name of checked) {
+        const expected = resolveValue(want.get(name), want)
+        assert.equal(resolveValue(got.get(name), got), expected, `plain.css: ${name} in ${app ?? "default"} / ${ground} differs from tokens.css`)
+        assert.equal(resolveValue(system.get(name), system), expected, `plain.css: ${name} on a \`system\` root (browser prefers ${ground === "graphite" ? "dark" : "light"}) in ${app ?? "default"} differs from ${ground}`)
+        plainChecked++
+      }
+    }
+  }
+}
+
+console.log(
+  `✓ foundation: ${SWATCHES.length} swatches on both grounds, 30° apart from hue.red (${swatchMeasures} distance checks); ` +
+    `plain.css parses flat with nothing to load, and ${plainChecked} role and knob values equal tokens.css in 10 modes and on a system root`
 )
