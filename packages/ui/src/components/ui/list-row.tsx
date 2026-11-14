@@ -486,19 +486,37 @@ function ListRow({
     </div>
   )
 
+  const words = has(status) || has(badge)
+  const controls = has(action) || hasMenu
+  // Inline rows keep their trailing parts together. With a mouse they sit on one line (the menu
+  // over the status, or after the action). On touch the words stay on the title line and the
+  // controls go under them, so a phone row gives its title the width, not the buttons.
   const trailing =
-    !message && (has(status) || has(badge)) ? (
-      <div data-slot="list-row-trailing" className={cn("flex shrink-0 items-baseline gap-3", underMenu)}>
-        {has(status) ? (
-          <span
-            id={ids.status}
-            data-slot="list-row-status"
-            className={cn("type-overline whitespace-nowrap", tone === "live" ? "text-secondary-live" : "text-muted-foreground")}
-          >
-            {status}
+    !message && (words || controls) ? (
+      <div
+        data-slot="list-row-trailing"
+        className="flex shrink-0 items-baseline gap-3 pointer-coarse:flex-col pointer-coarse:items-end pointer-coarse:gap-1"
+      >
+        {words ? (
+          <span data-slot="list-row-words" className={cn("flex items-baseline gap-3", underMenu)}>
+            {has(status) ? (
+              <span
+                id={ids.status}
+                data-slot="list-row-status"
+                className={cn("type-overline whitespace-nowrap", tone === "live" ? "text-secondary-live" : "text-muted-foreground")}
+              >
+                {status}
+              </span>
+            ) : null}
+            {has(badge) ? <span data-slot="list-row-badge" className="inline-flex shrink-0">{badge}</span> : null}
           </span>
         ) : null}
-        {has(badge) ? <span data-slot="list-row-badge" className="inline-flex shrink-0">{badge}</span> : null}
+        {controls ? (
+          <span data-slot="list-row-controls" className="flex items-baseline gap-1">
+            {actionSlot}
+            {menuButton}
+          </span>
+        ) : null}
       </div>
     ) : null
 
@@ -519,9 +537,14 @@ function ListRow({
             ) : null}
             {leadingSlot}
             {body}
-            {trailing}
-            {actionSlot}
-            {menuButton}
+            {message ? (
+              <>
+                {actionSlot}
+                {menuButton}
+              </>
+            ) : (
+              trailing
+            )}
           </>
         ),
       },
