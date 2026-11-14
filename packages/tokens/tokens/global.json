@@ -195,7 +195,7 @@
     }
   },
   "scrim": {
-    "$description": "The full-screen dim behind sheets, dialogs and menus (Figma surface/scrim, VariableID:54:50), the same for every app. Graphite is opaque black; stone carries 64% alpha inside the colour, as Figma stores it. The layer's own opacity is a tier 3 knob (--c-scrim-sheet, -dialog, -menu), the same number in both grounds.",
+    "$description": "The full-screen dim behind sheets, dialogs and menus (Figma surface/scrim, VariableID:54:50), the same for every app. Graphite is opaque black; stone carries 64% alpha inside the colour, as Figma stores it. The layer's own opacity is a tier 3 knob (--c-scrim-sheet, -dialog, -menu): 0.5, 0.6 and 0.32 on graphite, 1 on stone, where this 64% is the whole dim.",
     "graphite": { "$type": "color", "$value": "#000000", "$description": "Figma surface/scrim (VariableID:54:50) in every graphite mode." },
     "stone": { "$type": "color", "$value": "rgb(20 22 24 / 0.64)", "$description": "Figma surface/scrim (VariableID:54:50) in every stone mode: #141618 at 64% alpha." }
   },

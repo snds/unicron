@@ -72,7 +72,8 @@ const KIND_ALIASES = { "text-primary": "text-body", "text-on-tint": "text-label"
 
 // ── Recipes ──────────────────────────────────────────────────────────────────────────────────
 // A paint is a role, a role at an opacity (Tailwind's `/90` is color-mix towards transparent), or
-// a two-role mix. `over` is the stack it sits on, bottom first. Measured as a browser draws it:
+// a two-role mix. The opacity is a number, or the name of a number knob (`r("surface-scrim",
+// "c-scrim-dialog")`), read per mode, for a layer whose strength differs by ground. `over` is the stack it sits on, bottom first. Measured as a browser draws it:
 // each layer composited over the one below, then the paint over the top.
 const r = (role, alpha) => ({ role, alpha })
 const mix = (a, b, k) => ({ mix: [a, b], k })
@@ -412,6 +413,16 @@ function roleCss(role, mode) {
   return resolveValue(raw, mode.vars)
 }
 
+/** A paint's own opacity in one mode: 1, a number, or a number knob read from that mode's tokens. */
+function alphaOf(p, mode) {
+  if (p.alpha === undefined) return 1
+  if (typeof p.alpha === "number") return p.alpha
+  const raw = mode.vars.get(`--${p.alpha}`)
+  const n = raw === undefined ? Number.NaN : Number(resolveValue(raw, mode.vars))
+  if (!Number.isFinite(n) || n < 0 || n > 1) throw new Error(`--${p.alpha} is not a number knob between 0 and 1 (${raw})`)
+  return n
+}
+
 /** A paint → { rgb (0..255), alpha, clipped }. */
 function paintColor(p, mode) {
   const css = p.mix
@@ -419,7 +430,7 @@ function paintColor(p, mode) {
     : roleCss(p.role, mode)
   const lab = parseColor(css)
   const { rgb, clipped } = toSrgb(lab)
-  return { rgb, alpha: lab.alpha * (p.alpha ?? 1), clipped }
+  return { rgb, alpha: lab.alpha * alphaOf(p, mode), clipped }
 }
 
 /** The stack, bottom first, flattened to one opaque colour. A translucent base sits on the ground. */
@@ -437,7 +448,7 @@ function flatten(stack, mode) {
   return { rgb, clipped }
 }
 
-const label = (p) => (p.mix ? `mix(${p.mix[0]},${p.mix[1]} ${p.k * 100}%)` : p.alpha !== undefined ? `${p.role}/${Math.round(p.alpha * 100)}` : p.role)
+const label = (p) => (p.mix ? `mix(${p.mix[0]},${p.mix[1]} ${p.k * 100}%)` : typeof p.alpha === "string" ? `${p.role}/${p.alpha}` : p.alpha !== undefined ? `${p.role}/${Math.round(p.alpha * 100)}` : p.role)
 
 const errors = []
 const seenIds = new Set()

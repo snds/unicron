@@ -63,7 +63,7 @@ export const sameAsCore = [
   { id: "tab-icon", core: "label-raised *", source: "tab-bar-item at rest: the icon in text-text-label on the raised bar (graphite)" },
   { id: "tab-icon-hover", core: "label-raised-hover *", source: "tab-bar-item: hover:bg-state-hover (graphite)" },
   { id: "tab-icon-press", core: "label-raised-pressed *", source: "tab-bar-item: active:bg-state-pressed (graphite; warpcore stone)" },
-  { id: "tab-active", core: "body-soft *", source: "tab-bar-item active: the icon in text-text-body on bg-primary-soft (contract 9.9; stone)" },
+  { id: "tab-active", core: "primary-text-soft *", source: "tab-bar-item active: the icon in text-primary-text on bg-primary-soft, as Figma's Dock Tab and phone frames draw it (graphite; lockdown stone)" },
   { id: "tab-active-tile", core: "primary-soft-raised", source: "tab-bar-item active: the soft tile against the raised bar" },
   { id: "tab-bar-edge", core: "field-rest-ground", source: "tab-bar: rule-box, the resting hairline on the page" },
   // The mark

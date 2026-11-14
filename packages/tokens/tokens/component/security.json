@@ -1,30 +1,7 @@
 {
   "$description": "Tier 3 · Component knobs for the security set and the update kit (packages/ui: components/security/*, ui/update-status.tsx), restyled for the 2026-11 direction. Merged with component.json at build and emitted as --c-*. It adds knobs and re-declares a few that component.json holds (secret-field revealed-bg and meter colours, code group-gap): the security area owns them from 1.0. Every colour reads a role. Sizes that sit on the 4px spacing scale or the size roles need no knob.",
-  "security-row": {
-    "$description": "The Field Row look the security set draws until the shared FieldRow lands (Figma 15:512): SecretField, CodeDisplay's field layout, ApprovalSheet's facts, UpdateStatusRow.",
-    "label-width": {
-      "$type": "dimension",
-      "$value": "8.75rem",
-      "$description": "The label column in the Default and Display sizes: 140, typed in Figma."
-    }
-  },
   "review": {
-    "$description": "The review frame (ApprovalSheet, CrownJewelGate, LargeTypeView): a sheet on a phone, a dialog from the sm breakpoint up. Widths by name, as the cross-app decisions (§14) give them; they become overlays' dialog sizes when AdaptiveDialog lands.",
-    "question-width": {
-      "$type": "dimension",
-      "$value": "30rem",
-      "$description": "question 480: the gate, the crown-jewel explain."
-    },
-    "width": {
-      "$type": "dimension",
-      "$value": "35rem",
-      "$description": "review 560: a request to approve (Lockdown Desktop / 09, 41:3394)."
-    },
-    "viewer-width": {
-      "$type": "dimension",
-      "$value": "60rem",
-      "$description": "viewer 960: large type."
-    },
+    "$description": "The review frame (ApprovalSheet, CrownJewelGate, LargeTypeView): a sheet in the compact width class, a dialog wider. Its dialog widths, margin and label column are the shared parts' own knobs (--c-dialog-question-min-width, -review-, -viewer-, --c-dialog-margin in overlays.json; --c-field-row-label-width in data-b.json), so the security set cannot drift from them. Only what the shared Sheet has no knob for stays here.",
     "sheet-top-gap": {
       "$type": "dimension",
       "$value": "{size-control}",

@@ -229,8 +229,11 @@ assert.equal(px("--stroke-rule"), 1, "--stroke-rule is 1px")
 assert.equal(px("--stroke-emphasis"), 2, "--stroke-emphasis is 2px")
 assert.match(root.get("--g-font-sans"), /^"Geist Variable", Geist, /, "font.sans names Geist Variable, then Geist")
 assert.match(root.get("--g-font-mono"), /^"Geist Mono Variable", "Geist Mono", /, "font.mono names Geist Mono Variable, then Geist Mono")
-for (const [knob, value] of [["sheet", "0.5"], ["dialog", "0.6"], ["menu", "0.32"]]) {
-  assert.equal(light.get(`--c-scrim-${knob}`), value, `--c-scrim-${knob} must be ${value}`)
+// Figma sets the scrim's paint opacity per frame: 0.5, 0.6 and 0.32 by use on graphite, and the
+// role's own 64% behind every layer on stone. So on stone each knob is 1.
+for (const [knob, graphite] of [["sheet", "0.5"], ["dialog", "0.6"], ["menu", "0.32"]]) {
+  assert.equal(dark.get(`--c-scrim-${knob}`), graphite, `--c-scrim-${knob} must be ${graphite} on graphite`)
+  assert.equal(light.get(`--c-scrim-${knob}`), "1", `--c-scrim-${knob} must be 1 on stone: the role's own 64% is the whole dim there`)
 }
 assert.equal(root.get("--g-scrim-stone"), "rgb(20 22 24 / 0.64)", "the stone scrim carries its 64% alpha, as Figma stores it")
 

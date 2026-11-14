@@ -14,6 +14,7 @@ const GROUND = [r("surface-ground")]
 const RAISED = [r("surface-raised")]
 // The crown-jewel surface: the page's ink as a ground (`--c-crown-jewel-surface`, {protected}).
 const JEWEL = [r("surface-ground"), r("c-crown-jewel-surface")]
+const NEEDS_YOU = [r("surface-ground"), r("needs-you-fill")]
 
 export const recipes = [
   // ── SecretField ─────────────────────────────────────────────────────────────────────────────
@@ -36,6 +37,14 @@ export const recipes = [
   { id: "jewel-skeleton", source: "crown-jewel-surface: a Skeleton bar, --surface-raised re-mapped to --c-crown-jewel-muted", kind: "surface", paint: r("c-crown-jewel-muted"), over: JEWEL },
   // The surface against the page round it: it has to read as a different ground.
   { id: "jewel-surface", source: "crown-jewel-surface: bg-surface-ground re-mapped to --c-crown-jewel-surface, on the page", kind: "surface", paint: r("c-crown-jewel-surface"), over: GROUND },
+
+  // ── RiskTierBadge on the needs-you yellow (the header of an asking AgentPrompt) ─────────────
+  // The page's inks are near-white on graphite (1.15:1 on the yellow), so there the badge takes the
+  // ink that sits on that fill: the word, the 16px glyph and the 1px edge. The blocked state keeps
+  // its own critical tile on the yellow, with body ink on it (core body-critical-soft).
+  { id: "tier-on-needs-you", source: "risk-tier-badge surface=needs-you: the word and glyph in text-needs-you-on-fill on bg-needs-you-fill", kind: "on-fill", paint: r("needs-you-on-fill"), over: NEEDS_YOU },
+  { id: "tier-edge-on-needs-you", source: "risk-tier-badge surface=needs-you: inset-ring-needs-you-on-fill, the badge's 1px edge on the yellow (decorative: the word carries the tier)", kind: "border-rest", paint: r("needs-you-on-fill"), over: NEEDS_YOU },
+  { id: "tier-blocked-on-needs-you", source: "risk-tier-badge unverified on the yellow: bg-critical-soft against bg-needs-you-fill (the tile has to stand off the yellow)", kind: "surface", paint: r("critical-soft"), over: NEEDS_YOU },
 ]
 
 export const exceptions = []

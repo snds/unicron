@@ -11,7 +11,7 @@
 // state over one, so the core reports it, not this file:
 //
 //   label ink on the raised surface (an overline, a group heading, the palette's placeholder and
-//     search glyph) ............................................. core `label-raised`
+//     search glyph, a menu row's count) ......................... core `label-raised`
 //   critical ink on the raised surface (a destructive row, a failed yes, an error toast's glyph)
 //                                                                 core `critical-text-raised`
 //   body ink on the highlight fill (a highlighted row) .......... core `body-accent`
@@ -25,9 +25,10 @@
 const r = (role, alpha) => ({ role, alpha })
 
 const RAISED = [r("surface-raised")]
-// The page under a layer's scrim, which the layer's edge is seen against.
-const DIALOG_SCRIM = [r("surface-ground"), r("surface-scrim", 0.6)]
-const SHEET_SCRIM = [r("surface-ground"), r("surface-scrim", 0.5)]
+// The page under a layer's scrim, which the layer's edge is seen against. The scrim's strength is
+// its knob, read per ground: 0.6 and 0.5 on graphite, the role's own 64% on stone (knob 1).
+const DIALOG_SCRIM = [r("surface-ground"), r("surface-scrim", "c-scrim-dialog")]
+const SHEET_SCRIM = [r("surface-ground"), r("surface-scrim", "c-scrim-sheet")]
 
 export const recipes = [
   // ── The layer itself ────────────────────────────────────────────────────────────────────────
@@ -40,8 +41,8 @@ export const recipes = [
   { id: "sheet-grabber", source: "sheet-grabber: bg-(--c-sheet-handle) = line-grid-dot on the raised surface (decorative: the close button and Escape close it)", kind: "border-decorative", paint: r("c-sheet-handle"), over: RAISED },
 
   // ── Menu and palette rows ───────────────────────────────────────────────────────────────────
-  { id: "row", source: "DropdownMenuItem, CommandItem, AdaptiveMenuItem: text-text-body (words and 20px glyph) on the raised surface", kind: "text-body", paint: r("text-body"), over: RAISED },
-  { id: "row-chevron", source: "DropdownMenuSubTrigger chevron: text-text-secondary on the raised surface", kind: "text-secondary", paint: r("text-secondary"), over: RAISED },
+  { id: "row", source: "CommandItem: text-text-body (words and 20px glyph) on the raised surface", kind: "text-body", paint: r("text-body"), over: RAISED },
+  { id: "row-nav", source: "DropdownMenuItem, AdaptiveMenuItem at rest, as Figma's Nav Item rows: type-label text-text-secondary (words, 20px glyph, the submenu chevron) on the raised surface. Highlighted, checked or current they are body ink (core body-accent, body-raised, body-soft)", kind: "text-secondary", paint: r("text-secondary"), over: RAISED },
   { id: "row-separator", source: "DropdownMenuSeparator, CommandSeparator, AdaptiveMenuSeparator: bg-line-rule (decorative)", kind: "border-decorative", paint: r("line-rule"), over: RAISED },
 
   // ── Tooltip: inverted ink ───────────────────────────────────────────────────────────────────
@@ -50,4 +51,6 @@ export const recipes = [
   // ── Toast ───────────────────────────────────────────────────────────────────────────────────
   { id: "toast-title", source: "a toast's title: type-ui-emphasis text-text-body on bg-surface-raised", kind: "text-body", paint: r("text-body"), over: RAISED },
   { id: "toast-edge", source: "a toast: rule-box (line-rule) against the page (decorative)", kind: "border-decorative", paint: r("line-rule"), over: [r("surface-ground")] },
+  { id: "toast-focus", source: "a focused toast (each is a tab stop): the stylesheet's :focus-visible outline in --ring, 2px clear of the toast, against the page it floats over", kind: "focus", paint: r("ring"), over: [r("surface-ground")] },
+  { id: "toast-focus-raised", source: "a focused toast's outline beside the next toast in the column (bg-surface-raised)", kind: "focus", paint: r("ring"), over: RAISED },
 ]

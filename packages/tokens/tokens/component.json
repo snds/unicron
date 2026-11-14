@@ -1,10 +1,10 @@
 {
   "$description": "Tier 3 · Component knobs. Emitted as --c-*. Each aliases a semantic token or holds a per-component size. Only tokens that core @unicron/ui primitives read belong here; app-specific components keep theirs in the app extension layer. This file holds the cross-cutting knobs and the ones from before 1.0; each component area adds its own file in tokens/component/ (the build merges the directory, and a file there may re-declare a knob from this one).",
   "scrim": {
-    "$description": "The opacity of the full-screen dim behind an overlay. The colour is --surface-scrim (bg-surface-scrim); these set how much of it shows, the same number in both grounds (stone's 64% is already inside the colour, so a sheet's scrim draws at about 32% there). A scrim is never opaque and never blurred.",
-    "sheet": { "$type": "number", "$value": 0.5, "$description": "Behind a phone sheet." },
-    "dialog": { "$type": "number", "$value": 0.6, "$description": "Behind a desktop dialog." },
-    "menu": { "$type": "number", "$value": 0.32, "$description": "Behind a menu that dims the screen: quick create, the environment menu." }
+    "$description": "The opacity of the full-screen dim behind an overlay. The colour is --surface-scrim (bg-surface-scrim); these set how much of it shows, per ground, as Figma draws it. On graphite the role is opaque black, so the knob is the whole dim: 50% behind a sheet, 60% behind a dialog, 32% behind a menu. On stone the role already carries 64% and Figma's stone frames dim 64% behind every layer, so each knob is 1 there: the role's own alpha is the whole dim. A scrim is never opaque and never blurred.",
+    "sheet": { "$type": "number", "$value": 1, "$extensions": { "unicron.modes": { "dark": 0.5 } }, "$description": "Behind a phone sheet: 0.5 on graphite; 1 on stone (the role's 64%)." },
+    "dialog": { "$type": "number", "$value": 1, "$extensions": { "unicron.modes": { "dark": 0.6 } }, "$description": "Behind a desktop dialog: 0.6 on graphite; 1 on stone (the role's 64%)." },
+    "menu": { "$type": "number", "$value": 1, "$extensions": { "unicron.modes": { "dark": 0.32 } }, "$description": "Behind a menu that dims the screen (quick create, the environment menu): 0.32 on graphite; 1 on stone (the role's 64%)." }
   },
   "app-frame": {
     "$description": "AppFrame: the outermost box of an app that fills the screen, with its header, its nav, and the strips beside the notch and home bar.",

@@ -134,8 +134,8 @@ space and hairlines, not by fills.
   Tailwind ring, inset ring or shadow, even one that arrives with a state (`focus-visible:ring-2`).
   On an element with a rule, set a shadow through those utilities, never a raw `box-shadow`.
 - **Flat.** No shadows on surfaces, no glass, no `backdrop-blur` anywhere.
-- **Scrims** are `surface-scrim` at a knob: `scrim-sheet` (0.5), `scrim-dialog` (0.6), `scrim-menu`
-  (0.32). Never opaque, never blurred.
+- **Scrims** are `surface-scrim` at a knob: on graphite `scrim-sheet` (0.5), `scrim-dialog` (0.6),
+  `scrim-menu` (0.32); on stone all three are the role's own 64%. Never opaque, never blurred.
 - **Focus** is one rule in the stylesheet: a 2 px solid outline in `--ring` (ink), 2 px clear. Inside
   a needs-you block it takes `needs-you-on-fill`. Fields draw a 2 px inside border instead.
 

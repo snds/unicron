@@ -56,7 +56,7 @@ box.
 | 1, per app | `themes/<app>.json` | `--g-theme-` | The same 28 theme slots, with that app's values | `[data-theme="vale"] { --g-theme-stone-ground: #ECF1F4 }` |
 | 2 Semantic | `semantic.json` | `--` | Roles. Figma's theme roles, plus the shadcn/ui and sidebar contracts as aliases of them. Light = `$value`; dark = `$extensions["unicron.modes"].dark` | `--surface-ground: var(--g-theme-stone-ground)` / `.dark { --surface-ground: var(--g-theme-graphite-ground) }` |
 | Type roles | `type.json` | `--type-` | 23 text styles, five variables each | `--type-body-size: 1rem` |
-| 3 Component | `component.json` and `component/<area>.json` | `--c-` | Knobs the core primitives read; they alias tier 2 or hold per-component sizes | `--c-scrim-sheet: 0.5` |
+| 3 Component | `component.json` and `component/<area>.json` | `--c-` | Knobs the core primitives read; they alias tier 2 or hold per-component sizes | `--c-scrim-sheet: 0.5` (graphite) |
 
 The app axis lives in tier 1 and the ground axis in tier 2. Tier 3 follows tier 2 through `var()`.
 
@@ -392,16 +392,18 @@ monospace`. The tokens only name the families. `@unicron/ui` loads the font file
 ## Scrim
 
 `bg-surface-scrim` is the colour: black on graphite, `#141618` at 64% on stone. How much of it
-shows is a tier 3 knob, the same number on both grounds:
+shows is a tier 3 knob, set per ground as Figma draws it:
 
-| Knob | Value | Behind |
-|---|---|---|
-| `--c-scrim-sheet` | 0.5 | a phone sheet |
-| `--c-scrim-dialog` | 0.6 | a desktop dialog |
-| `--c-scrim-menu` | 0.32 | a menu that dims the screen (quick create) |
+| Knob | Graphite | Stone | Behind |
+|---|---|---|---|
+| `--c-scrim-sheet` | 0.5 | 1 | a phone sheet |
+| `--c-scrim-dialog` | 0.6 | 1 | a desktop dialog |
+| `--c-scrim-menu` | 0.32 | 1 | a menu that dims the screen (quick create) |
 
-On stone the two multiply, so a sheet's scrim draws at about 32%. A scrim is never opaque and
-never blurred: no `backdrop-blur` anywhere.
+On stone the knob is 1, so the role's own 64% is the whole dim behind every layer: Figma's stone
+frames dim 64% behind sheets, dialogs and menus alike. (Until 2026-11-14 the stone knobs were the
+graphite numbers, which multiplied to about 32%, 38% and 20%: half of what the frames draw.) A
+scrim is never opaque and never blurred: no `backdrop-blur` anywhere.
 
 ## Motion
 
