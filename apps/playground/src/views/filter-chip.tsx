@@ -1,6 +1,6 @@
 // Filter Chip, as Figma draws it (15:503), and the group's round-2 parts (contract 5.1b #25). View: ?view=filter-chip
 import { useState, type ReactNode } from "react"
-import { Button, FilterChip, FilterChipGroup, Icon } from "@unicron/ui"
+import { Button, FilterChip, FilterChipGroup, Icon, Popover, PopoverContent, PopoverHeader, PopoverTrigger } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -97,6 +97,26 @@ export default function FilterChipView() {
           <FilterChip active={own} onActiveChange={setOwn}>
             Unread
           </FilterChip>
+        </div>
+      </Specimen>
+
+      <Specimen label="Kinds // trigger (chevron, aria-haspopup) and button: a chat's chips above the composer; neither is ever on (Warpcore NA2, U-08)">
+        <div className="flex flex-wrap items-center gap-2">
+          <Popover>
+            <PopoverTrigger render={<FilterChip kind="trigger">Auto // Coding</FilterChip>} />
+            <PopoverContent>
+              <PopoverHeader title="Who answers" />
+              <p className="type-caption">Coding for code, files or errors. General otherwise.</p>
+            </PopoverContent>
+          </Popover>
+          <FilterChip kind="button">snds/lockdown // main</FilterChip>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterChip kind="trigger">General</FilterChip>
+          <FilterChip kind="trigger" disabled>
+            No models
+          </FilterChip>
+          <FilterChip kind="button">Envs</FilterChip>
         </div>
       </Specimen>
     </div>

@@ -15,7 +15,7 @@ function Specimen({ label, children }: { label: string; children: ReactNode }) {
 export default function ProseView() {
   return (
     <div className="flex flex-col gap-12 p-6">
-      <Specimen label='Variant "response" // a reply in Warpcore'>
+      <Specimen label='Variant "response" // a reply in Warpcore; h4 and bold keep the reply&apos;s 17/28 in the strong weight (no 24th role)'>
         <Prose variant="response">
           <p>
             Done. The diff is ready, and the tests are running in the cloud sandbox. Here is what changed and how to undo it.
@@ -37,6 +37,10 @@ export default function ProseView() {
           <h3>Old clients</h3>
           <p>
             The server accepts both flows until Dec 12, then rejects the old one. See the <a href="?view=prose">rollback runbook</a>.
+          </p>
+          <h4>If a login fails after the switch</h4>
+          <p>
+            <b>Clear the session cache</b> on that device, then sign in once. The new flow takes over from the next login.
           </p>
           <blockquote>
             <p>Password never leaves the SDK.</p>

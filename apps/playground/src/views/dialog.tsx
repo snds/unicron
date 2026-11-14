@@ -111,7 +111,16 @@ export default function DialogView() {
         )}
       </Stage>
 
-      <Specimen label="Sizes by name // question 480, review 560, form 640, compose 720, viewer 960, full; each capped at the screen less 24 a side">
+      <div className="flex flex-wrap gap-6">
+        <Stage label="Viewer // 960 in a window of 1100 (it fits: 960 + 48)" width={1100} height={480} app="synapse">
+          {(container) => <MergeDialog container={container} />}
+        </Stage>
+        <Stage label="Viewer // the same dialog in a window of 760: narrower than 960 + 48, so it draws full (Synapse SNA5)" width={760} height={480} app="synapse">
+          {(container) => <MergeDialog container={container} />}
+        </Stage>
+      </div>
+
+      <Specimen label="Sizes by name // question 480, review 560, form 640, compose 720, viewer 960, full; below a size's width plus 48 the dialog draws full">
         <div className="grid grid-cols-6 gap-2 max-sm:grid-cols-2">
           {[
             ["question", "480", "a confirmation, one field"],
@@ -132,3 +141,28 @@ export default function DialogView() {
     </div>
   )
 }
+
+/** Synapse's merge review (Y-09): a viewer dialog, so a medium window shows it full. */
+function MergeDialog({ container }: { container: HTMLElement }) {
+  const rowSize = useViewport().widthClass === "compact" ? "stacked" : "default"
+  return (
+    <Dialog open modal={false}>
+      <DialogContent size="viewer" container={container}>
+        <DialogHeader>
+          <DialogOverline>Merge // knowledge</DialogOverline>
+          <DialogTitle>Merge two notes into memory-tiers.md</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <DialogDescription>Both notes say how long a baton keeps its history. The merged note keeps the newer rule and links the older one.</DialogDescription>
+          <FieldRow size={rowSize} label="Keep">knowledge/decisions/memory-tiers.md</FieldRow>
+          <FieldRow size={rowSize} label="Fold in">knowledge/notes/baton-history.md</FieldRow>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="secondary">Cancel</Button>
+          <Button>Merge</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+

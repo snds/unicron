@@ -30,7 +30,7 @@ export default function TruncatedTextView() {
   return (
     <div className="flex flex-col gap-10 p-6 pt-20 max-sm:p-4 max-sm:pt-20">
       <div className="flex flex-wrap gap-10">
-        <Specimen label="End // a row title, cut; focused, its tooltip shows the rest">
+        <Specimen label="End // a row title, cut; focused, the full text opens from the element, from the start of the line">
           <div ref={focused}>
             <Box width={240}>
               <span className="type-subtitle">
@@ -84,6 +84,19 @@ export default function TruncatedTextView() {
           </Box>
         </Specimen>
       </div>
+
+      <Specimen label="Pointer // hover anywhere along a cut line: the full text opens at that spot and stays there while the pointer moves; it wraps between 192 and 352 (Synapse f-hovercard, SNA3)">
+        <div data-pointer-specimen="" className="flex flex-col gap-1">
+          <Box width={360}>
+            <span className="type-ui-emphasis">
+              <TruncatedText>identity.unique failed on 3 personas: reviewer, reviewer-2 and the imported Legion reviewer share one id</TruncatedText>
+            </span>
+            <span className="type-meta">
+              <TruncatedText cut="middle">knowledge/decisions/2026-11-07-persona-ids-are-unique-across-workspaces.md</TruncatedText>
+            </span>
+          </Box>
+        </div>
+      </Specimen>
     </div>
   )
 }

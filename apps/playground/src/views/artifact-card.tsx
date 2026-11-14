@@ -40,6 +40,12 @@ export default function ArtifactCardView() {
         ))}
       </Specimen>
 
+      <Specimen label="Writing // a reply is still writing the block: the meta in the live tone after a StatusOrb (Warpcore NA3, U-10)">
+        <ArtifactCard icon="code" title="Page" meta="HTML // writing" state="writing" />
+        <ArtifactCard icon="code" title="Sign-in page" meta="HTML // writing" state="writing" selected />
+        <ArtifactCard icon="code" title="Sign-in page" meta="HTML // 124 lines" />
+      </Specimen>
+
       <Specimen label="As a link, and off">
         <ArtifactCard href="?view=artifact-card" icon="document" title="auth.md draft" meta="Doc // edited 14:04" />
         <ArtifactCard disabled icon="code" title="OPAQUE migration diff" meta="Diff // 6 files // v2" />

@@ -1083,7 +1083,8 @@ function SecretFieldFillOnly({ label, description, id: idProp, className, size =
           </span>
         </div>
         {menu ? (
-          <div data-slot="secret-field-actions" className={row.actions}>
+          // No words here to share a baseline with: the ⋯ centres on the row's line instead.
+          <div data-slot="secret-field-actions" className={cn(row.actions, "self-center")}>
             {/* Never shown or copied: its own copy and show rows draw nothing here. */}
             <SecretFieldOverflow
               menu={menu}

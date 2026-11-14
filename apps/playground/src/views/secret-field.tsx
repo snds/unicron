@@ -2,7 +2,15 @@
 // remote buttons (Lockdown 40:357). Each state is driven once on mount, so a screenshot shows it.
 // View: ?view=secret-field
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { CrownJewelSurface, SecretField, SecretFieldRemoteButton, useSecretFieldRemote, type SecretFieldHost } from "@unicron/ui"
+import {
+  AdaptiveMenuItem,
+  CrownJewelSurface,
+  SecretField,
+  SecretFieldMenuItem,
+  SecretFieldRemoteButton,
+  useSecretFieldRemote,
+  type SecretFieldHost,
+} from "@unicron/ui"
 
 const encode = (text: string) => () => Promise.resolve(new TextEncoder().encode(text))
 const host = (overrides: Partial<SecretFieldHost> = {}): SecretFieldHost => ({
@@ -61,6 +69,37 @@ export default function SecretFieldView() {
         <Pressed slot="reveal">
           <SecretField label="API key" size="default" revealMode="toggle" getSecret={() => Promise.reject(new Error("locked"))} host={host()} errorText="The vault locked before this field was read." />
         </Pressed>
+      </Specimen>
+
+      <Specimen label="More // the trailing ⋯ after Show and Copy, always shown (Lockdown LA5): Show large type is its first row; its copy and show rows run the field's own paths">
+        <SecretField
+          label="Password"
+          getSecret={encode("larch-ember-quartz-17")}
+          host={host()}
+          menu={
+            <>
+              <AdaptiveMenuItem icon="text--scale">Show large type</AdaptiveMenuItem>
+              <SecretFieldMenuItem action="reveal" />
+              <SecretFieldMenuItem action="copy" />
+              <AdaptiveMenuItem icon="time">History</AdaptiveMenuItem>
+            </>
+          }
+        />
+        <SecretField
+          label="Wi-Fi password"
+          revealMode="toggle"
+          getSecret={encode("pine-hollow-2026")}
+          host={host()}
+          menu={
+            <>
+              <AdaptiveMenuItem icon="text--scale">Show large type</AdaptiveMenuItem>
+              <AdaptiveMenuItem icon="qr-code">Guest card</AdaptiveMenuItem>
+              <SecretFieldMenuItem action="reveal" />
+              <SecretFieldMenuItem action="copy" />
+            </>
+          }
+        />
+        <SecretField label="Password" fillOnly menu={<AdaptiveMenuItem icon="time">History</AdaptiveMenuItem>} />
       </Specimen>
 
       <Specimen label="Read // fill only: a share that fills in the browser, never shown or copied">

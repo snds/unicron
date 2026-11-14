@@ -1,6 +1,8 @@
 // FieldRow: Figma's Field Row (15:512), its three sizes, and what the four apps add (contract 5.1b #22, #37). View: ?view=field-row
 import { useState, type ReactNode } from "react"
 import {
+  AdaptiveMenuItem,
+  AdaptiveMenuSeparator,
   Badge,
   DropdownMenu,
   DropdownMenuContent,
@@ -147,6 +149,49 @@ export default function FieldRowView() {
         </FieldRow>
         <FieldRow label="Notify for">
           <FieldRowValue truncate="wrap">People I know, and anyone I wrote to in the last 30 days</FieldRowValue>
+        </FieldRow>
+      </Specimen>
+
+      <Specimen label="More // the trailing ⋯ after the text actions, always shown: a menu on a desktop, a sheet on a phone (Lockdown LA5)">
+        <FieldRow
+          size={phone ? "stacked" : "default"}
+          label="Network"
+          action={<FieldRowAction>Copy</FieldRowAction>}
+          menu={
+            <>
+              <AdaptiveMenuItem icon="text--scale">Show large type</AdaptiveMenuItem>
+              <AdaptiveMenuItem icon="qr-code">Guest card</AdaptiveMenuItem>
+              <AdaptiveMenuSeparator />
+              <AdaptiveMenuItem icon="time">History</AdaptiveMenuItem>
+            </>
+          }
+        >
+          PineHollow-Guest
+        </FieldRow>
+        <FieldRow
+          size={phone ? "stacked" : "default"}
+          label="Website"
+          action={
+            <>
+              <FieldRowAction href="https://store.steampowered.com" target="_blank" rel="noreferrer">
+                Open
+              </FieldRowAction>
+              <FieldRowAction>Copy</FieldRowAction>
+            </>
+          }
+          menu={<AdaptiveMenuItem icon="edit">Change match rule</AdaptiveMenuItem>}
+        >
+          store.steampowered.com
+        </FieldRow>
+        <FieldRow
+          size={phone ? "stacked" : "default"}
+          label="Recovery codes"
+          rule="both"
+          disabledReason="Unlock the vault to see them."
+          action={<FieldRowAction>Show</FieldRowAction>}
+          menu={<AdaptiveMenuItem icon="time">History</AdaptiveMenuItem>}
+        >
+          10 codes // 7 left
         </FieldRow>
       </Specimen>
 
