@@ -231,6 +231,12 @@ export type FloatButtonProps = Omit<TooltipPrimitive.Trigger.Props, "children" |
    * A key hint (`{ keys }`) shows in the tooltip and is said through `aria-keyshortcuts`.
    */
   mark?: NavMarkProp
+  /**
+   * The tooltip that shows `label`. On by default. A layer's own close button turns it off: a
+   * tooltip that is open takes the first Escape for itself, so with focus on Close a keyboard user
+   * had to press Escape twice to close the dialog or sheet. The name stays (`aria-label`).
+   */
+  tooltip?: boolean
   className?: string
   children?: React.ReactNode
 }
@@ -250,6 +256,7 @@ function FloatButton({
   longPressLabel,
   extended = false,
   mark,
+  tooltip = true,
   disabled,
   className,
   children,
@@ -310,8 +317,8 @@ function FloatButton({
     </>
   )
 
-  // The word is on the button, so an extended one needs no tooltip.
-  if (extended) {
+  // The word is on the button, so an extended one needs no tooltip; neither does one told to have none.
+  if (extended || !tooltip) {
     return (
       <ButtonPrimitive {...own} {...(props as ButtonPrimitive.Props)} {...handlers}>
         {content}

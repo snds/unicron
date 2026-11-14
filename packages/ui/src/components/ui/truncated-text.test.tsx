@@ -184,6 +184,67 @@ describe("TruncatedText: the full text at the pointer's spot (contract 5.1c C17,
     expect(positioner()).toHaveAttribute("data-anchor", "element")
   })
 
+  /** A tap as a finger makes it: pointer down and up of type touch, then the click. */
+  async function tapOn(el: HTMLElement) {
+    await act(async () => {
+      fireEvent.pointerDown(el, { pointerType: "touch", button: 0, clientX: 60, clientY: 10 })
+      fireEvent.pointerUp(el, { pointerType: "touch", clientX: 60, clientY: 10 })
+      fireEvent.click(el)
+    })
+  }
+
+  it("on a touch screen a tap on cut text opens all of it, from the element; a second tap puts it away", async () => {
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(<TruncatedText>Your November statement is ready to download</TruncatedText>)
+    expect(tip()).toBeNull()
+    await tapOn(root())
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    expect(tip()).toHaveTextContent("Your November statement is ready to download")
+    expect(positioner()).toHaveAttribute("data-anchor", "element")
+    await tapOn(root())
+    await vi.waitFor(() => expect(tip()).toBeNull())
+  })
+
+  it("opened by a tap, it closes on a tap anywhere else and when the page scrolls", async () => {
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(
+      <div>
+        <TruncatedText>Your November statement is ready to download</TruncatedText>
+        <p>Elsewhere</p>
+      </div>
+    )
+    await tapOn(root())
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    await act(async () => {
+      fireEvent.pointerDown(screen.getByText("Elsewhere"), { pointerType: "touch" })
+    })
+    await vi.waitFor(() => expect(tip()).toBeNull())
+    await tapOn(root())
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    await act(async () => {
+      fireEvent.scroll(document)
+    })
+    await vi.waitFor(() => expect(tip()).toBeNull())
+  })
+
+  it("a tap on text that fits opens nothing, and a mouse click is not a tap", async () => {
+    restore = layout({ clientWidth: 300, scrollWidth: 300 })
+    const { unmount } = render(<TruncatedText>Inbox</TruncatedText>)
+    await tapOn(root())
+    expect(tip()).toBeNull()
+    unmount()
+    restore()
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(<TruncatedText>Your November statement is ready to download</TruncatedText>)
+    await act(async () => {
+      fireEvent.pointerDown(root(), { pointerType: "mouse", button: 0 })
+      fireEvent.pointerUp(root(), { pointerType: "mouse" })
+      fireEvent.click(root())
+      await new Promise((r) => setTimeout(r, 20))
+    })
+    expect(tip()).toBeNull()
+  })
+
   it("wraps between the two knobs, never wider than the room on screen, and reads from the start of the line", async () => {
     restore = layout({ clientWidth: 120, scrollWidth: 300 })
     render(<TruncatedText>Your November statement is ready to download</TruncatedText>)

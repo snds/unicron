@@ -472,6 +472,34 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
     await vi.waitFor(() => expect(screen.getByRole("textbox")).toHaveFocus())
   })
 
+  it("with focus on Close, one Escape closes the dialog: the close button has no tooltip to take it first", async () => {
+    const onOpenChange = vi.fn()
+    function Live() {
+      return (
+        <Dialog defaultOpen onOpenChange={(open) => onOpenChange(open)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add a login</DialogTitle>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
+      )
+    }
+    render(<Live />)
+    const close = screen.getByRole("button", { name: "Close" })
+    await act(async () => {
+      close.focus()
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    // No tooltip opened for it, so nothing stands between Escape and the dialog.
+    expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull()
+    await act(async () => {
+      fireEvent.keyDown(close, { key: "Escape" })
+    })
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+    await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
   it("actions keep their words at every width; an icon comes before them, at 16", () => {
     render(<NewLogin />)
     const save = screen.getByRole("button", { name: "Save login" })

@@ -54,8 +54,9 @@ const proseVariants = cva(cn("min-w-0 text-text-body break-words", FLOW, HEADING
     variant: {
       // A note, a description, a mail body: the body role.
       body: "type-body",
-      // What a model wrote: the response role, a little larger and looser.
-      response: "type-response",
+      // The response role, a little larger and looser: what a model wrote, and a mail's body as
+      // Vale Desktop / 01 draws it (17/28). Its blocks are 24 apart there, not the body's 16.
+      response: "type-response [&>*+*]:mt-6",
     },
   },
   defaultVariants: { variant: "body" },
@@ -68,7 +69,8 @@ export interface ProseProps extends React.ComponentProps<"div">, VariantProps<ty
 /**
  * Rendered text: what a Markdown renderer or a sanitiser hands over (headings, paragraphs, lists,
  * links, quotes, inline code, code blocks, tables, rules), styled from the type roles alone.
- * `variant="body"` for notes and mail; `variant="response"` for what a model wrote. h1 takes the
+ * `variant="body"` for notes and descriptions; `variant="response"` for what a model wrote and
+ * for a mail's body (Vale draws it in the response role, its paragraphs 24 apart). h1 takes the
  * lead role; h2 and h3 subtitle; h4 to h6 and bold text keep the variant's size in the strong
  * weight. The host renders the elements and decides what is safe (no raw HTML from a model, images
  * as links); Prose only draws them. Put a code block that should copy in a CodeBlock.

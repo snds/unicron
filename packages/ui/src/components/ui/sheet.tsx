@@ -100,7 +100,7 @@ function SheetCloseButton({ label, notice }: { label: string; notice?: boolean }
   return (
     // Last in the tab order, so focus starts in the content. 16 from the right.
     <span data-slot="sheet-close-anchor" className={cn("absolute right-4 z-10 flex", topRightClasses(notice))}>
-      <SheetPrimitive.Close data-slot="sheet-close" render={<FloatButton label={label} icon="close" size="l" />} />
+      <SheetPrimitive.Close data-slot="sheet-close" render={<FloatButton label={label} icon="close" size="l" tooltip={false} />} />
     </span>
   )
 }

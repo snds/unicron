@@ -19,6 +19,18 @@ describe("Prose", () => {
     expect(root.className).not.toMatch(/(^| )type-body( |$)/)
   })
 
+  it("blocks are 16 apart in the body role and 24 in the response role, as Vale draws a mail's paragraphs", () => {
+    const { container, rerender } = render(<Prose>Text</Prose>)
+    const classes = () => container.querySelector('[data-slot="prose"]')!.className.split(" ")
+    expect(classes()).toContain("[&>*+*]:mt-4")
+    expect(classes()).not.toContain("[&>*+*]:mt-6")
+    rerender(<Prose variant="response">Text</Prose>)
+    expect(classes()).toContain("[&>*+*]:mt-6")
+    expect(classes()).not.toContain("[&>*+*]:mt-4")
+    // A section still opens 32 after what precedes it, and its heading sits 8 over its first block.
+    expect(classes()).toEqual(expect.arrayContaining(["[&>*+:is(h1,h2,h3,h4,h5,h6)]:mt-8", "[&>:is(h1,h2,h3,h4,h5,h6)+*]:mt-2"]))
+  })
+
   it("renders what the host hands it, elements and all", () => {
     render(
       <Prose variant="response">

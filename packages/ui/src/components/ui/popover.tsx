@@ -139,7 +139,7 @@ function PopoverHeader({
         {children}
       </div>
       {showCloseButton ? (
-        <PopoverPrimitive.Close data-slot="popover-close" render={<FloatButton label={closeLabel} icon="close" />} />
+        <PopoverPrimitive.Close data-slot="popover-close" render={<FloatButton label={closeLabel} icon="close" tooltip={false} />} />
       ) : null}
     </div>
   )

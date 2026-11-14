@@ -1,5 +1,5 @@
 import * as React from "react"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import { Composer, composerCopy } from "./composer"
@@ -28,15 +28,54 @@ describe("Composer", () => {
     expect(send.querySelector('[data-icon-name="send--alt"]')).toBeInTheDocument()
   })
 
-  it("keeps Send off while the field is empty or only spaces", () => {
-    render(<Composer />)
+  it("keeps Send off while the field is empty or only spaces: unavailable, and a press or Enter sends nothing", () => {
+    const onSend = vi.fn()
+    render(<Composer onSend={onSend} />)
     const send = screen.getByRole("button", { name: "Send" })
-    expect(send).toBeDisabled()
+    const off = () => {
+      expect(send).toHaveAttribute("aria-disabled", "true")
+      fireEvent.click(send)
+      enter()
+      fireEvent.submit(document.querySelector('[data-slot="composer"]')!)
+      expect(onSend).not.toHaveBeenCalled()
+    }
+    off()
     type("   ")
-    expect(send).toBeDisabled()
+    off()
     type("Run the full suite")
     expect(send).toBeEnabled()
+    expect(send).not.toHaveAttribute("aria-disabled")
     expect(document.querySelector('[data-slot="composer"]')).toHaveAttribute("data-state", "typing")
+  })
+
+  it("an empty composer draws Send at full strength, as Figma's one drawn state; a disabled one dims", () => {
+    const { unmount } = render(<Composer />)
+    const send = screen.getByRole("button", { name: "Send" })
+    expect(send).toHaveAttribute("data-idle")
+    const cls = send.className.split(" ")
+    // The button's own rule dims an aria-disabled control to 50%; while only empty that is lifted.
+    expect(cls).toContain("aria-disabled:not-aria-busy:opacity-100")
+    expect(cls).not.toContain("aria-disabled:not-aria-busy:opacity-50")
+    // It stays reachable, so focus is never lost to the page when the text is cleared under it.
+    expect(send).not.toHaveAttribute("disabled")
+    unmount()
+
+    const off = render(<Composer disabled />)
+    const dimmed = screen.getByRole("button", { name: "Send" })
+    expect(dimmed).toBeDisabled()
+    expect(dimmed).not.toHaveAttribute("data-idle")
+    expect(dimmed.className.split(" ")).not.toContain("aria-disabled:not-aria-busy:opacity-100")
+    off.unmount()
+
+    render(<Composer sendDisabled disabledReason="No models connected." />)
+    const turnedOff = screen.getByRole("button", { name: "Send" })
+    expect(turnedOff).not.toHaveAttribute("data-idle")
+    expect(turnedOff.className.split(" ")).toContain("aria-disabled:not-aria-busy:opacity-50")
+  })
+
+  it("the field's text is 16px on a touch screen, as every field's, so iOS does not zoom into it", () => {
+    render(<Composer />)
+    expect(field().className.split(" ")).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:text-(length:--type-body-size)"]))
   })
 
   it("sends on Enter, makes a line on Shift+Enter, and clears itself when uncontrolled", () => {
@@ -195,6 +234,54 @@ describe("Composer", () => {
     send.focus()
     rerender(<Composer defaultValue="Hi" streaming />)
     expect(field()).toHaveFocus()
+  })
+
+  it("moves focus to the field when a reply ends by itself while focus is on Stop", () => {
+    const { rerender } = render(<Composer streaming />)
+    const stop = screen.getByRole("button", { name: composerCopy.stop })
+    act(() => stop.focus())
+    expect(stop).toHaveFocus()
+    // The host ends the stream; nobody pressed anything. The button is a Send that cannot send.
+    rerender(<Composer />)
+    expect(screen.getByRole("button", { name: "Send" })).toHaveAttribute("aria-disabled", "true")
+    expect(field()).toHaveFocus()
+  })
+
+  it("the same when a wait ends under the clock, and when the composer is disabled as the reply ends", () => {
+    const { rerender, unmount } = render(<Composer waiting />)
+    act(() => screen.getByRole("button", { name: composerCopy.waiting }).focus())
+    rerender(<Composer />)
+    expect(field()).toHaveFocus()
+    unmount()
+
+    const next = render(<Composer streaming sendDisabled disabledReason="No models connected." />)
+    act(() => screen.getByRole("button", { name: composerCopy.stop }).focus())
+    next.rerender(<Composer sendDisabled disabledReason="No models connected." />)
+    expect(field()).toHaveFocus()
+  })
+
+  it("leaves focus alone when the reply ends and focus is elsewhere, or when Send can send", () => {
+    const { rerender, unmount } = render(
+      <>
+        <button type="button">Elsewhere</button>
+        <Composer streaming />
+      </>
+    )
+    act(() => screen.getByRole("button", { name: "Elsewhere" }).focus())
+    rerender(
+      <>
+        <button type="button">Elsewhere</button>
+        <Composer />
+      </>
+    )
+    expect(screen.getByRole("button", { name: "Elsewhere" })).toHaveFocus()
+    unmount()
+
+    // A draft is waiting: Stop turns into a Send that works, and focus stays on it.
+    const next = render(<Composer streaming defaultValue="And the tests?" />)
+    act(() => screen.getByRole("button", { name: composerCopy.stop }).focus())
+    next.rerender(<Composer defaultValue="And the tests?" />)
+    expect(screen.getByRole("button", { name: "Send" })).toHaveFocus()
   })
 
   it("while waiting for the network, the button is a clock that cancels the wait", () => {

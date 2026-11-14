@@ -7,6 +7,7 @@ import * as React from "react"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { Button } from "./button"
+import { fieldTextOnTouch } from "./input"
 
 /** What the composer is doing; also its `data-state`. */
 export type ComposerState = "empty" | "typing" | "sending" | "streaming" | "waiting"
@@ -94,10 +95,16 @@ function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null) {
  * The message box (Figma "21. Composer"): the raised surface with a 1px hairline, 48 tall at rest
  * (`size-control`), 16px in on the left and 4 on the right, gap 8. The field is in the `ui` role
  * with the placeholder in label ink; it grows with its text up to `--c-composer-max-lines` lines,
- * then scrolls inside itself. The send button is a 40px square on the primary fill with
- * `send--alt`; it is off while the field is empty or a message is sending.
+ * then scrolls inside itself. On a touch screen the field's text is 16px, as every field's, so iOS
+ * does not zoom into it. The send button is a 40px square on the primary fill with `send--alt`.
  *
- * While `streaming` the button is Stop (focus moves back to the field when it swaps). While
+ * While the field is only empty, Send is unavailable (`aria-disabled`: a press does nothing) but
+ * drawn at full strength, as Figma draws the one state it has (21. Composer, and "Reply to Mira" on
+ * Vale Desktop / 01): every composer on a resting screen is in that state. A composer that is
+ * `disabled`, or whose sending is turned off, dims to 50%.
+ *
+ * While `streaming` the button is Stop (focus moves back to the field when it swaps, and again
+ * when the reply ends under the keyboard and Stop turns back into a Send that cannot send). While
  * `waiting` it is a clock that cancels the wait. Enter sends and Shift+Enter makes a line, or as
  * `sendKey` says, and never while an input method is composing. Focus draws the field's 2px
  * `primary-fill` inside border on the box, as a Text Field does.
@@ -138,6 +145,8 @@ export function Composer({
   const empty = text.trim() === ""
   const state: ComposerState = waiting ? "waiting" : streaming ? "streaming" : sending ? "sending" : empty ? "empty" : "typing"
   const canSend = !empty && !sending && !streaming && !waiting && !disabled && !sendDisabled
+  // Nothing but the empty field stands in the way: Send is unavailable, at full strength.
+  const idle = empty && !sending && !streaming && !waiting && !disabled && !sendDisabled
 
   const reasonId = React.useId()
   const described = disabledReason ? [fieldProps?.["aria-describedby"], reasonId].filter(Boolean).join(" ") : fieldProps?.["aria-describedby"]
@@ -185,6 +194,30 @@ export function Composer({
     if (streaming && button.current && document.activeElement === button.current) field.current?.focus()
   }, [streaming])
 
+  // The other way round: a reply ends by itself (or a wait does) while focus is on Stop or on the
+  // clock. The button turns back into a Send that cannot send, and a browser drops focus from a
+  // button that becomes disabled to the page's body. Focus goes to the field instead. Whether the
+  // button held focus is kept from its own focus events, since by now the browser may have moved it.
+  const buttonFocused = React.useRef(false)
+  const busy = streaming || waiting
+  const wasBusy = React.useRef(busy)
+  React.useEffect(() => {
+    const ended = wasBusy.current && !busy
+    wasBusy.current = busy
+    if (!ended || !buttonFocused.current || canSend) return
+    const active = document.activeElement
+    if (active && active !== document.body && active !== button.current) return
+    field.current?.focus()
+  }, [busy, canSend])
+  const trackFocus = {
+    onFocus: () => {
+      buttonFocused.current = true
+    },
+    onBlur: () => {
+      buttonFocused.current = false
+    },
+  }
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     fieldProps?.onKeyDown?.(e)
     // An input method composing (Japanese, Chinese, Korean) owns Enter until it commits.
@@ -211,7 +244,7 @@ export function Composer({
   let action: React.ReactNode
   if (waiting) {
     action = (
-      <Button ref={button} type="button" size="icon" aria-label={composerCopy.waiting} data-slot="composer-send" data-action="waiting" onClick={press(onCancelWaiting)} disabled={disabled}>
+      <Button ref={button} type="button" size="icon" aria-label={composerCopy.waiting} data-slot="composer-send" data-action="waiting" onClick={press(onCancelWaiting)} disabled={disabled} {...trackFocus}>
         <Icon name="time" className="size-5" />
       </Button>
     )
@@ -227,6 +260,7 @@ export function Composer({
         loading={stopping}
         disabled={disabled}
         onClick={press(onStop)}
+        {...trackFocus}
       >
         <Icon name="stop--filled--alt" className="size-5" />
       </Button>
@@ -241,9 +275,13 @@ export function Composer({
         aria-describedby={disabledReason ? reasonId : undefined}
         data-slot="composer-send"
         data-action="send"
+        data-idle={idle ? "" : undefined}
         loading={sending}
         disabled={!canSend && !sending}
-        focusableWhenDisabled={focusable && (disabled || sendDisabled) ? true : undefined}
+        // Only empty: it stays in the tab order, says it is unavailable, and keeps its full strength.
+        focusableWhenDisabled={idle || (focusable && (disabled || sendDisabled)) ? true : undefined}
+        className={idle ? "aria-disabled:not-aria-busy:opacity-100" : undefined}
+        {...trackFocus}
       >
         <Icon name="send--alt" className="size-5" />
       </Button>
@@ -310,6 +348,8 @@ export function Composer({
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
           className={cn(
+            // 16px on a touch screen, as every field: iOS zooms the page into a field set under 16px.
+            fieldTextOnTouch,
             "type-ui text-text-body placeholder:text-text-label min-w-0 flex-1 resize-none bg-transparent py-2.5 outline-none",
             size === "line"
               ? "h-10 overflow-y-auto"

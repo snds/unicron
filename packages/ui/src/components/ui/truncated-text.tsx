@@ -97,7 +97,9 @@ function pointAnchor(x: number, y: number, contextElement: Element | null) {
  *
  * Synapse's `f-hovercard` (contract 5.1c C17): from the pointer, the full text opens at the spot
  * where the pointer was when it opened and stays there while the pointer moves over the text; from
- * the keyboard, it opens from the element. It wraps between --c-truncated-text-min-width and
+ * the keyboard, it opens from the element. On a touch screen, which has no hover, a tap on the cut
+ * text opens it from the element; a second tap, a tap anywhere else, or a scroll puts it away.
+ * It wraps between --c-truncated-text-min-width and
  * --c-truncated-text-max-width (never wider than the room the screen leaves) and reads from the
  * start of the line.
  *
@@ -117,6 +119,12 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
     pointer.current = event.pointerType === "touch" ? null : { x: event.clientX, y: event.clientY }
   }
   const anchor = React.useMemo(() => (openAt ? pointAnchor(openAt.x, openAt.y, openAt.element) : undefined), [openAt])
+  // Open or not, held here so a tap can open it: a touch screen has no hover, and a tap's focus is
+  // not a keyboard's, so without this a sighted person on a phone could never read the cut part.
+  const [open, setOpen] = React.useState(false)
+  // The press in hand: whether it is a finger, and whether the full text was open when it landed.
+  const press = React.useRef<{ touch: boolean; wasOpen: boolean }>({ touch: false, wasOpen: false })
+  const byTouch = React.useRef(false)
 
   const measure = React.useCallback(() => {
     const el = ref.current
@@ -153,17 +161,40 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
     return () => observer.disconnect()
   }, [measure])
 
+  // Opened by a tap, it closes on a tap anywhere else and when anything scrolls (it is anchored to
+  // text that would move from under it).
+  React.useEffect(() => {
+    if (!open || !byTouch.current) return
+    const el = ref.current
+    const doc = el?.ownerDocument
+    if (!el || !doc) return
+    const close = () => setOpen(false)
+    const onDown = (event: PointerEvent) => {
+      if (!el.contains(event.target as Node)) close()
+    }
+    doc.addEventListener("pointerdown", onDown, true)
+    doc.addEventListener("scroll", close, true)
+    return () => {
+      doc.removeEventListener("pointerdown", onDown, true)
+      doc.removeEventListener("scroll", close, true)
+    }
+  }, [open])
+
   const cutText = middle && shown !== text
   return (
     // One tree whether or not it is cut, so measuring never remounts it: the tooltip is off until
     // the text is cut.
     <Tooltip
       disabled={!truncated}
-      onOpenChange={(open, details) => {
-        // Opened by the pointer: pin it where the pointer is now. By focus: from the element.
-        if (!open) return
-        const at = details.reason === "trigger-hover" ? pointer.current : null
-        setOpenAt(at ? { ...at, element: ref.current } : null)
+      open={open && truncated}
+      onOpenChange={(next, details) => {
+        if (next) {
+          // Opened by the pointer: pin it where the pointer is now. By focus: from the element.
+          const at = details.reason === "trigger-hover" ? pointer.current : null
+          setOpenAt(at ? { ...at, element: ref.current } : null)
+          byTouch.current = false
+        }
+        setOpen(next)
       }}
     >
       <TooltipTrigger
@@ -184,6 +215,21 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
         )}
         style={clamp ? ({ "--truncated-text-lines": lines, ...style } as React.CSSProperties) : style}
         {...(props as React.ComponentProps<"button">)}
+        onPointerDown={(event: React.PointerEvent<HTMLButtonElement>) => {
+          press.current = { touch: event.pointerType === "touch", wasOpen: open }
+          props.onPointerDown?.(event as unknown as React.PointerEvent<HTMLSpanElement>)
+        }}
+        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+          // A tap on cut text shows all of it, from the text itself; a second tap puts it away.
+          if (truncated && press.current.touch) {
+            const next = !press.current.wasOpen
+            press.current = { touch: false, wasOpen: false }
+            byTouch.current = next
+            if (next) setOpenAt(null)
+            setOpen(next)
+          }
+          props.onClick?.(event as unknown as React.MouseEvent<HTMLSpanElement>)
+        }}
         onPointerEnter={(event: React.PointerEvent<HTMLButtonElement>) => {
           follow(event)
           props.onPointerEnter?.(event as unknown as React.PointerEvent<HTMLSpanElement>)

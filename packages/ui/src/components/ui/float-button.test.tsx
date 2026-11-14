@@ -138,6 +138,17 @@ describe("FloatButton (Figma 20:1690)", () => {
     expect(screen.getAllByText("Share")).toHaveLength(1)
   })
 
+  it("tooltip={false} draws no tooltip and keeps the name: for a layer's close, where a tooltip would take the first Escape", async () => {
+    const user = userEvent.setup()
+    render(<FloatButton label="Close" icon="close" tooltip={false} />)
+    await user.tab()
+    const button = screen.getByRole("button", { name: "Close" })
+    expect(button).toHaveFocus()
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.queryByText("Close")).toBeNull()
+    expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull()
+  })
+
   it("an extended button keeps the long press", () => {
     const onLongPress = vi.fn()
     render(<FloatButton label="Approve" icon="checkmark" kind="primary" extended onLongPress={onLongPress} />)

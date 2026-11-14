@@ -170,7 +170,7 @@ function DialogContent({
             data-slot="dialog-close-anchor"
             className={cn("absolute right-4 flex", notice ? "top-[calc(var(--size-control)+var(--spacing)*5)]" : "top-5")}
           >
-            <DialogPrimitive.Close data-slot="dialog-close" render={<FloatButton label={closeLabel} icon="close" />} />
+            <DialogPrimitive.Close data-slot="dialog-close" render={<FloatButton label={closeLabel} icon="close" tooltip={false} />} />
           </span>
         )}
       </DialogPrimitive.Popup>

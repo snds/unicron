@@ -8,20 +8,24 @@ import { cn } from "../../lib/utils"
 
 import { Separator } from "./separator"
 
-// Joined: the inner corners square off, and each part after the first steps back 1px over the one
-// before. An edge is drawn inside its box (an inset ring or rule), so two outlined buttons side by
-// side would show a 2px seam; overlapping by the edge's width leaves the one 1px line between them.
+// Joined: the inner corners square off. An edge is drawn inside its box (an inset ring or rule), so
+// two outlined buttons side by side would show a 2px seam. Each part after the first draws no edge
+// on the side it shares with the one before (join-l in a row, join-t in a column), which leaves the
+// one 1px line between them. Nothing overlaps, so the group is exactly as tall and as wide as its
+// parts: two 32px buttons in a column are 64, on the 4px grid (they were 63 while each part stepped
+// back 1px over the one before). A part that is focused, open or invalid keeps its whole edge.
 // A focused part comes forward, so its ring is never under its neighbour. A separator stands
-// between two parts on its own 1px and nothing steps over it.
+// between two parts on its own 1px, and the part after it keeps its own edge.
+// (The selector is written out in each class: Tailwind reads class names from the source as text.)
 const buttonGroupVariants = cva(
   "has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-lg flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
     variants: {
       orientation: {
         horizontal:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-lg! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator])]:-ml-(--stroke-rule)",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-lg! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator],:focus,:focus-within,[aria-invalid=true],[data-popup-open],:has([aria-invalid=true]))]:join-l",
         vertical:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator])]:-mt-(--stroke-rule)",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator],:focus,:focus-within,[aria-invalid=true],[data-popup-open],:has([aria-invalid=true]))]:join-t",
       },
     },
     defaultVariants: {
