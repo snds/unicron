@@ -8,7 +8,7 @@ export default function ChatView() {
   return (
     <div className="flex min-h-svh justify-center px-4 py-6 md:px-6">
       <div className="flex w-full max-w-180 flex-col gap-6">
-        <PageHead size="sm" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
+        <PageHead size="xs" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
         <div className="flex flex-1 flex-col gap-5">
           <ChatMessage role="user" meta="You // 14:02">
             Split the OPAQUE migration into a diff I can review, and run the full test suite in the background.

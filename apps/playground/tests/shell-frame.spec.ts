@@ -136,9 +136,12 @@ test.describe("the shell the width picks (contract 5.2)", () => {
       if (layout === "expanded") {
         await expect(sidebar).toHaveAttribute("data-state", "expanded")
         expect(Math.round((await sidebar.boundingBox())!.width)).toBe(204)
-        // List 432 + 12, the rule, the detail.
+        // List 432 + 12, the rule, the detail. As the first column its box also keeps 4 before the
+        // content (a focus ring's reach), taken with a negative margin: the content is 432 as before.
         const list = (await page.locator('[data-slot="app-frame-list"]').boundingBox())!
-        expect(Math.round(list.width)).toBe(444)
+        const startRoom = await page.locator('[data-slot="app-frame-list"]').evaluate((el) => Number.parseFloat(getComputedStyle(el).paddingLeft))
+        expect(startRoom).toBe(4)
+        expect(Math.round(list.width - startRoom)).toBe(444)
         await expect(page.locator('[data-slot="app-frame-detail"]')).toHaveAttribute("data-shown", "")
       } else if (layout === "medium") {
         await expect(sidebar).toHaveAttribute("data-state", "rail")
@@ -748,4 +751,217 @@ test.describe("the phone demos' heads", () => {
     const first = await box(page.locator('[data-slot="list-row"]').first())
     expect(first.y - header.bottom).toBe(0)
   })
+})
+
+// ── the second review pass (2026-11-14, should-fix) ─────────────────────────────────────────────
+
+test.describe("the short-screen rule is for scarce height", () => {
+  for (const [width, height, layout] of [
+    [430, 667, "phone"],
+    [528, 844, "phone"],
+    [560, 844, "phone"],
+    [599, 844, "phone"],
+    [599, 900, "phone"],
+    [375, 667, "phone"],
+    [382, 580, "rail"],
+    [385, 571, "rail"],
+    [844, 390, "rail"],
+  ] as const) {
+    test(`${width} × ${height} is ${layout}`, async ({ browser }) => {
+      const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true })
+      const page = await context.newPage()
+      await open(page, "shell-vale", "vale")
+      await expect(page.locator('[data-slot="app-frame"]')).toHaveAttribute("data-layout", layout)
+      await context.close()
+    })
+  }
+})
+
+test.describe("the short screen's trailing column has a floor", () => {
+  for (const [name, theme] of [
+    ["shell-vale", "vale"],
+    ["shell-synapse", "synapse"],
+    ["shell-warpcore", "warpcore"],
+  ] as const) {
+    for (const [width, height] of [
+      [667, 320],
+      [740, 340],
+      [844, 345],
+      [844, 390],
+    ] as const) {
+      test(`${name} at ${width} × ${height}: create stays on screen, and every tab is still there`, async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true })
+        const page = await context.newPage()
+        await open(page, name, theme)
+        await expect(page.locator('[data-slot="app-frame"]')).toHaveAttribute("data-layout", "rail")
+        const seen = await page.locator('[data-slot="app-frame-rail"]').evaluate((rail) => {
+          const buttons = [...rail.querySelectorAll('[data-slot="float-button"]')].map((el) => el.getBoundingClientRect())
+          const tabs = [...rail.querySelectorAll('[data-slot="tab-bar-item"]')].map((el) => el.getBoundingClientRect().height)
+          const create = buttons[buttons.length - 1]!
+          return { createTop: create.top, createBottom: create.bottom, buttonHeights: buttons.map((b) => b.height), tabs }
+        })
+        // The app's primary action: whole, and 16 clear of the screen's end.
+        expect(seen.createBottom).toBeLessThanOrEqual(height - 16)
+        expect(seen.createTop).toBeGreaterThanOrEqual(0)
+        // The buttons never shrink; the tabs share what is left, 24 at least, 40 where there is room.
+        for (const h of seen.buttonHeights) expect(h).toBe(48)
+        expect(seen.tabs.length).toBeGreaterThanOrEqual(3)
+        for (const h of seen.tabs) expect(h).toBeGreaterThanOrEqual(24)
+        if (height >= 390) for (const h of seen.tabs) expect(h).toBe(40)
+        await context.close()
+      })
+    }
+  }
+})
+
+test.describe("the bottom fade is fixed to the bottom row", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  for (const [name, theme, strip] of [
+    ["shell-vale", "vale", false],
+    ["shell-lockdown", "lockdown", true],
+    ["shell-warpcore", "warpcore", true],
+  ] as const) {
+    test(`${name}: it fades over 80 and is solid from 40 above the row${strip ? ", with a strip on the row" : ""}`, async ({ page }) => {
+      await open(page, name, theme)
+      const seen = await page.evaluate(() => {
+        const row = document.querySelector('[data-slot="app-frame-bottom-row-bar"]')!.getBoundingClientRect()
+        const edge = document.querySelector('[data-slot="app-frame-scroll-edge"][data-edge="bottom"]')!
+        const box = edge.getBoundingClientRect()
+        const strip = document.querySelector('[data-slot="app-frame-strip"] > *')
+        const column = document.querySelector("[data-column][data-shown]")!
+        return {
+          fadeFrom: row.top - box.top,
+          left: box.left,
+          right: innerWidth - box.right,
+          toTheEnd: box.bottom >= innerHeight,
+          mask: getComputedStyle(edge).maskImage,
+          strip: strip !== null && strip.getBoundingClientRect().height > 0,
+          clear: Number.parseFloat(getComputedStyle(column).paddingBottom) - (innerHeight - row.top),
+        }
+      })
+      // Figma (Vale Mobile / 01, Lockdown Mobile / 01): 640 to 720 with the row at 760.
+      expect(seen.fadeFrom).toBe(120)
+      expect(seen.mask).toContain("80px")
+      expect([seen.left, seen.right, seen.toTheEnd]).toEqual([0, 0, true])
+      expect(seen.strip).toBe(strip)
+      // The content rests clear of the whole fade, strip or no strip.
+      expect(seen.clear).toBe(120)
+    })
+  }
+})
+
+test.describe("focus after the shell's own controls", () => {
+  test("the sidebar: Collapse hands focus to Expand, and Expand to Collapse", async ({ page }) => {
+    await open(page, "app-frame-sidebar", "vale")
+    const collapse = page.getByRole("button", { name: "Collapse sidebar" }).first()
+    await collapse.focus()
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("button", { name: "Expand sidebar" }).first()).toBeFocused()
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("button", { name: "Collapse sidebar" }).first()).toBeFocused()
+  })
+
+  test("the context panel: Collapse hands focus to Expand, and a rail item to its tab", async ({ page }) => {
+    await open(page, "context-panel", "warpcore")
+    const collapse = page.getByRole("button", { name: "Collapse panel" }).first()
+    await collapse.focus()
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("button", { name: "Expand panel" }).first()).toBeFocused()
+    const item = page.getByRole("button", { name: /^Artifacts/ }).first()
+    await item.focus()
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("tab", { name: /^Artifacts/ }).first()).toBeFocused()
+  })
+
+  test.describe("at medium width", () => {
+    test.use({ viewport: { width: 768, height: 1024 } })
+
+    for (const [name, theme] of [
+      ["shell-vale", "vale"],
+      ["shell-synapse", "synapse"],
+    ] as const) {
+      test(`${name}: Tab out of the sidebar's drawer closes it, and focus stays where Tab went`, async ({ page }) => {
+        await open(page, name, theme)
+        await page.getByRole("button", { name: "Expand sidebar" }).first().click()
+        const drawer = page.locator('[data-slot="app-frame-sidebar-drawer"]')
+        await expect(drawer).toBeVisible()
+        let left = false
+        for (let i = 0; i < 40 && !left; i++) {
+          await page.keyboard.press("Tab")
+          left = await page.evaluate(() => {
+            const open = document.querySelector('[data-slot="app-frame-sidebar-drawer"]')
+            return open === null || !open.contains(document.activeElement)
+          })
+        }
+        expect(left).toBe(true)
+        await expect(drawer).toHaveCount(0)
+        // Not back on the expand control, and not on the body: on the page, where Tab sent it.
+        const active = await page.evaluate(() => ({ body: document.activeElement === document.body, expand: document.activeElement?.getAttribute("aria-label") === "Expand sidebar" }))
+        expect(active).toEqual({ body: false, expand: false })
+      })
+    }
+
+    test("a list that is the only column reaches the content line, where the header's rule ends", async ({ page }) => {
+      for (const [name, theme] of [
+        ["shell-vale", "vale"],
+        ["shell-lockdown", "lockdown"],
+        ["shell-warpcore", "warpcore"],
+      ] as const) {
+        await open(page, name, theme)
+        const seen = await page.evaluate(() => {
+          const list = document.querySelector('[data-slot="app-frame-list"]')!
+          const row = list.querySelector('[data-slot="list-row"]')!.getBoundingClientRect()
+          const head = (document.querySelector('[data-slot="app-frame-status-line"]') ?? document.querySelector('[data-slot="app-frame-top-bar"]'))!.getBoundingClientRect()
+          return { row: Math.round(row.right), head: Math.round(head.right) }
+        })
+        expect(seen.row, name).toBe(seen.head)
+      }
+    })
+  })
+
+  test("a control at a column's start edge has room for its focus ring", async ({ page }) => {
+    await open(page, "shell-warpcore", "warpcore")
+    const seen = await page.evaluate(() => {
+      const chip = document.querySelector('[data-slot="filter-chip"]')!
+      const column = chip.closest("[data-column]")!
+      return { room: chip.getBoundingClientRect().left - column.getBoundingClientRect().left, clip: getComputedStyle(column).overflowX }
+    })
+    // A 2px ring, 2px clear of the chip.
+    expect(seen.room).toBeGreaterThanOrEqual(4)
+  })
+})
+
+test("Lockdown scrolled on a phone: the small title is the page head's own, Items", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  const page = await context.newPage()
+  await open(page, "shell-lockdown", "lockdown")
+  await scrollShown(page, 400)
+  await expect(page.locator('[data-slot="app-frame"]')).toHaveAttribute("data-minimized", "")
+  await expect(page.locator('[data-slot="app-frame-top-row"]')).toContainText("Items")
+  await expect(page.locator('[data-slot="app-frame-top-row"]')).not.toContainText("Personal")
+  await context.close()
+})
+
+test("the chat workspace's heads against Figma cw-01: the conversation's overline at y 84, its lead title, the panel's controls from y 88", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1024 })
+  await open(page, "context-panel", "warpcore")
+  const seen = await page.evaluate(() => {
+    const frame = document.querySelector('[data-slot="app-frame-contained"], [data-slot="app-frame"]')!
+    const top = frame.getBoundingClientRect().top
+    const y = (selector: string) => {
+      const box = frame.querySelector(selector)!.getBoundingClientRect()
+      return [Math.round(box.top - top), Math.round(box.bottom - top)]
+    }
+    const title = getComputedStyle(frame.querySelector('[data-slot="page-head-title"]')!)
+    return {
+      overline: y('[data-slot="page-head-overline"]'),
+      title: y('[data-slot="page-head-title"]'),
+      font: `${title.fontWeight} ${title.fontSize}/${title.lineHeight}`,
+      collapse: y('[data-slot="context-panel"] [data-slot="float-button"]'),
+      tab: y('[data-slot="context-panel-tab"]'),
+      firstMessage: y('[data-slot="chat-message"]')[0],
+    }
+  })
+  expect(seen).toEqual({ overline: [84, 100], title: [104, 136], font: "500 24px/32px", collapse: [88, 132], tab: [98, 122], firstMessage: 156 })
 })

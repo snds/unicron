@@ -100,7 +100,7 @@ function Tasks() {
             size={frame.split ? "lg" : "md"}
             overline="Tasks // 03 running // 01 waiting on you"
             title="Tasks"
-            count="/012"
+            count="/12"
             below={
               <FilterChipGroup label="Show" value={show} onValueChange={setShow}>
                 <FilterChip value="all" count={12}>All</FilterChip>

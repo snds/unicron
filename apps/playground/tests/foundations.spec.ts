@@ -55,7 +55,9 @@ const TYPE: Record<string, [family: "Geist" | "Geist Mono", weight: number, size
   "icon-glyph": ["Geist", 400, 32, 32, 0],
 }
 /** Number roles and mono roles line their figures up. */
-const TABULAR = ["overline", "folio", "meta", "code-inline", "code-display", "number-hero", "number-metric", "number-index", "number-count"]
+// The mono roles. The three sans number roles (hero, metric, index) are proportional, as Figma
+// draws them (a Metric's "145" is 71px wide with a plain 1), and the else branch below holds that.
+const TABULAR = ["overline", "folio", "meta", "code-inline", "code-display", "number-count"]
 /** Names from before 1.0, and the role each now draws. */
 const KEPT = { "page-title": "title", "section-title": "subtitle", "group-title": "label", support: "caption" }
 

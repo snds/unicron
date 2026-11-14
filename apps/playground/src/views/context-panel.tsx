@@ -85,7 +85,7 @@ function Workspace({ initial, artifact = false, chats = true }: { initial: Conte
           </AppFrameList>
         ) : null}
         <AppFrameColumn reading={state !== "open" && !artifact} aria-label="Chat">
-          <AppFramePageHead size="sm" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
+          <AppFramePageHead size="xs" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
           <div className="flex flex-col gap-8">
             <ChatMessage role="user" meta="You // 14:02">
               Split the OPAQUE migration into a diff I can review, and run the full test suite in the background.

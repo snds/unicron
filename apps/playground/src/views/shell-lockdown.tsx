@@ -103,7 +103,7 @@ function Items() {
       </AppFrameSidebar>
 
       <AppFrameStatusLine crumbs={[{ label: "Items", href: "#items" }, { label: "All" }]}>
-        <StatusItem text="Health // 092 // 3 weak" />
+        <StatusItem text="Health // 92 // 03 weak" />
       </AppFrameStatusLine>
 
       {pushed ? (
@@ -111,7 +111,7 @@ function Items() {
           <TopBar onBack={() => setPicked(null)} actions={<FloatButton label="Edit" icon="edit" size="l" />} />
         </AppFrameTopRow>
       ) : (
-        <AppFrameTopRow lockup={<AppLockup name="Lockdown" />} title="Personal" actions={<FloatButton label="Settings" icon="user--avatar" size="l" />} />
+        <AppFrameTopRow lockup={<AppLockup name="Lockdown" />} actions={<FloatButton label="Settings" icon="user--avatar" size="l" />} />
       )}
 
       <AppFrameMain>

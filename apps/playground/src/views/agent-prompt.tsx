@@ -15,7 +15,8 @@ function Specimen({ label, children }: { label: string; children: ReactNode }) {
 const TASK_OPTIONS = [
   { id: "deny", label: "Deny", safe: true },
   { id: "once", label: "Allow once" },
-  { id: "always", label: "Always for Lockdown", key: "3" },
+  // A standing grant: its key answers only while focus is inside the prompt.
+  { id: "always", label: "Always for Lockdown", key: "3", standing: true },
 ]
 
 export default function AgentPromptView() {
@@ -26,7 +27,7 @@ export default function AgentPromptView() {
 
   return (
     <div className="flex flex-col gap-10 p-6">
-      <Specimen label="Live, inline // keys by meaning: Y allows once, N denies, 3 always, whatever the order; on a phone the options stay in place (Warpcore NA4, U-13)">
+      <Specimen label="Live, inline // keys by meaning: Y allows once, N denies, 3 always (a standing grant: only with focus in the prompt), whatever the order; keys are inert for half a second after it arrives; on a phone the options stay in place (Warpcore NA4, U-13)">
         <AgentPrompt
           key={round}
           kind="permission"

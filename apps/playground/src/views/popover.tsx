@@ -18,7 +18,9 @@ function Choice({ name, meta }: { name: string; meta: string }) {
   return (
     <div className="rule-t flex items-baseline justify-between gap-4 py-3">
       <span className="type-ui">{name}</span>
-      <span className="type-meta">{meta}</span>
+      {/* On the name's baseline: a 20px line of 12px type reaches 1px under a 20px line of 15px type,
+          and that pixel comes off its margin, so the row stays 44 (as LogRow's time). */}
+      <span className="type-meta -mb-px">{meta}</span>
     </div>
   )
 }

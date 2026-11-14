@@ -97,7 +97,9 @@ function Overview() {
               stays with its list: nothing between them. */}
           <AppFrameInset>
             <div className={frame.split ? "flex flex-col gap-8" : "flex flex-col gap-4"}>
-              <div className="flex flex-wrap items-end gap-x-12 gap-y-4">
+              {/* 40 under the hero on a desktop, as Desktop / 01 draws it (the number's line ends at
+                  y 260, the counts' rule is at y 300): the stack's 32 and 8 here. */}
+              <div className={frame.split ? "flex flex-wrap items-end gap-x-12 gap-y-4 pb-2" : "flex flex-wrap items-end gap-x-12 gap-y-4"}>
                 <Metric
                   href="#checks"
                   size="hero"

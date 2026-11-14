@@ -474,3 +474,279 @@ test.describe("the review frame", () => {
     })
   }
 })
+
+// ── the second review pass (2026-11-14, should-fix) ─────────────────────────────────────────────
+
+test("no page gets a <style> tag from the Toaster: sonner's rules come from the stylesheet file alone", async ({ page }) => {
+  for (const name of ["button", "toaster"]) {
+    await open(page, name)
+    if (name === "toaster") await expect(page.locator("[data-sonner-toast]").first()).toBeVisible()
+    const injected = await page.evaluate(() => [...document.querySelectorAll("style")].filter((style) => /data-sonner/.test(style.textContent ?? "")).length)
+    expect(injected, `${name}: style tags holding sonner's rules`).toBe(0)
+  }
+})
+
+test("a review's note is the caption role, on one line in the 560 dialog, as Lockdown Desktop / 09 draws it", async ({ page }) => {
+  await open(page, "dialog", "lockdown")
+  const note = page.locator('[data-slot="dialog-description"]', { hasText: "Not you?" })
+  const font = await note.evaluate((el) => {
+    const s = getComputedStyle(el)
+    return `${s.fontWeight} ${s.fontSize}/${s.lineHeight}`
+  })
+  expect(font).toBe("400 13px/20px")
+  expect(await heightOf(note)).toBe(20)
+  expect(await colorOf(note)).toBe(await role(page, "--text-secondary"))
+})
+
+test("a popover's head is the overline over a 15/20 emphasis title, 36 tall, with no close unless asked for (Figma cw-07)", async ({ page }) => {
+  await open(page, "popover")
+  const picker = page.locator('[data-slot="popover-content"]', { hasText: "Where it runs" })
+  const head = picker.locator('[data-slot="popover-header"]')
+  expect(await heightOf(head)).toBe(36)
+  await expect(head.locator('[data-slot="popover-close"]')).toHaveCount(0)
+  const title = await head.locator('[data-slot="popover-title"]').evaluate((el) => {
+    const s = getComputedStyle(el)
+    return `${s.fontWeight} ${s.fontSize}/${s.lineHeight}`
+  })
+  expect(title).toBe("600 15px/20px")
+})
+
+test("the command menu's search field is the field every search field is: 16 in, 8 to the glyph, the ui role", async ({ page }) => {
+  await open(page, "command")
+  const box = page.locator('[data-slot="command-input-wrapper"]').first()
+  const seen = await box.evaluate((el) => {
+    const s = getComputedStyle(el)
+    const input = getComputedStyle(el.querySelector('[data-slot="command-input"]')!)
+    return { pad: `${s.paddingLeft} ${s.paddingRight}`, gap: s.columnGap, height: el.getBoundingClientRect().height, font: `${input.fontWeight} ${input.fontSize}/${input.lineHeight}` }
+  })
+  expect(seen).toEqual({ pad: "16px 16px", gap: "8px", height: 48, font: "500 15px/20px" })
+  expect(await colorOf(box.locator("svg").first())).toBe(await role(page, "--text-secondary"))
+})
+
+test("an avatar's badge is the body ink, never the solid primary fill; the live tone is secondary-live", async ({ page }) => {
+  await open(page, "initial-tile", "vale", "stone")
+  const badges = page.locator('[data-slot="avatar-badge"]')
+  expect(await colorOf(badges.nth(0), "background-color")).toBe(await role(page, "--text-body"))
+  expect(await colorOf(badges.nth(1), "background-color")).toBe(await role(page, "--secondary-live"))
+  expect(await colorOf(badges.nth(0), "background-color")).not.toBe(await role(page, "--primary-fill"))
+})
+
+test("a vertical ButtonGroup is exactly as tall as its parts, with one 1px line between them", async ({ page }) => {
+  await open(page, "button-group")
+  const group = page.locator('[data-slot="button-group"][data-orientation="vertical"]').first()
+  const parts = await group.evaluate((el) => [...el.children].map((child) => child.getBoundingClientRect().height))
+  expect(await heightOf(group)).toBe(parts.reduce((sum, h) => sum + h, 0))
+  expect((await heightOf(group)) % 4).toBe(0)
+  // The second part draws three sides of its edge: nothing at the top, where the first part's line is.
+  const shadow = await group.evaluate((el) => getComputedStyle(el.children[1]!).boxShadow)
+  expect(shadow).toContain("1px 0px 0px 0px inset")
+  expect(shadow).toContain("-1px 0px 0px 0px inset")
+  expect(shadow).toContain("0px -1px 0px 0px inset")
+  expect(shadow).not.toMatch(/0px 1px 0px 0px inset|0px 0px 0px 1px inset/)
+})
+
+test("RunTrace is on the 4px grid open and closed, and its reasoning is cut at a line with no fade", async ({ page }) => {
+  await open(page, "run-trace")
+  const heights = await page.locator('[data-slot="run-trace"]').evaluateAll((all) => all.map((el) => el.getBoundingClientRect().height))
+  expect(heights.length).toBeGreaterThan(2)
+  for (const height of heights) expect(height % 4, `a run trace ${height} tall`).toBe(0)
+  const mask = await page.locator('[data-slot="run-trace-reasoning"]').first().evaluate((el) => getComputedStyle(el).maskImage)
+  expect(mask).toBe("none")
+})
+
+test("a LogRow's time keeps the meta role whole (12/20) and the row stays 40", async ({ page }) => {
+  await open(page, "log-row", "synapse")
+  const row = page.locator('[data-slot="log-row"]').first()
+  expect(await heightOf(row)).toBe(40)
+  expect(await row.locator('[data-slot="log-row-time"]').evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("12px/20px")
+})
+
+test("CodeDisplay: a tile is 172, a row 100 with the account 4 under the issuer, and a field 80 with no hairline above and its code centred", async ({ page }) => {
+  await open(page, "code-display", "lockdown")
+  const tile = page.locator('[data-slot="code-display"][data-layout="tile"]').first()
+  expect(await heightOf(tile)).toBe(172)
+  const gapIn = (el: Locator) =>
+    el.evaluate((node) => {
+      const issuer = node.querySelector('[data-slot="code-display-issuer"]')!.getBoundingClientRect()
+      const account = node.querySelector('[data-slot="code-display-account"]')!.getBoundingClientRect()
+      return Math.round(account.top - issuer.bottom)
+    })
+  expect(await gapIn(tile)).toBe(10)
+  const row = page.locator('[data-slot="code-display"][data-layout="row"]').first()
+  expect(await heightOf(row)).toBe(100)
+  expect(await gapIn(row)).toBe(4)
+  const field = page.locator('[data-slot="code-display"][data-layout="field"]').first()
+  expect(await heightOf(field)).toBe(80)
+  const drawn = await field.evaluate((node) => {
+    const box = node.getBoundingClientRect()
+    const label = node.querySelector('[data-slot="code-display-label"]')!.getBoundingClientRect()
+    const code = node.querySelector('[data-slot="code-display-code"]')!.getBoundingClientRect()
+    const timer = node.querySelector('[data-slot="code-display-timer"]')!.getBoundingClientRect()
+    const bar = node.querySelector('[data-slot="code-display-bar"]')!.getBoundingClientRect()
+    return { rule: getComputedStyle(node).boxShadow, before: code.left - label.right, after: timer.left - code.right, barUnderCode: bar.top - code.bottom, underBar: box.bottom - bar.bottom }
+  })
+  expect(drawn.rule).not.toMatch(/0px 1px 0px 0px inset/)
+  // Centred between the label and the seconds.
+  expect(Math.abs(drawn.before - drawn.after)).toBeLessThan(1.5)
+  expect(Math.round(drawn.barUnderCode)).toBe(10)
+  expect(Math.round(drawn.underBar)).toBe(14)
+  // Every form of the field stays on the 4px grid.
+  for (const height of await page.locator('[data-slot="code-display"][data-layout="field"]').evaluateAll((all) => all.map((el) => el.getBoundingClientRect().height))) expect(height % 4).toBe(0)
+})
+
+test("the file chip's name is the label role: Vale's chip is 276 wide", async ({ page }) => {
+  await open(page, "file-chip", "vale")
+  const chip = page.locator('[data-slot="file-chip"]').first()
+  expect(Math.round((await chip.boundingBox())!.width)).toBe(276)
+  expect(await chip.locator('[data-slot="file-chip-name"]').evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("14px/20px")
+})
+
+test("an empty Composer draws Send at full strength, and it sends nothing", async ({ page }) => {
+  await open(page, "composer")
+  const send = page.locator('[data-slot="composer-send"][data-action="send"]').first()
+  await expect(send).toHaveAttribute("aria-disabled", "true")
+  expect(await send.evaluate((el) => getComputedStyle(el).opacity)).toBe("1")
+  expect(await colorOf(send, "background-color")).toBe(await role(page, "--primary-fill"))
+})
+
+test("the hero Metric: its label sits on the number's line and the unit is 24 from the number, on its baseline", async ({ page }) => {
+  await open(page, "metric", "lockdown")
+  const hero = page.locator('[data-slot="metric"][data-size="hero"]').first()
+  const seen = await hero.evaluate((el) => {
+    const top = el.getBoundingClientRect().top
+    const value = el.querySelector('[data-slot="metric-value"]')!.getBoundingClientRect()
+    const unit = el.querySelector('[data-slot="metric-unit"]')!.getBoundingClientRect()
+    return { valueTop: value.top - top, gap: unit.left - value.right, numeric: getComputedStyle(el.querySelector('[data-slot="metric-value"]')!).fontVariantNumeric }
+  })
+  // 16 of label, then the number's 148 line: nothing between them.
+  expect(seen.valueTop).toBe(16)
+  expect(Math.round(seen.gap)).toBe(24)
+  // Proportional figures, as Figma draws the number roles.
+  expect(seen.numeric).not.toContain("tabular-nums")
+})
+
+test("a letter header's letter sits 4 above the bottom of its 48, not centred (Lockdown Desktop / 01)", async ({ page }) => {
+  await open(page, "shell-lockdown", "lockdown")
+  const header = page.locator('[data-slot="section-header"][data-variant="index"]').first()
+  const seen = await header.evaluate((el) => {
+    const box = el.getBoundingClientRect()
+    const letter = el.querySelector('[data-slot="section-header-title"]')!.getBoundingClientRect()
+    return { height: box.height, top: letter.top - box.top, under: box.bottom - letter.bottom }
+  })
+  expect(seen).toEqual({ height: 48, top: 12, under: 4 })
+})
+
+test("a DiffBlock's box that scrolls sideways is a named tab stop", async ({ page }) => {
+  await open(page, "diff-block")
+  const box = page.locator('[data-slot="diff-block-box"][data-scrolls]').first()
+  await expect(box).toHaveAttribute("tabindex", "0")
+  await expect(box).toHaveAttribute("role", "group")
+  expect(await box.getAttribute("aria-label")).toMatch(/, lines$/)
+  expect(await box.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true)
+})
+
+test("with focus on a layer's Close, one Escape closes the layer: no tooltip takes the first one", async ({ page }) => {
+  // The showcase holds the playground's live layers (a trigger, a modal dialog, a sheet).
+  await open(page, "showcase")
+  for (const [trigger, role] of [
+    ["Open a long settings dialog", "dialog"],
+    ["Open sheet", "dialog"],
+  ] as const) {
+    const opener = page.getByRole("button", { name: trigger, exact: true }).first()
+    if ((await opener.count()) === 0) continue
+    await opener.click()
+    const layer = page.getByRole(role).last()
+    await expect(layer).toBeVisible()
+    const close = layer.getByRole("button", { name: "Close", exact: true }).last()
+    await close.focus()
+    // Long enough for a tooltip to have opened, had there been one.
+    await page.waitForTimeout(700)
+    await expect(page.locator('[data-slot="tooltip-content"]')).toHaveCount(0)
+    await page.keyboard.press("Escape")
+    await expect(layer).toBeHidden()
+    await expect(opener).toBeFocused()
+  }
+})
+
+test("the page head's meta button is named by the text it shows; what it does is its description", async ({ page }) => {
+  await open(page, "page-head", "vale")
+  const meta = page.getByRole("button", { name: "THU 11.12" }).first()
+  await expect(meta).toBeVisible()
+  await expect(meta).toHaveAccessibleDescription("Go to today")
+})
+
+test("a list of Items is a list of list items; a row that is a link keeps its role inside one", async ({ page }) => {
+  await open(page, "item")
+  const lists = page.getByRole("list")
+  const owned = await lists.evaluateAll((all) => all.filter((list) => list.getAttribute("data-slot") === "item-group").map((list) => [...list.children].every((child) => child.getAttribute("role") === "listitem")))
+  expect(owned.length).toBeGreaterThan(0)
+  expect(owned.every(Boolean)).toBe(true)
+})
+
+test.describe("on a phone (second pass)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  test("a Select's rows, a small NativeSelect and a small Item that is a link are 44 on a touch screen (contract 6.6)", async ({ page }) => {
+    await open(page, "select")
+    expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true)
+    for (const height of await page.locator('[data-slot="native-select"][data-size="sm"]').evaluateAll((all) => all.map((el) => el.getBoundingClientRect().height))) expect(height).toBe(44)
+    for (const height of await page.locator('[data-slot="select-item"]').evaluateAll((all) => all.map((el) => el.getBoundingClientRect().height))) expect(height).toBeGreaterThanOrEqual(44)
+    await open(page, "item")
+    for (const height of await page.locator('a[data-slot="item"][data-size="sm"]').evaluateAll((all) => all.map((el) => el.getBoundingClientRect().height))) expect(height).toBeGreaterThanOrEqual(44)
+  })
+
+  test("in a phone frame one toast shows at a time, in the strip's slot: never three bars at the bottom", async ({ page }) => {
+    await open(page, "toaster")
+    await expect(page.locator("[data-sonner-toast]").first()).toBeVisible()
+    await page.waitForTimeout(600)
+    const perToaster = await page.locator("[data-sonner-toaster]").evaluateAll((all) =>
+      all.map((toaster) => ({
+        phone: toaster.closest('[data-layout="phone"]') !== null,
+        shown: [...toaster.querySelectorAll("[data-sonner-toast]")].filter((toast) => toast.getAttribute("data-removed") !== "true" && toast.getAttribute("data-visible") !== "false").length,
+      }))
+    )
+    const phones = perToaster.filter((t) => t.phone)
+    expect(phones.length).toBeGreaterThan(0)
+    for (const t of phones) expect(t.shown).toBe(1)
+    for (const t of perToaster.filter((x) => !x.phone)) expect(t.shown).toBeGreaterThanOrEqual(1)
+  })
+
+  test("a tap on cut text shows all of it, and a tap elsewhere puts it away", async ({ page }) => {
+    await open(page, "truncated-text")
+    const cut = page.locator('[data-slot="truncated-text"][data-truncated]').first()
+    await cut.scrollIntoViewIfNeeded()
+    await cut.tap()
+    const full = page.locator('[data-slot="truncated-text-full"]')
+    await expect(full).toBeVisible()
+    expect((await full.textContent())!.length).toBeGreaterThan(10)
+    await page.touchscreen.tap(380, 800)
+    await expect(full).toHaveCount(0)
+  })
+
+  test("a field's text is 16px on a touch screen in the Composer too, so iOS does not zoom into the chat's field", async ({ page }) => {
+    await open(page, "composer")
+    expect(await page.locator('[data-slot="composer-field"]').first().evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("16px/20px")
+  })
+})
+
+test.describe("a crumb on a touch tablet", () => {
+  test.use({ viewport: { width: 1024, height: 768 }, hasTouch: true })
+
+  test("a crumb that is a link takes a touch across 44px: its target is not clipped by a cut on the link itself", async ({ page }) => {
+    await open(page, "app-frame-status-line", "vale")
+    const crumb = page.locator('[data-slot="app-frame-crumbs"] a').first()
+    await expect(crumb).toBeVisible()
+    const hit = await crumb.evaluate((el) => {
+      const box = el.getBoundingClientRect()
+      const x = box.left + box.width / 2
+      const at = (y: number) => {
+        const top = document.elementFromPoint(x, y)
+        return top !== null && (top === el || el.contains(top))
+      }
+      // 14px above and below its 16px line is still the crumb.
+      return { coarse: matchMedia("(pointer: coarse)").matches, above: at(box.top - 12), below: at(box.bottom + 12), overflow: getComputedStyle(el).overflow }
+    })
+    expect(hit.overflow).toBe("visible")
+    if (hit.coarse) expect([hit.above, hit.below]).toEqual([true, true])
+  })
+})

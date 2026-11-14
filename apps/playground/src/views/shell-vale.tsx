@@ -126,7 +126,7 @@ export function ValeInbox({ toasterId }: { toasterId?: string } = {}) {
 
       <AppFrameMain>
         <AppFrameList aria-label="Inbox">
-          <AppFramePageHead overline="Inbox // 012 unread" title="Today" meta="THU 11.12" />
+          <AppFramePageHead overline="Inbox // 12 unread" title="Today" meta="THU 11.12" />
           <ul aria-label="Messages" className="flex flex-col">
             {messages.map((m) => (
               <ListRow
@@ -160,7 +160,7 @@ export function ValeInbox({ toasterId }: { toasterId?: string } = {}) {
                   overline="Summary // 03 points"
                   lines={["Two-bedroom cabin is booked for Nov 20 to 22.", "Check-in is after 3 PM. No chains needed.", "Mira asks you to bring the board games."]}
                 />
-                <Prose>
+                <Prose variant="response">
                   <p>Hi,</p>
                   <p>Booked the two-bedroom for the 20th through the 22nd. Check-in is after 3, and the road up is fine without chains this time of year.</p>
                   <p>Could you bring the board games? I&apos;ll handle groceries for the first night.</p>
@@ -185,7 +185,7 @@ export function ValeInbox({ toasterId }: { toasterId?: string } = {}) {
       </AppFrameMain>
 
       {/* Nothing live: once the page has scrolled, the place strip (States / 02). */}
-      <AppFrameAccessory scrolledOnly meta="Inbox // 012 unread" title="Cabin for the 20th" />
+      <AppFrameAccessory scrolledOnly meta="Inbox // 12 unread" title="Cabin for the 20th" />
 
       {message && !frame.split ? (
         <AppFrameBottomRow variant="detail" fill={<Composer size="line" placeholder="Reply to Mira" />} />
