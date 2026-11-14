@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import {
   Popover,
@@ -88,5 +90,69 @@ describe("Popover", () => {
     await userEvent.click(screen.getByRole("button", { name: "Outside" }))
 
     expect(screen.queryByRole("dialog")).toBeNull()
+  })
+})
+
+describe("Popover in the 2026-11 look", () => {
+  function Picker({ scrim, showCloseButton }: { scrim?: boolean; showCloseButton?: boolean }) {
+    return (
+      <Popover defaultOpen>
+        <PopoverTrigger>Who answers</PopoverTrigger>
+        <PopoverContent scrim={scrim}>
+          <PopoverHeader overline="Who answers // 03" title="Pick a model" showCloseButton={showCloseButton} />
+          <label>
+            Search models
+            <input />
+          </label>
+        </PopoverContent>
+      </Popover>
+    )
+  }
+  const content = () => document.querySelector('[data-slot="popover-content"]') as HTMLElement
+
+  it("is solid and square: the raised surface, a 1px rule, the 2px corner, no shadow or blur", () => {
+    render(<Picker />)
+    const cls = content().className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box", "rounded", "p-4"]))
+    expect(cls.some((c) => /shadow|blur|ring-|zoom|rounded-(lg|xl)/.test(c))).toBe(false)
+  })
+
+  it("PopoverHeader: an overline over a title in the ui-emphasis role, as Figma's environment picker draws it, and no close button", () => {
+    render(<Picker />)
+    expect(screen.getByRole("dialog", { name: "Pick a model" })).toBeInTheDocument()
+    expect(screen.getByText("Who answers // 03").className.split(" ")).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
+    const title = screen.getByRole("heading", { name: "Pick a model" }).className.split(" ")
+    expect(title).toContain("type-ui-emphasis")
+    expect(title).not.toContain("type-subtitle")
+    // A popover closes on an outside press and on Escape, so the header draws no close by default.
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull()
+  })
+
+  it("showCloseButton adds a FloatButton M that closes it", async () => {
+    render(<Picker showCloseButton />)
+    const close = screen.getByRole("button", { name: "Close" })
+    expect(close).toHaveAttribute("data-size", "m")
+    await userEvent.click(close)
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
+  it("starts focus on its first control, never on the header's close button", async () => {
+    render(<Picker showCloseButton />)
+    await vi.waitFor(() => expect(screen.getByRole("textbox", { name: "Search models" })).toHaveFocus())
+  })
+
+  it("scrim dims the page behind with the menu scrim, never opaque or blurred", () => {
+    const { unmount } = render(<Picker />)
+    expect(document.querySelector('[data-slot="popover-scrim"]')).toBeNull()
+    unmount()
+    render(<Picker scrim />)
+    const scrim = document.querySelector('[data-slot="popover-scrim"]') as HTMLElement
+    expect(scrim.className.split(" ")).toEqual(expect.arrayContaining(["scrim-menu", "fixed", "inset-0"]))
+    expect(scrim.className).not.toContain("blur")
+  })
+
+  it("the width comes from its knob: 20rem, so the header's close fits beside the words", () => {
+    const tokens = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/component/overlays.json"), "utf8"))
+    expect(tokens.popover.width.$value).toBe("20rem")
   })
 })

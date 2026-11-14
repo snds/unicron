@@ -1,6 +1,26 @@
 # CodeDisplay
 
-_Spec v0.3 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §4 Code type) · Status: built in `@unicron/ui` 0.4.0 (PR #15); v0.3 adds the copy reference a desktop host found it needed (`onCopy` may resolve with `{ hash }`, `clipboardHolds`, `onClipboardClear(ref)` that may say whether it cleared, and "Cleared" only after a real clear), the same contract SecretField has; this spec describes the build_
+_Spec v0.3 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §4 Code type) · Status: built in `@unicron/ui` 0.4.0 (PR #15); v0.3 adds the copy reference a desktop host found it needed (`onCopy` may resolve with `{ hash }`, `clipboardHolds`, `onClipboardClear(ref)` that may say whether it cleared, and "Cleared" only after a real clear), the same contract SecretField has; this spec describes the build. v1.0 (2026-11-13) draws the code in Lockdown's four places with the 30-cell countdown; the 1.0 section says what changed and wins where an older section disagrees_
+
+## 1.0: the 2026-11 look (contract 5.1a, 5.1b row 50)
+
+The ring is gone. The time left is **30 cells** (the segmented `Progress`, 4px tall, 2px apart; lit `secondary-live`, unlit `line-rule`; `critical-fill` from 5 s, `--c-code-expiring-at`) and the seconds in words (`type-overline`, `secondary-live`, `critical-text` near expiry: "18 s"). The cells are drawn, not spoken: the group's label carries the seconds, as before.
+
+| Prop | Values | Notes |
+|---|---|---|
+| `layout` | `field` (default) · `row` · `tile` · `compact` | Where the code sits, with the type roles Lockdown's frames bind. **field**: a Field Row in the Display size on an item (40:357, 41:720): label column, code in `type-code-display`, the seconds in the action slot, the cells under the row; it stacks below 32rem. **row**: the phone's Codes list (40:954): issuer `ui-emphasis` and account `meta` on the left, the code in `type-number-count` on the right, the cells and seconds under them; 100 tall (`--c-code-row-min-height`), padding 14 / 16, a hairline under. **tile**: the desktop Codes grid (41:2487): `surface-raised` with a hairline, padding 20, gap 10, the code in `type-number-metric`; 170 tall (`--c-code-tile-min-height`). **compact**: one line for a popup or a list in a sheet |
+| `density` | deprecated | `detail` → `field`, `list` → `row`, `compact` → `compact`. `layout` wins |
+| `label` | string | The field layout's label ("Steam Guard"). Default `issuer`, else "One-time code" |
+
+`CodeDisplayList` takes `layout="grid"`: tiles in as many columns as fit (`--c-code-tile-min-width` 18rem, `--c-code-tile-gap`).
+
+- **One target.** A row or a tile is one target: the copy button's hit area covers it, and hover and press wash it. Not while concealed: a click then shows the code, and a `Show` word does the same (`code-display-reveal`, "Show code").
+- **The copy countdown** is words on the copy control, in the live colour: "Clears in 28 s", then "Cleared" (only after a real clear, as before).
+- **The next code** appears in the last 10 s as `Next 330 918` in label ink, beside the cells (field, row, tile) or before the code (compact), so nothing moves.
+- **The counter kind** (`variant="hotp"`): no cells, no seconds; `Counter 14` and the word `Next code`.
+- **Notices** are Badges in the warning tone, with `Fix clock` as a word.
+
+Unchanged: the copy reference contract, the thresholds, the rollover, the haptic, the spelled label, the live region, the crown-jewel gate, the HOTP wait. Tokens added: `--c-code-row-min-height`, `--c-code-tile-min-height`, `--c-code-tile-min-width`, `--c-code-tile-gap`; `--c-code-group-gap` re-declared (0.3em). Removed in 1.0 (no longer read): `--c-code-size-*`, `--c-code-letter-spacing`, `--c-code-ring-*`, `--c-code-next-ink`.
 
 ## Purpose and the user job
 
@@ -18,7 +38,7 @@ code-display                       Item, role="group", tabIndex=0; data-variant,
 ├─ code-display-issuer             "GitHub · sean" (detail and list)
 ├─ code-display-code               aria-hidden; data-rolling during the crossfade
 │  └─ code-display-group × n       font-mono, tabular, 3+3 · 4+4 · 5; data-concealed when dots
-├─ code-display-next               "Next 330 558" in --c-code-next-ink
+├─ code-display-next               "Next 330 558" in the label ink (type-overline)
 ├─ code-display-notice             Badge outline: "Clock is off by 40 s · Fix clock" · "Same account you sign in with"
 ├─ code-display-timer              ring (TOTP, Steam), aria-hidden; text "N s" in high contrast
 ├─ code-display-counter            "#7" (HOTP) · "Next code" Button
@@ -60,7 +80,7 @@ Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`, `CodeD
 | `concealed` | Dots (`*` in high contrast); label "Code for GitHub, sean, hidden. Press Enter to show it." |
 | `loading` | Skeleton boxes, one per group |
 | `error` | "Can't make a code: reason" in `destructive`; no digits, no copy button |
-| next shown | From `--c-code-next-at` (10 s): next code beneath in `--c-code-next-ink` |
+| next shown | From `--c-code-next-at` (10 s): next code beside it in the label ink |
 | rollover | `--c-code-rollover-duration` (200 ms) fade-in; instant under reduced motion |
 | copied (`data-copied`) | Seconds on the copy button; tooltip "Copied · clears in 30 s" or "Copied the next code · …" |
 | cleared | Check plus sr-only "Cleared", tooltip "Cleared", for 2 s, as SecretField; only when the clear is known to have run (below). Otherwise the countdown ends silently and the button goes back to copy |
@@ -94,15 +114,7 @@ Tier 3 under `code`:
 
 | Token | Aliases | Purpose |
 |---|---|---|
-| `--c-code-size-detail` | `2.25rem` | |
-| `--c-code-size-list` | `1.25rem` | |
-| `--c-code-size-compact` | `1rem` | |
 | `--c-code-group-gap` | `0.75em` | |
-| `--c-code-letter-spacing` | `0.08em` | |
-| `--c-code-ring-track` | `{border}` | |
-| `--c-code-ring-progress` | `{foreground}` | |
-| `--c-code-ring-expiring` | `{warning}` | |
-| `--c-code-next-ink` | `{muted-foreground}` | |
 | `--c-code-expiring-at` | `5s` | |
 | `--c-code-next-at` | `10s` | |
 | `--c-code-copy-next-at` | `3s` | |

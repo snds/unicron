@@ -99,7 +99,7 @@ describe("ApprovalSheet: number matching gates the approve action", () => {
   it("4. Past expiresAt, onDeny('timeout') fires, no approve control remains, and Deny becomes Close", async () => {
     const { onDeny, onApprove } = setup({ expiresAt: Date.now() + 15_000 })
     await arm()
-    expect(screen.getByRole("timer")).toHaveTextContent("15 s left")
+    expect(screen.getByRole("timer")).toHaveTextContent("15 S left")
     await advance(5_000)
     expect(screen.getByRole("status")).toHaveTextContent(approvalSheetAnnouncements.urgent)
     await advance(10_000)
@@ -211,11 +211,96 @@ describe("ApprovalSheet: the other states", () => {
     try {
       setup({ expiresAt: Date.now() + 58_000 })
       await arm()
-      expect(screen.getByRole("timer")).toHaveTextContent("60 s left")
+      expect(screen.getByRole("timer")).toHaveTextContent("01:00 left")
       await advance(4_000)
-      expect(screen.getByRole("timer")).toHaveTextContent("55 s left")
+      expect(screen.getByRole("timer")).toHaveTextContent("55 S left")
     } finally {
       window.matchMedia = original
     }
+  })
+})
+
+describe("ApprovalSheet 1.0: the review look and the matching modes", () => {
+  it("the frame is named by the request's own words; the overline carries the time left as MM:SS", async () => {
+    setup({ title: "Steam on a Windows PC", overline: "Sign-in request", matching: { mode: "none" }, expiresAt: Date.now() + 100_000 })
+    await arm()
+    expect(dialog()).toHaveAccessibleName("Steam on a Windows PC")
+    expect(screen.getByRole("timer")).toHaveTextContent("01:40 left")
+    expect(dialog().querySelector('[data-slot="review-overline"]')).toHaveTextContent("Sign-in request")
+  })
+
+  it("matching none: the yes is live once armed, named by the gate's route, and focus stays on the no", async () => {
+    const { onApprove } = setup({ matching: { mode: "none" }, approveLabel: "Approve with Touch ID", approveIcon: "fingerprint-recognition" })
+    expect(approve()).toBeDisabled()
+    await arm()
+    expect(approve()).toBeEnabled()
+    expect(approve()).toHaveAccessibleName(/Approve with Touch ID/)
+    expect(document.activeElement).not.toBe(approve())
+    expect(screen.queryAllByRole("textbox")).toHaveLength(0)
+    fireEvent.click(approve()!)
+    expect(onApprove).toHaveBeenCalledTimes(1)
+  })
+
+  it("matching compare: the code in groups, They match / They don't match; the no denies as a mismatch", async () => {
+    const { onDeny } = setup({ kind: "bridge", matching: { mode: "compare", code: "482913" } })
+    await arm()
+    const code = dialog().querySelector('[data-slot="approval-sheet-match-code"]')!
+    expect(code).toHaveTextContent("482")
+    expect(code).toHaveTextContent("913")
+    expect(screen.getByRole("button", { name: /They match/ })).toBeEnabled()
+    expect(deny()).toHaveTextContent("They don't match")
+    fireEvent.click(deny())
+    expect(onDeny).toHaveBeenCalledWith("mismatch")
+  })
+
+  it("a refused device code still renders no approve control whatever the matching mode", async () => {
+    setup({ kind: "device-code", origin: "push", matching: { mode: "none" } })
+    await arm()
+    expect(document.querySelector('[data-action="approve"]')).toBeNull()
+  })
+
+  it("dismiss=keep: Escape decides nothing; the host is asked to close", async () => {
+    const { onDeny, onOpenChange } = setup({ dismiss: "keep" })
+    await arm()
+    fireEvent.keyDown(dialog(), { key: "Escape" })
+    expect(onDeny).not.toHaveBeenCalled()
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it("the countdown rule turns critical in the last 20 s; the overline's words turn critical at 10", async () => {
+    setup({ expiresAt: Date.now() + 25_000 })
+    await arm()
+    const lit = () => Array.from(dialog().querySelectorAll('[data-slot="progress-segment"]')).filter((c) => !c.className.includes("--c-progress-track"))
+    expect(lit()[0]!.className).toContain("--c-progress-live")
+    await advance(5_000)
+    expect(lit()[0]!.className).toContain("--c-progress-critical")
+    expect(screen.getByRole("timer")).not.toHaveClass("text-critical-text")
+    await advance(10_000)
+    expect(screen.getByRole("timer")).toHaveClass("text-critical-text")
+  })
+
+  // Lockdown Mobile / 11: Deny hugs (126), Approve fills (216), 16 apart. Two equal columns pushed
+  // "Approve with Face ID" out of its fill at 360 (the browser check in tests/shell.spec.ts measures it).
+  it("on a phone the no hugs its word and the yes takes the rest; a label that still cannot fit wraps", async () => {
+    setup({ matching: { mode: "none" }, approveLabel: "Approve with Face ID", approveIcon: "fingerprint-recognition" })
+    await arm()
+    const actions = dialog().querySelector('[data-slot="approval-sheet-actions"]') as HTMLElement
+    const classes = actions.className.split(/\s+/)
+    expect(classes).toEqual(expect.arrayContaining(["grid", "grid-cols-[auto_minmax(0,1fr)]", "gap-x-4", "gap-y-3"]))
+    expect(classes).not.toContain("grid-cols-2")
+    for (const action of ["approve", "deny"]) {
+      const button = actions.querySelector(`[data-action="${action}"]`) as HTMLElement
+      expect(button.className.split(/\s+/)).toEqual(expect.arrayContaining(["w-full", "h-auto", "min-h-10", "whitespace-normal"]))
+    }
+  })
+
+  it("the facts are Field Rows: overline label, mono value, a rule on top", async () => {
+    setup()
+    await arm()
+    const rows = dialog().querySelectorAll('[data-slot="approval-sheet-context-row"]')
+    expect(rows).toHaveLength(4)
+    expect(rows[0]!.className).toContain("rule-t")
+    expect(within(rows[0] as HTMLElement).getByText("What")).toHaveClass("type-overline")
+    expect(within(rows[0] as HTMLElement).getByText("Sign in to the vault")).toHaveClass("type-code-inline")
   })
 })

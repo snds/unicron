@@ -116,7 +116,7 @@ describe("RunTrace", () => {
         steps={steps}
         defaultOpen
         marks={[
-          { id: "1", after: "b", label: "Allowed once", icon: "check" },
+          { id: "1", after: "b", label: "Allowed once", icon: "checkmark" },
           { id: "0", label: "Picked up again" },
           { id: "2", after: "gone", label: "Paused for a game", icon: "pause" },
         ]}
@@ -145,10 +145,43 @@ describe("RunTrace", () => {
     expect(screen.getByRole("button", { name: "Show reasoning" })).toHaveAttribute("aria-pressed", "true")
   })
 
-  it("fades old reasoning with a plain mask, not Tailwind's heavier mask utilities", () => {
+  it("cuts old reasoning at a whole line, three lines tall, with no fade: the scroll edge is the system's one gradient (rules 1.1)", () => {
     render(<RunTrace steps={steps} live reasoning={["one", "two", "three", "four"].join("\n")} />)
     const reasoning = document.querySelector('[data-slot="run-trace-reasoning"]')!
-    expect(reasoning.className).toContain("[mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]")
-    expect(reasoning.className).not.toMatch(/mask-[tblrxy]-/)
+    const cls = reasoning.className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["max-h-[calc(var(--type-caption-leading)*3)]", "overflow-hidden", "type-caption"]))
+    expect(reasoning.className).not.toMatch(/gradient|mask/)
+  })
+
+  it("its parts are 4 apart, so it is 24 closed and 48, 72 and so on open: on the 4px grid", () => {
+    render(<RunTrace steps={steps} defaultOpen />)
+    const root = document.querySelector('[data-slot="run-trace"]')!
+    expect(root.className.split(" ")).toContain("gap-1")
+    expect(root.className.split(" ")).not.toContain("gap-1.5")
+    const content = document.querySelector('[data-slot="run-trace-content"]')!
+    expect(content.className.split(" ")).toContain("gap-1")
+    expect(document.querySelector('[data-slot="run-trace-steps"]')!.className.split(" ")).toContain("gap-1")
+  })
+})
+
+describe("RunTrace in the 2026-11 look", () => {
+  it("draws the running step in the live colour, the rest in body ink, both in mono meta", () => {
+    const live: RunStep[] = [steps[0], { id: "b", label: "Run tests", state: "running", startedAt: T + 2_000 }]
+    render(<RunTrace steps={live} live />)
+    const running = document.querySelector('[data-slot="run-trace-step"][data-state="running"] .type-meta')!
+    expect(running.className).toContain("text-secondary-live")
+    const done = document.querySelector('[data-slot="run-trace-step"][data-state="done"] .type-meta')!
+    expect(done.className).toContain("text-text-body")
+  })
+
+  it("separates the one line's facts with //, says failures in critical ink, and takes the system focus ring", () => {
+    render(<RunTrace steps={steps} />)
+    const trigger = document.querySelector<HTMLElement>('[data-slot="run-trace-trigger"]')!
+    expect(trigger).toHaveTextContent("12s // 3 steps // 1 failed")
+    // The separators are hidden; the name stays the facts.
+    expect(trigger).toHaveAccessibleName("Failed 12s 3 steps 1 failed")
+    expect(screen.getByText("1 failed").className).toContain("text-critical-text")
+    expect(trigger.className).not.toContain("outline-none")
+    expect(trigger.className).toContain("hover:bg-state-hover")
   })
 })

@@ -1,16 +1,32 @@
 #!/usr/bin/env node
 // Builds dist/tokens.css and dist/tokens.json from the DTCG sources in tokens/.
 //
-// Three tiers, three files, three CSS prefixes:
-//   tokens/global.json     → --g-*   raw values, theme-agnostic
-//   tokens/semantic.json   → --*     roles (the shadcn contract); light = $value, dark = $extensions["unicron.modes"].dark
-//   tokens/component.json  → --c-*   per-component knobs that alias semantic tokens
+// Three tiers, three CSS prefixes:
+//   tokens/global.json          → --g-*   raw values. Includes the theme slots (--g-theme-*), with
+//                                         the default app's values.
+//   tokens/semantic.json        → --*     roles: Figma's theme roles, with the shadcn contract as
+//                                         aliases of them. light = $value, dark = $extensions["unicron.modes"].dark
+//   tokens/component.json       → --c-*   per-component knobs that alias semantic tokens
+//   + tokens/component/*.json             the same tier, one file per component area, merged in
+//
+// Two axes (docs/02-tokens.md → Two axes):
+//   app     tokens/themes/<app>.json re-declares the 28 theme slots under [data-theme="<app>"].
+//           No attribute = the defaults in global.json.
+//   ground  graphite (dark) and stone (light). Tier 2 reads the stone slot in light and the
+//           graphite slot in dark.
+// Every colour of tiers 2 and 3 is written in both ground blocks, even when its expression is the
+// same in both: a custom property keeps the value it computed where it was declared, so an alias
+// (`--background: var(--surface-ground)`) has to be declared again wherever its target changes.
+// For the same reason both ground blocks also match [data-theme]: a themed box re-reads its slots.
+//
+// Type roles: tokens/type.json holds 23 typography composites. Each becomes five variables,
+// --type-<role>-family, -weight, -size, -leading, -tracking (px → rem for size and leading).
 //
 // Springs (`$type: "spring"`, `$value: { stiffness, damping, mass }`, tier 1) have no CSS form of
 // their own. Each is sampled into a `linear()` easing curve that runs over its sibling
 // `<name>-duration` token; the raw numbers stay in tokens.json (`spring`) for JS.
 //
-// References use DTCG syntax: "{neutral.0}" (global), "{foreground}" (semantic), "{icon.fill}" (component).
+// References use DTCG syntax: "{neutral.0}" (global), "{foreground}" (semantic), "{scrim.sheet}" (component).
 // They resolve to var(--…) so the cascade stays live (a dark override of a semantic token
 // flows into every component token that aliases it).
 //
@@ -29,13 +45,32 @@ const root = path.resolve(here, "..")
 const src = path.join(root, "tokens")
 const out = path.join(root, "dist")
 
-const TIERS = [
-  { name: "global", file: "global.json", prefix: "g-" },
-  { name: "semantic", file: "semantic.json", prefix: "" },
-  { name: "component", file: "component.json", prefix: "c-" },
-]
 const MODES_KEY = "unicron.modes"
 const THEME_KEY = "unicron.theme"
+const APP_KEY = "unicron.app"
+const DEFAULT_APP_KEY = "unicron.default-app"
+const TYPE_KEY = "unicron.type"
+const REM_PX = 16
+
+// The two ground blocks. A box takes the ground of its nearest `.dark` or `.light` box, and
+// `:root` is stone. A `.dark` or `.light` box declares the roles itself, so ground boxes nest to
+// any depth. [data-theme] is in both blocks so a themed box re-reads its own slots, and a themed
+// box with no ground class of its own finds its nearest ground by selector: dark when it sits in
+// `.dark` with no `.light` between, or in `.dark .light .dark` with no `.light` after that, and so
+// on, GROUND_DEPTH dark boxes deep (dark, light, dark, light, dark). @unicron/ui's `dark:` variant
+// has the same reach. Deeper than that, give the themed box its own `dark` or `light` class.
+const GROUND_DEPTH = 3
+const alternations = (n) => Array.from({ length: n }, () => ".dark .light").join(" ")
+const LIGHT_SELECTOR = ":root, .light, [data-theme]"
+const DARK_SELECTOR = [
+  ".dark",
+  ...Array.from({ length: GROUND_DEPTH }, (_, k) => `${k ? `${alternations(k)} ` : ""}.dark [data-theme]:not(.light):not(${alternations(k + 1)} *)`),
+].join(", ")
+
+const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"))
+const jsonFiles = (dir) =>
+  fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => path.join(dir, f)) : []
+const rel = (file) => path.relative(src, file)
 
 /** Flatten a DTCG tree into [{ path, token }] (depth-first, source order). */
 function flatten(node, trail = [], acc = []) {
@@ -50,11 +85,38 @@ function flatten(node, trail = [], acc = []) {
   return acc
 }
 
-const tiers = TIERS.map((t) => {
-  const json = JSON.parse(fs.readFileSync(path.join(src, t.file), "utf8"))
-  const tokens = flatten(json)
-  return { ...t, json, tokens }
-})
+// ── Tier 3: component.json plus one file per component area ──────────────────────────────────
+// A file in tokens/component/ adds knobs, and may re-declare a knob that component.json already
+// holds (the area that restyles a component owns its knobs from then on); the build says so.
+// Two area files may not declare the same knob.
+function componentTokens() {
+  const base = path.join(src, "component.json")
+  const byPath = new Map()
+  const notes = []
+  for (const { path: p, token } of flatten(readJson(base))) byPath.set(p.join("."), { path: p, token, file: base })
+  for (const file of jsonFiles(path.join(src, "component"))) {
+    for (const { path: p, token } of flatten(readJson(file))) {
+      const dotted = p.join(".")
+      const prior = byPath.get(dotted)
+      if (prior && prior.file !== base) {
+        throw new Error(`component knob {${dotted}} is declared in both ${rel(prior.file)} and ${rel(file)}`)
+      }
+      if (prior) notes.push(`${rel(file)} re-declares {${dotted}} from component.json`)
+      // Keep the knob's original place in the output when it is re-declared.
+      byPath.set(dotted, { path: p, token, file })
+    }
+  }
+  return { tokens: [...byPath.values()], notes }
+}
+
+const component = componentTokens()
+const globalJson = readJson(path.join(src, "global.json"))
+const semanticJson = readJson(path.join(src, "semantic.json"))
+const tiers = [
+  { name: "global", prefix: "g-", tokens: flatten(globalJson) },
+  { name: "semantic", prefix: "", tokens: flatten(semanticJson) },
+  { name: "component", prefix: "c-", tokens: component.tokens },
+]
 
 // Reference index: "neutral.0" → "--g-neutral-0". Later tiers can shadow earlier ones only
 // if a path collides, which the naming scheme (prefixes) is designed to avoid.
@@ -109,6 +171,7 @@ function toCss(value, type, from) {
 
 const flat = {}
 const blocks = { light: [], dark: [], theme: [] }
+const plainFonts = []
 
 for (const tier of tiers) {
   const light = []
@@ -135,10 +198,15 @@ for (const tier of tiers) {
     if (themeOnly) {
       // Fonts are Tailwind theme variables, not root variables: Tailwind owns --font-*.
       blocks.theme.push(`  ${css}: ${value};`)
+      // The plain sheet has no Tailwind, so there they are root variables after all.
+      plainFonts.push(`  ${css}: ${value};`)
       continue
     }
     light.push(`  ${css}: ${value};`)
-    if (darkValue !== undefined) dark.push(`  ${css}: ${darkValue};`)
+    // A colour above tier 1 is declared on both grounds (see the header). Anything else is
+    // declared in dark only when it has a dark value of its own.
+    const onBothGrounds = tier.name !== "global" && type === "color"
+    if (darkValue !== undefined || onBothGrounds) dark.push(`  ${css}: ${darkValue ?? value};`)
 
     if (tier.name === "semantic" && type === "color") {
       blocks.theme.push(`  --color-${p.join("-")}: var(${css});`)
@@ -148,12 +216,99 @@ for (const tier of tiers) {
   if (dark.length) blocks.dark.push({ tier: tier.name, lines: dark })
 }
 
+// ── The app axis: tokens/themes/<app>.json ───────────────────────────────────────────────────
+// Each file re-declares the theme slots of global.json, all of them and nothing else, as raw
+// values. The default app's file must equal the defaults, so `data-theme="<default>"` and no
+// attribute are the same thing.
+const slotPaths = tiers[0].tokens.filter((t) => t.path[0] === "theme").map((t) => t.path.join("."))
+const defaultApp = globalJson.theme?.$extensions?.[DEFAULT_APP_KEY]
+if (!slotPaths.length || !defaultApp) throw new Error("global.json: expected a `theme` group that names its default app")
+
+const apps = jsonFiles(path.join(src, "themes"))
+  .map((file) => {
+    const json = readJson(file)
+    const meta = json.$extensions?.[APP_KEY]
+    const name = path.basename(file, ".json")
+    if (!meta || meta.name !== name) throw new Error(`${rel(file)}: $extensions["${APP_KEY}"].name must be "${name}"`)
+    const tokens = flatten(json)
+    const paths = tokens.map((t) => t.path.join("."))
+    const missing = slotPaths.filter((p) => !paths.includes(p))
+    const extra = paths.filter((p) => !slotPaths.includes(p))
+    if (missing.length) throw new Error(`${rel(file)}: missing theme slots: ${missing.join(", ")}`)
+    if (extra.length) throw new Error(`${rel(file)}: holds tokens that are not theme slots: ${extra.join(", ")}`)
+    const lines = []
+    const values = {}
+    for (const { path: p, token } of tokens) {
+      const css = byPath.get(p.join("."))
+      if (typeof token.$value !== "string" || /[{]|var\(/.test(token.$value)) {
+        throw new Error(`${rel(file)} ${p.join(".")}: a theme slot holds a raw value, not a reference`)
+      }
+      lines.push(`  ${css}: ${token.$value};`)
+      values[css] = token.$value
+    }
+    return { name, order: meta.order ?? Infinity, figmaModes: meta.figmaModes, lines, values }
+  })
+  .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+
+const defaultTheme = apps.find((a) => a.name === defaultApp)
+if (!defaultTheme) throw new Error(`global.json names the default app "${defaultApp}", but tokens/themes/${defaultApp}.json is missing`)
+for (const [css, value] of Object.entries(defaultTheme.values)) {
+  if (flat[css].value !== value) {
+    throw new Error(`${css}: the default in global.json (${flat[css].value}) differs from tokens/themes/${defaultApp}.json (${value})`)
+  }
+}
+
+// ── Type roles: tokens/type.json ─────────────────────────────────────────────────────────────
+const round = (n) => +n.toFixed(5)
+function pxToRem(value, from) {
+  const m = /^(-?[\d.]+)px$/.exec(String(value))
+  if (!m) throw new Error(`${from}: expected px, got ${JSON.stringify(value)}`)
+  return `${round(Number(m[1]) / REM_PX)}rem`
+}
+const typeLines = []
+const typeRoles = {}
+for (const { path: p, token } of flatten(readJson(path.join(src, "type.json")))) {
+  const from = `type.json ${p.join(".")}`
+  if (token.$type !== "typography") throw new Error(`${from}: expected $type "typography"`)
+  const v = token.$value
+  if (!/^-?[\d.]+em$/.test(String(v.letterSpacing))) throw new Error(`${from}: letterSpacing must be in em, got ${JSON.stringify(v.letterSpacing)}`)
+  const parts = {
+    family: { type: "fontFamily", value: toCss(v.fontFamily, "fontFamily", from) },
+    weight: { type: "fontWeight", value: String(v.fontWeight) },
+    size: { type: "dimension", value: pxToRem(v.fontSize, from), px: parseFloat(v.fontSize) },
+    leading: { type: "dimension", value: pxToRem(v.lineHeight, from), px: parseFloat(v.lineHeight) },
+    tracking: { type: "dimension", value: v.letterSpacing },
+  }
+  const base = `--${p.join("-")}`
+  const role = p.slice(1).join("-")
+  typeRoles[role] = { ...(token.$extensions?.[TYPE_KEY] ?? {}) }
+  for (const [part, { type, value, px }] of Object.entries(parts)) {
+    const css = `${base}-${part}`
+    if (flat[css]) throw new Error(`${from}: ${css} is already a token`)
+    flat[css] = {
+      tier: "type",
+      path: [...p, part].join("."),
+      type,
+      value,
+      ...(px !== undefined && { px }),
+      ...(token.$description && { description: token.$description }),
+    }
+    typeLines.push(`  ${css}: ${value};`)
+    typeRoles[role][part] = value
+  }
+}
+
+// ── The Tailwind theme map ───────────────────────────────────────────────────────────────────
+const theme = semanticJson.$extensions?.[THEME_KEY] ?? {}
 // Radius scale for Tailwind (rounded-sm … rounded-4xl) as multiples of --radius.
-const theme = tiers.find((t) => t.name === "semantic").json.$extensions?.[THEME_KEY] ?? {}
 for (const [step, factor] of Object.entries(theme.radius ?? {})) {
   blocks.theme.push(
     factor === 1 ? `  --radius-${step}: var(--radius);` : `  --radius-${step}: calc(var(--radius) * ${factor});`
   )
+}
+// Named sizes for Tailwind's spacing and sizing utilities (h-control, size-control, min-h-touch-min).
+for (const [name, value] of Object.entries(theme.spacing ?? {})) {
+  blocks.theme.push(`  --spacing-${name}: ${toCss(value, "dimension", `unicron.theme spacing.${name}`)};`)
 }
 
 // Motion: Tailwind's default transition (what `transition`, `transition-colors`, `transition-all`
@@ -172,28 +327,92 @@ blocks.theme.push(
   "  --ease-spring-firm: var(--motion-spring-firm);"
 )
 
+// ── Write ────────────────────────────────────────────────────────────────────────────────────
 const titles = {
   global: "Tier 1 · Global primitives (--g-*)",
   semantic: "Tier 2 · Semantic roles (--*)",
   component: "Tier 3 · Component knobs (--c-*)",
 }
+const block = (title, selector, lines) => `/* ── ${title} ── */\n${selector} {\n${lines.join("\n")}\n}\n\n`
 
-let css = `/* Generated by @unicron/tokens (scripts/build.mjs) from tokens/*.json — do not edit. */\n\n`
+// (No glob in this comment: a `*` followed by `/` would end it early and break the first rule.)
+let css = `/* Generated by @unicron/tokens (scripts/build.mjs) from the JSON sources in tokens/ — do not edit. */\n\n`
 for (const { tier, lines } of blocks.light) {
+  if (tier === "global") {
+    // Tier 1 has no ground. The app axis follows it: one block of theme slots per app.
+    css += block(`${titles.global} · theme slots default to ${defaultApp}`, ":root", lines)
+    for (const app of apps) css += block(`Tier 1 · App theme: ${app.name} (--g-theme-*)`, `[data-theme="${app.name}"]`, app.lines)
+    css += block("Type roles (--type-*)", ":root", typeLines)
+    continue
+  }
   const dark = blocks.dark.find((b) => b.tier === tier)
-  // A tier with a dark mode also emits its light values on `.light`, mirroring `.dark`, so a box
-  // marked light inside a dark page (a light preview, a light column) re-declares them.
-  css += `/* ── ${titles[tier]}${dark ? " · light" : ""} ── */\n${dark ? ":root, .light" : ":root"} {\n${lines.join("\n")}\n}\n\n`
-  if (dark) css += `/* ── ${titles[tier]} · dark ── */\n.dark {\n${dark.lines.join("\n")}\n}\n\n`
+  css += block(`${titles[tier]} · light (stone)`, LIGHT_SELECTOR, lines)
+  if (dark) css += block(`${titles[tier]} · dark (graphite)`, DARK_SELECTOR, dark.lines)
 }
-css += `/* ── Tailwind v4 theme map: exposes tier 2 as utilities (bg-background, text-muted-foreground, rounded-lg …) ── */\n@theme inline {\n${blocks.theme.join("\n")}\n}\n`
+css += `/* ── Tailwind v4 theme map: exposes tier 2 as utilities (bg-surface-ground, text-text-label, bg-background, rounded-lg, h-control …) ── */\n@theme inline {\n${blocks.theme.join("\n")}\n}\n`
+// Tailwind's bare `rounded` reads the theme key --radius, which has the same name as the radius
+// role. In the inline block it would read itself, so it sits in a plain @theme block: Tailwind
+// then writes `border-radius: var(--radius)`, the role, as every other step does, and declares
+// the key on its theme layer with the role's own value (where the role is not declared, as in a
+// shadow root, the corner is still 2px).
+css += `/* ── Tailwind v4 theme key for the bare \`rounded\` class: --radius, named like the role, so not inline ── */\n@theme {\n  --radius: ${flat["--radius"].value};\n}\n`
+
+// ── The plain sheet: dist/plain.css (@unicron/tokens/plain.css) ───────────────────────────────
+// For a page with no Tailwind that may load nothing it does not own: the browser extension's
+// in-page frames (Lockdown B2 and B3; contract 5.1b #54). The same custom properties as
+// tokens.css, every tier in every mode, as flat rules: no @theme, no nested style rule, no
+// @import, no url(), no font file. A page whose policy is only `style-src 'self'` can link it.
+// The page uses the roles by their own names (var(--surface-raised)); Tailwind's --color-* names
+// are not here. The font roles, which tokens.css hands to Tailwind, are root variables here.
+// One addition, for a frame that must follow the browser's light or dark setting with no script:
+// a root that carries the class `system` (and not `dark` or `light`) takes the graphite roles
+// while the browser prefers dark. The ground block re-reads a themed box inside it, one level
+// deep, as `.dark` does. scripts/check.mjs holds the file to all of this.
+const SYSTEM_SELECTOR = ":root.system:not(.light), :root.system:not(.light) [data-theme]:not(.light):not(:root.system .light *)"
+let plain = `/* Generated by @unicron/tokens (scripts/build.mjs) from the JSON sources in tokens/ — do not edit.
+   The plain sheet: every role and knob in every mode as custom properties, for a page with no
+   Tailwind (an extension frame). No @theme, no nested style rule, no @import, no url(): it loads
+   under a policy of style-src 'self' alone. Themes: data-theme on the root (or a box). Grounds:
+   the class dark or light; the class system follows the browser's prefers-color-scheme. */\n\n`
+for (const { tier, lines } of blocks.light) {
+  if (tier === "global") {
+    plain += block(`${titles.global} · theme slots default to ${defaultApp}`, ":root", lines)
+    for (const app of apps) plain += block(`Tier 1 · App theme: ${app.name} (--g-theme-*)`, `[data-theme="${app.name}"]`, app.lines)
+    plain += block("Type roles (--type-*)", ":root", typeLines)
+    plain += block("Font roles (--font-*; Tailwind theme variables in tokens.css)", ":root", plainFonts)
+    continue
+  }
+  const dark = blocks.dark.find((b) => b.tier === tier)
+  plain += block(`${titles[tier]} · light (stone)`, LIGHT_SELECTOR, lines)
+  if (dark) plain += block(`${titles[tier]} · dark (graphite)`, DARK_SELECTOR, dark.lines)
+}
+const indent = (text) => text.replace(/^(?=.)/gm, "  ")
+plain += `/* ── A root with the class system follows the browser: the dark (graphite) blocks again, while it prefers dark ── */\n@media (prefers-color-scheme: dark) {\n`
+plain += blocks.dark.map(({ tier, lines }) => indent(`/* ${titles[tier]} · system, dark */\n${SYSTEM_SELECTOR} {\n${lines.join("\n")}\n}\n`)).join("\n")
+plain += "}\n"
 
 fs.mkdirSync(out, { recursive: true })
 fs.writeFileSync(path.join(out, "tokens.css"), css)
+fs.writeFileSync(path.join(out, "plain.css"), plain)
 fs.writeFileSync(
   path.join(out, "tokens.json"),
-  JSON.stringify({ $generated: "@unicron/tokens scripts/build.mjs", tokens: flat }, null, 2) + "\n"
+  JSON.stringify(
+    {
+      $generated: "@unicron/tokens scripts/build.mjs",
+      defaultApp,
+      // Each app's theme slots, keyed like `tokens`. An app's value replaces the token's `value`.
+      themes: Object.fromEntries(apps.map((a) => [a.name, a.values])),
+      // The type roles, grouped: { body: { family, weight, size, leading, tracking }, … }.
+      type: typeRoles,
+      tokens: flat,
+    },
+    null,
+    2
+  ) + "\n"
 )
 
+for (const note of component.notes) console.log(`  note: ${note}`)
 const counts = tiers.map((t) => `${t.name} ${t.tokens.length}`).join(", ")
-console.log(`✓ tokens built: ${counts} → dist/tokens.css, dist/tokens.json`)
+console.log(
+  `✓ tokens built: ${counts}, type roles ${Object.keys(typeRoles).length}, app themes ${apps.length} (${apps.map((a) => a.name).join(", ")}; default ${defaultApp}) → dist/tokens.css, dist/plain.css, dist/tokens.json`
+)

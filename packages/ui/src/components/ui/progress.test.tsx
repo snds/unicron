@@ -1,7 +1,11 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import { Progress, ProgressLabel, ProgressValue } from "./progress"
+import { Progress, ProgressLabel, ProgressValue, progressDefaultSegments } from "./progress"
+
+const classesOf = (el: Element) => el.className.split(/\s+/)
+const cells = (container: HTMLElement) => [...container.querySelectorAll('[data-slot="progress-segment"]')]
+const lit = (container: HTMLElement) => cells(container).filter((c) => c.hasAttribute("data-filled"))
 
 describe("Progress", () => {
   it("is a named progressbar with its values", () => {
@@ -13,48 +17,142 @@ describe("Progress", () => {
     expect(bar).toHaveAttribute("data-variant", "bar")
   })
 
-  it("takes a visible label and value", () => {
-    render(
+  it("takes a visible label and value, set in type roles", () => {
+    const { container } = render(
       <Progress value={3} max={7}>
         <ProgressLabel>Steps</ProgressLabel>
         <ProgressValue />
       </Progress>
     )
     expect(screen.getByRole("progressbar", { name: "Steps" })).toHaveAttribute("aria-valuenow", "3")
+    expect(classesOf(container.querySelector('[data-slot="progress-label"]')!)).toContain("type-label")
+    expect(classesOf(container.querySelector('[data-slot="progress-value"]')!)).toContain("type-meta")
   })
 
-  it("sizes from its knob and fills with primary, then success once complete", () => {
+  it("a bar is square, sizes from its knob, takes the bar's fill knob, then success once complete", () => {
     const { container, rerender } = render(<Progress value={50} aria-label="Sync" />)
     const track = container.querySelector('[data-slot="progress-track"]')!
     const fill = container.querySelector('[data-slot="progress-indicator"]')!
-    expect(track.className).toContain("h-(--c-progress-height)")
-    expect(fill.className).toContain("bg-(--c-progress-fill)")
-    expect(fill.className).toContain("group-data-complete/progress:group-data-[tone=default]/progress:bg-(--c-progress-complete)")
+    expect(classesOf(track)).toEqual(expect.arrayContaining(["h-(--c-progress-height)", "rounded-none", "bg-(--c-progress-track)"]))
+    expect(classesOf(track)).not.toContain("rounded-full")
+    expect(classesOf(fill)).toEqual(
+      expect.arrayContaining([
+        "group-data-[fill=complete]/progress:bg-(--c-progress-fill)",
+        "group-data-[fill=complete]/progress:group-data-complete/progress:bg-(--c-progress-complete)",
+      ])
+    )
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "complete")
     rerender(<Progress value={100} aria-label="Sync" />)
     expect(screen.getByRole("progressbar")).toHaveAttribute("data-complete")
   })
 
-  it("segmented: one cell per step, value cells filled, hidden from screen readers", () => {
-    const { container } = render(<Progress variant="segmented" value={3} max={7} aria-label="Plan" />)
-    const cells = container.querySelectorAll('[data-slot="progress-segment"]')
-    expect(cells).toHaveLength(7)
-    expect([...cells].filter((c) => c.hasAttribute("data-filled"))).toHaveLength(3)
-    for (const cell of cells) expect(cell).toHaveAttribute("aria-hidden")
+  it("segmented: 32 cells by default, lit by the value's share, hidden from screen readers", () => {
+    const { container } = render(<Progress variant="segmented" value={19} max={32} aria-label="SEA-48" />)
+    expect(progressDefaultSegments).toBe(32)
+    expect(cells(container)).toHaveLength(32)
+    expect(lit(container)).toHaveLength(19)
+    // Lit from the start: the first 19, then 13 empty.
+    expect(cells(container).findIndex((c) => !c.hasAttribute("data-filled"))).toBe(19)
+    for (const cell of cells(container)) expect(cell).toHaveAttribute("aria-hidden")
     expect(container.querySelector('[data-slot="progress-indicator"]')).toBeNull()
-    expect(screen.getByRole("progressbar", { name: "Plan" })).toHaveAttribute("aria-valuenow", "3")
+    expect(screen.getByRole("progressbar", { name: "SEA-48" })).toHaveAttribute("aria-valuenow", "19")
   })
 
-  it("segmented clamps to its range", () => {
-    const { container, rerender } = render(<Progress variant="segmented" value={9} max={4} aria-label="Plan" />)
-    expect(container.querySelectorAll('[data-filled]')).toHaveLength(4)
-    rerender(<Progress variant="segmented" value={null} max={4} aria-label="Plan" />)
-    expect(container.querySelectorAll('[data-filled]')).toHaveLength(0)
+  it("segmented cells are 4px tall, 2px apart and square; lit is the live colour, empty the hairline colour", () => {
+    const { container } = render(<Progress variant="segmented" value={19} max={32} aria-label="SEA-48" />)
+    const track = classesOf(container.querySelector('[data-slot="progress-track"]')!)
+    expect(track).toEqual(
+      expect.arrayContaining(["h-(--c-progress-height)", "group-data-[variant=segmented]/progress:gap-(--c-progress-segment-gap)"])
+    )
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "live")
+    const [first] = lit(container)
+    const last = cells(container).at(-1)!
+    expect(classesOf(first)).toEqual(expect.arrayContaining(["flex-1", "h-full", "group-data-[fill=live]/progress:bg-(--c-progress-live)"]))
+    expect(classesOf(last)).toContain("bg-(--c-progress-track)")
+    expect(classesOf(last).some((c) => c.includes("--c-progress-live") || c.includes("--c-progress-primary"))).toBe(false)
+    for (const cell of [first, last]) expect(classesOf(cell).some((c) => c.startsWith("rounded"))).toBe(false)
+  })
+
+  it("segmented takes a real value: any range, any cell count, rounded down", () => {
+    const count = (props: { value: number | null; min?: number; max?: number; segments?: number }) => {
+      const { container, unmount } = render(<Progress variant="segmented" aria-label="Spend" {...props} />)
+      const n = [cells(container).length, lit(container).length]
+      unmount()
+      return n
+    }
+    // $3.40 of $10.00 on 32 cells: 10.88, so 10.
+    expect(count({ value: 3.4, max: 10 })).toEqual([32, 10])
+    // 18 of 30 seconds on a 30-cell countdown.
+    expect(count({ value: 18, max: 30, segments: 30 })).toEqual([30, 18])
+    // 212 of 218 checks on 44 cells: 42.8, so 42 (never "done" before it is).
+    expect(count({ value: 212, max: 218, segments: 44 })).toEqual([44, 42])
+    expect(count({ value: 218, max: 218, segments: 44 })).toEqual([44, 44])
+    // One cell per step of a checklist.
+    expect(count({ value: 3, max: 7, segments: 7 })).toEqual([7, 3])
+    // A share that floats just under a whole cell still lights it.
+    expect(count({ value: 0.3, max: 1, segments: 10 })).toEqual([10, 3])
+    expect(count({ value: 15, min: 10, max: 20, segments: 10 })).toEqual([10, 5])
+  })
+
+  it("segmented clamps to its range, and lights nothing while indeterminate", () => {
+    const { container, rerender } = render(<Progress variant="segmented" value={9} max={4} segments={4} aria-label="Plan" />)
+    expect(lit(container)).toHaveLength(4)
+    rerender(<Progress variant="segmented" value={null} max={4} segments={4} aria-label="Plan" />)
+    expect(lit(container)).toHaveLength(0)
+    rerender(<Progress variant="segmented" value={2} max={4} segments={0} aria-label="Plan" />)
+    expect(cells(container)).toHaveLength(0)
+  })
+
+  it("primary, and a budget under its warning mark, take the primary knob; nothing else competes with it", () => {
+    const { container } = render(<Progress variant="segmented" tone="primary" value={3.4} max={10} aria-label="Spend" />)
+    const classes = classesOf(lit(container)[0])
+    expect(classes).toContain("bg-(--c-progress-primary)")
+    // Every other fill is behind a data-fill or data-level condition, so it cannot win by order.
+    for (const c of classes.filter((c) => c.includes("bg-(--c-progress-") && c !== "bg-(--c-progress-primary)")) {
+      expect(c).toMatch(/^group-data-\[(fill|level)=/)
+    }
+  })
+
+  it("tones: primary and live on either variant, critical for a countdown about to run out", () => {
+    const fillOf = (props: Pick<React.ComponentProps<typeof Progress>, "variant" | "tone">) => {
+      const { unmount } = render(<Progress aria-label="Tone" value={5} max={30} {...props} />)
+      const fill = screen.getByRole("progressbar").getAttribute("data-fill")
+      unmount()
+      return fill
+    }
+    expect(fillOf({})).toBe("complete")
+    expect(fillOf({ variant: "segmented" })).toBe("live")
+    expect(fillOf({ tone: "primary" })).toBe("primary")
+    expect(fillOf({ variant: "segmented", tone: "primary" })).toBe("primary")
+    expect(fillOf({ tone: "live" })).toBe("live")
+    expect(fillOf({ variant: "segmented", tone: "critical" })).toBe("critical")
+    expect(fillOf({ tone: "critical" })).toBe("critical")
+  })
+
+  it("the critical fill is its own knob on a lit cell and on a bar", () => {
+    const { container, rerender } = render(<Progress variant="segmented" tone="critical" value={4} max={30} segments={30} aria-label="Fastmail code" />)
+    expect(lit(container)).toHaveLength(4)
+    expect(classesOf(lit(container)[0])).toContain("group-data-[fill=critical]/progress:bg-(--c-progress-critical)")
+    expect(screen.getByRole("progressbar", { name: "Fastmail code" })).toHaveAttribute("data-tone", "critical")
+    rerender(<Progress tone="critical" value={4} max={30} aria-label="Fastmail code" />)
+    expect(classesOf(container.querySelector('[data-slot="progress-indicator"]')!)).toContain(
+      "group-data-[fill=critical]/progress:bg-(--c-progress-critical)"
+    )
+  })
+
+  it("only a default bar turns success: a full segmented countdown stays the live colour", () => {
+    render(<Progress variant="segmented" value={30} max={30} segments={30} aria-label="Steam code" />)
+    const bar = screen.getByRole("progressbar")
+    expect(bar).toHaveAttribute("data-complete")
+    expect(bar).toHaveAttribute("data-fill", "live")
   })
 
   it("budget: warning past 70%, destructive past 90%, never success", () => {
     const level = (value: number) => {
       const { unmount } = render(<Progress tone="budget" value={value} aria-label="Spend" />)
-      const l = screen.getByRole("progressbar").getAttribute("data-level")
+      const bar = screen.getByRole("progressbar")
+      const l = bar.getAttribute("data-level")
+      expect(bar).toHaveAttribute("data-fill", "budget")
       unmount()
       return l
     }
@@ -69,5 +167,39 @@ describe("Progress", () => {
     const { container } = render(<Progress value={null} aria-label="Loading" />)
     expect(screen.getByRole("progressbar")).toHaveAttribute("data-indeterminate")
     expect(container.querySelector('[data-slot="progress-track"]')!.className).toContain("group-data-indeterminate/progress:animate-pulse")
+  })
+})
+
+describe("Progress round 2 (contract 5.1b #29)", () => {
+  it("takes the neutral and warning tones on either variant", () => {
+    const { rerender } = render(<Progress variant="segmented" segments={3} value={2} max={3} tone="neutral" aria-label="Strength" />)
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "neutral")
+    expect(screen.getByRole("progressbar").querySelector("[data-filled]")!.className).toContain("group-data-[fill=neutral]/progress:bg-(--c-progress-neutral)")
+    rerender(<Progress value={9} max={10} tone="warning" aria-label="Spend" />)
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-fill", "warning")
+    expect(screen.getByRole("progressbar").querySelector('[data-slot="progress-indicator"]')!.className).toContain("group-data-[fill=warning]/progress:bg-(--c-progress-warning)")
+  })
+
+  it("cuts 3 to 64 segments", () => {
+    for (const segments of [3, 10, 30, 64]) {
+      const { container, unmount } = render(<Progress variant="segmented" segments={segments} value={1} max={1} aria-label="Cells" />)
+      expect(cells(container)).toHaveLength(segments)
+      unmount()
+    }
+  })
+
+  it("a tick marks a value across the bar: 2px of ink, taller than the bar, decorative", () => {
+    const { container } = render(<Progress variant="segmented" segments={64} tone="primary" value={6.4} max={10} tick={8} aria-label="$6.40 of $10.00 today" />)
+    const tick = container.querySelector('[data-slot="progress-tick"]') as HTMLElement
+    expect(tick).toHaveAttribute("aria-hidden")
+    expect(tick.style.left).toBe("80%")
+    expect(classesOf(tick)).toEqual(expect.arrayContaining(["w-(--stroke-emphasis)", "h-(--c-progress-tick-height)", "bg-(--c-progress-tick)"]))
+    expect(screen.getByRole("progressbar", { name: "$6.40 of $10.00 today" })).toHaveAttribute("aria-valuenow", "6.4")
+  })
+
+  it("without a tick the bar keeps its old shape", () => {
+    const { container } = render(<Progress value={4} max={10} aria-label="Import" />)
+    expect(container.querySelector('[data-slot="progress-bar"]')).toBeNull()
+    expect(container.querySelector('[data-slot="progress-tick"]')).toBeNull()
   })
 })

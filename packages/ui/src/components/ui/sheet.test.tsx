@@ -1,7 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import { AdaptiveSheetContent, Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetHeaderActions, SheetTitle } from "./sheet"
+import {
+  AdaptiveSheetContent,
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetHeaderActions,
+  SheetOverline,
+  SheetTitle,
+} from "./sheet"
 
 // The strip a desktop app renders so its window stays draggable while a sheet is open (issue #7).
 const strip = <div aria-hidden data-testid="drag-strip" className="fixed inset-x-0 top-0 z-50 h-13" data-tauri-drag-region="deep" />
@@ -105,22 +116,23 @@ describe("SheetContent size and anatomy", () => {
     expect(popup().className).not.toContain("data-[side=right]:sm:max-w-sm")
   })
 
-  it("keeps the header clear of the close button, and only when there is one", () => {
+  it("keeps the header clear of the close button (16 + 48 + 12), and only when there is one", () => {
     const { rerender } = render(
       <Sheet open>
         <SheetContent>{header}</SheetContent>
       </Sheet>
     )
-    expect(popup().className).toContain("[&>[data-slot=sheet-header]]:pr-12")
+    const headerEl = () => document.querySelector('[data-slot="sheet-header"]') as HTMLElement
+    expect(headerEl().className.split(" ")).toContain("pr-19")
     rerender(
       <Sheet open>
         <SheetContent showCloseButton={false}>{header}</SheetContent>
       </Sheet>
     )
-    expect(popup().className).not.toContain("[&>[data-slot=sheet-header]]:pr-12")
+    expect(headerEl().className.split(" ")).not.toContain("pr-19")
   })
 
-  it("wraps long titles and puts footer actions in a row from sm up", () => {
+  it("wraps long titles; footer actions sit at the right of a side sheet and share the width of a bottom one", () => {
     render(
       <Sheet open>
         <SheetContent>
@@ -132,12 +144,15 @@ describe("SheetContent size and anatomy", () => {
       </Sheet>
     )
     expect(document.querySelector('[data-slot="sheet-title"]')?.className).toContain("break-words")
-    expect(document.querySelector('[data-slot="sheet-footer"]')?.className).toContain("sm:flex-row")
+    const footer = document.querySelector('[data-slot="sheet-footer"]') as HTMLElement
+    expect(footer.className.split(" ")).toEqual(
+      expect.arrayContaining(["flex", "justify-end", "gap-4", "in-data-[side=bottom]:*:flex-auto", "in-data-[side=adaptive]:max-sm:*:flex-auto"])
+    )
   })
 })
 
 // A sheet's own actions sat in the header's flow at a larger size than the close button, so the
-// two icons didn't line up (snds/synapse UI review round 2, F16).
+// two icons didn't line up (snds/synapse UI review round 2, F16). Since 2026-11 both are 48.
 describe("SheetHeaderActions", () => {
   it("sits beside the close button at its top, and the header keeps clear of both", () => {
     render(
@@ -150,11 +165,14 @@ describe("SheetHeaderActions", () => {
     )
     const actions = screen.getByTestId("actions")
     expect(actions.getAttribute("data-slot")).toBe("sheet-header-actions")
-    expect(actions.className).toContain("top-3")
-    expect(actions.className).toContain("right-11")
-    const close = document.querySelector('[data-slot="sheet-close"]') as HTMLElement
-    expect(close.className).toContain("top-3")
-    expect(popup().className).toContain("has-[[data-slot=sheet-header-actions]]:[&>[data-slot=sheet-header]]:pr-20")
+    const cls = actions.className.split(" ")
+    // 16 + the 48 close + 8 from the right; the close's own top (16, or 20 under a grabber).
+    expect(cls).toEqual(expect.arrayContaining(["top-4", "right-18", "in-data-[side=bottom]:top-5"]))
+    const anchor = (document.querySelector('[data-slot="sheet-close"]') as HTMLElement).parentElement as HTMLElement
+    expect(anchor.className.split(" ")).toEqual(expect.arrayContaining(["top-4", "right-4", "in-data-[side=bottom]:top-5"]))
+    expect((document.querySelector('[data-slot="sheet-header"]') as HTMLElement).className).toContain(
+      "in-[[data-slot=sheet-content]:has([data-slot=sheet-header-actions])]:pr-33"
+    )
   })
 })
 
@@ -208,6 +226,231 @@ describe("SheetFooter sticky", () => {
       </Sheet>
     )
     expect(footer()).toHaveAttribute("data-sticky", "true")
-    expect(footer().className.split(" ")).toEqual(expect.arrayContaining(["sticky", "bottom-0", "bg-popover"]))
+    expect(footer().className.split(" ")).toEqual(expect.arrayContaining(["sticky", "bottom-0", "bg-surface-raised", "rule-t"]))
   })
 })
+
+describe("Sheet in the 2026-11 look (Figma 32:122 Sheet Header; Vale 05, Lockdown 11)", () => {
+  function Review({ side = "bottom", height, onOpenChange }: { side?: "bottom" | "right"; height?: "content" | "full"; onOpenChange?: (open: boolean) => void }) {
+    return (
+      <Sheet open onOpenChange={onOpenChange}>
+        <SheetContent side={side} height={height}>
+          <SheetHeader>
+            <SheetOverline>Lockdown // sign-in request</SheetOverline>
+            <SheetTitle>Review sign-in</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <p>Not you? Deny, and Lockdown locks this login until you change the password.</p>
+          </SheetBody>
+          <SheetFooter>
+            <button type="button">Deny</button>
+            <button type="button">Approve with Face ID</button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  it("is solid and square: the raised surface Figma's sheets are drawn in, a rule on the edge that faces the page, no shadow", () => {
+    render(<Review />)
+    const cls = popup().className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "data-[side=bottom]:rule-t", "data-[side=right]:rule-l"]))
+    expect(cls.some((c) => /shadow|blur|rounded/.test(c))).toBe(false)
+    expect(overlay().className.split(" ")).toContain("scrim-sheet")
+  })
+
+  it("a bottom sheet draws the 36 x 4 grabber in line-grid-dot, hidden from assistive tech, 8 from the top", () => {
+    render(<Review />)
+    const grabber = popup().querySelector('[data-slot="sheet-grabber"]') as HTMLElement
+    expect(grabber).toHaveAttribute("aria-hidden")
+    expect((grabber.firstElementChild as HTMLElement).className.split(" ")).toEqual(expect.arrayContaining(["h-1", "w-9", "bg-(--c-sheet-handle)"]))
+    expect(popup().className.split(" ")).toContain("data-[side=bottom]:pt-2")
+    // It is decoration here: only AdaptiveSheetContent drags.
+    expect(grabber).not.toHaveAttribute("data-draggable")
+  })
+
+  it("a side sheet has no grabber", () => {
+    render(<Review side="right" />)
+    expect(popup().querySelector('[data-slot="sheet-grabber"]')).toBeNull()
+  })
+
+  it("the header is the overline over a lead title, 48 tall, beside a neutral FloatButton L that closes it", () => {
+    const onOpenChange = vi.fn()
+    render(<Review onOpenChange={onOpenChange} />)
+    expect(screen.getByRole("dialog", { name: "Review sign-in" })).toBeInTheDocument()
+    const headerEl = document.querySelector('[data-slot="sheet-header"]') as HTMLElement
+    expect(headerEl.className.split(" ")).toEqual(expect.arrayContaining(["min-h-control", "flex-col", "justify-center", "px-4"]))
+    expect(screen.getByText("Lockdown // sign-in request").className.split(" ")).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
+    expect(screen.getByRole("heading", { name: "Review sign-in" }).className.split(" ")).toContain("type-lead")
+    const close = screen.getByRole("button", { name: "Close" })
+    expect(close).toHaveAttribute("data-size", "l")
+    expect(close).toHaveAttribute("data-kind", "neutral")
+    fireEvent.click(close)
+    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+  })
+
+  it("a description is the caption note of Lockdown Mobile / 11; size=\"body\" keeps the body role", () => {
+    render(
+      <Sheet open>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Steam on a Windows PC</SheetTitle>
+          </SheetHeader>
+          <SheetDescription>Not you? Deny, and Lockdown locks this login.</SheetDescription>
+          <SheetDescription size="body">Claude Code is running the check against main.</SheetDescription>
+        </SheetContent>
+      </Sheet>
+    )
+    const note = screen.getByText(/Not you/).className.split(" ")
+    expect(note).toEqual(expect.arrayContaining(["type-caption", "text-text-secondary"]))
+    expect(note).not.toContain("type-body")
+    expect(screen.getByText(/Claude Code is running/).className.split(" ")).toContain("type-body")
+  })
+
+  it("starts focus in the content; the close button is last in the tab order", async () => {
+    render(<Review />)
+    const close = screen.getByRole("button", { name: "Close" })
+    const approve = screen.getByRole("button", { name: "Approve with Face ID" })
+    expect(approve.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Deny" })).toHaveFocus())
+  })
+
+  it("two heights: content (hugs, up to the screen less 48) and full", () => {
+    const { rerender } = render(<Review />)
+    expect(popup()).toHaveAttribute("data-height", "content")
+    expect(popup().className.split(" ")).toContain("data-[side=bottom]:max-h-(--c-sheet-compact-height)")
+    rerender(<Review height="full" />)
+    expect(popup()).toHaveAttribute("data-height", "full")
+    expect(popup().className.split(" ")).toContain("data-[side=bottom]:top-(--c-dialog-titlebar-inset)")
+  })
+
+  it("the body pads 16 at the sides and scrolls", () => {
+    render(<Review />)
+    const body = document.querySelector('[data-slot="sheet-body"]') as HTMLElement
+    expect(body.className.split(" ")).toEqual(expect.arrayContaining(["px-4", "overflow-y-auto", "min-h-0", "flex-1"]))
+  })
+})
+
+describe("AdaptiveSheetContent (2026-11)", () => {
+  it("keeps its two forms: a bottom sheet below sm with a grabber that drags, a panel on the right from sm up", () => {
+    render(
+      <Sheet open>
+        <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
+      </Sheet>
+    )
+    const cls = popup().className.split(" ")
+    expect(popup()).toHaveAttribute("data-side", "adaptive")
+    expect(cls).toEqual(
+      expect.arrayContaining(["max-sm:bottom-0", "max-sm:rule-t", "sm:right-0", "sm:rule-l", "sm:w-(--c-sheet-regular-width)", "bg-surface-raised"])
+    )
+    const grabber = popup().querySelector('[data-slot="sheet-grabber"]') as HTMLElement
+    expect(grabber).toHaveAttribute("data-draggable")
+    expect(grabber.className.split(" ")).toContain("sm:hidden")
+  })
+
+  it("a drag down past 120px on the grabber dismisses it; a short one springs back", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <Sheet open onOpenChange={onOpenChange}>
+        <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
+      </Sheet>
+    )
+    const grabber = popup().querySelector('[data-slot="sheet-grabber"]') as HTMLElement
+    // jsdom has no layout: give the sheet a height, so 30% of it is 120.
+    Object.defineProperty(popup(), "offsetHeight", { configurable: true, value: 400 })
+    fireEvent.pointerDown(grabber, { clientY: 100, pointerId: 1 })
+    fireEvent.pointerMove(grabber, { clientY: 140, pointerId: 1 })
+    fireEvent.pointerUp(grabber, { clientY: 140, pointerId: 1 })
+    expect(onOpenChange).not.toHaveBeenCalled()
+    fireEvent.pointerDown(grabber, { clientY: 100, pointerId: 1 })
+    fireEvent.pointerMove(grabber, { clientY: 260, pointerId: 1 })
+    fireEvent.pointerUp(grabber, { clientY: 260, pointerId: 1 })
+    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+  })
+
+  it("hugs its content on a phone by default, or takes the whole screen", () => {
+    const { rerender } = render(
+      <Sheet open>
+        <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
+      </Sheet>
+    )
+    expect(popup().className.split(" ")).toContain("max-sm:max-h-(--c-sheet-compact-height)")
+    rerender(
+      <Sheet open>
+        <AdaptiveSheetContent height="full">{header}</AdaptiveSheetContent>
+      </Sheet>
+    )
+    expect(popup().className.split(" ")).toContain("max-sm:top-(--c-dialog-titlebar-inset)")
+  })
+
+  it("closes from the FloatButton L at the top right in both forms", () => {
+    render(
+      <Sheet open>
+        <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
+      </Sheet>
+    )
+    const close = screen.getByRole("button", { name: "Close" })
+    expect(close).toHaveAttribute("data-size", "l")
+    expect(close.parentElement!.className.split(" ")).toEqual(expect.arrayContaining(["top-4", "right-4", "in-data-[side=adaptive]:max-sm:top-5"]))
+  })
+})
+
+describe("Sheet focus", () => {
+  it("with nothing to focus inside, it focuses itself, never the close button (and its tooltip)", async () => {
+    render(
+      <Sheet open>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Legend</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            <p>Skills, checks, harnesses and notes.</p>
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
+    )
+    await vi.waitFor(() => expect(popup()).toHaveFocus())
+    expect(screen.getByRole("button", { name: "Close" })).not.toHaveFocus()
+  })
+})
+
+describe("SheetContent notice (contract 5.1c C19)", () => {
+  it("a side sheet: the line first, flush with its top, and the close button and header actions moved under it", () => {
+    render(
+      <Sheet open>
+        <SheetContent side="right" notice={<p data-testid="line">Sign-in request</p>}>
+          <SheetHeaderActions>
+            <span>pin</span>
+          </SheetHeaderActions>
+          <SheetHeader>
+            <SheetTitle>Filters</SheetTitle>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    )
+    const notice = document.querySelector('[data-slot="sheet-notice"]') as HTMLElement
+    expect(notice).toContainElement(screen.getByTestId("line"))
+    expect(notice.className.split(" ")).toEqual(expect.arrayContaining(["-mt-4", "in-data-[side=bottom]:-mt-2", "shrink-0"]))
+    const anchor = document.querySelector('[data-slot="sheet-close-anchor"]') as HTMLElement
+    expect(anchor.className).toContain("top-[calc(var(--size-control)+var(--spacing)*4)]")
+    expect(anchor.className.split(" ")).not.toContain("top-4")
+    expect((document.querySelector('[data-slot="sheet-header-actions"]') as HTMLElement).className).toContain("top-[calc(var(--size-control)+var(--spacing)*4)]")
+  })
+
+  it("without one, nothing moves", () => {
+    render(
+      <Sheet open>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Filters</SheetTitle>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    )
+    expect(document.querySelector('[data-slot="sheet-notice"]')).toBeNull()
+    expect((document.querySelector('[data-slot="sheet-close-anchor"]') as HTMLElement).className.split(" ")).toEqual(
+      expect.arrayContaining(["top-4", "in-data-[side=bottom]:top-5"])
+    )
+  })
+})
+

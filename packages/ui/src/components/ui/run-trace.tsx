@@ -1,4 +1,5 @@
 // Promoted from: hand-raised from the Mercury review (none)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: mono meta lines, the live colour on the running step, the stylesheet's one focus ring; contract 5.1; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
@@ -166,35 +167,37 @@ function RunTrace({
       onOpenChange={setOpen}
       data-slot="run-trace"
       data-live={live ? "" : undefined}
-      className={cn("flex min-w-0 flex-col gap-1.5", className)}
+      // 4 between the 24px line and the steps, and between steps (20 each): 24 closed, 48 with one
+      // step, 72 with two, all on the 4px grid (6 apart they were 50 and 98).
+      className={cn("flex min-w-0 flex-col gap-1", className)}
       {...props}
     >
       <CollapsibleTrigger
         data-slot="run-trace-trigger"
-        className="type-meta hover:text-foreground focus-visible:ring-ring/50 -mx-1 flex w-fit max-w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left outline-none transition-colors focus-visible:ring-3"
+        className="type-meta hover:text-text-body hover:bg-state-hover active:bg-state-pressed hit-area -mx-1 flex w-fit max-w-full cursor-pointer items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors duration-(--motion-fast) ease-(--motion-ease)"
       >
         {/* The spaces between parts are for the button's name; a flex row draws none of them. */}
         <StatusOrb state={runOrb(steps, live)} size="xs" tooltip={false} />{" "}
-        {live && current ? <><span className="truncate font-mono">{current.label}</span>{" "}</> : null}
+        {live && current ? <><span className={cn("truncate", current.state === "running" && "text-secondary-live")}>{current.label}</span>{" "}<Sep />{" "}</> : null}
         <span>{time}</span>{" "}
-        <Dot />{" "}
+        <Sep />{" "}
         <span>{copy.steps(steps.length)}</span>
         {failed ? (
           <>
-            {" "}<Dot />{" "}
-            <span className="text-destructive">{copy.failed(failed)}</span>
+            {" "}<Sep />{" "}
+            <span className="text-critical-text">{copy.failed(failed)}</span>
           </>
         ) : null}
-        <Icon name="keyboard_arrow_down" className="transition-transform in-data-panel-open:rotate-180" />
+        <Icon name="chevron--down" size="sm" className="transition-transform duration-(--motion-fast) ease-(--motion-ease) in-data-panel-open:rotate-180" />
       </CollapsibleTrigger>
-      <CollapsibleContent data-slot="run-trace-content" className="flex flex-col gap-1.5">
+      <CollapsibleContent data-slot="run-trace-content" className="flex flex-col gap-1">
         {reasoning ? (
           <div className="flex items-start gap-1">
             {showReasoning ? <Reasoning text={reasoning} /> : <span className="flex-1" />}
             <IconButton
               size="icon-xs"
               variant="ghost-muted"
-              icon={showReasoning ? "visibility_off" : "visibility"}
+              icon={showReasoning ? "view--off" : "view"}
               label={showReasoning ? copy.hideReasoning : copy.showReasoning}
               aria-pressed={!showReasoning}
               onClick={() => setShowReasoning((v) => !v)}
@@ -215,15 +218,15 @@ function RunTrace({
   )
 }
 
-function Dot() {
-  return <span aria-hidden>·</span>
+/** Between the facts on the run's one line: `//`, as every mono line in the system. */
+function Sep() {
+  return <span aria-hidden>{"//"}</span>
 }
 
 /**
- * Three lines of the newest reasoning, the older lines fading out at the top. The fade is a plain
- * mask-image, not Tailwind's mask-t-* utilities: those bring a dozen @property rules, which every
- * app paid for (0.2 KB gzipped) because the stylesheet scans every component. Any opaque colour
- * works as the mask's solid end; --foreground is one.
+ * Three lines of the newest reasoning, cut at a whole line: the box is exactly three lines tall and
+ * scrolled to its end, so the older lines leave by its top edge. No fade: the system has one
+ * gradient, the scroll-edge under the phone's chrome (rules 1.1), and this is not it.
  */
 function Reasoning({ text }: { text: string }) {
   const ref = React.useRef<HTMLParagraphElement>(null)
@@ -234,7 +237,7 @@ function Reasoning({ text }: { text: string }) {
     <p
       ref={ref}
       data-slot="run-trace-reasoning"
-      className="type-support max-h-[calc(var(--type-support-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap [mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]"
+      className="type-caption text-text-secondary max-h-[calc(var(--type-caption-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap"
     >
       {text}
     </p>
@@ -247,7 +250,7 @@ function RunTraceStep({ step, now }: { step: RunStep; now: number }) {
   return (
     <li data-slot="run-trace-step" data-state={step.state} className="flex min-w-0 items-center gap-2">
       <StatusOrb state={ORB[step.state]} label={copy.state[step.state]} size="xs" />{" "}
-      <span className="min-w-0 flex-1 font-mono text-(length:--type-meta-size) leading-(--type-meta-leading) break-words">{step.label}</span>{" "}
+      <span className={cn("type-meta min-w-0 flex-1 break-words", step.state === "running" ? "text-secondary-live" : "text-text-body")}>{step.label}</span>{" "}
       <span className="type-meta shrink-0">{time}</span>
       {step.detail ? <StepDetail step={step} /> : null}
     </li>
@@ -259,7 +262,7 @@ function RunTraceMark({ mark }: { mark: RunMark }) {
   return (
     <li data-slot="run-trace-mark" className="type-meta flex min-w-0 items-center gap-2">
       <span aria-hidden className="flex size-(--c-status-orb-size-xs) shrink-0 items-center justify-center">
-        {mark.icon ? <Icon name={mark.icon} className="size-full" /> : <Dot />}
+        {mark.icon ? <Icon name={mark.icon} className="size-full" /> : <span className="size-1 bg-current" />}
       </span>
       <span className="min-w-0 flex-1 break-words">{mark.label}</span>
     </li>
@@ -269,7 +272,9 @@ function RunTraceMark({ mark }: { mark: RunMark }) {
 /** A popover beside the step; on a phone, a sheet from the bottom. */
 function StepDetail({ step }: { step: RunStep }) {
   const { widthClass } = useViewport()
-  const trigger = <IconButton size="icon-xs" variant="ghost-muted" icon="info" label={`${runTraceCopy.details}: ${step.label}`} />
+  // A 32px button in a 20px line: it hangs 6px over the line above and below, so a step with
+  // detail is as tall as one without.
+  const trigger = <IconButton size="icon-xs" variant="ghost-muted" icon="information" label={`${runTraceCopy.details}: ${step.label}`} className="-my-1.5" />
   if (widthClass === "compact") {
     return (
       <Sheet>

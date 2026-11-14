@@ -107,6 +107,16 @@ describe("Select", () => {
     expect(trigger()).toHaveTextContent("Choose a model")
   })
 
+  it("adds no <style> tag as its list opens, and hides the inner list's bar with the stylesheet's utility", async () => {
+    render(<Subject />)
+    await openList()
+    expect(screen.getByRole("listbox")).toBeInTheDocument()
+    // Base UI's popup adds one (in <head>) unless it is told not to; a strict style-src refuses it.
+    expect(document.querySelectorAll("style")).toHaveLength(0)
+    // The inner list is what scrolls when the chosen item sits over the trigger.
+    expect(document.querySelector('[data-slot="select-list"]')?.className).toContain("no-scrollbar")
+  })
+
   it("marks the chosen option selected", async () => {
     render(<Subject defaultValue="code" />)
     await openList()
@@ -140,10 +150,12 @@ describe("Select", () => {
     expect(screen.queryByRole("listbox")).toBeNull()
   })
 
-  it("carries aria-invalid onto the trigger, where the error ring keys on it", () => {
+  it("carries aria-invalid onto the trigger, where the 2px critical border keys on it", () => {
     render(<Subject invalid />)
     expect(trigger()).toHaveAttribute("aria-invalid", "true")
-    expect(trigger().className).toContain("aria-invalid:ring-destructive/60")
+    // 1.0: Figma's error field (32:48): a 2px inside border in critical-fill, no outer ring.
+    expect(trigger().className).toContain("aria-invalid:rule-box-emphasis")
+    expect(trigger().className).toContain("aria-invalid:[--rule-color:var(--critical-fill)]")
   })
 
   it("renders a label outside a group without throwing", async () => {
@@ -181,8 +193,44 @@ describe("SelectContent width", () => {
     expect(cls).toEqual(expect.arrayContaining(["w-(--anchor-width)", "min-w-(--c-menu-min-width)"]))
   })
 
-  it("is a menu's frosted glass", async () => {
+  it("is a solid menu surface, never frosted glass (contract 1.5: no blur)", async () => {
     const cls = await open()
-    expect(cls).toEqual(expect.arrayContaining(["bg-popover/70", "before:backdrop-blur-2xl"]))
+    expect(cls).toContain("bg-popover")
+    expect(cls).not.toContain("bg-popover/70")
+    expect(cls.some((name) => name.includes("backdrop-blur"))).toBe(false)
+  })
+})
+
+describe("Select in the 2026-11 look", () => {
+  it("the trigger is the Text Field box, 48 tall, the value in the ui role", () => {
+    render(<Subject />)
+    const cls = trigger().className
+    for (const name of ["bg-surface-raised", "rule-box", "type-ui", "data-[size=default]:h-control", "data-popup-open:rule-box-emphasis"]) expect(cls).toContain(name)
+    expect(cls).not.toMatch(/focus-visible:ring/)
+  })
+
+  it("the list is solid, a 1px rule, the 2px corner; no blur, no shadow", async () => {
+    render(<Subject />)
+    await openList()
+    const cls = content().className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-popover", "rule-box", "rounded-lg"]))
+    expect(cls.some((name) => /shadow-|backdrop-blur|ring-1/.test(name))).toBe(false)
+  })
+
+  it("an item highlights with bg-accent; the chosen one shows a checkmark", async () => {
+    render(<Subject defaultValue="code" />)
+    await openList()
+    const code = screen.getByRole("option", { name: "Code" })
+    expect(code.className).toContain("data-highlighted:bg-accent")
+    expect(code.className).toContain("type-ui")
+    expect(code.querySelector('[data-icon-name="checkmark"]')).not.toBeNull()
+    expect(screen.getByRole("option", { name: "General" }).querySelector('[data-icon-name="checkmark"]')).toBeNull()
+  })
+
+  it("an item is 40 tall, and the 44px touch minimum on a coarse pointer, as a menu row", async () => {
+    render(<Subject />)
+    await openList()
+    const cls = screen.getByRole("option", { name: "Code" }).className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["min-h-10", "pointer-coarse:min-h-touch-min"]))
   })
 })

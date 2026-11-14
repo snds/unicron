@@ -1,5 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: solid menus, the quick-create menu drawn on the app pages (Vale and Lockdown States 03: raised, 1px rule, padding 8, gap 4, overline, Nav Item rows); the frosted menu of 2026-10-15 reversed; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
@@ -10,6 +11,7 @@ import { MENU_WIDTHS, type MenuWidth } from "../menu-width"
 import { cn } from "../../lib/utils"
 
 import { Icon } from "../icon"
+import { Kbd } from "./kbd"
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
@@ -25,12 +27,25 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
 
 export type DropdownMenuWidth = MenuWidth
 
+/**
+ * The panel, solid and square like every overlay: the raised surface, a 1px rule, the 2px corner,
+ * 8 inside and 4 between rows, no shadow and no blur (the frosted menu of 2026-10-15 is reversed).
+ */
+const PANEL =
+  "bg-surface-raised text-text-body rule-box relative flex flex-col gap-1 rounded p-2 outline-none max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto data-closed:overflow-hidden"
+
+/** It fades and moves 8px off its anchor: no zoom. */
+const PANEL_MOTION =
+  "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 duration-(--motion-fast) ease-(--motion-ease)"
+
 function DropdownMenuContent({
   align = "start",
   alignOffset = 0,
   side = "bottom",
   sideOffset = 4,
   width = "trigger",
+  scrim = false,
+  container,
   className,
   ...props
 }: MenuPrimitive.Popup.Props &
@@ -40,9 +55,22 @@ function DropdownMenuContent({
   > & {
     /** How wide the list is (MENU_WIDTHS): `trigger` by default, as before. */
     width?: DropdownMenuWidth
+    /**
+     * Dim the page behind with the menu scrim (--c-scrim-menu: 32% on graphite, the role's 64% on stone): quick
+     * create, the environment menu. Off by default. Only the root menu draws it, never a submenu.
+     */
+    scrim?: boolean
+    /** Where the portal goes: `<body>` by default. */
+    container?: MenuPrimitive.Portal.Props["container"]
   }) {
   return (
-    <MenuPrimitive.Portal>
+    <MenuPrimitive.Portal container={container}>
+      {scrim ? (
+        <MenuPrimitive.Backdrop
+          data-slot="dropdown-menu-scrim"
+          className="scrim-menu fixed inset-0 z-50 transition-opacity duration-(--motion-fast) data-ending-style:opacity-0 data-starting-style:opacity-0"
+        />
+      ) : null}
       <MenuPrimitive.Positioner
         className="isolate z-50 outline-none"
         align={align}
@@ -53,11 +81,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           data-width={width}
-          className={cn(
-            "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground rounded-lg p-1 shadow-md ring-1 duration-(--motion-fast) data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 animate-none! relative bg-popover/70 before:pointer-events-none before:absolute before:inset-0 before:-z-1 before:rounded-[inherit] before:backdrop-blur-2xl before:backdrop-saturate-150 **:data-[slot$=-item]:focus:bg-foreground/10 **:data-[slot$=-item]:data-highlighted:bg-foreground/10 **:data-[slot$=-separator]:bg-foreground/5 **:data-[slot$=-trigger]:focus:bg-foreground/10 **:data-[slot$=-trigger]:aria-expanded:bg-foreground/10! **:data-[variant=destructive]:focus:bg-foreground/10! **:data-[variant=destructive]:text-accent-foreground! **:data-[variant=destructive]:**:text-accent-foreground! z-50 max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none data-closed:overflow-hidden",
-            MENU_WIDTHS[width],
-            className
-          )}
+          className={cn(PANEL, PANEL_MOTION, "z-50", MENU_WIDTHS[width], className)}
           {...props}
         />
       </MenuPrimitive.Positioner>
@@ -68,21 +92,22 @@ function DropdownMenuContent({
 /** Set by a group, so a label inside one can name it (Base UI's GroupLabel needs a group). */
 const InMenuGroup = React.createContext(false)
 
-function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
+function DropdownMenuGroup({ className, ...props }: MenuPrimitive.Group.Props) {
   return (
     <InMenuGroup.Provider value>
-      <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+      <MenuPrimitive.Group data-slot="dropdown-menu-group" className={cn("flex flex-col gap-1", className)} {...props} />
     </InMenuGroup.Provider>
   )
 }
 
-const LABEL = "text-muted-foreground px-1.5 py-1 text-xs font-medium data-inset:pl-7"
+/** A section label: an overline, in label ink, flush with the panel's padding (as Figma draws `CREATE // LONG PRESS`). */
+const LABEL = "type-overline text-text-label select-none data-inset:pl-2.5"
 
 /**
- * A small heading in a menu. Inside a `DropdownMenuGroup` or `DropdownMenuRadioGroup` it names the
- * group for screen readers (Base UI's `Menu.GroupLabel`). On its own, at the top of a menu, it is
- * a plain label: Base UI's GroupLabel throws outside a group, which blanked the whole page
- * (Lockdown #10, and the playground's Options menu).
+ * A small heading in a menu, set as an overline. Inside a `DropdownMenuGroup` or
+ * `DropdownMenuRadioGroup` it names the group for screen readers (Base UI's `Menu.GroupLabel`). On
+ * its own, at the top of a menu, it is a plain label: Base UI's GroupLabel throws outside a group,
+ * which blanked the whole page (Lockdown #10, and the playground's Options menu).
  */
 function DropdownMenuLabel({
   className,
@@ -119,22 +144,42 @@ function DropdownMenuLabel({
   )
 }
 
+/**
+ * One row, as Figma draws the rows of its two menus (the quick-create menu, Vale and Lockdown
+ * States 03, and Vale 05's folder sheet): a Nav Item. 36 tall (44 on a touch screen), 10 in from
+ * the panel's padding, a 20px glyph 10 from the words; the words in the label role (14/20 Medium)
+ * and, with the glyph, in secondary ink. The highlighted row (pointer or keys) takes the opaque
+ * highlight fill (`bg-accent`) and body ink. The row that is current, or checked, is body ink too;
+ * a current row also takes the `primary-soft` tile, as a current Nav Item does.
+ */
+const ITEM =
+  "type-label text-text-secondary group/dropdown-menu-item relative flex min-h-9 cursor-default items-center gap-2.5 rounded px-2.5 py-2 outline-hidden select-none pointer-coarse:min-h-touch-min data-highlighted:bg-accent data-highlighted:text-text-body data-checked:text-text-body data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
+
 function DropdownMenuItem({
   className,
   inset,
   variant = "default",
+  current = false,
   ...props
 }: MenuPrimitive.Item.Props & {
   inset?: boolean
+  /** `destructive`: the words and glyph in the critical ink. */
   variant?: "default" | "destructive"
+  /** The row for where the person already is (the open folder): the `primary-soft` tile and body ink, `aria-current`. */
+  current?: boolean
 }) {
   return (
     <MenuPrimitive.Item
       data-slot="dropdown-menu-item"
       data-inset={inset}
       data-variant={variant}
+      data-current={current ? "" : undefined}
+      aria-current={current ? "true" : undefined}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive not-data-[variant=destructive]:focus:**:text-accent-foreground gap-1.5 rounded-md px-1.5 py-1 text-sm data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4 group/dropdown-menu-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        ITEM,
+        "data-current:bg-primary-soft data-current:text-text-body",
+        // Critical ink holds through the highlight: the highlight's body ink must not replace it.
+        "data-[variant=destructive]:text-critical-text data-[variant=destructive]:data-highlighted:text-critical-text",
         className
       )}
       {...props}
@@ -158,34 +203,30 @@ function DropdownMenuSubTrigger({
     <MenuPrimitive.SubmenuTrigger
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground gap-1.5 rounded-md px-1.5 py-1 text-sm data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4 flex cursor-default items-center outline-hidden select-none data-popup-open:bg-accent data-popup-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className
-      )}
+      className={cn(ITEM, "data-popup-open:bg-accent data-popup-open:text-text-body", className)}
       {...props}
     >
       {children}
-      <Icon className="ml-auto" name="chevron_right" />
+      <span className="ml-auto flex">
+        <Icon name="chevron--right" size="sm" />
+      </span>
     </MenuPrimitive.SubmenuTrigger>
   )
 }
 
 function DropdownMenuSubContent({
   align = "start",
-  alignOffset = -3,
+  alignOffset = -9,
   side = "right",
   sideOffset = 0,
   width = "auto",
   className,
   ...props
-}: React.ComponentProps<typeof DropdownMenuContent>) {
+}: Omit<React.ComponentProps<typeof DropdownMenuContent>, "scrim">) {
   return (
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
-      className={cn(
-        "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground rounded-lg p-1 shadow-lg ring-1 duration-(--motion-fast) animate-none! relative bg-popover/70 before:pointer-events-none before:absolute before:inset-0 before:-z-1 before:rounded-[inherit] before:backdrop-blur-2xl before:backdrop-saturate-150 **:data-[slot$=-item]:focus:bg-foreground/10 **:data-[slot$=-item]:data-highlighted:bg-foreground/10 **:data-[slot$=-separator]:bg-foreground/5 **:data-[slot$=-trigger]:focus:bg-foreground/10 **:data-[slot$=-trigger]:aria-expanded:bg-foreground/10! **:data-[variant=destructive]:focus:bg-foreground/10! **:data-[variant=destructive]:text-accent-foreground! **:data-[variant=destructive]:**:text-accent-foreground!",
-        className
-      )}
+      className={className}
       align={align}
       alignOffset={alignOffset}
       side={side}
@@ -193,6 +234,15 @@ function DropdownMenuSubContent({
       width={width}
       {...props}
     />
+  )
+}
+
+/** The mark at the end of a checked row: a 16px check, in the row's ink (body ink: a checked row is the current one). */
+function Indicator({ children, slot }: { children: React.ReactNode; slot: string }) {
+  return (
+    <span className="pointer-events-none absolute right-2.5 flex items-center justify-center" data-slot={slot}>
+      {children}
+    </span>
   )
 }
 
@@ -209,31 +259,26 @@ function DropdownMenuCheckboxItem({
     <MenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       data-inset={inset}
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className
-      )}
+      className={cn(ITEM, "pr-9", className)}
       checked={checked}
       {...props}
     >
-      <span
-        className="absolute right-2 flex items-center justify-center pointer-events-none"
-        data-slot="dropdown-menu-checkbox-item-indicator"
-      >
+      <Indicator slot="dropdown-menu-checkbox-item-indicator">
         <MenuPrimitive.CheckboxItemIndicator>
-          <Icon name="check" />
+          <Icon name="checkmark" size="sm" />
         </MenuPrimitive.CheckboxItemIndicator>
-      </span>
+      </Indicator>
       {children}
     </MenuPrimitive.CheckboxItem>
   )
 }
 
-function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
+function DropdownMenuRadioGroup({ className, ...props }: MenuPrimitive.RadioGroup.Props) {
   return (
     <InMenuGroup.Provider value>
       <MenuPrimitive.RadioGroup
         data-slot="dropdown-menu-radio-group"
+        className={cn("flex flex-col gap-1", className)}
         {...props}
       />
     </InMenuGroup.Provider>
@@ -252,25 +297,24 @@ function DropdownMenuRadioItem({
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       data-inset={inset}
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className
-      )}
+      className={cn(ITEM, "pr-9", className)}
       {...props}
     >
-      <span
-        className="absolute right-2 flex items-center justify-center pointer-events-none"
-        data-slot="dropdown-menu-radio-item-indicator"
-      >
+      <Indicator slot="dropdown-menu-radio-item-indicator">
         <MenuPrimitive.RadioItemIndicator>
-          <Icon name="check" />
+          <Icon name="checkmark" size="sm" />
         </MenuPrimitive.RadioItemIndicator>
-      </span>
+      </Indicator>
       {children}
     </MenuPrimitive.RadioItem>
   )
 }
 
+/**
+ * A hairline across the panel, edge to edge. Strokes never add height (contract §1.6): the 1px it
+ * draws is taken back from the space under it (4 above, 3 below), so a menu with separators is as
+ * tall as its rows and gaps, and what follows stays on the 4px grid.
+ */
 function DropdownMenuSeparator({
   className,
   ...props
@@ -278,22 +322,22 @@ function DropdownMenuSeparator({
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn("bg-border -mx-1 my-1 h-px", className)}
+      className={cn("bg-line-rule -mx-2 mt-1 mb-0.75 h-px shrink-0", className)}
       {...props}
     />
   )
 }
 
+/** The row's keys, in a Kbd at its end (`⌘N`). Said with the row for assistive tech; set `aria-keyshortcuts` on the item too. */
 function DropdownMenuShortcut({
   className,
+  children,
   ...props
 }: React.ComponentProps<"span">) {
   return (
-    <span
-      data-slot="dropdown-menu-shortcut"
-      className={cn("text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground ml-auto text-xs tracking-widest", className)}
-      {...props}
-    />
+    <span data-slot="dropdown-menu-shortcut" className={cn("ml-auto flex shrink-0 pl-4", className)} {...props}>
+      <Kbd>{children}</Kbd>
+    </span>
   )
 }
 

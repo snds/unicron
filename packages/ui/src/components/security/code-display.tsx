@@ -1,23 +1,38 @@
 // Owned component (not generated): a one-time code, grouped for reading, with the time it has left.
 // Spec: docs/specs/security/code-display.md.
 // Promoted from: snds/lockdown · PR snds/unicron (this PR) · DSA none (first principles, Lockdown brief §5.7)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction, Lockdown Figma 40:357, 40:954, 41:720, 41:2487; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
-import { IconButton } from "../icon-button"
+import { AdaptiveMenuItem, overflowMenuLabel } from "../ui/adaptive"
 import { Badge } from "../ui/badge"
-import { Button } from "../ui/button"
-import { Item, ItemActions, ItemContent, ItemMedia } from "../ui/item"
+import { FieldRowOverflow } from "../ui/field-row"
+import { Progress } from "../ui/progress"
 import { Skeleton } from "../ui/skeleton"
 import { readSecondsToken, useCopyCountdown, useHighContrast, useReducedMotion } from "./copy-countdown"
 import { useCrownJewel } from "./crown-jewel"
+import { TextAction, formatCountdown, rowClasses } from "./parts"
 
 export type CodeDisplayVariant = "totp" | "hotp" | "steam"
+/**
+ * Where the code sits (Lockdown's frames): `field`, a Field Row in the Display size on an item
+ * (Figma 40:357, 41:720); `row`, a row of the phone's Codes list (40:954); `tile`, a tile of the
+ * desktop Codes grid (41:2487); `compact`, one line in a popup or a list inside a sheet.
+ */
+export type CodeDisplayLayout = "field" | "row" | "tile" | "compact"
+/** @deprecated Use `layout`: `detail` draws as `field`, `list` as `row`, `compact` as `compact`. */
 export type CodeDisplayDensity = "detail" | "list" | "compact"
 export type CodeDisplayWarning = "issuer-equals-login"
+
+/** The countdown's cells: one per second of a 30 s period, as Figma draws it. */
+export const codeDisplaySegments = 30
+
+const LAYOUT_OF_DENSITY: Record<CodeDisplayDensity, CodeDisplayLayout> = { detail: "field", list: "row", compact: "compact" }
 
 /**
  * What `onCopy` may resolve with: the string `clipboardHolds` is asked about when the countdown
@@ -52,7 +67,17 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   expiresAt?: number
   /** The core's skew-corrected clock, in Unix seconds, ticked by the host. Omit it and the component ticks itself. */
   now?: number
+  /** Default `field`, or what a legacy `density` asks for. */
+  layout?: CodeDisplayLayout
+  /** @deprecated Use `layout`. */
   density?: CodeDisplayDensity
+  /** The field layout's label ("Steam Guard"). Default: `issuer`, else "One-time code". */
+  label?: string
+  /**
+   * The field layout's hairline above it. `none` (the default) as Lockdown Desktop / 01 draws the
+   * code under an item's Field Rows; `top` for a field that stands alone or opens a group.
+   */
+  rule?: "top" | "none"
   /** Tap or Enter reveals for one period. Forced inside a CrownJewelSurface. */
   concealed?: boolean
   /** Shows the clock notice past ±15 s. */
@@ -84,7 +109,7 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   issuer?: string
   /** "sean" in "GitHub · sean". */
   account?: string
-  /** Avatar or Icon for the issuer, in `detail` and `list` density. */
+  /** Avatar or Icon for the issuer, in the `row` and `tile` layouts. */
   media?: React.ReactNode
   /** Called once when the code enters the expiring state. Mobile hosts vibrate; desktop hosts leave it out. */
   onHaptic?: () => void
@@ -109,6 +134,63 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   loading?: boolean
   /** "Can't make a code" with this reason; no digits are drawn. */
   error?: string
+  /**
+   * More actions behind a trailing overflow button (⋯) in the `field`, `row` and `tile` layouts
+   * (contract 5.1c C18, Lockdown LA5): `AdaptiveMenu` parts from the app ("Open item", "Show large
+   * type"). Always shown; a menu on a desktop, a sheet on a phone; it never copies by itself. A row
+   * that copies or shows the code uses `CodeDisplayMenuItem`, which runs this code's own copy (the
+   * clipboard countdown and clear) and reveal.
+   */
+  menu?: React.ReactNode
+  /** The overflow button's name and the menu's title. Default "More actions for {label or issuer}". */
+  menuLabel?: string
+}
+
+interface CodeDisplayMenuContextValue {
+  /** The code can be copied now (not loading, no error, no advance pending). */
+  canCopy: boolean
+  /** The code is concealed: a reveal row shows it for one period. */
+  hidden: boolean
+  /** Copying now takes the next code (the last seconds). */
+  copyNext: boolean
+  copy: () => void
+  reveal: () => void
+}
+
+const CodeDisplayMenuContext = React.createContext<CodeDisplayMenuContextValue | null>(null)
+
+export interface CodeDisplayMenuItemProps {
+  /**
+   * `copy`: this code's own copy, as a click on the code (the crown-jewel gate, the next code in
+   * the last seconds, the clipboard countdown and clear). `reveal`: a concealed code shown for one
+   * period, as Show does; it draws nothing when the code is not concealed.
+   */
+  action: "copy" | "reveal"
+  /** The row's words. Default "Copy code" (or "Copy the next code") / "Show code". */
+  children?: React.ReactNode
+}
+
+/**
+ * A row of a CodeDisplay's overflow menu that copies or shows the code (contract 5.1c C18). It
+ * runs the component's own copy and reveal, so the clipboard countdown, the clear and the gate
+ * hold. An app's own row must never copy the code itself.
+ */
+export function CodeDisplayMenuItem({ action, children }: CodeDisplayMenuItemProps) {
+  const code = React.useContext(CodeDisplayMenuContext)
+  if (!code) throw new Error("CodeDisplayMenuItem must be inside a CodeDisplay's menu.")
+  if (action === "reveal") {
+    if (!code.hidden) return null
+    return (
+      <AdaptiveMenuItem icon="view" onSelect={code.reveal}>
+        {children ?? "Show code"}
+      </AdaptiveMenuItem>
+    )
+  }
+  return (
+    <AdaptiveMenuItem icon="copy" disabled={!code.canCopy} onSelect={code.copy}>
+      {children ?? (code.copyNext ? "Copy the next code" : "Copy code")}
+    </AdaptiveMenuItem>
+  )
 }
 
 export type CodeDisplayState = "default" | "expiring" | "concealed" | "loading" | "error"
@@ -155,53 +237,32 @@ function useAnnouncer(): [(text: string) => void, React.ReactNode] {
   return [announce, region]
 }
 
+export interface CodeDisplayListProps extends React.ComponentProps<"div"> {
+  /** `list` stacks rows; `grid` lays tiles in as many columns as fit (three at 1280 px, two below, on Lockdown's desktop). */
+  layout?: "list" | "grid"
+}
+
 /** Wrap a list of codes so they share one polite live region instead of twenty. */
-export function CodeDisplayList({ className, children, ...props }: React.ComponentProps<"div">) {
+export function CodeDisplayList({ className, children, layout = "list", ...props }: CodeDisplayListProps) {
   const [msg, setMsg] = React.useState<{ text: string; n: number }>({ text: "", n: 0 })
   const announce = React.useCallback((text: string) => setMsg((s) => ({ text, n: s.n + 1 })), [])
   return (
     <AnnounceContext.Provider value={announce}>
-      <div data-slot="code-display-list" className={cn("flex flex-col", className)} {...props}>
+      <div
+        data-slot="code-display-list"
+        data-layout={layout}
+        className={cn(
+          layout === "grid" ? "grid grid-cols-[repeat(auto-fill,minmax(var(--c-code-tile-min-width),1fr))] gap-(--c-code-tile-gap)" : "flex flex-col",
+          className
+        )}
+        {...props}
+      >
         {children}
         <span aria-live="polite" className="sr-only" data-slot="code-display-live">
           <span key={msg.n}>{msg.text}</span>
         </span>
       </div>
     </AnnounceContext.Provider>
-  )
-}
-
-// ── The ring ──────────────────────────────────────────────────────────────────────────────────
-
-function Ring({ fraction, expiring, seconds }: { fraction: number; expiring: boolean; seconds: number }) {
-  const r = 14
-  const c = 2 * Math.PI * r
-  return (
-    <span data-slot="code-display-timer" data-expiring={expiring ? "" : undefined} className="inline-flex items-center">
-      <svg
-        aria-hidden
-        viewBox="0 0 32 32"
-        className="size-5 -rotate-90 contrast-more:hidden forced-colors:hidden"
-      >
-        <circle cx="16" cy="16" r={r} fill="none" strokeWidth="3" className="stroke-(--c-code-ring-track)" />
-        <circle
-          cx="16"
-          cy="16"
-          r={r}
-          fill="none"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c * (1 - Math.min(1, Math.max(0, fraction)))}
-          className={cn(
-            "transition-[stroke-dashoffset] duration-(--motion-tick) ease-linear motion-reduce:transition-none",
-            expiring ? "stroke-(--c-code-ring-expiring)" : "stroke-(--c-code-ring-progress)"
-          )}
-        />
-      </svg>
-      {/* High contrast: the ring becomes text. */}
-      <span className="hidden text-xs tabular-nums contrast-more:inline forced-colors:inline">{seconds} s</span>
-    </span>
   )
 }
 
@@ -220,7 +281,10 @@ export function CodeDisplay({
   period = 30,
   expiresAt: expiresAtProp,
   now: nowProp,
-  density = "detail",
+  layout: layoutProp,
+  density,
+  label: labelProp,
+  rule = "none",
   concealed: concealedProp = false,
   skewSeconds = 0,
   warnings = [],
@@ -237,6 +301,8 @@ export function CodeDisplay({
   onClipboardClear,
   loading = false,
   error,
+  menu,
+  menuLabel,
   className,
   onKeyDown,
   onClick,
@@ -381,7 +447,7 @@ export function CodeDisplay({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, expiring])
   const who = issuer ? `${issuer}${account ? `, ${account}` : ""}` : account ?? "this account"
-  const label = hidden
+  const groupLabel = hidden
     ? `Code for ${who}, hidden. Press Enter to show it.`
     : `Code for ${who}: ${spellCode(display)}.${timed ? ` ${labelSeconds} seconds left.` : ""}`
 
@@ -432,189 +498,339 @@ export function CodeDisplay({
   }
 
   const state: CodeDisplayState = error ? "error" : loading ? "loading" : hidden ? "concealed" : expiring ? "expiring" : "default"
-  const fraction = timed
-    ? (reducedMotion ? Math.ceil(remaining / 5) * 5 : remaining) / Math.max(1, period)
-    : 0
+  const layout: CodeDisplayLayout = layoutProp ?? (density ? LAYOUT_OF_DENSITY[density] : "field")
+  // The cells follow the seconds; under reduced motion they step every 5 s, as the ring did.
+  const shownRemaining = reducedMotion ? Math.ceil(remaining / 5) * 5 : Math.ceil(remaining)
   const groups = groupCode(display)
   const skewed = Math.abs(skewSeconds) > SKEW_NOTICE_S
-  const itemSize = density === "detail" ? "default" : density === "list" ? "sm" : "xs"
-  const copyTooltip =
-    copyPhase === "counting"
-      ? `${copied === "next" ? "Copied the next code" : "Copied"} · clears in ${countdown.secondsLeft} s`
-      : copyPhase === "cleared"
-        ? "Cleared"
-        : copyNext
-          ? "Copy the next code"
-          : "Copy code"
+  const copyStatus =
+    copyPhase === "counting" ? `Clears in ${countdown.secondsLeft} s` : copyPhase === "cleared" ? "Cleared" : null
+  // A row or a tile is one target: a click anywhere copies (the copy button's hit area covers it).
+  // Not while concealed: then a click shows the code, and the copy button keeps to the digits.
+  const stretch = (layout === "row" || layout === "tile") && !hidden && !error && !loading
+  const codeType = layout === "tile" ? "type-number-metric" : layout === "field" ? "type-code-display" : "type-number-count"
 
-  return (
-    <Item
-      ref={rootRef}
-      data-slot="code-display"
-      data-variant={variant}
-      data-density={density}
-      data-state={state}
-      data-gated={crown.gated ? "" : undefined}
-      data-copied={copied ?? undefined}
-      size={itemSize}
-      role="group"
-      aria-label={label}
-      tabIndex={0}
+  // ── Parts ──
+  const codeEl = error ? (
+    <span data-slot="code-display-error" className="type-caption text-critical-text min-w-0">
+      Can't make a code: {error}
+    </span>
+  ) : loading ? (
+    <span data-slot="code-display-code" className={cn("flex gap-(--c-code-group-gap)", codeType)}>
+      {Array.from({ length: expectedDigits === 5 ? 1 : 2 }, (_, i) => (
+        <Skeleton key={i} className="h-[1em] w-[3.2em] self-center" />
+      ))}
+    </span>
+  ) : (
+    <ButtonPrimitive
+      data-slot="code-display-copy"
+      aria-label={copyNext ? "Copy the next code" : "Copy code"}
+      disabled={!code || advancing}
+      onClick={(e) => {
+        e.stopPropagation()
+        void copy()
+      }}
       className={cn(
-        "bg-card select-none",
-        density === "list" && "min-h-11",
-        density === "compact" && "min-h-9",
+        "group/copy inline-flex min-w-0 items-baseline gap-3 rounded-sm text-left select-none disabled:pointer-events-none",
+        // Rows and tiles: the code is drawn on the right of a row and sits with its status on its left.
+        (layout === "row" || layout === "compact") && "flex-row-reverse",
+        stretch && "after:absolute after:inset-0 after:content-['']"
+      )}
+    >
+      <span
+        data-slot="code-display-code"
+        data-rolling={rolling ? "true" : undefined}
+        aria-hidden
+        className={cn(
+          "text-text-body flex items-baseline gap-(--c-code-group-gap) whitespace-nowrap",
+          codeType,
+          expectedDigits === 8 && "[font-feature-settings:'zero']",
+          expiring && "contrast-more:underline forced-colors:underline",
+          rolling && "animate-in fade-in-0 motion-reduce:animate-none"
+        )}
+        style={rolling ? { animationDuration: "var(--c-code-rollover-duration)" } : undefined}
+      >
+        {hidden
+          ? groups.map((g, i) => (
+              <span key={i} data-slot="code-display-group" data-concealed="">
+                {highContrast ? "*".repeat(g.length) : "•".repeat(g.length)}
+              </span>
+            ))
+          : groups.map((g, i) => (
+              <span key={i} data-slot="code-display-group">
+                {g}
+              </span>
+            ))}
+      </span>
+      {copyStatus && (
+        // The clipboard's countdown, on the copy control: the live colour, because it is running now.
+        <span data-slot="code-display-copy-status" className="type-overline text-secondary-live whitespace-nowrap">
+          {copyStatus === "Cleared" ? (
+            <>
+              <Icon name="checkmark" size="sm" className="mr-1 inline align-[-0.2em]" />
+              Cleared
+            </>
+          ) : (
+            copyStatus
+          )}
+        </span>
+      )}
+    </ButtonPrimitive>
+  )
+
+  const secondsEl =
+    timed && !error && !loading ? (
+      <span
+        data-slot="code-display-timer"
+        data-expiring={expiring ? "" : undefined}
+        aria-hidden
+        className={cn("type-overline shrink-0 whitespace-nowrap", expiring ? "text-critical-text" : "text-secondary-live")}
+      >
+        {formatCountdown(secondsLeft)}
+      </span>
+    ) : null
+
+  const nextEl =
+    nextShown && !hidden && !error && !loading ? (
+      <span data-slot="code-display-next" aria-hidden className="type-overline text-text-label shrink-0 whitespace-nowrap">
+        Next{" "}
+        {groupCode(nextDisplay as string).map((g, i) => (
+          <span key={i} className="ml-[0.5em]">
+            {g}
+          </span>
+        ))}
+      </span>
+    ) : null
+
+  const barEl =
+    timed && !error && !loading ? (
+      <span data-slot="code-display-bar" className="min-w-0 flex-1">
+        <Progress
+          aria-hidden
+          variant="segmented"
+          segments={codeDisplaySegments}
+          min={0}
+          max={Math.max(1, period)}
+          value={Math.min(period, shownRemaining)}
+          tone={expiring ? "critical" : "default"}
+        />
+      </span>
+    ) : null
+
+  const counterEl = !timed ? (
+    <>
+      {counter !== undefined && (
+        <span data-slot="code-display-counter" className="type-overline text-text-label whitespace-nowrap">
+          Counter {counter}
+        </span>
+      )}
+      <TextAction data-slot="code-display-advance" className="relative z-10" disabled={advancing || !onAdvance} onClick={(e) => {
+        e.stopPropagation()
+        void advance()
+      }}>
+        Next code
+      </TextAction>
+    </>
+  ) : null
+
+  const showEl = hidden && !error && !loading ? (
+    <TextAction data-slot="code-display-reveal" aria-label="Show code" className="relative z-10" onClick={(e) => {
+      e.stopPropagation()
+      setRevealedFor(code)
+    }}>
+      Show
+    </TextAction>
+  ) : null
+
+  const noticeEl =
+    skewed || warnings.length > 0 ? (
+      <span data-slot="code-display-notice" className="relative z-10 flex flex-wrap items-center gap-x-3 gap-y-1">
+        {skewed && (
+          <>
+            <Badge tone="warning">
+              <Icon name="time" size="sm" />
+              Clock is off by {Math.round(Math.abs(skewSeconds))} s
+            </Badge>
+            {onFixClock && <TextAction onClick={onFixClock}>Fix clock</TextAction>}
+          </>
+        )}
+        {warnings.includes("issuer-equals-login") && (
+          <Badge tone="warning">
+            <Icon name="warning--alt" size="sm" />
+            Same account you sign in with
+          </Badge>
+        )}
+      </span>
+    ) : null
+
+  // The issuer over the account: 10 apart in a tile and 4 in a row, as the two Lockdown codes
+  // screens draw them (Desktop / 06: account ink 35 under the tile's top; Mobile / 08: 29 under
+  // the row's). The compact row keeps them touching, in its 56.
+  const who2 = (issuer || account) && (
+    <span className={cn("flex min-w-0 flex-col", layout === "tile" && "gap-2.5", layout === "row" && "gap-1")}>
+      {issuer && (
+        <span data-slot="code-display-issuer" className="type-ui-emphasis text-text-body truncate">
+          {issuer}
+        </span>
+      )}
+      {account && (
+        <span data-slot="code-display-account" className="type-meta text-text-label truncate">
+          {account}
+        </span>
+      )}
+    </span>
+  )
+
+  const rootProps = {
+    ref: rootRef,
+    "data-slot": "code-display",
+    "data-variant": variant,
+    "data-layout": layout,
+    "data-state": state,
+    "data-gated": crown.gated ? "" : undefined,
+    "data-copied": copied ?? undefined,
+    role: "group",
+    "aria-label": groupLabel,
+    tabIndex: 0,
+    onFocus: () => setFocused(true),
+    onBlur: (e: React.FocusEvent<HTMLDivElement>) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
+    },
+    onClick: (e: React.MouseEvent<HTMLDivElement>) => {
+      onClick?.(e)
+      if (e.defaultPrevented) return
+      // A press in the overflow menu (its button, or its rows, which a portal draws elsewhere on the
+      // page) is the menu's own: it never shows a concealed code by reaching the row.
+      const target = e.target as Element
+      if (!e.currentTarget.contains(target) || target.closest?.("[data-overflow-menu]")) return
+      if (hidden) setRevealedFor(code)
+    },
+    onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(e)
+      if (e.defaultPrevented || e.target !== e.currentTarget) return
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault()
+        activate()
+      }
+    },
+  } as const
+
+  // The trailing ⋯ (field, row and tile), above a row's or a tile's stretched copy target.
+  const menuEl =
+    menu && layout !== "compact" ? (
+      <CodeDisplayMenuContext.Provider
+        value={{
+          canCopy: Boolean(code) && !loading && !error && !advancing,
+          hidden: hidden && !error && !loading,
+          copyNext,
+          copy: () => void copy(),
+          reveal: () => setRevealedFor(code),
+        }}
+      >
+        <span data-slot="code-display-menu" className="relative z-10 inline-flex shrink-0 self-center">
+          <FieldRowOverflow label={menuLabel ?? overflowMenuLabel(labelProp ?? issuer ?? "One-time code")}>{menu}</FieldRowOverflow>
+        </span>
+      </CodeDisplayMenuContext.Provider>
+    ) : null
+
+  if (layout === "field") {
+    const row = rowClasses("display-auto")
+    return (
+      // As Lockdown Desktop / 01 draws the code on an item, under its Field Rows: no hairline above
+      // it (the rows before it each draw their own; `rule="top"` adds one), the label hugging its
+      // words, the code centred between the label and the seconds, the bar 10 under the code's
+      // line and 14 above the row's end: 12 + 40 + 10 + 4 + 14 = 80. The bar's row carries the odd
+      // 2px on each side of it, so every other form of the field (no bar, a notice under it, an
+      // error) keeps the stack's 8 and 12 and stays on the 4px grid.
+      <div {...rootProps} data-rule={rule} className={cn("@container/row", rule === "top" && "rule-t", "select-none", className)} {...props}>
+        <div className="flex flex-col gap-2 pb-3">
+          <div className={cn(row.inner, "pb-0")}>
+            <div className={row.body}>
+              <span data-slot="code-display-label" className="type-overline text-text-label min-w-0 shrink-0">
+                {labelProp ?? issuer ?? "One-time code"}
+              </span>
+              {/* Stacked under its label in a narrow column, it starts at the column's edge. */}
+              <span className="flex min-w-0 flex-1 items-baseline justify-center gap-4 @max-lg/row:justify-start">{codeEl}</span>
+            </div>
+            <span className={row.actions}>
+              {secondsEl}
+              {counterEl}
+              {showEl}
+              {menuEl}
+            </span>
+          </div>
+          {(barEl || nextEl) && (
+            <div data-slot="code-display-bar-row" className="my-0.5 flex items-center gap-3">
+              {nextEl}
+              {barEl}
+            </div>
+          )}
+          {noticeEl}
+        </div>
+        {liveRegion}
+      </div>
+    )
+  }
+
+  if (layout === "compact") {
+    return (
+      <div {...rootProps} className={cn("rule-t relative flex min-h-14 items-center gap-4 py-3.5 select-none hover:bg-state-hover", className)} {...props}>
+        {media && <span data-slot="code-display-media" className="shrink-0">{media}</span>}
+        <span className="flex min-w-0 flex-1 flex-col">
+          {who2}
+          {noticeEl}
+        </span>
+        {nextEl}
+        {codeEl}
+        {secondsEl}
+        {counterEl}
+        {showEl}
+        {liveRegion}
+      </div>
+    )
+  }
+
+  // Row and tile: issuer and account over the code's line, the cells and seconds under it.
+  const tile = layout === "tile"
+  return (
+    <div
+      {...rootProps}
+      className={cn(
+        "relative flex flex-col select-none",
+        tile
+          ? "bg-surface-raised rule-box min-h-(--c-code-tile-min-height) gap-2.5 rounded p-5 hover:bg-accent active:bg-[color-mix(in_oklab,var(--text-body)_10%,var(--surface-raised))]"
+          : "rule-b min-h-(--c-code-row-min-height) gap-2 px-4 py-3.5 hover:bg-state-hover active:bg-state-pressed",
         className
       )}
-      onFocus={() => setFocused(true)}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
-      }}
-      onClick={(e) => {
-        onClick?.(e)
-        if (e.defaultPrevented) return
-        if (hidden) setRevealedFor(code)
-      }}
-      onKeyDown={(e) => {
-        onKeyDown?.(e)
-        if (e.defaultPrevented || e.target !== e.currentTarget) return
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          activate()
-        }
-      }}
       {...props}
     >
-      {media && density !== "compact" && <ItemMedia>{media}</ItemMedia>}
-      <ItemContent>
-        {(issuer || account) && density !== "compact" && (
-          <span data-slot="code-display-issuer" className="text-muted-foreground flex items-center gap-1 text-xs">
-            {issuer}
-            {issuer && account && <span aria-hidden> · </span>}
-            {account}
+      {tile ? (
+        <>
+          <span className="flex min-w-0 items-center gap-3">
+            {media && <span data-slot="code-display-media" className="shrink-0">{media}</span>}
+            {who2}
           </span>
-        )}
-
-        {error ? (
-          <span data-slot="code-display-error" className="text-destructive text-sm">
-            Can't make a code: {error}
-          </span>
-        ) : loading ? (
-          <span data-slot="code-display-code" className="flex gap-(--c-code-group-gap)">
-            {Array.from({ length: expectedDigits === 5 ? 1 : 2 }, (_, i) => (
-              <Skeleton key={i} className="h-[1.2em] w-[3.2em]" />
-            ))}
-          </span>
-        ) : (
-          <span
-            data-slot="code-display-code"
-            data-rolling={rolling ? "true" : undefined}
-            aria-hidden
-            className={cn(
-              "font-mono flex items-baseline gap-(--c-code-group-gap) leading-none tracking-(--c-code-letter-spacing) tabular-nums",
-              density === "detail" && "text-(length:--c-code-size-detail)",
-              density === "list" && "text-(length:--c-code-size-list)",
-              density === "compact" && "text-(length:--c-code-size-compact)",
-              expectedDigits === 8 && "[font-feature-settings:'zero']",
-              expiring && "text-warning font-semibold contrast-more:underline forced-colors:underline",
-              rolling && "animate-in fade-in-0 motion-reduce:animate-none"
-            )}
-            style={rolling ? { animationDuration: "var(--c-code-rollover-duration)" } : undefined}
-          >
-            {hidden
-              ? groups.map((g, i) => (
-                  <span key={i} data-slot="code-display-group" data-concealed="">
-                    {highContrast ? "*".repeat(g.length) : "•".repeat(g.length)}
-                  </span>
-                ))
-              : groups.map((g, i) => (
-                  <span key={i} data-slot="code-display-group">
-                    {g}
-                  </span>
-                ))}
-          </span>
-        )}
-
-        {nextShown && !hidden && !error && !loading && (
-          <span
-            data-slot="code-display-next"
-            aria-hidden
-            className="font-mono text-(--c-code-next-ink) flex gap-(--c-code-group-gap) text-xs tracking-(--c-code-letter-spacing) tabular-nums"
-          >
-            <span className="font-sans tracking-normal">Next</span>
-            {groupCode(nextDisplay as string).map((g, i) => (
-              <span key={i}>{g}</span>
-            ))}
-          </span>
-        )}
-
-        {(skewed || warnings.length > 0) && (
-          <span data-slot="code-display-notice" className="flex flex-wrap items-center gap-1.5">
-            {skewed && (
-              <Badge variant="outline">
-                <Icon name="schedule" data-icon="inline-start" />
-                Clock is off by {Math.round(Math.abs(skewSeconds))} s
-                {onFixClock && (
-                  <>
-                    {" · "}
-                    <Button variant="link" size="inline" onClick={onFixClock}>
-                      Fix clock
-                    </Button>
-                  </>
-                )}
-              </Badge>
-            )}
-            {warnings.includes("issuer-equals-login") && (
-              <Badge variant="outline">
-                <Icon name="warning" data-icon="inline-start" />
-                Same account you sign in with
-              </Badge>
-            )}
-          </span>
-        )}
-      </ItemContent>
-
-      <ItemActions>
-        {timed && !error && !loading && <Ring fraction={fraction} expiring={expiring} seconds={secondsLeft} />}
-        {!timed && counter !== undefined && (
-          <span data-slot="code-display-counter" className="text-muted-foreground text-xs tabular-nums">
-            #{counter}
-          </span>
-        )}
-        {!timed && (
-          <Button variant="outline" size="sm" disabled={advancing || !onAdvance} onClick={advance}>
-            Next code
-          </Button>
-        )}
-        {!error && (
-          <IconButton
-            data-slot="code-display-copy"
-            label={copyNext ? "Copy the next code" : "Copy code"}
-            tooltip={copyTooltip}
-            size={density === "compact" ? "icon-sm" : "icon"}
-            disabled={loading || !code || advancing}
-            onClick={(e) => {
-              e.stopPropagation()
-              void copy()
-            }}
-          >
-            {copyPhase === "counting" ? (
-              <span className="text-xs tabular-nums">{countdown.secondsLeft}</span>
-            ) : copyPhase === "cleared" ? (
-              <>
-                <Icon name="check" />
-                <span className="sr-only">Cleared</span>
-              </>
-            ) : (
-              <>
-                <Icon name="content_copy" />
-                {crown.gated && <Icon name="lock" className="size-3" />}
-              </>
-            )}
-          </IconButton>
-        )}
-      </ItemActions>
+          <span className="flex min-w-0 items-baseline">{codeEl}</span>
+        </>
+      ) : (
+        <span className="flex min-w-0 items-center gap-4">
+          {media && <span data-slot="code-display-media" className="shrink-0">{media}</span>}
+          <span className="min-w-0 flex-1">{who2}</span>
+          {codeEl}
+        </span>
+      )}
+      {(barEl || nextEl || secondsEl || counterEl || showEl || menuEl) && (
+        <span className="flex items-center gap-3">
+          {nextEl}
+          {barEl ?? <span className="flex-1" />}
+          {secondsEl}
+          {counterEl}
+          {showEl}
+          {menuEl}
+        </span>
+      )}
+      {noticeEl}
       {liveRegion}
-    </Item>
+    </div>
   )
 }

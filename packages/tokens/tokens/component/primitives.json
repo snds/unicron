@@ -1,0 +1,63 @@
+{
+  "$description": "Tier 3 · Component knobs for the primitives area (packages/ui: text-field, input, select, tabs, toggle, item, avatar, initial-tile, empty, chip, chip-field, radio-group, progress, spinner, scroll-area, resizable-panes, toolbar, split-button), merged with component.json at build and emitted as --c-*. It adds knobs and re-declares none. Most sizes in this area sit on the 4px spacing scale and the size roles (a field's box is min-h-control with 12 / 16 padding, as Figma 32:48 draws it; an Initial Tile is 24, 40 or 64; a chip 24), so they need no knob.",
+  "radio": {
+    "$description": "RadioGroup and RadioRow (radio-group.tsx), new in 1.0. Not drawn in Figma: the box is the Checkbox's 16px square on the 2px corner, and a choice is marked by an 8px ink square inside it, not a check, so a radio never reads as a checkbox.",
+    "edge": {
+      "$type": "color",
+      "$value": "{text-label}",
+      "$description": "The edge of an unchosen radio. It is the only thing that shows the control, so it is the label ink (3:1 and more against the ground and a raised surface; scripts/recipes/primitives.mjs), not the line-rule hairline, as the Checkbox edge is."
+    },
+    "mark": {
+      "$type": "color",
+      "$value": "{text-body}",
+      "$description": "The chosen radio: its edge and the square inside it. Ink, never the identity colour (a choice is not a selection)."
+    }
+  },
+  "progress": {
+    "$description": "Progress tones and the tick added in round 2 (contract 5.1b #29), beside the knobs in component.json and controls.json.",
+    "neutral": {
+      "$type": "color",
+      "$value": "{text-body}",
+      "$description": "tone=\"neutral\": ink cells, for a count that is neither live nor the app's own (Lockdown's password strength, an idle lock)."
+    },
+    "tick": {
+      "$type": "color",
+      "$value": "{text-body}",
+      "$description": "The tick: a 2px ink mark across the bar at a share of it (Warpcore's spend bar at 80%)."
+    },
+    "tick-height": {
+      "$type": "dimension",
+      "$value": "0.75rem",
+      "$description": "How tall the tick stands: 12px, centred on the 4px bar, so it reads above and below it."
+    }
+  },
+  "spinner": {
+    "$description": "Spinner (spinner.tsx): generic loading. It must never move like the agent's working ring (StatusOrb, RunTrace: one even, linear turn per --motion-spin), so it turns once a second and eases in and out of each turn, a mechanism stepping round.",
+    "turn-duration": {
+      "$type": "duration",
+      "$value": "{motion-tick}",
+      "$description": "One turn of the arc."
+    }
+  },
+  "scroll-area": {
+    "$description": "ScrollArea (scroll-area.tsx).",
+    "thumb": {
+      "$type": "color",
+      "$value": "{text-label}",
+      "$description": "The scroll thumb: a square bar in the label ink, so it shows on the ground and on a raised surface (scripts/recipes/primitives.mjs). It was the 1px border colour, which measures 1.3:1."
+    }
+  },
+  "resizable": {
+    "$description": "ResizablePanes' handle (resizable-panes.tsx).",
+    "grip": {
+      "$type": "color",
+      "$value": "{text-label}",
+      "$description": "The grip a handle shows for touch: a 4 × 24 square-cornered bar in the label ink."
+    },
+    "active": {
+      "$type": "color",
+      "$value": "{text-body}",
+      "$description": "The handle's line under the pointer, while dragged and with keyboard focus: the 1px rule turns to ink."
+    }
+  }
+}

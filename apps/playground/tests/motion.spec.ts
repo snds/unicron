@@ -199,3 +199,34 @@ for (const contract of motionContracts as readonly MotionContract[]) {
     }
   })
 }
+
+// ── loops ──────────────────────────────────────────────────────────────────────────────────────
+// Nothing loops under reduced motion, whatever variant puts the loop on: the indeterminate Progress
+// pulses through `group-data-indeterminate/progress:animate-pulse`, which a rule on the bare class
+// name would miss (index.css → reduced motion).
+test("no loop runs under reduced motion, or in a data-motion=reduced box, a variant's loop included", async ({ page }) => {
+  const loops = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>("[class*='animate-spin'], [class*='animate-pulse'], [class*='animate-ping'], [class*='animate-bounce']")]
+        .filter((el) => getComputedStyle(el).animationName !== "none")
+        .map((el) => el.getAttribute("data-slot") ?? el.tagName.toLowerCase())
+    )
+  const open = async () => {
+    await page.goto("/?view=progress&chrome=0")
+    await expect(page.locator('[data-slot="playground-view"]')).toHaveAttribute("data-view-state", "ready")
+  }
+  await open()
+  const indeterminate = page.locator('[data-slot="progress"][data-indeterminate] [data-slot="progress-track"]').first()
+  expect(await indeterminate.evaluate((el) => getComputedStyle(el).animationName), "the indeterminate track pulses").toBe("pulse")
+  expect(await loops()).toContain("progress-track")
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await open()
+  expect(await indeterminate.evaluate((el) => getComputedStyle(el).animationName)).toBe("none")
+  expect(await loops(), "loops still running under reduced motion").toEqual([])
+
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await open()
+  await page.evaluate(() => document.body.setAttribute("data-motion", "reduced"))
+  expect(await loops(), "loops still running in a data-motion=reduced box").toEqual([])
+})

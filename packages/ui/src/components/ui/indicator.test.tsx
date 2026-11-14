@@ -1,7 +1,10 @@
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import { AppFrame, AppFrameMain, AppFrameNav, AppFrameNavItem } from "./app-frame"
+import { AppFrame, AppFrameBottomRow, AppFrameMain } from "./app-frame"
+import { TabBar, TabBarItem } from "./tab-bar"
 import { IndicatorMark, indicatorCount, indicatorLabel, indicatorsOf } from "./indicator"
 import { Item, ItemContent, ItemTitle } from "./item"
 import { Button } from "./button"
@@ -24,9 +27,11 @@ describe("indicator words", () => {
     expect(indicatorLabel(both)).toBe("1 waiting for you, 5 unread")
   })
 
-  it("cap the badge at 9+", () => {
-    expect(indicatorCount(9)).toBe("9")
-    expect(indicatorCount(12)).toBe("9+")
+  it("write counts as decisions §13 does: two digits, capped at 99+", () => {
+    expect(indicatorCount(7)).toBe("07")
+    expect(indicatorCount(12)).toBe("12")
+    expect(indicatorCount(99)).toBe("99")
+    expect(indicatorCount(140)).toBe("99+")
   })
 })
 
@@ -39,7 +44,7 @@ describe("IndicatorMark", () => {
     expect(mark).toHaveAttribute("data-kind", "attention")
     expect(mark).toHaveAttribute("data-shape", "badge")
     expect(mark).toHaveAttribute("aria-hidden")
-    expect(mark.textContent).toBe("1")
+    expect(mark.textContent).toBe("01")
   })
 
   it("is a dot without a count, and nothing when nothing is wanted", () => {
@@ -50,38 +55,44 @@ describe("IndicatorMark", () => {
   })
 })
 
-describe("AppFrameNavItem indicator", () => {
+// AppFrameNavItem (the floating capsule's place) is gone in 1.0: a top-level place is a TabBarItem
+// in the phone's bottom row, and its count or waiting state is the shared `mark` (rail.tsx), whose
+// words join the name the same way. These two keep the old checks on the part that replaced it.
+describe("a place's mark in the frame's tab bar (was AppFrameNavItem indicator)", () => {
   it("adds the count and the meaning to the item's name", () => {
     render(
-      <AppFrame>
+      <AppFrame layout="phone">
         <AppFrameMain />
-        <AppFrameNav aria-label="Places">
-          <AppFrameNavItem icon="forum" label="Conversations" indicator={{ kind: "attention", count: 2 }} />
-          <AppFrameNavItem icon="home" label="Home" />
-        </AppFrameNav>
+        <AppFrameBottomRow
+          tabs={
+            <TabBar label="Places" value="home">
+              <TabBarItem value="chat" icon="chat" label="Conversations" mark={{ count: 2, tone: "needs-you" }} />
+              <TabBarItem value="home" icon="home" label="Home" />
+            </TabBar>
+          }
+        />
       </AppFrame>
     )
-    expect(screen.getByRole("button", { name: "Conversations, 2 waiting for you" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Home" })).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Conversations, 2 waiting on you" })).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Home" })).toBeInTheDocument()
   })
 
-  it("has a count badge for the bar and a dot for the rail and the pivot", () => {
+  it("draws a count at the icon's corner, capped where it would not fit", () => {
     render(
-      <AppFrame>
+      <AppFrame layout="phone">
         <AppFrameMain />
-        <AppFrameNav aria-label="Places">
-          <AppFrameNavItem icon="forum" label="Conversations" indicator={{ kind: "unread", count: 14 }} />
-        </AppFrameNav>
+        <AppFrameBottomRow
+          tabs={
+            <TabBar label="Places" value="home">
+              <TabBarItem value="chat" icon="chat" label="Conversations" mark={{ count: 140, label: "140 unread" }} />
+              <TabBarItem value="home" icon="home" label="Home" />
+            </TabBar>
+          }
+        />
       </AppFrame>
     )
-    const button = screen.getByRole("button", { name: "Conversations, 14 unread" })
-    const badge = button.querySelector('[data-shape="badge"]')!
-    const dot = button.querySelector('[data-shape="dot"]')!
-    expect(badge.textContent).toBe("9+")
-    expect(badge.className).toContain("nav-rail:hidden")
-    expect(badge.className).toContain("in-data-[slot=app-frame-pivot]:hidden")
-    expect(dot.className).toContain("nav-rail:inline-block")
-    expect(dot.className).toContain("in-data-[slot=app-frame-pivot]:inline-block")
+    const tab = screen.getByRole("tab", { name: "Conversations, 140 unread" })
+    expect(tab.querySelector('[data-slot="nav-mark"]')?.textContent).toBe("99+")
   })
 })
 
@@ -121,7 +132,7 @@ describe("indicator on a control", () => {
   it("joins an aria-label rather than adding words a label would hide", () => {
     render(
       <Button size="icon" aria-label="Open" indicator={{ kind: "unread" }}>
-        <Icon name="forum" />
+        <Icon name="chat" />
       </Button>
     )
     const button = screen.getByRole("button", { name: "Open, Unread" })
@@ -129,7 +140,7 @@ describe("indicator on a control", () => {
   })
 
   it("puts it on an IconButton: the name carries it, the tooltip stays the label", () => {
-    render(<IconButton icon="forum" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />)
+    render(<IconButton icon="chat" label="Open conversation" indicator={{ kind: "unread", count: 3 }} />)
     const button = screen.getByRole("button", { name: "Open conversation, 3 unread" })
     expect(button.className).toContain("relative")
     expect(button.querySelector('[data-slot="indicator"]')).toHaveAttribute("data-kind", "unread")
@@ -139,7 +150,7 @@ describe("indicator on a control", () => {
     render(
       <ToggleGroup>
         <ToggleGroupItem value="tasks" aria-label="Tasks" indicator={{ kind: "attention", count: 1 }}>
-          <Icon name="task_alt" />
+          <Icon name="task" />
         </ToggleGroupItem>
       </ToggleGroup>
     )
@@ -155,5 +166,33 @@ describe("indicator on a control", () => {
     rerender(<Button indicator={{ kind: "attention", count: 0 }}>Tasks</Button>)
     button = screen.getByRole("button", { name: "Tasks" })
     expect(button.querySelector('[data-slot="indicator"]')).toBeNull()
+  })
+})
+
+describe("IndicatorMark in the 2026-11 look", () => {
+  const knobs = JSON.parse(readFileSync(resolve(__dirname, "../../../../tokens/tokens/component/chat.json"), "utf8")).indicator
+
+  it("is an ink square for unread and the yellow square for attention, with an ink outline", () => {
+    expect(knobs.unread.$value).toBe("{text-body}")
+    expect(knobs.attention.$value).toBe("{needs-you-fill}")
+    expect(knobs["attention-edge"].$value).toBe("{needs-you-on-fill}")
+    expect(knobs["dot-size"].$value).toBe("0.375rem")
+    const { container, rerender } = render(<IndicatorMark indicator={{ kind: "attention" }} />)
+    const dot = container.querySelector('[data-slot="indicator"]')!
+    expect(dot.className).toContain("ring-(--c-indicator-attention-edge)")
+    rerender(<IndicatorMark indicator={{ kind: "unread" }} />)
+    expect(container.querySelector('[data-slot="indicator"]')!.className).not.toContain("ring-")
+  })
+
+  it("counts on the same fills, in mono, the attention badge outlined inside in ink", () => {
+    expect(knobs["unread-badge-bg"].$value).toBe("{text-body}")
+    expect(knobs["unread-badge-ink"].$value).toBe("{surface-ground}")
+    expect(knobs["attention-badge-bg"].$value).toBe("{needs-you-fill}")
+    expect(knobs["attention-badge-ink"].$value).toBe("{needs-you-on-fill}")
+    const { container } = render(<IndicatorMark indicator={{ kind: "attention", count: 3 }} shape="badge" />)
+    const badge = container.querySelector('[data-slot="indicator"]')!
+    expect(badge.textContent).toBe("03")
+    expect(badge.className).toContain("inset-ring-(--c-indicator-attention-edge)")
+    expect(badge.className).toContain("[font-family:var(--type-overline-family)]")
   })
 })

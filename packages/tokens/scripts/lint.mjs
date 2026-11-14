@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Token lint: the two mechanical rules behind docs/06-contributing.md → "Token lint".
+// Token lint: the mechanical rules behind docs/06-contributing.md → "Token lint".
 //
-//   (a) Tiers 2 and 3 (tokens/semantic.json, tokens/component.json) alias, they do not invent.
+//   (a) Tiers 2 and 3 (tokens/semantic.json, tokens/component.json and every file in
+//       tokens/component/) alias, they do not invent.
 //       Every colour there — `$value` and every `$extensions["unicron.modes"].*` value — must be
 //       a `{reference}` (or a composition such as `color-mix(in oklab, {ref} 45%, transparent)`
 //       whose colours are all references). No hex / rgb() / hsl() / oklch() / oklab() literals,
@@ -15,6 +16,20 @@
 //       it must be a `{reference}` to a motion role, so no component invents its own speed.
 //       Timers that are behaviour, not motion (`lifetime`, `arm-delay`, `expiring-at`), may
 //       stay literal.
+//       No role points at the legacy neutral ramp (`{neutral.*}`, `{white-alpha.*}`): it is not
+//       themed. success, warning and info keep their accent ramps, labels included.
+//       A component knob's colour reads a role, never tier 1: `{needs-you-fill}` (the role), not
+//       `{needs-you.fill}` (the raw value).
+//       Two files in tokens/component/ may not declare the same knob.
+//       A component knob for a corner (a dimension whose last name part is `radius`: `x-radius`
+//       or `x.radius`) is the one 2px corner: it must be the bare reference `{radius}`, so no
+//       component draws a rounder part.
+//   (t) Theme files (tokens/themes/<app>.json) hold the theme slots of global.json, all of them
+//       and nothing else: a raw six-digit hex each, with the Figma variable id in `$description`.
+//       The defaults in global.json follow the same rule.
+//   (y) Type roles (tokens/type.json) are typography composites: the family is a `{font.*}`
+//       reference; size and line height are px, the line height a multiple of 4; letter spacing
+//       is em; the weight is one of the four the fonts ship.
 //   (b) Primitives (packages/ui/src) carry no colour literals: no hex, rgb(), hsl(), oklch(),
 //       oklab() in any .ts/.tsx/.css file. Tailwind arbitrary values that reference a token,
 //       e.g. `bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]`, are fine.
@@ -25,6 +40,21 @@
 //       and no `transition-all`, which animates whatever happens to change. Write a motion role:
 //       `duration-(--motion-base)`, `ease-exit`, `var(--motion-ease-move)`. `ease-linear` is
 //       allowed: it is for a value that tracks a real quantity (a countdown, a progress bar).
+//   (d) Primitives carry no raw values in their classes either (contract section 7 "No raw
+//       values"; .ts and .tsx, tests excluded):
+//       - no px or rem number in an arbitrary value (`w-[13px]`, `rounded-[9px]`, `text-[13px]`).
+//         A token is fine there: `var(--…)`, Tailwind's `--spacing(n)`, a `(--knob)` shorthand.
+//       - no colour from Tailwind's own palette (`bg-red-500`, `text-white`, `border-black/10`):
+//         the palette is not themed. Write a role (`bg-critical-fill`, `text-text-body`).
+//       - no raw type: `text-xs` … `text-9xl`, `font-medium` and the other weights, `leading-*`.
+//         Write a type role (`type-ui`, `type-caption`). `leading-(--token)` and
+//         `leading-[inherit]` are fine.
+//       - no `rounded-full`: the corner is 2px and marks are squares (contract 1.6). The named
+//         exceptions are in ROUND_ALLOWED below, each with its reason.
+//       - no blur and no drop shadow: `backdrop-blur*`, `backdrop-filter`, `blur-*`, `shadow-sm`
+//         … `shadow-2xl`, `drop-shadow-*`, `text-shadow-*`, a coloured shadow. `shadow-none` is
+//         fine, and so is an inset shadow built from tokens (`shadow-[inset_…var(--…)]`): that is
+//         how a stroke is drawn without adding height.
 //
 // Run: pnpm lint:tokens (root) · exit 1 with every violation listed, 0 when clean.
 
@@ -38,11 +68,14 @@ const repoRoot = path.resolve(tokensRoot, "..", "..")
 const uiSrc = path.join(repoRoot, "packages", "ui", "src")
 
 const MODES_KEY = "unicron.modes"
+const jsonFiles = (dir) =>
+  fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => path.join(path.basename(dir), f)) : []
 const TIERS = [
-  { name: "global", rank: 1, file: "global.json" },
-  { name: "semantic", rank: 2, file: "semantic.json" },
-  { name: "component", rank: 3, file: "component.json" },
+  { name: "global", rank: 1, files: ["global.json"] },
+  { name: "semantic", rank: 2, files: ["semantic.json"] },
+  { name: "component", rank: 3, files: ["component.json", ...jsonFiles(path.join(tokensRoot, "tokens", "component"))] },
 ]
+const readTokens = (file) => JSON.parse(fs.readFileSync(path.join(tokensRoot, "tokens", file), "utf8"))
 const REF = /\{([^}]+)\}/g
 const COLOR_LITERAL = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb|color)\(/g
 const NAMED_COLOR =
@@ -62,54 +95,140 @@ function flatten(node, trail = [], acc = []) {
 }
 
 // ── (a) tier rules ────────────────────────────────────────────────────────────────────────────
-const tiers = TIERS.map((t) => {
-  const json = JSON.parse(fs.readFileSync(path.join(tokensRoot, "tokens", t.file), "utf8"))
-  return { ...t, tokens: flatten(json) }
-})
+const tiers = TIERS.map((t) => ({
+  ...t,
+  tokens: t.files.flatMap((file) => flatten(readTokens(file)).map((entry) => ({ ...entry, file }))),
+}))
 const rankByPath = new Map()
-for (const tier of tiers) for (const { path: p } of tier.tokens) rankByPath.set(p.join("."), tier.rank)
+const typeByPath = new Map()
+for (const tier of tiers) {
+  for (const { path: p, token } of tier.tokens) {
+    rankByPath.set(p.join("."), tier.rank)
+    typeByPath.set(p.join("."), token.$type)
+  }
+}
+// A file in tokens/component/ may re-declare a knob of component.json (it owns that component from
+// then on, and the build says so). Two of those files may not declare the same knob.
+{
+  const owner = new Map()
+  for (const { path: p, file } of tiers[2].tokens) {
+    if (file === "component.json") continue
+    const dotted = p.join(".")
+    if (owner.has(dotted)) fail(`${file} ${dotted}`, `also declared in ${owner.get(dotted)}; one area owns a knob`)
+    owner.set(dotted, file)
+  }
+}
 
-function checkValue(tier, dotted, label, value, type) {
+const LEGACY_RAMP = /^(neutral|white-alpha)\./
+const KEEPS_RAMP = /^(success|warning|info)(-|$)/
+
+function checkValue(tier, file, dotted, label, value, type) {
   if (typeof value !== "string") {
     // numbers and arrays are literals by construction
-    if (tier.rank === 2) fail(`${tier.file} ${dotted}`, `${label} must be a {reference}, got ${JSON.stringify(value)}`)
+    if (tier.rank === 2) fail(`${file} ${dotted}`, `${label} must be a {reference}, got ${JSON.stringify(value)}`)
     return
   }
   const refs = [...value.matchAll(REF)].map((m) => m[1])
   for (const ref of refs) {
     const rank = rankByPath.get(ref)
-    if (rank === undefined) fail(`${tier.file} ${dotted}`, `${label} references {${ref}}, which does not exist`)
-    else if (rank > tier.rank) fail(`${tier.file} ${dotted}`, `${label} references {${ref}} from a higher tier (${TIERS[rank - 1].name})`)
+    if (rank === undefined) fail(`${file} ${dotted}`, `${label} references {${ref}}, which does not exist`)
+    else if (rank > tier.rank) fail(`${file} ${dotted}`, `${label} references {${ref}} from a higher tier (${TIERS[rank - 1].name})`)
   }
   const rest = value.replace(REF, "")
   const bareRef = refs.length === 1 && rest.trim() === ""
 
   if (type === "color") {
     const literal = rest.match(COLOR_LITERAL)
-    if (literal) fail(`${tier.file} ${dotted}`, `${label} contains a raw colour literal (${literal[0]}…); alias a lower-tier token instead`)
-    if (/var\(/.test(rest)) fail(`${tier.file} ${dotted}`, `${label} uses var(--…); write a {reference} so the token graph stays whole`)
+    if (literal) fail(`${file} ${dotted}`, `${label} contains a raw colour literal (${literal[0]}…); alias a lower-tier token instead`)
+    if (/var\(/.test(rest)) fail(`${file} ${dotted}`, `${label} uses var(--…); write a {reference} so the token graph stays whole`)
     const named = rest.replace(/\btransparent\b|\bcurrentcolor\b/gi, "").match(NAMED_COLOR)
-    if (named) fail(`${tier.file} ${dotted}`, `${label} contains the named colour "${named[0]}"`)
-    if (refs.length === 0) fail(`${tier.file} ${dotted}`, `${label} is a colour with no {reference}: "${value}"`)
+    if (named) fail(`${file} ${dotted}`, `${label} contains the named colour "${named[0]}"`)
+    if (refs.length === 0) fail(`${file} ${dotted}`, `${label} is a colour with no {reference}: "${value}"`)
+    for (const ref of refs) {
+      if (LEGACY_RAMP.test(ref) && !(tier.rank === 2 && KEEPS_RAMP.test(dotted))) {
+        fail(`${file} ${dotted}`, `${label} references {${ref}}: the legacy neutral ramp is not themed; point at a role (text-body, surface-raised, line-rule …)`)
+      } else if (tier.rank === 3 && rankByPath.get(ref) === 1) {
+        fail(`${file} ${dotted}`, `${label} references {${ref}}, a tier 1 value; a component knob's colour reads a role`)
+      }
+    }
     return
   }
   if (tier.rank === 3 && label === "$value" && /-duration$/.test(dotted) && !bareRef) {
-    fail(`${tier.file} ${dotted}`, `a motion duration must be a {reference} to a motion role (e.g. {motion-base}), got "${value}"`)
+    fail(`${file} ${dotted}`, `a motion duration must be a {reference} to a motion role (e.g. {motion-base}), got "${value}"`)
   }
-  if (tier.rank === 2 && !bareRef) fail(`${tier.file} ${dotted}`, `${label} must be a bare {reference} in the semantic tier, got "${value}"`)
+  if (tier.rank === 3 && label === "$value" && /(^|[.-])radius$/.test(dotted) && !(bareRef && refs[0] === "radius")) {
+    fail(`${file} ${dotted}`, `a corner knob must be {radius}, the one 2px corner (contract §1.6), got "${value}"`)
+  }
+  if (tier.rank === 2 && !bareRef) fail(`${file} ${dotted}`, `${label} must be a bare {reference} in the semantic tier, got "${value}"`)
 }
 
 let checked = 0
 for (const tier of tiers) {
   if (tier.rank === 1) continue
-  for (const { path: p, token } of tier.tokens) {
+  for (const { path: p, token, file } of tier.tokens) {
     const dotted = p.join(".")
     checked++
-    checkValue(tier, dotted, "$value", token.$value, token.$type)
+    checkValue(tier, file, dotted, "$value", token.$value, token.$type)
     for (const [mode, v] of Object.entries(token.$extensions?.[MODES_KEY] ?? {})) {
-      checkValue(tier, dotted, `${mode} mode`, v, token.$type)
+      checkValue(tier, file, dotted, `${mode} mode`, v, token.$type)
     }
   }
+}
+
+// ── (t) theme files ───────────────────────────────────────────────────────────────────────────
+// The app axis is tier 1: raw values, one per Figma primitive. A slot is a six-digit hex, written
+// as Figma writes it, and says which Figma variable it came from.
+const HEX = /^#[0-9A-F]{6}$/
+const FIGMA_ID = /VariableID:\d+:\d+/
+function checkSlot(file, dotted, token) {
+  if (token.$type !== "color") fail(`${file} ${dotted}`, `a theme slot is a colour, got $type ${JSON.stringify(token.$type)}`)
+  if (typeof token.$value !== "string" || !HEX.test(token.$value)) {
+    fail(`${file} ${dotted}`, `a theme slot is a raw six-digit hex in capitals, as Figma writes it; got ${JSON.stringify(token.$value)}`)
+  }
+  if (!FIGMA_ID.test(token.$description ?? "")) fail(`${file} ${dotted}`, "$description must name the Figma variable the value came from (VariableID:…)")
+}
+const defaultSlots = tiers[0].tokens.filter((t) => t.path[0] === "theme")
+const slotPaths = defaultSlots.map((t) => t.path.join("."))
+for (const { path: p, token } of defaultSlots) checkSlot("global.json", p.join("."), token)
+const themeFiles = jsonFiles(path.join(tokensRoot, "tokens", "themes"))
+if (!themeFiles.length) fail("tokens/themes", "no app theme files found")
+for (const file of themeFiles) {
+  const json = readTokens(file)
+  const app = path.basename(file, ".json")
+  if (json.$extensions?.["unicron.app"]?.name !== app) fail(file, `$extensions["unicron.app"].name must be "${app}", the file's own name`)
+  const slots = flatten(json)
+  const paths = slots.map((t) => t.path.join("."))
+  for (const missing of slotPaths.filter((q) => !paths.includes(q))) fail(file, `missing theme slot ${missing}`)
+  for (const { path: q, token } of slots) {
+    const dotted = q.join(".")
+    if (!slotPaths.includes(dotted)) fail(`${file} ${dotted}`, "not a theme slot of global.json; a theme file holds the slots and nothing else")
+    else checkSlot(file, dotted, token)
+  }
+}
+
+// ── (y) type roles ────────────────────────────────────────────────────────────────────────────
+const TYPE_KEYS = ["fontFamily", "fontWeight", "fontSize", "lineHeight", "letterSpacing"]
+const typeTokens = flatten(readTokens("type.json"))
+for (const { path: p, token } of typeTokens) {
+  const where = `type.json ${p.join(".")}`
+  const v = token.$value
+  if (p[0] !== "type" || p.length !== 2) fail(where, "a type role sits directly under `type`, so its variables are --type-<role>-…")
+  if (token.$type !== "typography" || !v || typeof v !== "object") {
+    fail(where, "a type role is a typography composite")
+    continue
+  }
+  const keys = Object.keys(v)
+  if (keys.length !== TYPE_KEYS.length || TYPE_KEYS.some((k) => !keys.includes(k))) fail(where, `$value holds exactly ${TYPE_KEYS.join(", ")}`)
+  const family = /^\{([^}]+)\}$/.exec(String(v.fontFamily))?.[1]
+  if (!family || rankByPath.get(family) !== 1 || typeByPath.get(family) !== "fontFamily") {
+    fail(where, `fontFamily must be a {reference} to a tier 1 font ({font.sans}, {font.mono}), got ${JSON.stringify(v.fontFamily)}`)
+  }
+  if (![400, 500, 600, 700].includes(v.fontWeight)) fail(where, `fontWeight must be 400, 500, 600 or 700 (the weights the fonts ship), got ${JSON.stringify(v.fontWeight)}`)
+  if (!/^[\d.]+px$/.test(String(v.fontSize))) fail(where, `fontSize must be in px, as Figma holds it; got ${JSON.stringify(v.fontSize)}`)
+  const leading = /^([\d.]+)px$/.exec(String(v.lineHeight))?.[1]
+  if (leading === undefined) fail(where, `lineHeight must be in px, as Figma holds it; got ${JSON.stringify(v.lineHeight)}`)
+  else if (Number(leading) % 4 !== 0) fail(where, `lineHeight ${v.lineHeight} is off the 4px grid`)
+  if (!/^-?[\d.]+em$/.test(String(v.letterSpacing))) fail(where, `letterSpacing must be in em (Figma's percent ÷ 100); got ${JSON.stringify(v.letterSpacing)}`)
 }
 
 // ── (b) no colour literals in primitives ──────────────────────────────────────────────────────
@@ -157,9 +276,73 @@ for (const file of files) {
   })
 }
 
+// ── (d) no raw values in the primitives' classes ───────────────────────────────────────────────
+// Read from the source as text. A comment may name a class it rules out, so comment lines, a
+// trailing `// …` and a `{/* … */}` are left out.
+const PALETTE = "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone"
+const COLOR_PREFIX = "bg|text|border(?:-[trblxyse])?|ring|ring-offset|inset-ring|outline|fill|stroke|decoration|divide|from|via|to|shadow|inset-shadow|accent|caret|placeholder"
+const CLASS_RULES = [
+  [
+    new RegExp(`(?<![\\w-])(?:${COLOR_PREFIX})-(?:(?:${PALETTE})-(?:50|[1-9]00|950)|white|black)(?:\\/\\d+)?(?![\\w-])`, "g"),
+    "a colour from Tailwind's palette, which is not themed; write a role (bg-surface-raised, text-text-body, bg-critical-fill …)",
+  ],
+  [/(?<![\w-])text-(?:xs|sm|base|lg|xl|[2-9]xl)(?![\w-])/g, "a raw type size; write a type role (type-ui, type-caption …)"],
+  [/(?<![\w-])font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)(?![\w-])/g, "a raw font weight; write a type role (type-ui-emphasis, type-body-strong …)"],
+  [/(?<![\w-])leading-(?!\(|\[inherit\])[\w[.][^\s"'`]*/g, "a raw line height; a type role sets it (leading-(--token) and leading-[inherit] are fine)"],
+  [/(?<![\w-])(?:backdrop-blur(?:-[\w[\]().-]+)?|backdrop-filter|blur-[\w[(][^\s"'`]*)(?![\w-])/g, "a blur; nothing in the system is blurred (contract 1.5)"],
+  [/(?<![\w-])(?:drop-shadow|text-shadow)(?:-[\w[(][^\s"'`]*)?(?![\w-])/g, "a drop shadow; surfaces are solid with a 1px rule"],
+  [/(?<![\w-])(?:inset-)?shadow-(?!none(?![\w-])|\[inset_)[\w[(][^\s"'`]*/g, "a shadow; surfaces are solid with a 1px rule (shadow-none and a token-built shadow-[inset_…] stroke are fine)"],
+]
+// `rounded-full` by name: file, how many times, and why it is round.
+const ROUND_ALLOWED = []
+const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
+// An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not
+// inside var(…) or --spacing(…).
+const ARBITRARY = /(?<![\w-])[\w:/.()=,&>~+*@-]*-\[([^\]\s]+)\]/g
+const RAW_LENGTH = /(?<![\w.])-?\d*\.?\d+(?:px|rem)(?![\w-])/g
+const stripTokens = (value) => {
+  let out = value
+  // Innermost first, so a var() or --spacing() inside a calc() is taken out whole.
+  for (let i = 0; i < 4; i++) out = out.replace(/(?:var|--spacing)\([^()]*\)/g, "")
+  return out
+}
+let classFiles = 0
+const roundSeen = new Map()
+for (const file of files) {
+  if (!/\.tsx?$/.test(file) || /\.test\.tsx?$/.test(file) || file.includes(`${path.sep}test${path.sep}`)) continue
+  classFiles++
+  const rel = path.relative(repoRoot, file)
+  fs.readFileSync(file, "utf8").split("\n").forEach((raw, i) => {
+    const trimmed = raw.trim()
+    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return
+    const line = raw.replace(/\s\/\/ .*$/, "").replace(/\{\/\*.*?\*\/\}/g, "")
+    for (const [pattern, why] of CLASS_RULES) {
+      for (const hit of line.match(pattern) ?? []) fail(`${rel}:${i + 1}`, `raw value ${hit} — ${why}`)
+    }
+    for (const hit of line.match(ROUND) ?? []) {
+      roundSeen.set(rel, (roundSeen.get(rel) ?? 0) + 1)
+      if (!ROUND_ALLOWED.some((entry) => entry.file === rel)) fail(`${rel}:${i + 1}`, `raw value ${hit} — the corner is 2px and marks are squares (contract 1.6); a round part needs a named exception in ROUND_ALLOWED`)
+    }
+    for (const match of line.matchAll(ARBITRARY)) {
+      for (const hit of stripTokens(match[1]).match(RAW_LENGTH) ?? []) {
+        fail(`${rel}:${i + 1}`, `raw value ${hit} in ${match[0]} — a length is a spacing step (w-10, --spacing(2)) or a knob (w-(--c-…), var(--…))`)
+      }
+    }
+  })
+}
+// The list of round parts has to match the source exactly: an entry nothing uses must go.
+for (const entry of ROUND_ALLOWED) {
+  const seen = roundSeen.get(entry.file) ?? 0
+  if (seen !== entry.count) fail(`lint.mjs ROUND_ALLOWED ${entry.file}`, `lists ${entry.count} rounded-full, the file has ${seen}; keep the list exact`)
+}
+
 if (errors.length) {
   console.error(`✗ token lint: ${errors.length} violation${errors.length === 1 ? "" : "s"}`)
   for (const e of errors) console.error(`  ${e}`)
   process.exit(1)
 }
-console.log(`✓ token lint: ${checked} tier-2/3 tokens alias lower tiers; ${files.length} files in packages/ui/src carry no colour literals, ${motionFiles} carry no motion literals`)
+console.log(
+  `✓ token lint: ${checked} tier-2/3 tokens alias lower tiers (${TIERS[2].files.length} component file${TIERS[2].files.length === 1 ? "" : "s"}); ` +
+    `${themeFiles.length} theme files hold the ${slotPaths.length} slots; ${typeTokens.length} type roles; ` +
+    `${files.length} files in packages/ui/src carry no colour literals, ${motionFiles} carry no motion literals, ${classFiles} carry no raw values in their classes`
+)

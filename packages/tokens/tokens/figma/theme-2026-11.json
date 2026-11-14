@@ -1,0 +1,1386 @@
+{
+  "$description": "Snapshot of the Figma read-out: the theme roles in all 8 modes, the 23 type roles, and the space, radius and size numbers. Written by scripts/figma-snapshot.mjs; never edited by hand. scripts/figma-parity.mjs (run by `pnpm test`) fails when a built value differs from it.",
+  "source": {
+    "file": "ibZp32eAXdv9lPID6AMSF7",
+    "name": "Unicron explorations",
+    "extracted": "2026-11-13",
+    "method": "read-only Plugin API scripts"
+  },
+  "modes": [
+    "warpcore / graphite",
+    "warpcore / stone",
+    "vale / graphite",
+    "vale / stone",
+    "lockdown / graphite",
+    "lockdown / stone",
+    "synapse / graphite",
+    "synapse / stone"
+  ],
+  "defaultMode": "warpcore / graphite",
+  "roles": {
+    "surface/ground": {
+      "id": "VariableID:5:124",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#18191D",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/bg",
+          "primitiveId": "VariableID:5:3"
+        },
+        "warpcore / stone": {
+          "hex": "#EFF0F5",
+          "alpha": 1,
+          "primitive": "warpcore/stone/bg",
+          "primitiveId": "VariableID:5:18"
+        },
+        "vale / graphite": {
+          "hex": "#161A1C",
+          "alpha": 1,
+          "primitive": "vale/graphite/bg",
+          "primitiveId": "VariableID:5:33"
+        },
+        "vale / stone": {
+          "hex": "#ECF1F4",
+          "alpha": 1,
+          "primitive": "vale/stone/bg",
+          "primitiveId": "VariableID:5:48"
+        },
+        "lockdown / graphite": {
+          "hex": "#171A18",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/bg",
+          "primitiveId": "VariableID:5:63"
+        },
+        "lockdown / stone": {
+          "hex": "#EDF1EE",
+          "alpha": 1,
+          "primitive": "lockdown/stone/bg",
+          "primitiveId": "VariableID:5:78"
+        },
+        "synapse / graphite": {
+          "hex": "#1C181A",
+          "alpha": 1,
+          "primitive": "synapse/graphite/bg",
+          "primitiveId": "VariableID:5:93"
+        },
+        "synapse / stone": {
+          "hex": "#F4EEF0",
+          "alpha": 1,
+          "primitive": "synapse/stone/bg",
+          "primitiveId": "VariableID:5:108"
+        }
+      }
+    },
+    "surface/raised": {
+      "id": "VariableID:5:125",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#212125",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/surf",
+          "primitiveId": "VariableID:5:4"
+        },
+        "warpcore / stone": {
+          "hex": "#F7F8FD",
+          "alpha": 1,
+          "primitive": "warpcore/stone/surf",
+          "primitiveId": "VariableID:5:19"
+        },
+        "vale / graphite": {
+          "hex": "#1E2224",
+          "alpha": 1,
+          "primitive": "vale/graphite/surf",
+          "primitiveId": "VariableID:5:34"
+        },
+        "vale / stone": {
+          "hex": "#F4F9FC",
+          "alpha": 1,
+          "primitive": "vale/stone/surf",
+          "primitiveId": "VariableID:5:49"
+        },
+        "lockdown / graphite": {
+          "hex": "#1F2320",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/surf",
+          "primitiveId": "VariableID:5:64"
+        },
+        "lockdown / stone": {
+          "hex": "#F5FAF6",
+          "alpha": 1,
+          "primitive": "lockdown/stone/surf",
+          "primitiveId": "VariableID:5:79"
+        },
+        "synapse / graphite": {
+          "hex": "#242022",
+          "alpha": 1,
+          "primitive": "synapse/graphite/surf",
+          "primitiveId": "VariableID:5:94"
+        },
+        "synapse / stone": {
+          "hex": "#FDF7F9",
+          "alpha": 1,
+          "primitive": "synapse/stone/surf",
+          "primitiveId": "VariableID:5:109"
+        }
+      }
+    },
+    "line/rule": {
+      "id": "VariableID:5:126",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#313238",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/rule",
+          "primitiveId": "VariableID:5:5"
+        },
+        "warpcore / stone": {
+          "hex": "#D1D2D9",
+          "alpha": 1,
+          "primitive": "warpcore/stone/rule",
+          "primitiveId": "VariableID:5:20"
+        },
+        "vale / graphite": {
+          "hex": "#2E3436",
+          "alpha": 1,
+          "primitive": "vale/graphite/rule",
+          "primitiveId": "VariableID:5:35"
+        },
+        "vale / stone": {
+          "hex": "#CDD4D7",
+          "alpha": 1,
+          "primitive": "vale/stone/rule",
+          "primitiveId": "VariableID:5:50"
+        },
+        "lockdown / graphite": {
+          "hex": "#303431",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/rule",
+          "primitiveId": "VariableID:5:65"
+        },
+        "lockdown / stone": {
+          "hex": "#CED4D0",
+          "alpha": 1,
+          "primitive": "lockdown/stone/rule",
+          "primitiveId": "VariableID:5:80"
+        },
+        "synapse / graphite": {
+          "hex": "#373133",
+          "alpha": 1,
+          "primitive": "synapse/graphite/rule",
+          "primitiveId": "VariableID:5:95"
+        },
+        "synapse / stone": {
+          "hex": "#D8D0D3",
+          "alpha": 1,
+          "primitive": "synapse/stone/rule",
+          "primitiveId": "VariableID:5:110"
+        }
+      }
+    },
+    "line/grid-dot": {
+      "id": "VariableID:5:127",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#393A40",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/dot",
+          "primitiveId": "VariableID:5:6"
+        },
+        "warpcore / stone": {
+          "hex": "#BCBDC4",
+          "alpha": 1,
+          "primitive": "warpcore/stone/dot",
+          "primitiveId": "VariableID:5:21"
+        },
+        "vale / graphite": {
+          "hex": "#353C3F",
+          "alpha": 1,
+          "primitive": "vale/graphite/dot",
+          "primitiveId": "VariableID:5:36"
+        },
+        "vale / stone": {
+          "hex": "#B7BFC3",
+          "alpha": 1,
+          "primitive": "vale/stone/dot",
+          "primitiveId": "VariableID:5:51"
+        },
+        "lockdown / graphite": {
+          "hex": "#373C38",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/dot",
+          "primitiveId": "VariableID:5:66"
+        },
+        "lockdown / stone": {
+          "hex": "#B9C0BB",
+          "alpha": 1,
+          "primitive": "lockdown/stone/dot",
+          "primitiveId": "VariableID:5:81"
+        },
+        "synapse / graphite": {
+          "hex": "#3F383B",
+          "alpha": 1,
+          "primitive": "synapse/graphite/dot",
+          "primitiveId": "VariableID:5:96"
+        },
+        "synapse / stone": {
+          "hex": "#C3BBBE",
+          "alpha": 1,
+          "primitive": "synapse/stone/dot",
+          "primitiveId": "VariableID:5:111"
+        }
+      }
+    },
+    "text/faint": {
+      "id": "VariableID:5:128",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#5F6066",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/faint",
+          "primitiveId": "VariableID:5:7"
+        },
+        "warpcore / stone": {
+          "hex": "#A3A4AB",
+          "alpha": 1,
+          "primitive": "warpcore/stone/faint",
+          "primitiveId": "VariableID:5:22"
+        },
+        "vale / graphite": {
+          "hex": "#5B6265",
+          "alpha": 1,
+          "primitive": "vale/graphite/faint",
+          "primitiveId": "VariableID:5:37"
+        },
+        "vale / stone": {
+          "hex": "#9EA6AA",
+          "alpha": 1,
+          "primitive": "vale/stone/faint",
+          "primitiveId": "VariableID:5:52"
+        },
+        "lockdown / graphite": {
+          "hex": "#5C625E",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/faint",
+          "primitiveId": "VariableID:5:67"
+        },
+        "lockdown / stone": {
+          "hex": "#A0A6A1",
+          "alpha": 1,
+          "primitive": "lockdown/stone/faint",
+          "primitiveId": "VariableID:5:82"
+        },
+        "synapse / graphite": {
+          "hex": "#655E61",
+          "alpha": 1,
+          "primitive": "synapse/graphite/faint",
+          "primitiveId": "VariableID:5:97"
+        },
+        "synapse / stone": {
+          "hex": "#AAA2A5",
+          "alpha": 1,
+          "primitive": "synapse/stone/faint",
+          "primitiveId": "VariableID:5:112"
+        }
+      }
+    },
+    "text/label": {
+      "id": "VariableID:5:129",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#B2B4BA",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/mute",
+          "primitiveId": "VariableID:5:8"
+        },
+        "warpcore / stone": {
+          "hex": "#67696E",
+          "alpha": 1,
+          "primitive": "warpcore/stone/mute",
+          "primitiveId": "VariableID:5:23"
+        },
+        "vale / graphite": {
+          "hex": "#AFB5B9",
+          "alpha": 1,
+          "primitive": "vale/graphite/mute",
+          "primitiveId": "VariableID:5:38"
+        },
+        "vale / stone": {
+          "hex": "#646A6D",
+          "alpha": 1,
+          "primitive": "vale/stone/mute",
+          "primitiveId": "VariableID:5:53"
+        },
+        "lockdown / graphite": {
+          "hex": "#B0B6B1",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/mute",
+          "primitiveId": "VariableID:5:68"
+        },
+        "lockdown / stone": {
+          "hex": "#656A66",
+          "alpha": 1,
+          "primitive": "lockdown/stone/mute",
+          "primitiveId": "VariableID:5:83"
+        },
+        "synapse / graphite": {
+          "hex": "#B9B2B5",
+          "alpha": 1,
+          "primitive": "synapse/graphite/mute",
+          "primitiveId": "VariableID:5:98"
+        },
+        "synapse / stone": {
+          "hex": "#6D6769",
+          "alpha": 1,
+          "primitive": "synapse/stone/mute",
+          "primitiveId": "VariableID:5:113"
+        }
+      }
+    },
+    "text/secondary": {
+      "id": "VariableID:5:130",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#D3D4D8",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/sub",
+          "primitiveId": "VariableID:5:9"
+        },
+        "warpcore / stone": {
+          "hex": "#3C3D40",
+          "alpha": 1,
+          "primitive": "warpcore/stone/sub",
+          "primitiveId": "VariableID:5:24"
+        },
+        "vale / graphite": {
+          "hex": "#D0D5D7",
+          "alpha": 1,
+          "primitive": "vale/graphite/sub",
+          "primitiveId": "VariableID:5:39"
+        },
+        "vale / stone": {
+          "hex": "#3A3E40",
+          "alpha": 1,
+          "primitive": "vale/stone/sub",
+          "primitiveId": "VariableID:5:54"
+        },
+        "lockdown / graphite": {
+          "hex": "#D1D5D2",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/sub",
+          "primitiveId": "VariableID:5:69"
+        },
+        "lockdown / stone": {
+          "hex": "#3B3E3C",
+          "alpha": 1,
+          "primitive": "lockdown/stone/sub",
+          "primitiveId": "VariableID:5:84"
+        },
+        "synapse / graphite": {
+          "hex": "#D8D3D4",
+          "alpha": 1,
+          "primitive": "synapse/graphite/sub",
+          "primitiveId": "VariableID:5:99"
+        },
+        "synapse / stone": {
+          "hex": "#403C3D",
+          "alpha": 1,
+          "primitive": "synapse/stone/sub",
+          "primitiveId": "VariableID:5:114"
+        }
+      }
+    },
+    "text/body": {
+      "id": "VariableID:5:131",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#EFF0F3",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/ink",
+          "primitiveId": "VariableID:5:10"
+        },
+        "warpcore / stone": {
+          "hex": "#151618",
+          "alpha": 1,
+          "primitive": "warpcore/stone/ink",
+          "primitiveId": "VariableID:5:25"
+        },
+        "vale / graphite": {
+          "hex": "#EDF1F3",
+          "alpha": 1,
+          "primitive": "vale/graphite/ink",
+          "primitiveId": "VariableID:5:40"
+        },
+        "vale / stone": {
+          "hex": "#141618",
+          "alpha": 1,
+          "primitive": "vale/stone/ink",
+          "primitiveId": "VariableID:5:55"
+        },
+        "lockdown / graphite": {
+          "hex": "#EEF1EE",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/ink",
+          "primitiveId": "VariableID:5:70"
+        },
+        "lockdown / stone": {
+          "hex": "#141715",
+          "alpha": 1,
+          "primitive": "lockdown/stone/ink",
+          "primitiveId": "VariableID:5:85"
+        },
+        "synapse / graphite": {
+          "hex": "#F3EFF0",
+          "alpha": 1,
+          "primitive": "synapse/graphite/ink",
+          "primitiveId": "VariableID:5:100"
+        },
+        "synapse / stone": {
+          "hex": "#181516",
+          "alpha": 1,
+          "primitive": "synapse/stone/ink",
+          "primitiveId": "VariableID:5:115"
+        }
+      }
+    },
+    "primary/fill": {
+      "id": "VariableID:5:132",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#5146EE",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/org",
+          "primitiveId": "VariableID:5:11"
+        },
+        "warpcore / stone": {
+          "hex": "#4837E0",
+          "alpha": 1,
+          "primitive": "warpcore/stone/org",
+          "primitiveId": "VariableID:5:26"
+        },
+        "vale / graphite": {
+          "hex": "#27728F",
+          "alpha": 1,
+          "primitive": "vale/graphite/org",
+          "primitiveId": "VariableID:5:41"
+        },
+        "vale / stone": {
+          "hex": "#186683",
+          "alpha": 1,
+          "primitive": "vale/stone/org",
+          "primitiveId": "VariableID:5:56"
+        },
+        "lockdown / graphite": {
+          "hex": "#008231",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/org",
+          "primitiveId": "VariableID:5:71"
+        },
+        "lockdown / stone": {
+          "hex": "#007625",
+          "alpha": 1,
+          "primitive": "lockdown/stone/org",
+          "primitiveId": "VariableID:5:86"
+        },
+        "synapse / graphite": {
+          "hex": "#B90D75",
+          "alpha": 1,
+          "primitive": "synapse/graphite/org",
+          "primitiveId": "VariableID:5:101"
+        },
+        "synapse / stone": {
+          "hex": "#AB006A",
+          "alpha": 1,
+          "primitive": "synapse/stone/org",
+          "primitiveId": "VariableID:5:116"
+        }
+      }
+    },
+    "primary/on-fill": {
+      "id": "VariableID:5:133",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/onO",
+          "primitiveId": "VariableID:5:12"
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "warpcore/stone/onO",
+          "primitiveId": "VariableID:5:27"
+        },
+        "vale / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "vale/graphite/onO",
+          "primitiveId": "VariableID:5:42"
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "vale/stone/onO",
+          "primitiveId": "VariableID:5:57"
+        },
+        "lockdown / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/onO",
+          "primitiveId": "VariableID:5:72"
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "lockdown/stone/onO",
+          "primitiveId": "VariableID:5:87"
+        },
+        "synapse / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "synapse/graphite/onO",
+          "primitiveId": "VariableID:5:102"
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1,
+          "primitive": "synapse/stone/onO",
+          "primitiveId": "VariableID:5:117"
+        }
+      }
+    },
+    "primary/text": {
+      "id": "VariableID:5:134",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#A1AEFF",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/ptext",
+          "primitiveId": "VariableID:5:13"
+        },
+        "warpcore / stone": {
+          "hex": "#4E4DCD",
+          "alpha": 1,
+          "primitive": "warpcore/stone/ptext",
+          "primitiveId": "VariableID:5:28"
+        },
+        "vale / graphite": {
+          "hex": "#86BDD7",
+          "alpha": 1,
+          "primitive": "vale/graphite/ptext",
+          "primitiveId": "VariableID:5:43"
+        },
+        "vale / stone": {
+          "hex": "#356B82",
+          "alpha": 1,
+          "primitive": "vale/stone/ptext",
+          "primitiveId": "VariableID:5:58"
+        },
+        "lockdown / graphite": {
+          "hex": "#67CA85",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/ptext",
+          "primitiveId": "VariableID:5:73"
+        },
+        "lockdown / stone": {
+          "hex": "#007839",
+          "alpha": 1,
+          "primitive": "lockdown/stone/ptext",
+          "primitiveId": "VariableID:5:88"
+        },
+        "synapse / graphite": {
+          "hex": "#FF8FCC",
+          "alpha": 1,
+          "primitive": "synapse/graphite/ptext",
+          "primitiveId": "VariableID:5:103"
+        },
+        "synapse / stone": {
+          "hex": "#A52C6D",
+          "alpha": 1,
+          "primitive": "synapse/stone/ptext",
+          "primitiveId": "VariableID:5:118"
+        }
+      }
+    },
+    "primary/soft": {
+      "id": "VariableID:5:135",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#1F2343",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/psoft",
+          "primitiveId": "VariableID:5:14"
+        },
+        "warpcore / stone": {
+          "hex": "#D5DDFF",
+          "alpha": 1,
+          "primitive": "warpcore/stone/psoft",
+          "primitiveId": "VariableID:5:29"
+        },
+        "vale / graphite": {
+          "hex": "#1B292F",
+          "alpha": 1,
+          "primitive": "vale/graphite/psoft",
+          "primitiveId": "VariableID:5:44"
+        },
+        "vale / stone": {
+          "hex": "#D2E3EB",
+          "alpha": 1,
+          "primitive": "vale/stone/psoft",
+          "primitiveId": "VariableID:5:59"
+        },
+        "lockdown / graphite": {
+          "hex": "#152C1C",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/psoft",
+          "primitiveId": "VariableID:5:74"
+        },
+        "lockdown / stone": {
+          "hex": "#CCE8D2",
+          "alpha": 1,
+          "primitive": "lockdown/stone/psoft",
+          "primitiveId": "VariableID:5:89"
+        },
+        "synapse / graphite": {
+          "hex": "#3A1B29",
+          "alpha": 1,
+          "primitive": "synapse/graphite/psoft",
+          "primitiveId": "VariableID:5:104"
+        },
+        "synapse / stone": {
+          "hex": "#FDD2E3",
+          "alpha": 1,
+          "primitive": "synapse/stone/psoft",
+          "primitiveId": "VariableID:5:119"
+        }
+      }
+    },
+    "secondary/live": {
+      "id": "VariableID:5:136",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#1EC5E4",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/sec",
+          "primitiveId": "VariableID:5:15"
+        },
+        "warpcore / stone": {
+          "hex": "#007491",
+          "alpha": 1,
+          "primitive": "warpcore/stone/sec",
+          "primitiveId": "VariableID:5:30"
+        },
+        "vale / graphite": {
+          "hex": "#87C0A6",
+          "alpha": 1,
+          "primitive": "vale/graphite/sec",
+          "primitiveId": "VariableID:5:45"
+        },
+        "vale / stone": {
+          "hex": "#397059",
+          "alpha": 1,
+          "primitive": "vale/stone/sec",
+          "primitiveId": "VariableID:5:60"
+        },
+        "lockdown / graphite": {
+          "hex": "#7CBBF0",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/sec",
+          "primitiveId": "VariableID:5:75"
+        },
+        "lockdown / stone": {
+          "hex": "#296898",
+          "alpha": 1,
+          "primitive": "lockdown/stone/sec",
+          "primitiveId": "VariableID:5:90"
+        },
+        "synapse / graphite": {
+          "hex": "#31C8C9",
+          "alpha": 1,
+          "primitive": "synapse/graphite/sec",
+          "primitiveId": "VariableID:5:105"
+        },
+        "synapse / stone": {
+          "hex": "#007778",
+          "alpha": 1,
+          "primitive": "synapse/stone/sec",
+          "primitiveId": "VariableID:5:120"
+        }
+      }
+    },
+    "needs-you/fill": {
+      "id": "VariableID:5:137",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/yel",
+          "primitiveId": "VariableID:5:16"
+        },
+        "warpcore / stone": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "warpcore/stone/yel",
+          "primitiveId": "VariableID:5:31"
+        },
+        "vale / graphite": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "vale/graphite/yel",
+          "primitiveId": "VariableID:5:46"
+        },
+        "vale / stone": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "vale/stone/yel",
+          "primitiveId": "VariableID:5:61"
+        },
+        "lockdown / graphite": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/yel",
+          "primitiveId": "VariableID:5:76"
+        },
+        "lockdown / stone": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "lockdown/stone/yel",
+          "primitiveId": "VariableID:5:91"
+        },
+        "synapse / graphite": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "synapse/graphite/yel",
+          "primitiveId": "VariableID:5:106"
+        },
+        "synapse / stone": {
+          "hex": "#EDE54A",
+          "alpha": 1,
+          "primitive": "synapse/stone/yel",
+          "primitiveId": "VariableID:5:121"
+        }
+      }
+    },
+    "needs-you/on-fill": {
+      "id": "VariableID:5:138",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/onYel",
+          "primitiveId": "VariableID:5:17"
+        },
+        "warpcore / stone": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "warpcore/stone/onYel",
+          "primitiveId": "VariableID:5:32"
+        },
+        "vale / graphite": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "vale/graphite/onYel",
+          "primitiveId": "VariableID:5:47"
+        },
+        "vale / stone": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "vale/stone/onYel",
+          "primitiveId": "VariableID:5:62"
+        },
+        "lockdown / graphite": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/onYel",
+          "primitiveId": "VariableID:5:77"
+        },
+        "lockdown / stone": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "lockdown/stone/onYel",
+          "primitiveId": "VariableID:5:92"
+        },
+        "synapse / graphite": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "synapse/graphite/onYel",
+          "primitiveId": "VariableID:5:107"
+        },
+        "synapse / stone": {
+          "hex": "#1C1C1C",
+          "alpha": 1,
+          "primitive": "synapse/stone/onYel",
+          "primitiveId": "VariableID:5:122"
+        }
+      }
+    },
+    "primary/display": {
+      "id": "VariableID:7:2",
+      "description": "Primary as large type (36px and up). Solved to APCA Lc 45, so it stays closer to the identity hue than primary/text.",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#888EFF",
+          "alpha": 1,
+          "primitive": "warpcore/graphite/pdisp",
+          "primitiveId": "VariableID:7:3"
+        },
+        "warpcore / stone": {
+          "hex": "#4837E0",
+          "alpha": 1,
+          "primitive": "warpcore/stone/pdisp",
+          "primitiveId": "VariableID:7:4"
+        },
+        "vale / graphite": {
+          "hex": "#58A0BE",
+          "alpha": 1,
+          "primitive": "vale/graphite/pdisp",
+          "primitiveId": "VariableID:7:5"
+        },
+        "vale / stone": {
+          "hex": "#186683",
+          "alpha": 1,
+          "primitive": "vale/stone/pdisp",
+          "primitiveId": "VariableID:7:6"
+        },
+        "lockdown / graphite": {
+          "hex": "#11AE5B",
+          "alpha": 1,
+          "primitive": "lockdown/graphite/pdisp",
+          "primitiveId": "VariableID:7:7"
+        },
+        "lockdown / stone": {
+          "hex": "#007625",
+          "alpha": 1,
+          "primitive": "lockdown/stone/pdisp",
+          "primitiveId": "VariableID:7:8"
+        },
+        "synapse / graphite": {
+          "hex": "#FA59AC",
+          "alpha": 1,
+          "primitive": "synapse/graphite/pdisp",
+          "primitiveId": "VariableID:7:9"
+        },
+        "synapse / stone": {
+          "hex": "#AB006A",
+          "alpha": 1,
+          "primitive": "synapse/stone/pdisp",
+          "primitiveId": "VariableID:7:10"
+        }
+      }
+    },
+    "critical/fill": {
+      "id": "VariableID:30:2325",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        }
+      }
+    },
+    "critical/on-fill": {
+      "id": "VariableID:30:2326",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "critical/text": {
+      "id": "VariableID:30:2327",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        }
+      }
+    },
+    "critical/soft": {
+      "id": "VariableID:30:2328",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        }
+      }
+    },
+    "surface/scrim": {
+      "id": "VariableID:54:50",
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#141618",
+          "alpha": 0.64
+        },
+        "vale / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#141618",
+          "alpha": 0.64
+        },
+        "lockdown / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#141618",
+          "alpha": 0.64
+        },
+        "synapse / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#141618",
+          "alpha": 0.64
+        }
+      }
+    }
+  },
+  "type": {
+    "display": {
+      "id": "S:c95e3613cdd9a3a9dd5897886caaf9f46a0fb675,",
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 72,
+      "lineHeight": 68,
+      "letterSpacingPercent": -4,
+      "case": "ORIGINAL"
+    },
+    "display/compact": {
+      "id": "S:d1482c82fb84fdd98dd8a8125efecd9647933dc2,",
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 48,
+      "lineHeight": 48,
+      "letterSpacingPercent": -3,
+      "case": "ORIGINAL"
+    },
+    "title": {
+      "id": "S:d4f1c16850e9fe61641ad5cf3f7772d7e865baea,",
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 32,
+      "lineHeight": 36,
+      "letterSpacingPercent": -1.5,
+      "case": "ORIGINAL"
+    },
+    "lead": {
+      "id": "S:82a1ed31534710743eccbb2664f09aec0063ba4d,",
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 24,
+      "lineHeight": 32,
+      "letterSpacingPercent": -1,
+      "case": "ORIGINAL"
+    },
+    "subtitle": {
+      "id": "S:7cf72e102955ce5df697d0a38f1bff0329ad1c86,",
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 18,
+      "lineHeight": 28,
+      "letterSpacingPercent": -0.5,
+      "case": "ORIGINAL"
+    },
+    "body": {
+      "id": "S:85165832c63fc0d22bb928a44e39f3f3ddf22833,",
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 16,
+      "lineHeight": 24,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "body/strong": {
+      "id": "S:c2fa76730eff744761d48e35d2ae0a5b2c3a14d3,",
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 16,
+      "lineHeight": 24,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "response": {
+      "id": "S:b1090db32ee4d1c567ba2d4a1fc49f019df33162,",
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 17,
+      "lineHeight": 28,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "ui": {
+      "id": "S:8a4ccdc3ec3b4727ebb45ca8f38ed26081561438,",
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 15,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "ui/emphasis": {
+      "id": "S:530c28815a14795f55c6d5982f279f42c4e99384,",
+      "family": "Geist",
+      "style": "SemiBold",
+      "weight": 600,
+      "size": 15,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "label": {
+      "id": "S:a67651eadf258e99bd88678185d156b94eef0e94,",
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 14,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "caption": {
+      "id": "S:69b9b91b3349b6947da660b850c369f9db9aa5fe,",
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 13,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "overline": {
+      "id": "S:2ac3246e1fad851a721af8b17fbe12d54a362678,",
+      "family": "Geist Mono",
+      "style": "Medium",
+      "weight": 500,
+      "size": 11,
+      "lineHeight": 16,
+      "letterSpacingPercent": 4,
+      "case": "UPPER"
+    },
+    "folio": {
+      "id": "S:dfba22f16bfde8ab9c5ec2b640ac7a8522e6de81,",
+      "family": "Geist Mono",
+      "style": "Medium",
+      "weight": 500,
+      "size": 12,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "meta": {
+      "id": "S:c1ff652d561ec617c51c938f6d67d33f04a6329d,",
+      "family": "Geist Mono",
+      "style": "Regular",
+      "weight": 400,
+      "size": 12,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "code/inline": {
+      "id": "S:a79217bbc61ef3471c0bfcf16c283bccf06600d6,",
+      "family": "Geist Mono",
+      "style": "Regular",
+      "weight": 400,
+      "size": 15,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "code/display": {
+      "id": "S:cf90cd84174c212b16213e9a88aa4ffc5861953e,",
+      "family": "Geist Mono",
+      "style": "Medium",
+      "weight": 500,
+      "size": 36,
+      "lineHeight": 40,
+      "letterSpacingPercent": 12,
+      "case": "ORIGINAL"
+    },
+    "number/hero": {
+      "id": "S:0e02db6f0918e8644a7bb3e090e2a51a41e08858,",
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 168,
+      "lineHeight": 148,
+      "letterSpacingPercent": -5,
+      "case": "ORIGINAL"
+    },
+    "number/metric": {
+      "id": "S:13ce511c42caaee1b1ddce494052241a650efb54,",
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 44,
+      "lineHeight": 44,
+      "letterSpacingPercent": -2,
+      "case": "ORIGINAL"
+    },
+    "number/index": {
+      "id": "S:00a527df6cbb25a960d86b02efb938cb92b3b4d2,",
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 28,
+      "lineHeight": 32,
+      "letterSpacingPercent": -2,
+      "case": "ORIGINAL"
+    },
+    "number/count": {
+      "id": "S:cca67e5f17815db705c7491190f39093b837f2b0,",
+      "family": "Geist Mono",
+      "style": "Regular",
+      "weight": 400,
+      "size": 24,
+      "lineHeight": 28,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "brand/wordmark": {
+      "id": "S:3f4f4cbb381810e168aa8962970f86a3bcfcb7e5,",
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 13,
+      "lineHeight": 16,
+      "letterSpacingPercent": 12,
+      "case": "ORIGINAL"
+    },
+    "icon/glyph": {
+      "id": "S:65aafbf94825284feed65889daff54d0d51a7366,",
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 32,
+      "lineHeight": 32,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    }
+  },
+  "space": {
+    "space/000": {
+      "id": "VariableID:7:12",
+      "px": 0
+    },
+    "space/002": {
+      "id": "VariableID:7:13",
+      "px": 2
+    },
+    "space/004": {
+      "id": "VariableID:7:14",
+      "px": 4
+    },
+    "space/006": {
+      "id": "VariableID:7:15",
+      "px": 6
+    },
+    "space/008": {
+      "id": "VariableID:7:16",
+      "px": 8
+    },
+    "space/010": {
+      "id": "VariableID:7:17",
+      "px": 10
+    },
+    "space/012": {
+      "id": "VariableID:7:18",
+      "px": 12
+    },
+    "space/014": {
+      "id": "VariableID:7:19",
+      "px": 14
+    },
+    "space/016": {
+      "id": "VariableID:7:20",
+      "px": 16
+    },
+    "space/020": {
+      "id": "VariableID:7:21",
+      "px": 20
+    },
+    "space/024": {
+      "id": "VariableID:7:22",
+      "px": 24
+    },
+    "space/028": {
+      "id": "VariableID:7:23",
+      "px": 28
+    },
+    "space/032": {
+      "id": "VariableID:7:24",
+      "px": 32
+    },
+    "space/040": {
+      "id": "VariableID:7:25",
+      "px": 40
+    },
+    "space/048": {
+      "id": "VariableID:7:26",
+      "px": 48
+    },
+    "space/056": {
+      "id": "VariableID:7:27",
+      "px": 56
+    },
+    "space/064": {
+      "id": "VariableID:7:28",
+      "px": 64
+    },
+    "space/096": {
+      "id": "VariableID:7:29",
+      "px": 96
+    }
+  },
+  "radius": {
+    "radius/none": {
+      "id": "VariableID:7:30",
+      "px": 0
+    },
+    "radius/control": {
+      "id": "VariableID:7:31",
+      "px": 2
+    },
+    "radius/round": {
+      "id": "VariableID:7:32",
+      "px": 999
+    }
+  },
+  "size": {
+    "size/control": {
+      "id": "VariableID:27:1982",
+      "px": 48
+    },
+    "size/touch-min": {
+      "id": "VariableID:27:1983",
+      "px": 44
+    }
+  }
+}

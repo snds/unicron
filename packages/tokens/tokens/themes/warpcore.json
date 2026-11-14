@@ -1,0 +1,40 @@
+{
+  "$description": "Tier 1 · App theme: Warpcore (blue-violet 277, live plasma cyan 215). The 28 theme slots, 14 per ground: Figma's `warpcore / graphite` and `warpcore / stone` modes of `Unicron / Theme`, each hex copied exactly from the primitive the role aliases. Emitted in dist/tokens.css as `[data-theme=\"warpcore\"] { --g-theme-… }`. Raw hex only, and only these slots: a change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
+  "$extensions": {
+    "unicron.app": { "name": "warpcore", "order": 1, "figmaModes": { "graphite": "warpcore / graphite", "stone": "warpcore / stone" } }
+  },
+  "theme": {
+    "graphite": {
+      "ground": { "$type": "color", "$value": "#18191D", "$description": "Figma VariableID:5:3 (warpcore/graphite/bg): surface/ground in warpcore / graphite." },
+      "raised": { "$type": "color", "$value": "#212125", "$description": "Figma VariableID:5:4 (warpcore/graphite/surf): surface/raised in warpcore / graphite." },
+      "rule": { "$type": "color", "$value": "#313238", "$description": "Figma VariableID:5:5 (warpcore/graphite/rule): line/rule in warpcore / graphite." },
+      "grid-dot": { "$type": "color", "$value": "#393A40", "$description": "Figma VariableID:5:6 (warpcore/graphite/dot): line/grid-dot in warpcore / graphite." },
+      "faint": { "$type": "color", "$value": "#5F6066", "$description": "Figma VariableID:5:7 (warpcore/graphite/faint): text/faint in warpcore / graphite." },
+      "label": { "$type": "color", "$value": "#B2B4BA", "$description": "Figma VariableID:5:8 (warpcore/graphite/mute): text/label in warpcore / graphite." },
+      "secondary": { "$type": "color", "$value": "#D3D4D8", "$description": "Figma VariableID:5:9 (warpcore/graphite/sub): text/secondary in warpcore / graphite." },
+      "body": { "$type": "color", "$value": "#EFF0F3", "$description": "Figma VariableID:5:10 (warpcore/graphite/ink): text/body in warpcore / graphite." },
+      "primary-fill": { "$type": "color", "$value": "#5146EE", "$description": "Figma VariableID:5:11 (warpcore/graphite/org): primary/fill in warpcore / graphite." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:12 (warpcore/graphite/onO): primary/on-fill in warpcore / graphite." },
+      "primary-text": { "$type": "color", "$value": "#A1AEFF", "$description": "Figma VariableID:5:13 (warpcore/graphite/ptext): primary/text in warpcore / graphite." },
+      "primary-soft": { "$type": "color", "$value": "#1F2343", "$description": "Figma VariableID:5:14 (warpcore/graphite/psoft): primary/soft in warpcore / graphite." },
+      "primary-display": { "$type": "color", "$value": "#888EFF", "$description": "Figma VariableID:7:3 (warpcore/graphite/pdisp): primary/display in warpcore / graphite." },
+      "live": { "$type": "color", "$value": "#1EC5E4", "$description": "Figma VariableID:5:15 (warpcore/graphite/sec): secondary/live in warpcore / graphite." }
+    },
+    "stone": {
+      "ground": { "$type": "color", "$value": "#EFF0F5", "$description": "Figma VariableID:5:18 (warpcore/stone/bg): surface/ground in warpcore / stone." },
+      "raised": { "$type": "color", "$value": "#F7F8FD", "$description": "Figma VariableID:5:19 (warpcore/stone/surf): surface/raised in warpcore / stone." },
+      "rule": { "$type": "color", "$value": "#D1D2D9", "$description": "Figma VariableID:5:20 (warpcore/stone/rule): line/rule in warpcore / stone." },
+      "grid-dot": { "$type": "color", "$value": "#BCBDC4", "$description": "Figma VariableID:5:21 (warpcore/stone/dot): line/grid-dot in warpcore / stone." },
+      "faint": { "$type": "color", "$value": "#A3A4AB", "$description": "Figma VariableID:5:22 (warpcore/stone/faint): text/faint in warpcore / stone." },
+      "label": { "$type": "color", "$value": "#67696E", "$description": "Figma VariableID:5:23 (warpcore/stone/mute): text/label in warpcore / stone." },
+      "secondary": { "$type": "color", "$value": "#3C3D40", "$description": "Figma VariableID:5:24 (warpcore/stone/sub): text/secondary in warpcore / stone." },
+      "body": { "$type": "color", "$value": "#151618", "$description": "Figma VariableID:5:25 (warpcore/stone/ink): text/body in warpcore / stone." },
+      "primary-fill": { "$type": "color", "$value": "#4837E0", "$description": "Figma VariableID:5:26 (warpcore/stone/org): primary/fill in warpcore / stone." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:27 (warpcore/stone/onO): primary/on-fill in warpcore / stone." },
+      "primary-text": { "$type": "color", "$value": "#4E4DCD", "$description": "Figma VariableID:5:28 (warpcore/stone/ptext): primary/text in warpcore / stone." },
+      "primary-soft": { "$type": "color", "$value": "#D5DDFF", "$description": "Figma VariableID:5:29 (warpcore/stone/psoft): primary/soft in warpcore / stone." },
+      "primary-display": { "$type": "color", "$value": "#4837E0", "$description": "Figma VariableID:7:4 (warpcore/stone/pdisp): primary/display in warpcore / stone." },
+      "live": { "$type": "color", "$value": "#007491", "$description": "Figma VariableID:5:30 (warpcore/stone/sec): secondary/live in warpcore / stone." }
+    }
+  }
+}
