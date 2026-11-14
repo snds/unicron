@@ -9,7 +9,7 @@ import { useRender } from "@base-ui/react/use-render"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { AppFrameTabBarContext } from "./app-frame-context"
-import { NavMark, nameWithMark, resolveNavMark, rovingTarget, type NavMarkProp } from "./rail"
+import { NavMark, markKeyShortcuts, nameWithMark, resolveNavMark, rovingTarget, type NavMarkProp } from "./rail"
 
 /**
  * `tabs`: the items are tabs in a tablist; the arrow keys move the selection (and the content
@@ -318,6 +318,7 @@ function TabBarItem({ value, icon, label, mark, render, className, onClick, ...p
         "aria-selected": isLink ? undefined : selected,
         "aria-current": isLink && selected ? "page" : undefined,
         "aria-label": nameWithMark(label, resolved),
+        "aria-keyshortcuts": markKeyShortcuts(resolved),
         "data-value": value,
         "data-active": active ? "" : undefined,
         "data-collapsed": collapsed ? "" : undefined,

@@ -10,7 +10,7 @@ import { cva } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
-import { NavMark, nameWithMark, resolveNavMark, type NavMarkProp } from "./rail"
+import { NavMark, NavMarkTooltipKeys, markKeyShortcuts, nameWithMark, resolveNavMark, type NavMarkProp } from "./rail"
 import { Tooltip, TooltipContent } from "./tooltip"
 
 export type FloatButtonKind = "neutral" | "primary"
@@ -224,7 +224,12 @@ export type FloatButtonProps = Omit<TooltipPrimitive.Trigger.Props, "children" |
    * There is no tooltip, since the word is there.
    */
   extended?: boolean
-  /** A count or a square at the glyph's corner (the mark every navigation item shares): the update mark on Settings. Its words join the name. */
+  /**
+   * The mark every navigation item shares (contract 5.1c C1; one implementation, `rail.tsx`): a
+   * count or a square at the glyph's corner, its words joined to the name. Uses: the update mark on
+   * Settings (decisions §3), an open-comments count, a square on View options while a filter is on.
+   * A key hint (`{ keys }`) shows in the tooltip and is said through `aria-keyshortcuts`.
+   */
   mark?: NavMarkProp
   className?: string
   children?: React.ReactNode
@@ -280,13 +285,13 @@ function FloatButton({
     "data-current": on ? "" : undefined,
     "aria-label": nameWithMark(label, resolved),
     "aria-current": current === true ? ("true" as const) : current || undefined,
-    "aria-keyshortcuts": onLongPress ? floatButtonLongPressKeys : undefined,
+    "aria-keyshortcuts": markKeyShortcuts(resolved, onLongPress && floatButtonLongPressKeys),
     "aria-describedby": hint ? hintId : undefined,
     className: floatButtonVariants({ kind, size, current: on, extended, className }),
   }
   const content = (
     <>
-      {resolved ? (
+      {resolved && resolved.kind !== "keys" ? (
         <span data-slot="float-button-glyph" className="relative inline-flex">
           {glyph}
           <NavMark mark={resolved} placement="corner" />
@@ -326,6 +331,7 @@ function FloatButton({
       </TooltipPrimitive.Trigger>
       <TooltipContent>
         {label}
+        <NavMarkTooltipKeys mark={resolved} />
         {hint ? <span data-slot="float-button-hint">{`Hold: ${hint}`}</span> : null}
       </TooltipContent>
     </Tooltip>

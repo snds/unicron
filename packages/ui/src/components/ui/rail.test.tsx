@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import { NavMark, Rail, RailItem, formatNavCount, nameWithMark, railItemVariants, resolveNavMark, rovingTarget } from "./rail"
+import { NavMark, Rail, RailItem, formatNavCount, markKeyShortcuts, nameWithMark, railItemVariants, resolveNavMark, rovingTarget } from "./rail"
 
 describe("the nav mark (contract 5.1b #7)", () => {
   it("writes counts as cross-app decisions §13 does: 07, 12, 248, 1,204; 99+ at an icon's corner", () => {
@@ -54,9 +54,19 @@ describe("the nav mark (contract 5.1b #7)", () => {
     expect(mark.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-overline", "h-(--c-nav-mark-badge-height)", "bg-foreground", "text-background"]))
   })
 
-  it("a key hint is a Kbd", () => {
+  it("a key hint is a Kbd after a label; on an icon there is no room, so it draws nothing there (the host's tooltip shows it)", () => {
     const { container } = render(<NavMark mark={resolveNavMark({ keys: "/" })} placement="inline" />)
     expect(container.querySelector('kbd[data-slot="kbd"]')).toHaveTextContent("/")
+    const corner = render(<NavMark mark={resolveNavMark({ keys: "/" })} placement="corner" />)
+    expect(corner.container.innerHTML).toBe("")
+  })
+
+  it("a key hint is said through aria-keyshortcuts, in its ARIA form when the drawn keys are not (contract 5.1c C2)", () => {
+    expect(markKeyShortcuts(resolveNavMark({ keys: "/" }))).toBe("/")
+    expect(markKeyShortcuts(resolveNavMark({ keys: "⌘K", shortcut: "Meta+K" }))).toBe("Meta+K")
+    expect(markKeyShortcuts(resolveNavMark({ keys: "/" }), "Shift+Enter")).toBe("/ Shift+Enter")
+    expect(markKeyShortcuts(resolveNavMark(12))).toBeUndefined()
+    expect(markKeyShortcuts(null, false)).toBeUndefined()
   })
 
   it("roving targets wrap, and Home and End jump", () => {

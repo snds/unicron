@@ -155,6 +155,36 @@ describe("FloatButton (Figma 20:1690)", () => {
     expect(glyph.querySelector('[data-slot="nav-mark"]')).toHaveAttribute("data-kind", "square")
   })
 
+  it("takes the very mark the nav items take (contract 5.1c C1): a count, a needs-you count, a square; its words join the name", () => {
+    render(
+      <>
+        <FloatButton label="Comments" icon="chat" mark={3} />
+        <FloatButton label="Requests" icon="notification" mark={{ count: 2, tone: "needs-you" }} />
+        <FloatButton label="View options" icon="filter" mark={{ square: true, label: "Filter on" }} />
+        <FloatButton label="Inbox" icon="email" mark={0} />
+      </>
+    )
+    const comments = screen.getByRole("button", { name: "Comments, 3" })
+    expect(comments.querySelector('[data-slot="nav-mark"]')).toHaveTextContent("03")
+    const requests = screen.getByRole("button", { name: "Requests, 2 waiting on you" })
+    expect(requests.querySelector('[data-slot="nav-mark"]')).toHaveAttribute("data-tone", "needs-you")
+    expect(screen.getByRole("button", { name: "View options, Filter on" }).querySelector('[data-slot="nav-mark"]')).toHaveAttribute("data-kind", "square")
+    // A count of 0 draws nothing and says nothing.
+    const inbox = screen.getByRole("button", { name: "Inbox" })
+    expect(inbox.querySelector('[data-slot="nav-mark"]')).toBeNull()
+  })
+
+  it("a key hint is said through aria-keyshortcuts, with the long press's keys after it, and shows in the tooltip, not on the glyph (contract 5.1c C2)", async () => {
+    const user = userEvent.setup()
+    render(<FloatButton label="Search" icon="search" mark={{ keys: "/" }} onLongPress={() => {}} longPressLabel="Search everything" />)
+    const button = screen.getByRole("button", { name: "Search" })
+    expect(button).toHaveAttribute("aria-keyshortcuts", `/ ${floatButtonLongPressKeys}`)
+    expect(button.querySelector("kbd")).toBeNull()
+    await user.tab()
+    const kbd = await screen.findByText("/", { selector: '[data-slot="nav-mark-keys"]' })
+    expect(kbd.tagName).toBe("KBD")
+  })
+
   it("shows its label as a tooltip on focus", async () => {
     const user = userEvent.setup()
     render(<FloatButton label="Search" icon="search" />)
