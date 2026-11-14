@@ -117,6 +117,22 @@ In a client-only React 19 app that same script makes React log, in development o
 "Encountered a script tag while rendering React component". It is harmless in production, but
 it breaks a "no console errors" bar; prefer the hook above there.
 
+### Under a strict Content-Security-Policy
+
+`@unicron/ui` works with `style-src 'self'; font-src 'self'` and no inline script (Lockdown's web
+vault). No component adds a `<style>` tag or writes a `style` attribute into markup, the fonts
+ship as files, and nothing loads from a `data:` URL.
+
+One dependency does add a tag: sonner, which `Toaster` is built on, inserts its own stylesheet
+as its script loads. That policy refuses it, and without those rules a toast would fall into the
+page's flow. So `@unicron/ui/styles` carries the same rules as a file (it imports
+`sonner/dist/styles.css`), and the refused tag does no harm: toasts take their place either way.
+You need to do nothing, and you do not need to strip the tag at build. The browser will log one
+"Refused to apply inline style" line for sonner's tag; that line is the policy working. (Base UI's
+scroll area also tries one tag, for hiding scrollbars; the stylesheet's `no-scrollbar` utility
+already covers it.) A browser check loads the Toaster under this policy
+(`apps/playground/tests/parts.spec.ts`).
+
 ## 4a. Icons (Carbon)
 
 Icons are IBM Carbon, drawn as inline SVG by `<Icon name="…" />`. There is no icon font to load
