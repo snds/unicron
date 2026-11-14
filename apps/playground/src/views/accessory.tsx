@@ -60,6 +60,21 @@ export default function AccessoryView() {
         />
       </Specimen>
 
+      <Specimen label="Countdown // the seconds follow the meta, hidden from screen readers; one sentence is said">
+        <Accessory
+          tone="live"
+          meta="Sending"
+          countdown={8}
+          title="Board games for the cabin"
+          action={{ label: "Undo", onClick: () => setSaid("Send undone") }}
+          progress={{ value: 8, max: 10 }}
+          announce="Sending. 10 seconds to undo."
+          onOpen={() => setSaid("Opened the Outbox")}
+          openLabel="Open the Outbox"
+        />
+        <Accessory tone="needs-you" meta="Sign-in request" countdown={94} title="Chrome on Windows" action={{ label: "Review", onClick: () => setSaid("Review") }} onOpen={() => setSaid("Opened the request")} />
+      </Specimen>
+
       <Specimen label="Dismissable // a finished background task">
         {finished ? (
           <Accessory

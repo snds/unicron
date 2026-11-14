@@ -151,3 +151,196 @@ test.describe("the shell the width picks (contract 5.2)", () => {
     })
   }
 })
+
+// ── Late additions (contract 5.1c, lane c-shell) ─────────────────────────────────────────────────
+
+const contained = (page: Page, label: string) => page.locator(`[data-slot="app-frame-contained"][aria-label^="${label}"]`)
+
+/** A toast's box once it has arrived: it slides in, so wait until two reads agree. */
+async function settledBox(locator: ReturnType<Page["locator"]>) {
+  let last = ""
+  await expect
+    .poll(async () => {
+      const b = await locator.boundingBox()
+      const now = b ? `${Math.round(b.x)},${Math.round(b.y)},${Math.round(b.width)},${Math.round(b.height)}` : ""
+      const same = now !== "" && now === last
+      last = now
+      return same
+    })
+    .toBe(true)
+  return (await locator.boundingBox())!
+}
+
+test.describe("toasts in the frame (C6)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  test("phone: a toast takes the strip's slot above the bottom row, as wide as the strip; never a third bar", async ({ page }) => {
+    await open(page, "app-frame-toasts", "vale")
+    const frame = contained(page, "No strip")
+    const toast = frame.locator("[data-sonner-toast]")
+    await expect(toast).toHaveCount(1)
+    await expect(toast).toBeVisible()
+    const f = (await frame.boundingBox())!
+    const bar = (await frame.locator('[data-slot="app-frame-bottom-row-bar"]').boundingBox())!
+    const t = await settledBox(toast)
+    // 8 above the bar, the strip's place; 16 from each side.
+    expect(Math.abs(bar.y - (t.y + t.height) - 8)).toBeLessThanOrEqual(2)
+    expect(Math.abs(t.x - f.x - 16)).toBeLessThanOrEqual(2)
+    expect(Math.abs(t.width - (f.width - 32))).toBeLessThanOrEqual(2)
+  })
+
+  test("a live strip without an action gives way while the toast shows; the toast stands where it stood", async ({ page }) => {
+    await open(page, "app-frame-toasts", "vale")
+    const frame = contained(page, "Live strip, no action")
+    const toast = frame.locator("[data-sonner-toast]")
+    await expect(toast).toBeVisible()
+    const strip = frame.locator('[data-slot="accessory"]')
+    await expect(strip).toHaveAttribute("data-yield", "")
+    await expect(strip).toBeHidden()
+    const s = (await strip.boundingBox())!
+    const t = await settledBox(toast)
+    expect(Math.abs(s.y + s.height - (t.y + t.height))).toBeLessThanOrEqual(2)
+  })
+
+  test("a live strip with an action is never covered: no toast shows while it is up", async ({ page }) => {
+    await open(page, "app-frame-toasts", "vale")
+    const frame = contained(page, "Live strip with an action")
+    await expect(frame).toHaveAttribute("data-strip", "live-action")
+    await page.waitForTimeout(400)
+    await expect(frame.locator("[data-sonner-toast]")).toHaveCount(0)
+    await expect(frame.locator('[data-slot="accessory"]')).toBeVisible()
+  })
+
+  test("a needs-you strip never gives way: the toast sits just under the top row", async ({ page }) => {
+    await open(page, "app-frame-toasts", "vale")
+    const frame = contained(page, "Needs-you strip")
+    const toast = frame.locator("[data-sonner-toast]")
+    await expect(toast).toBeVisible()
+    await expect(frame.locator('[data-slot="accessory"]')).toBeVisible()
+    const top = (await frame.locator('[data-slot="app-frame-top-row"]').boundingBox())!
+    const t = await settledBox(toast)
+    expect(t.y).toBeGreaterThanOrEqual(top.y + top.height - 1)
+    expect(t.y - (top.y + top.height)).toBeLessThanOrEqual(4)
+  })
+})
+
+test.describe("toasts on a desktop (C6)", () => {
+  test("stay at the bottom left of the content", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await open(page, "app-frame-toasts", "vale")
+    const frame = contained(page, "Vale // beside")
+    const toast = frame.locator("[data-sonner-toast]")
+    await expect(toast).toBeVisible()
+    const main = (await frame.locator('[data-slot="app-frame-main"]').boundingBox())!
+    const f = (await frame.boundingBox())!
+    const t = await settledBox(toast)
+    expect(Math.abs(t.x - main.x)).toBeLessThanOrEqual(2)
+    expect(Math.abs(f.y + f.height - (t.y + t.height) - 24)).toBeLessThanOrEqual(3)
+  })
+})
+
+test.describe("list + detail shrink order (C8)", () => {
+  test("the sidebar's rail first, then the detail pushed; the frames say which", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await open(page, "app-frame-shrink", "synapse")
+    const room = contained(page, "1180")
+    await expect(room).not.toHaveAttribute("data-shrink")
+    await expect(room.locator('nav[data-slot="app-frame-sidebar"]')).toHaveAttribute("data-state", "expanded")
+
+    const rail = contained(page, "1050 // content")
+    await expect(rail).toHaveAttribute("data-shrink", "rail")
+    const sidebar = rail.locator('nav[data-slot="app-frame-sidebar"]')
+    await expect(sidebar).toHaveAttribute("data-state", "rail")
+    expect(Math.round((await sidebar.boundingBox())!.width)).toBe(48)
+    await expect(rail.locator('[data-slot="app-frame-list"]')).toHaveAttribute("data-shown", "")
+    await expect(rail.locator('[data-slot="app-frame-detail"]')).toHaveAttribute("data-shown", "")
+    // The detail keeps its least width beside the list.
+    expect((await rail.locator('[data-slot="app-frame-detail"]').boundingBox())!.width).toBeGreaterThanOrEqual(480)
+
+    const push = contained(page, "1050, the least detail")
+    await expect(push).toHaveAttribute("data-shrink", "push")
+    await expect(push.locator('[data-slot="app-frame-detail"]')).toHaveAttribute("data-pushed", "")
+    await expect(push.locator('[data-slot="app-frame-list"]')).not.toHaveAttribute("data-shown")
+    await expect(push.getByRole("button", { name: "Back" })).toBeVisible()
+  })
+
+  for (const [width, state] of [
+    [1440, "expanded"],
+    [1100, "expanded"],
+    [1099, "rail"],
+    [1024, "rail"],
+  ] as const) {
+    test(`a real window at ${width}: the Vale inbox's sidebar is ${state}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 860 })
+      await open(page, "shell-vale", "vale")
+      await expect(page.locator('[data-slot="app-frame"]')).toHaveAttribute("data-layout", "expanded")
+      await expect(page.locator('nav[data-slot="app-frame-sidebar"]')).toHaveAttribute("data-state", state)
+      await expect(page.locator('[data-slot="app-frame-detail"]')).toHaveAttribute("data-shown", "")
+    })
+  }
+})
+
+test.describe("pull to refresh (C9)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  /** A real touch drag through Chromium's input pipeline, so touch-action decides who gets it. */
+  async function drag(page: Page, x: number, y: number, dy: number, { lift = true } = {}) {
+    const cdp = await page.context().newCDPSession(page)
+    const point = (py: number) => [{ x, y: py, id: 1 }]
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: point(y) })
+    const steps = 12
+    for (let i = 1; i <= steps; i++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: point(y + (dy * i) / steps) })
+    }
+    if (lift) await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] })
+    return cdp
+  }
+
+  async function atRest(page: Page) {
+    await open(page, "app-frame-pull", "lockdown")
+    const frame = contained(page, "At rest")
+    const list = frame.locator('[data-slot="app-frame-list"]')
+    await expect(list).toHaveAttribute("data-pull-ready", "")
+    const box = (await list.boundingBox())!
+    return { frame, list, x: box.x + box.width / 2, y: box.y + 260 }
+  }
+
+  test("a pull past 64 from the top runs the refresh; the app's live strip shows; the chrome does not minimize", async ({ page }) => {
+    const { frame, list, x, y } = await atRest(page)
+    // At the top, a finger moving down is the column's, not the browser's.
+    expect(await list.evaluate((el) => getComputedStyle(el).touchAction)).toContain("pan-down")
+    await drag(page, x, y, 140)
+    await expect(frame.locator('[data-slot="accessory"]')).toBeVisible()
+    await expect(frame.locator('[data-slot="accessory"]')).toContainText("Checking for breaches")
+    await expect(list).toHaveAttribute("aria-busy", "true")
+    expect(await list.evaluate((el) => el.scrollTop)).toBe(0)
+    await expect(frame).not.toHaveAttribute("data-minimized")
+    // The content went back.
+    await expect.poll(() => list.evaluate((el) => getComputedStyle(el).transform)).toBe("none")
+  })
+
+  test("a pull short of the line does nothing", async ({ page }) => {
+    const { frame, x, y } = await atRest(page)
+    await drag(page, x, y, 40)
+    await page.waitForTimeout(200)
+    await expect(frame.locator('[data-slot="accessory"]')).toHaveCount(0)
+  })
+
+  test("a finger moving up scrolls the list as always, and is not a pull", async ({ page }) => {
+    const { frame, list, x, y } = await atRest(page)
+    await drag(page, x, y + 200, -220)
+    await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+    await expect(frame.locator('[data-slot="accessory"]')).toHaveCount(0)
+  })
+
+  test("under reduced motion the list does not stretch; the mark still shows and changes at the line", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const { list, frame, x, y } = await atRest(page)
+    await drag(page, x, y, 140, { lift: false })
+    await expect(list).toHaveAttribute("data-pull", "armed")
+    expect(await list.evaluate((el) => getComputedStyle(el).transform)).toBe("none")
+    const mark = frame.locator('[data-slot="app-frame-pull-mark"]')
+    await expect(mark).toBeVisible()
+    await expect(mark).toHaveAttribute("data-state", "armed")
+  })
+})
