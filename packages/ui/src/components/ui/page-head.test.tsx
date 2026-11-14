@@ -54,6 +54,19 @@ describe("PageHead", () => {
     expect(classesOf(meta)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
   })
 
+  // Lockdown Desktop / 01: overline at y 96, the display title's 68px line from 112, the meta line
+  // from 180: nothing between the three. The phone frames (md, sm) keep 4.
+  it("lg sets the overline and the meta line directly on the title's line box; md and sm keep 4 between them", () => {
+    const { container, rerender } = render(<PageHead size="lg" overline="Login" title="Steam" meta="store.steampowered.com" metaPosition="below" />)
+    const main = () => classesOf(container.querySelector('[data-slot="page-head-main"]')!)
+    expect(main()).toContain("gap-0")
+    expect(main()).not.toContain("gap-1")
+    for (const size of ["md", "sm"] as const) {
+      rerender(<PageHead size={size} overline="Inbox // 012 unread" title="Today" />)
+      expect(main()).toContain("gap-1")
+    }
+  })
+
   it("meta as a button, above the switcher", async () => {
     const user = userEvent.setup()
     const onMetaClick = vi.fn()

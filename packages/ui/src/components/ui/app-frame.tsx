@@ -28,7 +28,7 @@ import { AppFramePullMark, usePullToRefresh } from "./app-frame-pull"
 import { FloatButton } from "./float-button"
 import { PageHead, type PageHeadProps } from "./page-head"
 import { ResizableHandle, ResizablePane, ResizablePanes, useResizablePanesLayout } from "./resizable-panes"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./sheet"
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "./sheet"
 
 /* ── AppFrame ────────────────────────────────────────────────────────────────────────────────── */
 
@@ -709,12 +709,35 @@ function AppFrameInset({ fill = false, className, ...props }: AppFrameInsetProps
   )
 }
 
+export type AppFramePageHeadProps = PageHeadProps & {
+  /**
+   * The space under the head, before what it heads.
+   * - `md` (default): the space between a head and the list or page under it: 32 on a desktop, 16
+   *   on a phone.
+   * - `sm`: 16, for a head whose first block belongs with it (Lockdown's needs-you under "Steam").
+   * - `none`: no space. For a head that is one block of a stack whose own gap separates the blocks
+   *   (a detail: the meta, the title, the summary, the body). With the default there, the head's
+   *   32 stacked on the stack's gap and the title sat twice as far from its own content as the
+   *   blocks sat from each other (rules.md 5.4: never more space inside a group than between two).
+   */
+  gap?: "none" | "sm" | "md"
+  /**
+   * What belongs to the head and sits right under its title, in the same group: a row of filter
+   * chips, 16 under the title. With it, the `md` space under the head is 28 on a desktop, as
+   * Warpcore Desktop / 01 draws them (the head ends at y 180, chips at y 196, the first row at
+   * y 248); on a phone it stays 16 (Mobile / 06: chips at y 200, the first row at y 240).
+   */
+  below?: React.ReactNode
+}
+
 /**
  * The page head of a column: `PageHead`, with the space the frames draw around it, and wired to the
  * phone's chrome. While its column shows, its title (and switcher) is the small centred title the
  * top row shows once the page has scrolled; on a short screen it draws in that collapsed form.
+ * `gap` sets the space under it and `below` holds a chip row that belongs to it, so an app never
+ * needs a class to place a head.
  */
-function AppFramePageHead({ title, switcher, collapsed, className, ...props }: PageHeadProps) {
+function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, className, ...props }: AppFramePageHeadProps) {
   const frame = useAppFrame()
   const shown = useAppFrameColumnShown()
   const { setHead } = frame
@@ -747,9 +770,16 @@ function AppFramePageHead({ title, switcher, collapsed, className, ...props }: P
   }, [registers, title, switcherLabel, swipes, popup, setHead])
 
   const inset = React.useContext(InsetContext)
+  const hasBelow = below !== undefined && below !== null && below !== false
+  const under = gap === "none" ? "" : gap === "sm" || frame.phone ? "pb-4" : hasBelow ? "pb-7" : "pb-8"
   return (
-    <div data-slot="app-frame-page-head" className={cn(frame.phone ? cn("pb-4", !inset && "px-4") : "pb-8", className)}>
+    <div data-slot="app-frame-page-head" data-gap={gap} className={cn(under, frame.phone && !inset && "px-4", className)}>
       <PageHead title={title} switcher={switcher} collapsed={collapsed ?? frame.layout === "rail"} {...props} />
+      {hasBelow ? (
+        <div data-slot="app-frame-page-head-below" className="mt-4 min-w-0">
+          {below}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -757,6 +787,13 @@ function AppFramePageHead({ title, switcher, collapsed, className, ...props }: P
 /* ── Beside the detail ───────────────────────────────────────────────────────────────────────── */
 
 export type AppFrameSidePanelProps = Omit<React.ComponentProps<"aside">, "title"> & {
+  /**
+   * The panel shows. As a column it stands while this is true. As a sheet (no room for a column,
+   * or a phone) it opens only when this turns true while it is a sheet, that is on a press: an
+   * `open` it inherits (true at load, or a standing column that lost its room) is handed back
+   * through `onOpenChange(false)`, so a standing column never turns into an open modal sheet by
+   * itself. When the room comes back, the column that stood before is asked for again.
+   */
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Its name: the panel's label, and the sheet's title when it is one. */
@@ -772,7 +809,8 @@ export type AppFrameSidePanelProps = Omit<React.ComponentProps<"aside">, "title"
 /**
  * A third column beside the detail (Vale's sender panel, Synapse's activity), 312 wide, with a
  * rule at its start. It stands as a column only when the content keeps `minContent` beside it;
- * with less room, and on a phone, it is a sheet from the side.
+ * with less room, and on a phone, it is a sheet from the side, which starts closed and opens on a
+ * press (see `open`). In the sheet its content keeps the sheet's own inset (`SheetBody`).
  */
 function AppFrameSidePanel({ open, onOpenChange, title, minContent = "room", className, children, ...props }: AppFrameSidePanelProps) {
   const frame = useAppFrame()
@@ -804,8 +842,41 @@ function AppFrameSidePanel({ open, onOpenChange, title, minContent = "room", cla
   }, [el, anchor, frame.phone, frame.split, minContent])
 
   const asColumn = !frame.phone && frame.split && room
+
+  // `asked`: this `open` was asked for while the panel was a sheet (it rose from false there).
+  // Kept from the last render's `open` and form, as React's "state from the previous render".
+  const [last, setLast] = React.useState({ open, asColumn })
+  const [asked, setAsked] = React.useState(false)
+  if (last.open !== open || last.asColumn !== asColumn) {
+    setLast({ open, asColumn })
+    if (asColumn || !open) setAsked(false)
+    else if (!last.asColumn && !last.open) setAsked(true)
+  }
+  // Open, as a sheet, but not asked for there: true at load, or a column that just lost its room.
+  const inherited = !asColumn && open && !asked
+  const latestChange = React.useRef(onOpenChange)
+  React.useLayoutEffect(() => {
+    latestChange.current = onOpenChange
+  })
+  const stood = React.useRef(false)
+  React.useLayoutEffect(() => {
+    if (!inherited) return
+    // The sheet stays closed; the app hears that the panel no longer shows. Remembered, so the
+    // column comes back with its room.
+    stood.current = true
+    latestChange.current(false)
+  }, [inherited])
+  React.useLayoutEffect(() => {
+    if (!asColumn || !stood.current) return
+    stood.current = false
+    if (!open) latestChange.current(true)
+  }, [asColumn, open])
+
   if (asColumn) {
-    if (!open) return null
+    // Closed, it still holds its place among the columns, so the room is measured before a press:
+    // without that a closed panel never learned it had no room, and its first press opened a
+    // column that turned into a sheet.
+    if (!open) return <span ref={setAnchor} hidden />
     return (
       <aside
         ref={setEl}
@@ -827,14 +898,17 @@ function AppFrameSidePanel({ open, onOpenChange, title, minContent = "room", cla
     <>
       {/* Holds the panel's place among the columns, so the room is still measured. */}
       <span ref={setAnchor} hidden />
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open && asked} onOpenChange={onOpenChange}>
         <SheetContent side="right" aria-label={title}>
           <SheetHeader>
             <SheetTitle>{title}</SheetTitle>
           </SheetHeader>
-          <div data-slot="app-frame-side-panel" className="min-h-0 flex-1 overflow-y-auto">
-            {children}
-          </div>
+          {/* SheetBody: the sheet's own 16 from the sides, so the content starts on the title's line. */}
+          <SheetBody>
+            <div data-slot="app-frame-side-panel" className="min-w-0">
+              {children}
+            </div>
+          </SheetBody>
         </SheetContent>
       </Sheet>
     </>

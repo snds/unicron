@@ -12,7 +12,8 @@ import { formatNavCount } from "./rail"
 
 /**
  * The title's size, from the frames:
- * `lg`: display (72/68), a desktop list or detail head (Warpcore Tasks, Lockdown's Steam).
+ * `lg`: display (72/68), a desktop list or detail head (Warpcore Tasks, Lockdown's Steam). Its
+ *   overline and meta line sit directly on the title's line box, with no gap, as drawn.
  * `md`: display/compact (48/48), every phone list and Vale's desktop lists. The default.
  * `sm`: title (32/36), a two-word phone title, a conversation or a detail head beside a pane.
  */
@@ -242,7 +243,11 @@ function PageHead({
       className={cn("flex min-w-0 flex-wrap items-end justify-between gap-x-6 gap-y-3", className)}
       {...props}
     >
-      <div data-slot="page-head-main" className="relative flex min-w-0 grow flex-col gap-1">
+      {/* 4 between the overline, the title and a meta line under it, as the phone frames draw a
+          head. At `lg` nothing: the desktop frames set the overline and the meta line directly on
+          the display title's own line box (Lockdown Desktop / 01: overline at y 96, the title's
+          68px line from 112, the meta line from 180). */}
+      <div data-slot="page-head-main" className={cn("relative flex min-w-0 grow flex-col", size === "lg" ? "gap-0" : "gap-1")}>
         {overline || switcher ? (
           <p data-slot="page-head-overline" className="flex min-w-0 items-center gap-1">
             {overline ? <span className="type-overline min-w-0 truncate text-text-label">{overline}</span> : null}

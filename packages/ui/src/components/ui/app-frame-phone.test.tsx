@@ -111,7 +111,18 @@ describe("AppFrameBottomRow", () => {
     const dock = document.querySelector('[data-slot="app-frame-bottom-row"]')!
     expect(dock).toHaveAttribute("data-variant", "tabs")
     const bar = dock.querySelector('[data-slot="app-frame-bottom-row-bar"]')!
-    expect([...bar.children].map((el) => el.getAttribute("data-slot"))).toEqual(["float-button", "tab-bar", "app-frame-bottom-row-strip", "float-button"])
+    // The end sits in its own slot, held at the trailing edge (`ms-auto`): the create button does
+    // not move while the tab bar and the strip trade room.
+    expect([...bar.children].map((el) => el.getAttribute("data-slot"))).toEqual(["float-button", "tab-bar", "app-frame-bottom-row-strip", "app-frame-bottom-row-end"])
+    const end = bar.querySelector('[data-slot="app-frame-bottom-row-end"]')!
+    expect(end.className.split(/\s+/)).toEqual(expect.arrayContaining(["ms-auto", "shrink-0"]))
+    expect(end).toContainElement(screen.getByRole("button", { name: "New item" }))
+    // The strip's slot is always in the row at no width, and trades room with the tab bar on the
+    // state role: the bar's first frame is its old width (the browser check samples the frames).
+    const strip = bar.querySelector('[data-slot="app-frame-bottom-row-strip"]')!
+    expect(strip.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["grow-0", "basis-0", "-ms-2", "has-[>*]:grow", "has-[>*]:ms-0", "transition-[flex-grow,margin]", "duration-(--motion-state)", "ease-(--motion-ease-move)"])
+    )
     expect(screen.getByRole("tablist", { name: "Sections" })).toHaveAttribute("aria-orientation", "horizontal")
     // A masked fill of the ground, never a blur, written for WebKit too.
     const edge = dock.querySelector('[data-slot="app-frame-scroll-edge"]')!
@@ -138,7 +149,11 @@ describe("AppFrameBottomRow", () => {
     const dock = document.querySelector('[data-slot="app-frame-bottom-row"]')!
     expect(dock).toHaveAttribute("data-variant", "detail")
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument()
-    expect(dock.querySelector('[data-slot="app-frame-bottom-row-fill"]')).toHaveTextContent("Reply to Mira")
+    const fill = dock.querySelector('[data-slot="app-frame-bottom-row-fill"]')!
+    expect(fill).toHaveTextContent("Reply to Mira")
+    // The slot fills the row and stretches what it holds: a Composer's root hugs otherwise, and
+    // stopped two thirds across the row (the browser check measures its right edge).
+    expect(fill.className.split(/\s+/)).toEqual(expect.arrayContaining(["flex", "min-w-0", "flex-1", "[&>*]:min-w-0", "[&>*]:flex-1"]))
     expect(screen.getByRole("button", { name: "Copy password" })).toHaveTextContent("Copy password")
   })
 

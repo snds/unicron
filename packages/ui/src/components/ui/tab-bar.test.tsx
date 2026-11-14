@@ -57,12 +57,16 @@ describe("TabBar (Figma 20:1657)", () => {
     expect(classesOf(tab)).toEqual(expect.arrayContaining(["grow", "basis-0", "h-full", "hit-area", "text-text-label", "hover:bg-state-hover", "active:bg-state-pressed"]))
   })
 
-  it("the active tab is the soft primary tile with the icon in body ink (contract 9.9)", () => {
+  // Figma's Dock Tab (20:1656) and the phone frames of Warpcore, Lockdown, Synapse and Vale's
+  // Calendar, Contacts and Notes draw the active icon in primary/text. Body ink is one override
+  // (Vale's Mail tab), which contract 9.9 had taken for the rule.
+  it("the active tab is the soft primary tile with the icon in primary-text, as Figma draws it", () => {
     render(<Vale />)
     const mail = screen.getByRole("tab", { name: "Mail, 12" })
     expect(mail).toHaveAttribute("data-active")
-    expect(classesOf(mail)).toEqual(expect.arrayContaining(["bg-primary-soft", "text-text-body"]))
+    expect(classesOf(mail)).toEqual(expect.arrayContaining(["bg-primary-soft", "text-primary-text"]))
     expect(classesOf(mail)).not.toContain("text-text-label")
+    expect(classesOf(mail)).not.toContain("text-text-body")
   })
 
   it("a tap picks a section; a second tap on the active one calls onReselect", async () => {

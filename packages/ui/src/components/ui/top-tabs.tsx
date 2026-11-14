@@ -17,11 +17,12 @@ export type TopTabsProps = React.ComponentProps<"nav"> & {
 
 /**
  * TopTabs: the sections of an app with a desktop top bar (Warpcore). A `nav` of `TopTab` links,
- * 8px apart: with each tab's 12px side padding the labels sit 32px apart, as the frames draw them.
+ * 4px apart: with each tab's 12px side padding the drawn tabs sit 28px apart, as all 19 Warpcore
+ * desktop frames draw them (tab boxes at x 276, 374, 472, each 70 wide).
  * Tab moves along them; each is a link, so the browser and assistive tech treat them as places.
  */
 function TopTabs({ label, className, ...props }: TopTabsProps) {
-  return <nav data-slot="top-tabs" aria-label={label} className={cn("flex items-center gap-2", className)} {...props} />
+  return <nav data-slot="top-tabs" aria-label={label} className={cn("flex items-center gap-1", className)} {...props} />
 }
 
 export type TopTabProps = Omit<useRender.ComponentProps<"a">, "children" | "aria-label"> & {

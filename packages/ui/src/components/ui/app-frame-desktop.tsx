@@ -107,12 +107,20 @@ function AppFrameSidebar({
   const frame = useAppFrame()
   const [drawerOwn, setDrawerOwn] = React.useState(false)
   const drawerOpen = drawerOpenProp ?? drawerOwn
+  // The app's handler is read when it is called, so an inline `onDrawerOpenChange` (a new function
+  // on every render of the app) does not make a new `setDrawerOpen`, and so does not re-run the
+  // effect that moves focus into the drawer: focus stays where the person put it.
+  const onDrawerOpenChangeRef = React.useRef(onDrawerOpenChange)
+  React.useEffect(() => {
+    onDrawerOpenChangeRef.current = onDrawerOpenChange
+  })
+  const drawerControlled = drawerOpenProp !== undefined
   const setDrawerOpen = React.useCallback(
     (open: boolean) => {
-      if (drawerOpenProp === undefined) setDrawerOwn(open)
-      onDrawerOpenChange?.(open)
+      if (!drawerControlled) setDrawerOwn(open)
+      onDrawerOpenChangeRef.current?.(open)
     },
-    [drawerOpenProp, onDrawerOpenChange]
+    [drawerControlled]
   )
   // At medium width, and when a list + detail needs the room at the expanded width (C8), the
   // sidebar is its rail and expanding it lays the full sidebar over the content as a drawer.
@@ -145,18 +153,34 @@ function AppFrameSidebar({
     return () => document.removeEventListener("keydown", onKey)
   }, [frame.phone, medium, drawerOpen, setDrawerOpen, onCollapsedChange, collapsed])
 
-  // The drawer: focus goes into it, Esc closes it and focus comes back to the expand control.
+  // The drawer: focus goes into it as it opens (once: this runs when `drawerShows` changes, not on
+  // every render of the app), and Esc closes it.
   React.useEffect(() => {
     if (!drawerShows) return
     drawerRef.current?.querySelector<HTMLElement>("a[href],button:not([disabled]),[tabindex='0']")?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return
       setDrawerOpen(false)
-      expandButton.current?.focus()
     }
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)
   }, [drawerShows, setDrawerOpen])
+
+  // Focus comes back to the expand control once the drawer has closed (Esc, "Close sidebar", ⌘\,
+  // a press outside). Only then: while the drawer shows, the rail under it is inert, and a browser
+  // refuses to focus anything inside an inert box, so a focus() in the closing handler itself left
+  // focus on the body. If the app has already put focus somewhere of its own, it stays there.
+  const drawerWasShowing = React.useRef(false)
+  React.useEffect(() => {
+    if (drawerShows) {
+      drawerWasShowing.current = true
+      return
+    }
+    if (!drawerWasShowing.current) return
+    drawerWasShowing.current = false
+    const active = document.activeElement
+    if (!active || active === document.body) expandButton.current?.focus()
+  }, [drawerShows])
 
   if (frame.phone) return null
 
@@ -184,7 +208,7 @@ function AppFrameSidebar({
           <div className="min-w-0 flex-1">{footer}</div>
           {footerControl}
           {inDrawer ? (
-            <SidebarControl label="Close sidebar" icon="side-panel--close" onClick={() => (setDrawerOpen(false), expandButton.current?.focus())} />
+            <SidebarControl label="Close sidebar" icon="side-panel--close" onClick={() => setDrawerOpen(false)} />
           ) : onCollapsedChange ? (
             <SidebarControl label="Collapse sidebar" icon="side-panel--close" onClick={() => onCollapsedChange(true)} />
           ) : null}
@@ -264,7 +288,7 @@ function AppFrameSidebar({
       </nav>
       {drawerShows ? (
         <>
-          {/* A press outside closes it. The scrim is the menu's (32%): the drawer is a panel, not a dialog. */}
+          {/* A press outside closes it. The scrim is the menu's (--c-scrim-menu): the drawer is a panel, not a dialog. */}
           <div data-slot="app-frame-sidebar-scrim" aria-hidden="true" className="scrim-menu absolute inset-0 z-30" onPointerDown={() => setDrawerOpen(false)} />
           <div
             ref={drawerRef}
@@ -615,6 +639,12 @@ export type AppFrameTopBarProps = Omit<React.ComponentProps<"header">, "children
   action?: AppFrameAction
   /** Float buttons at the end (search, settings), size m. */
   actions?: React.ReactNode
+  /**
+   * The leading slot: a back button, before the lockup. Default: the frame's own, while a detail is
+   * pushed at medium width (contract 5.1b #4, decisions §14: Warpcore keeps its top-bar back
+   * button). `false` keeps it empty.
+   */
+  back?: AppFrameBack | false
 }
 
 /**
@@ -623,13 +653,17 @@ export type AppFrameTopBarProps = Omit<React.ComponentProps<"header">, "children
  * When it runs out of room (medium width) it gives up room in Warpcore's order (U-01): the status
  * takes its short form; the wordmark hides; the primary becomes an icon-only float button with the
  * same name; the tab numbers hide; the tabs go icon only, keeping their names. The status never hides.
+ *
+ * While a detail is pushed at medium width (the list is hidden), the way back is a float button in
+ * the leading slot, before the lockup, as in the status line of the sidebar apps. It never hides.
  */
-function AppFrameTopBar({ lockup, tabs, status, action, actions, className, ...props }: AppFrameTopBarProps) {
+function AppFrameTopBar({ lockup, tabs, status, action, actions, back, className, ...props }: AppFrameTopBarProps) {
   const frame = useAppFrame()
   const bar = React.useRef<HTMLElement>(null)
   useCollapseFlags(bar, !frame.phone)
   if (frame.phone) return null
   const wide = frame.layout === "expanded"
+  const way = back === false ? null : (back ?? frame.back)
 
   return (
     <header
@@ -647,6 +681,11 @@ function AppFrameTopBar({ lockup, tabs, status, action, actions, className, ...p
       )}
       {...props}
     >
+      {way ? (
+        <div data-slot="app-frame-top-bar-back" className="flex shrink-0 items-center">
+          <FloatButton label={way.label} icon="arrow--left" onClick={way.onBack} />
+        </div>
+      ) : null}
       <div data-slot="app-frame-top-bar-lockup" className={cn("flex shrink-0 items-center", wide && "w-(--c-app-frame-sidebar-width)")}>
         {lockup}
       </div>

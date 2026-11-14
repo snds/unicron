@@ -17,6 +17,7 @@ import {
   AppFrameSidePanel,
   AppFrameSidebar,
   AppFrameStatusLine,
+  AppFrameTopBar,
   FoldPanes,
   StatusItem,
   shrinkFor,
@@ -264,6 +265,36 @@ describe("list and detail (contract 5.2)", () => {
     expect(onBack).toHaveBeenCalledTimes(1)
   })
 
+  // Warpcore has no status line: its top bar draws the same way back (contract 5.1b #4,
+  // decisions §14). Without it a pushed detail at medium width had no way back at all.
+  it("puts the way back in the top bar's leading slot at medium width, before the lockup", () => {
+    setViewport(768, 1024)
+    const onBack = vi.fn()
+    const warpcore = (open: boolean, back?: false) => (
+      <AppFrame>
+        <AppFrameTopBar lockup={<span data-testid="lockup">Warpcore</span>} back={back} />
+        <AppFrameMain>
+          <AppFrameList aria-label="Tasks">The list</AppFrameList>
+          <AppFrameDetail open={open} onBack={onBack} aria-label="Task">
+            The task
+          </AppFrameDetail>
+        </AppFrameMain>
+      </AppFrame>
+    )
+    const { rerender } = render(warpcore(false))
+    expect(screen.queryByRole("button", { name: "Back" })).not.toBeInTheDocument()
+    rerender(warpcore(true))
+    const back = screen.getByRole("button", { name: "Back" })
+    expect(back.closest('[data-slot="app-frame-top-bar-back"]')).not.toBeNull()
+    // Before the lockup, in the bar.
+    expect(back.compareDocumentPosition(screen.getByTestId("lockup")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(back)
+    expect(onBack).toHaveBeenCalledTimes(1)
+    // `back={false}` keeps the slot empty (an app that draws its own).
+    rerender(warpcore(true, false))
+    expect(screen.queryByRole("button", { name: "Back" })).not.toBeInTheDocument()
+  })
+
   it("hides the list for reading at length (focus) at the expanded width", () => {
     setViewport(1440, 900)
     render(
@@ -334,6 +365,76 @@ describe("columns that are always the screen", () => {
     expect(screen.getByTestId("inner")).not.toHaveClass("px-4")
     expect(document.querySelector('[data-slot="app-frame-page-head"]')).not.toHaveClass("px-4")
   })
+
+  // rules.md 5.4: never more space inside a group than between two. The head always added 32 under
+  // itself on a desktop; in a stack that stacked on the stack's own gap (title to summary 64, the
+  // other blocks 32 apart), and an app could only undo it with a class.
+  describe("AppFramePageHead: the space under it is the frame's to set", () => {
+    const head = () => document.querySelector('[data-slot="app-frame-page-head"]') as HTMLElement
+    const classes = () => head().className.split(/\s+/)
+
+    it("md (the default): 32 under it on a desktop, 16 on a phone", () => {
+      setViewport(1440, 900)
+      const { unmount } = render(
+        <AppFrame>
+          <AppFramePageHead title="Today" />
+        </AppFrame>
+      )
+      expect(head()).toHaveAttribute("data-gap", "md")
+      expect(classes()).toContain("pb-8")
+      unmount()
+      setViewport(390, 844)
+      render(
+        <AppFrame>
+          <AppFramePageHead title="Today" />
+        </AppFrame>
+      )
+      expect(classes()).toContain("pb-4")
+      expect(classes()).not.toContain("pb-8")
+    })
+
+    it("none: no space, for a head that is one block of a stack; sm: 16", () => {
+      setViewport(1440, 900)
+      const { rerender } = render(
+        <AppFrame>
+          <AppFramePageHead title="Cabin for the 20th, confirmed" gap="none" />
+        </AppFrame>
+      )
+      expect(head()).toHaveAttribute("data-gap", "none")
+      expect(classes().some((c) => /^pb-/.test(c))).toBe(false)
+      rerender(
+        <AppFrame>
+          <AppFramePageHead title="Steam" gap="sm" />
+        </AppFrame>
+      )
+      expect(classes()).toContain("pb-4")
+      expect(classes()).not.toContain("pb-8")
+    })
+
+    it("below: a chip row in the head's own group, 16 under the title; 28 over the list on a desktop, 16 on a phone", () => {
+      setViewport(1440, 900)
+      const { unmount } = render(
+        <AppFrame>
+          <AppFramePageHead title="Tasks" below={<div data-testid="chips">All 12</div>} />
+        </AppFrame>
+      )
+      const slot = () => document.querySelector('[data-slot="app-frame-page-head-below"]') as HTMLElement
+      expect(head()).toContainElement(screen.getByTestId("chips"))
+      expect(slot()).toHaveClass("mt-4")
+      expect(classes()).toContain("pb-7")
+      expect(classes()).not.toContain("pb-8")
+      unmount()
+      setViewport(390, 844)
+      render(
+        <AppFrame>
+          <AppFramePageHead title="Tasks" below={<div data-testid="chips">All 12</div>} />
+        </AppFrame>
+      )
+      expect(slot()).toHaveClass("mt-4")
+      // On a phone the head keeps the frame's 16 at its sides, and the chip row with it.
+      expect(classes()).toEqual(expect.arrayContaining(["pb-4", "px-4"]))
+    })
+  })
 })
 
 describe("AppFramePeek (Synapse Y-03)", () => {
@@ -376,20 +477,53 @@ describe("AppFramePeek (Synapse Y-03)", () => {
 })
 
 describe("AppFrameSidePanel", () => {
-  it("is a sheet from the side when the detail would keep less than 960 beside it", () => {
+  // jsdom lays nothing out, so the detail measures 0 wide: no room for a column. The panel is a sheet.
+  const panel = (open: boolean, onOpenChange: (open: boolean) => void = () => {}) => (
+    <AppFrame>
+      <AppFrameMain>
+        <AppFrameDetail aria-label="Message">The message</AppFrameDetail>
+        <AppFrameSidePanel open={open} onOpenChange={onOpenChange} title="Mira Chen">
+          The sender
+        </AppFrameSidePanel>
+      </AppFrameMain>
+    </AppFrame>
+  )
+
+  it("is a sheet from the side when the detail would keep less than 960 beside it, opened by a press", () => {
     setViewport(1440, 900)
-    render(
-      <AppFrame>
-        <AppFrameMain>
-          <AppFrameDetail aria-label="Message">The message</AppFrameDetail>
-          <AppFrameSidePanel open onOpenChange={() => {}} title="Mira Chen">
-            The sender
-          </AppFrameSidePanel>
-        </AppFrameMain>
-      </AppFrame>
-    )
-    // jsdom lays nothing out, so the detail measures 0 wide: no room for a column.
-    expect(screen.getByRole("dialog", { name: "Mira Chen" })).toHaveTextContent("The sender")
+    const { rerender } = render(panel(false))
+    expect(screen.queryByRole("dialog", { name: "Mira Chen" })).not.toBeInTheDocument()
+    // The app's button turns `open` on while the panel is a sheet: that is a press.
+    rerender(panel(true))
+    const sheet = screen.getByRole("dialog", { name: "Mira Chen" })
+    expect(sheet).toHaveTextContent("The sender")
+    // Its content keeps the sheet's inset: it sits in the SheetBody.
+    expect(sheet.querySelector('[data-slot="sheet-body"] [data-slot="app-frame-side-panel"]')).toHaveTextContent("The sender")
+    rerender(panel(false))
+    expect(screen.queryByRole("dialog", { name: "Mira Chen" })).not.toBeInTheDocument()
+  })
+
+  it("a standing column that has no room does not open as a sheet by itself: `open` is handed back", () => {
+    setViewport(1440, 900)
+    const onOpenChange = vi.fn()
+    // `open` from the start (a column that stands by default), with no room for it.
+    const { rerender } = render(panel(true, onOpenChange))
+    expect(screen.queryByRole("dialog", { name: "Mira Chen" })).not.toBeInTheDocument()
+    expect(onOpenChange).toHaveBeenCalledTimes(1)
+    expect(onOpenChange).toHaveBeenLastCalledWith(false)
+    // The app follows; a later press then opens the sheet.
+    rerender(panel(false, onOpenChange))
+    rerender(panel(true, onOpenChange))
+    expect(screen.getByRole("dialog", { name: "Mira Chen" })).toBeInTheDocument()
+    expect(onOpenChange).toHaveBeenCalledTimes(1)
+  })
+
+  it("starts closed on a phone too", () => {
+    setViewport(390, 844)
+    const onOpenChange = vi.fn()
+    render(panel(true, onOpenChange))
+    expect(screen.queryByRole("dialog", { name: "Mira Chen" })).not.toBeInTheDocument()
+    expect(onOpenChange).toHaveBeenLastCalledWith(false)
   })
 })
 

@@ -60,7 +60,9 @@ describe("TopTabs and TopTab (Figma 15:498)", () => {
     render(<Warpcore />)
     const chat = screen.getByRole("link", { name: "Chat" })
     expect(classesOf(chat)).toEqual(expect.arrayContaining(["px-3", "py-3", "hover:bg-state-hover", "active:bg-state-pressed", "rounded-sm"]))
-    expect(classesOf(screen.getByRole("navigation"))).toContain("gap-2")
+    // 12 + 4 + 12: the drawn tabs sit 28px apart, as the Warpcore desktop frames draw them (not 32).
+    expect(classesOf(screen.getByRole("navigation"))).toContain("gap-1")
+    expect(classesOf(screen.getByRole("navigation"))).not.toContain("gap-2")
   })
 
   it("the index and the icon are optional; Tab moves along the links", async () => {

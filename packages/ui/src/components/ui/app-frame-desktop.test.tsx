@@ -105,6 +105,34 @@ describe("AppFrameSidebar", () => {
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "Expand sidebar" }))
   })
 
+  // A browser refuses focus inside an inert box, and the rail is inert while the drawer shows.
+  // The old code called focus() in the closing handler, before the rail was released, so focus fell
+  // to the body in a real browser (jsdom does not enforce inert; the browser check in
+  // tests/shell-frame.spec.ts holds this). Here: "Close sidebar" returns focus as Esc does.
+  it("returns focus to the expand control when the drawer closes by its Close button", () => {
+    setViewport(820, 1180)
+    render(<Sidebar />)
+    fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }))
+    fireEvent.click(screen.getByRole("button", { name: "Close sidebar" }))
+    expect(screen.queryByRole("dialog", { name: "Places" })).not.toBeInTheDocument()
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Expand sidebar" }))
+  })
+
+  it("keeps focus where the person put it when the app re-renders with a new onDrawerOpenChange", () => {
+    setViewport(820, 1180)
+    // An inline handler: a new function on every render of the app.
+    const { rerender } = render(<Sidebar drawerOpen onDrawerOpenChange={() => {}} />)
+    const drawer = screen.getByRole("dialog", { name: "Places" })
+    const controls = drawer.querySelectorAll<HTMLElement>("a[href],button:not([disabled])")
+    expect(controls.length).toBeGreaterThan(1)
+    const last = controls[controls.length - 1]!
+    last.focus()
+    expect(document.activeElement).toBe(last)
+    rerender(<Sidebar drawerOpen onDrawerOpenChange={() => {}} />)
+    // Focus was pulled back to the drawer's first control on every such render.
+    expect(document.activeElement).toBe(last)
+  })
+
   it("closes the drawer on a press outside", () => {
     setViewport(820, 1180)
     render(<Sidebar />)

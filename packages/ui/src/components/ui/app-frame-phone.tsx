@@ -202,6 +202,25 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
 
 /* ── Bottom row ──────────────────────────────────────────────────────────────────────────────── */
 
+/**
+ * The `fill` slot: it takes the room between the ends, and so does what it holds. A Composer's
+ * root is a column that hugs its content, so without the stretch it stopped two thirds across the
+ * row (Vale Mobile / 02 draws it from 16 to 374).
+ */
+const FILL_SLOT = "flex min-w-0 flex-1 [&>*]:min-w-0 [&>*]:flex-1"
+
+/**
+ * The slot the status strip takes inside the row once the page has scrolled. It is always in the
+ * row, at no width (its start margin takes back the row's gap), and trades room with the tab bar
+ * on the same role and easing: while the bar's share of the row goes from all to none, the slot's
+ * goes from none to all, so the two always fill the row between the ends. The bar's first frame is
+ * its old width, the strip opens out of nothing, and on the way back the slot hands its room back
+ * the same way (the strip itself has left for its place above the row). What the strip cannot yet
+ * fit is cut at the slot's edge, two ring widths out, so a focus ring inside still shows.
+ */
+const STRIP_SLOT =
+  "-ms-2 flex min-w-0 grow-0 basis-0 [clip-path:inset(calc(var(--stroke-emphasis)*-2))] transition-[flex-grow,margin] duration-(--motion-state) ease-(--motion-ease-move) has-[>*]:ms-0 has-[>*]:grow [&>*:not(:first-child)]:hidden"
+
 export type AppFrameBottomRowProps = Omit<React.ComponentProps<"div">, "children"> & {
   /**
    * `tabs` (a section's root, rules.md 6.3): search, the tab bar filling, create. `detail` (a
@@ -280,7 +299,7 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
           <AppFrameScrollEdge edge="bottom" />
           {/* The strip at the start of the content's foot, compact (Warpcore U-03: 190 wide). */}
           <div ref={setInside} data-slot="app-frame-strip" className="pointer-events-auto flex w-48 shrink-0 flex-col empty:hidden [&>*:not(:first-child)]:hidden" />
-          {fill ? <div className="pointer-events-auto flex min-w-0 flex-1">{fill}</div> : null}
+          {fill ? <div className={cn("pointer-events-auto", FILL_SLOT)}>{fill}</div> : null}
         </div>
         {frame.rail.bottom
           ? createPortal(
@@ -311,10 +330,19 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
       <div ref={setBar} data-slot="app-frame-bottom-row-bar" className="pointer-events-auto flex min-h-control min-w-0 items-end gap-2">
         {start}
         {tabBar}
-        {/* Scrolled: the strip, compact, takes the room the tab bar gave up. */}
-        <div ref={setInside} data-slot="app-frame-bottom-row-strip" className="contents [&>*:not(:first-child)]:hidden" />
-        {fill ? <div data-slot="app-frame-bottom-row-fill" className="flex min-w-0 flex-1">{fill}</div> : null}
-        {end}
+        {/* Scrolled: the strip, compact, takes the room the tab bar gives up, as the bar gives it. */}
+        <div ref={setInside} data-slot="app-frame-bottom-row-strip" className={STRIP_SLOT} />
+        {fill ? (
+          <div data-slot="app-frame-bottom-row-fill" className={FILL_SLOT}>
+            {fill}
+          </div>
+        ) : null}
+        {/* Held at the trailing edge, whatever the middle is doing: the app's primary button never moves. */}
+        {end ? (
+          <div data-slot="app-frame-bottom-row-end" className="ms-auto flex shrink-0 items-end gap-2">
+            {end}
+          </div>
+        ) : null}
       </div>
     </div>
   )

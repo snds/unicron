@@ -78,7 +78,9 @@ export type TabBarProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 /**
  * TabBar: the phone's floating bar of sections (Figma 20:1657). Icon-only tabs on the raised
  * surface with a hairline, 4px padding and gap, 48 high; the tabs share the width. The active tab
- * is the soft primary tile with its icon in body ink (contract 9.9).
+ * is the soft primary tile with its icon in `primary-text`, as Figma's Dock Tab (20:1656) and the
+ * phone frames of all four apps draw it. (Contract 9.9 said body ink; that is one override, on
+ * Vale's Mail tab.)
  *
  * - Slide along the bar to scrub: the active tab follows the finger and is picked on lift. The
  *   arrow keys do the same from the keyboard (Home, End too).
@@ -283,8 +285,8 @@ export type TabBarItemProps = Omit<useRender.ComponentProps<"button">, "children
 /**
  * TabBarItem: one section in a `TabBar` (Figma 20:1656 "Dock Tab", icon only). The tabs share the
  * bar's width and fill its height (40); on a coarse pointer each takes a 44px touch. Active: the
- * soft primary tile, the icon in body ink. Resting: the icon in label ink, the contract's washes
- * under hover and press (§6).
+ * soft primary tile, the icon in `primary-text` (as an active Rail Item). Resting: the icon in
+ * label ink, the contract's washes under hover and press (§6).
  */
 function TabBarItem({ value, icon, label, mark, render, className, onClick, ...props }: TabBarItemProps) {
   const bar = React.useContext(TabBarContext)
@@ -307,7 +309,7 @@ function TabBarItem({ value, icon, label, mark, render, className, onClick, ...p
           "[transition:color_var(--motion-fast)_var(--motion-ease),background-color_var(--motion-fast)_var(--motion-ease),flex-grow_var(--motion-state)_var(--motion-ease-move),height_var(--motion-state)_var(--motion-ease-move),opacity_var(--motion-state)_var(--motion-ease-move),visibility_var(--motion-state)]",
           "hover:bg-state-hover active:bg-state-pressed",
           vertical ? "h-10 w-full" : "h-full grow basis-0",
-          active && "bg-primary-soft text-text-body hover:bg-primary-soft active:bg-primary-soft",
+          active && "bg-primary-soft text-primary-text hover:bg-primary-soft active:bg-primary-soft",
           // Minimized: the other tabs fold away and leave the tab order.
           collapsed && (vertical ? "invisible h-0 opacity-0" : "invisible grow-0 opacity-0"),
           className
