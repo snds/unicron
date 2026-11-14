@@ -153,4 +153,57 @@ describe("Accessory (Figma 20:1713)", () => {
     render(<Accessory tone="live" meta="SEA-48 // Running 04:12" title="Add baseline drift check" />)
     expect(screen.getByRole("status")).toHaveTextContent("Add baseline drift check")
   })
+
+  it("never puts a button inside a button: the text area and every action are siblings (contract 5.1c C5)", () => {
+    const cases = [
+      <Accessory key="a" tone="live" meta="Sending" countdown={8} title="Board games for the cabin" onOpen={() => {}} action={{ label: "Undo", onClick: () => {} }} onDismiss={() => {}} />,
+      <Accessory key="b" tone="live" title="Board games for the cabin" onOpen={() => {}} action={<button type="button">Undo</button>} />,
+      <Accessory key="c" compact tone="live" title="Board games for the cabin" onOpen={() => {}} action={{ label: "Undo", icon: "undo", onClick: () => {} }} />,
+      <Accessory key="d" tone="needs-you" title="Chrome on Windows" onOpen={() => {}} action={{ label: "Review", onClick: () => {} }} onDismiss={() => {}} />,
+      <Accessory key="e" tone="critical" title="Spend paused" onSwipeUp={() => {}} action={{ label: "Resume", onClick: () => {} }} />,
+    ]
+    for (const strip of cases) {
+      const { container, unmount } = render(strip)
+      for (const button of Array.from(container.querySelectorAll("button"))) {
+        expect(button.parentElement!.closest("button")).toBeNull()
+        expect(button.querySelector("button")).toBeNull()
+      }
+      unmount()
+    }
+  })
+
+  it("the text area is one button that opens the strip's place; the action is the sibling beside it, and a miss on it opens nothing", async () => {
+    const user = userEvent.setup()
+    const onOpen = vi.fn()
+    const onUndo = vi.fn()
+    render(<Accessory tone="live" meta="Sending" title="Board games for the cabin" onOpen={onOpen} openLabel="Open the Outbox" action={{ label: "Undo", onClick: onUndo }} />)
+    const open = screen.getByRole("button", { name: /Board games for the cabin/ })
+    expect(open).toHaveAccessibleDescription("Open the Outbox")
+    const undo = screen.getByRole("button", { name: "Undo" })
+    expect(open.contains(undo)).toBe(false)
+    expect(undo.closest('[data-slot="accessory-action"]')!.parentElement).toBe(open.parentElement)
+    await user.click(undo)
+    expect(onUndo).toHaveBeenCalledTimes(1)
+    expect(onOpen).not.toHaveBeenCalled()
+    await user.click(open)
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+
+  it("a needs-you strip still has no dismiss, even when asked", () => {
+    render(<Accessory tone="needs-you" title="Chrome on Windows" onDismiss={() => {}} action={{ label: "Review" }} />)
+    expect(screen.queryByRole("button", { name: "Dismiss" })).toBeNull()
+  })
+
+  it("a countdown follows the meta as decisions §13 writes it, hidden from assistive tech; the open button's name does not tick (contract 5.1c C7)", () => {
+    const { container, rerender } = render(<Accessory tone="live" meta="Sending" countdown={8} title="Board games for the cabin" onOpen={() => {}} announce="Sending. 10 seconds to undo." />)
+    const countdown = container.querySelector('[data-slot="accessory-countdown"]')!
+    expect(countdown).toHaveTextContent("// 08 S")
+    expect(countdown).toHaveAttribute("aria-hidden", "true")
+    const open = screen.getByRole("button", { name: /Board games/ })
+    expect(open.textContent).toContain("08 S")
+    expect(open).not.toHaveAccessibleName(/08/)
+    rerender(<Accessory tone="live" meta="Sending" countdown={7} title="Board games for the cabin" onOpen={() => {}} announce="Sending. 10 seconds to undo." />)
+    expect(screen.getByRole("status")).toHaveTextContent("Sending. 10 seconds to undo.")
+    expect(screen.getByRole("status")).not.toHaveTextContent("07")
+  })
 })

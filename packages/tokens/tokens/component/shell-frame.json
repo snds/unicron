@@ -1,5 +1,5 @@
 {
-  "$description": "Tier 3 · Component knobs for the shell's frame (packages/ui: app-frame.tsx and the frame parts beside it, context-panel.tsx, settings-frame.tsx), merged with component.json at build and emitted as --c-*. The width table (contract 5.1b #14): one knob per column the four apps draw, at the width Figma draws it at 1440, plus the least widths the frame keeps when a window is narrower. Widths on the 4px spacing scale that the frame uses as gutters and gaps (48, 24, 16, 12) need no knob. Re-declares app-frame.sidebar-width (the sidebar is now the navigation column, 204).",
+  "$description": "Tier 3 · Component knobs for the shell's frame (packages/ui: app-frame.tsx and the frame parts beside it, context-panel.tsx, settings-frame.tsx), merged with component.json at build and emitted as --c-*. The width table (contract 5.1b #14): one knob per column the four apps draw, at the width Figma draws it at 1440, plus the least widths the frame keeps when a window is narrower. Widths on the 4px spacing scale that the frame uses as gutters and gaps (48, 24, 16, 12) need no knob. Re-declares app-frame.sidebar-width (the sidebar is now the navigation column, 204). Late additions (contract 5.1c): the list + detail split gap (C8) and the pull-to-refresh distances (C9).",
   "app-frame": {
     "sidebar-width": {
       "$type": "dimension",
@@ -40,6 +40,11 @@
       "$type": "dimension",
       "$value": "30rem",
       "$description": "The least a detail (or a conversation) gets beside a list or a companion: 480 (Warpcore U-03, contract 5.1c C8)."
+    },
+    "split-gap": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "The gap a list + detail screen counts between its two columns when it decides what to give up (contract 5.1c C8: 320 + 24 + 480 = 824). Narrower content than list-compact + split-gap + detail-min shows the sidebar as its rail; narrower still, the detail is pushed as at medium width."
     },
     "reading": {
       "$type": "dimension",
@@ -100,6 +105,21 @@
       "$type": "dimension",
       "$value": "5rem",
       "$description": "How long the bottom scroll edge's fade is: content fades into the ground over 80 above the bottom chrome (Vale Mobile / 01: y 640 to 720), then the ground is solid under the chrome."
+    },
+    "pull-threshold": {
+      "$type": "dimension",
+      "$value": "4rem",
+      "$description": "Pull to refresh (contract 5.1c C9, Lockdown LA6): how far a finger pulls down from the top of a phone column before letting go runs the refresh: 64. A behaviour distance, read at the press, with this value as the fallback."
+    },
+    "pull-max": {
+      "$type": "dimension",
+      "$value": "8rem",
+      "$description": "The furthest the content moves under a pull (128): it follows the finger with resistance (rubberBand) and never passes this. Not used under reduced motion, where the content does not move."
+    },
+    "pull-slop": {
+      "$type": "dimension",
+      "$value": "0.5rem",
+      "$description": "How far a finger moves before the column decides whether it is a pull (down, more down than sideways) or the browser's (scroll, a row's swipe): 8."
     }
   }
 }

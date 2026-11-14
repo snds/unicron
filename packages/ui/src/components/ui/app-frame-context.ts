@@ -112,6 +112,110 @@ export function useScrollMinimize(scroller: HTMLElement | null, { threshold, ena
   return enabled && scroller ? minimized : false
 }
 
+/* ── List + detail shrink order (contract 5.1c C8) ─────────────────────────────────────────── */
+
+/**
+ * What a list + detail screen gives up when its content is narrower than the list's least width,
+ * the gap and the detail's least width (320 + 24 + 480 = 824, knobs): first the sidebar shows as
+ * its rail (`rail`); narrower still, the detail is pushed over the list as at medium width (`push`).
+ */
+export type AppFrameShrink = "none" | "rail" | "push"
+
+export interface ShrinkInput {
+  /** The frame's width (the window, or a contained frame's box), in px. */
+  width: number
+  /** The page gutter on each side: 24, or 48 from the wide width. */
+  gutter: number
+  /** The sidebar: none (Warpcore's top bar), shown full, or collapsed to its rail by choice. */
+  sidebar: "none" | "full" | "rail"
+  /** The sidebar's full and rail widths, and the space between it and the content (24). */
+  sidebarWidth: number
+  railWidth: number
+  sidebarGap: number
+  /** The least list, the gap between list and detail, and the least detail: 320, 24, 480. */
+  listMin: number
+  gap: number
+  detailMin: number
+}
+
+/** The shrink step for a width: the sidebar's rail first, then the pushed detail (C8). Pure, for tests. */
+export function shrinkFor(input: ShrinkInput): AppFrameShrink {
+  const { width, gutter, sidebar, sidebarWidth, railWidth, sidebarGap, listMin, gap, detailMin } = input
+  const need = listMin + gap + detailMin
+  const content = (side: "none" | "full" | "rail") =>
+    width - 2 * gutter - (side === "none" ? 0 : (side === "full" ? sidebarWidth : railWidth) + sidebarGap)
+  if (content(sidebar) >= need) return "none"
+  if (sidebar === "full" && content("rail") >= need) return "rail"
+  // Narrower still: the detail is pushed, and the sidebar (if any) stays its rail, as at medium width.
+  return "push"
+}
+
+/* ── The status strip and the toasts (contract 5.1c C6) ────────────────────────────────────────── */
+
+/**
+ * What the phone's status strip means for a toast (the frame tells the Toaster):
+ *
+ * - `none`: no strip. A toast takes the strip's slot above the bottom row.
+ * - `live-action`: a strip with an action (undo send). It is never covered: toasts wait until it ends.
+ * - `live`: a strip without an action (a sync running, the place strip). It gives way for the
+ *   toast's time, then comes back.
+ * - `needs-you`: a request that waits on the person (and a critical strip, which the person must be
+ *   able to act on). It never gives way: the toast sits under the top row instead.
+ */
+export type AppFrameStripState = "none" | "live-action" | "live" | "needs-you"
+
+/** A strip's state from its tone and whether it holds an action. */
+export function stripStateFor(tone: "neutral" | "live" | "needs-you" | "critical" | undefined, hasAction: boolean): AppFrameStripState {
+  if (tone === "needs-you" || tone === "critical") return "needs-you"
+  return hasAction ? "live-action" : "live"
+}
+
+/**
+ * Where a toast goes: `content` (the bottom left of the content, on a desktop), `strip` (the phone's
+ * status-strip slot, just above the bottom row, so the bottom never holds three bars), `top` (under
+ * the phone's top row), or `wait` (held back until the strip ends).
+ */
+export type AppFrameToastPlacement = "content" | "strip" | "top" | "wait"
+
+export function toastPlacementFor(phone: boolean, strip: AppFrameStripState): AppFrameToastPlacement {
+  if (!phone) return "content"
+  if (strip === "needs-you") return "top"
+  if (strip === "live-action") return "wait"
+  return "strip"
+}
+
+/* ── One polite region (contract 5.1c C7) ──────────────────────────────────────────────────────── */
+
+/**
+ * The frame's one visually hidden polite region: status parts (StatusItem, Accessory) hand it a
+ * stable sentence, so a screen reader is told once, not on every tick of a countdown.
+ */
+export const AppFrameAnnounceContext = React.createContext<((message: string) => void) | null>(null)
+
+/**
+ * Says `message` in the frame's polite region when it changes, and when the part first shows if
+ * `onMount` (news: a strip that appears). Returns false outside a frame, where the part keeps a
+ * polite region of its own.
+ */
+export function useFrameAnnouncement(message: string | null | undefined, onMount: boolean): boolean {
+  const announce = React.useContext(AppFrameAnnounceContext)
+  const said = React.useRef<string | null | undefined>(undefined)
+  const ran = React.useRef(false)
+  const news = React.useRef(onMount)
+  React.useEffect(() => {
+    if (!announce) return
+    const first = !ran.current
+    ran.current = true
+    const before = said.current
+    said.current = message
+    if (!message || before === message) return
+    // The first message is said only when the part's arrival is news; after that, every change.
+    if (first && !news.current) return
+    announce(message)
+  }, [announce, message])
+  return announce !== null
+}
+
 /* ── The frame's context ─────────────────────────────────────────────────────────────────────── */
 
 /** What the page's head tells the phone chrome: the small title, and the switcher if the head is one. */
@@ -174,6 +278,24 @@ export interface AppFrameContextValue {
   focus: boolean
   /** Measured chrome, so the content can keep clear of it (px). */
   setClearance: (edge: "top" | "bottom", px: number) => void
+  /** The list + detail shrink step at this width (C8). `push` also makes `split` false. */
+  shrink: AppFrameShrink
+  /** The frame asks the sidebar to stand as its rail (C8): expanding it then opens the drawer, as at medium. */
+  sidebarRail: boolean
+  /** The sidebar says it is there, and whether it is collapsed by choice (null: gone). */
+  setSidebar: (sidebar: { collapsed: boolean } | null) => void
+  /** A list or a detail column says it is there, so the shrink order applies. Returns its removal. */
+  registerSplitPart: (part: "list" | "detail") => () => void
+  /** The phone's status strip, as a toast reads it (C6). */
+  strip: AppFrameStripState
+  setStrip: (id: string, state: AppFrameStripState | null) => void
+  /** Toasts are showing: a `live` strip gives way meanwhile (C6). */
+  toastShowing: boolean
+  setToastShowing: (showing: boolean) => void
+  /** The bottom row's bar, so the frame can place a toast just above it. */
+  setBottomBar: (el: HTMLElement | null) => void
+  /** The content's area on a desktop, so the frame can place a toast at its bottom left. */
+  setMainArea: (el: HTMLElement | null) => void
 }
 
 const noop = () => {}
@@ -208,6 +330,16 @@ export function useAppFrame(): AppFrameContextValue {
     setBack: noop,
     focus: false,
     setClearance: noop,
+    shrink: "none",
+    sidebarRail: false,
+    setSidebar: noop,
+    registerSplitPart: () => noop,
+    strip: "none",
+    setStrip: noop,
+    toastShowing: false,
+    setToastShowing: noop,
+    setBottomBar: noop,
+    setMainArea: noop,
   }
 }
 

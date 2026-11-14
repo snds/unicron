@@ -15,9 +15,14 @@ import {
   AppFramePeek,
   AppFrameReading,
   AppFrameSidePanel,
+  AppFrameSidebar,
   AppFrameStatusLine,
   FoldPanes,
+  StatusItem,
+  shrinkFor,
 } from "./app-frame"
+import { Accessory } from "./accessory"
+import { NavItem, NavSection } from "./nav-item"
 import { Input } from "./input"
 import { Textarea } from "./textarea"
 import { SHORT_HEIGHT } from "../use-viewport"
@@ -382,5 +387,145 @@ describe("text fields on touch", () => {
     expect(className).toContain("type-ui")
     expect(className).toContain("pointer-coarse:text-(length:--type-body-size)")
     expect(className).not.toMatch(/(^|\s)md:text-sm/)
+  })
+})
+
+describe("list + detail shrink order (contract 5.1c C8)", () => {
+  const knobs = { sidebarWidth: 204, railWidth: 48, sidebarGap: 24, listMin: 320, gap: 24, detailMin: 480 }
+
+  it("needs list 320 + gap 24 + detail 480 = 824 of content: the sidebar's rail first, then the detail pushed", () => {
+    // 1440 and 1280: 48 gutters, the full sidebar, room to spare.
+    expect(shrinkFor({ ...knobs, width: 1440, gutter: 48, sidebar: "full" })).toBe("none")
+    expect(shrinkFor({ ...knobs, width: 1280, gutter: 48, sidebar: "full" })).toBe("none")
+    // Under 1280 the gutters are 24: 1100 − 48 − 228 = 824 still fits; one less does not.
+    expect(shrinkFor({ ...knobs, width: 1100, gutter: 24, sidebar: "full" })).toBe("none")
+    expect(shrinkFor({ ...knobs, width: 1099, gutter: 24, sidebar: "full" })).toBe("rail")
+    expect(shrinkFor({ ...knobs, width: 1024, gutter: 24, sidebar: "full" })).toBe("rail")
+    // With the rail, 944 − 48 − 72 = 824 fits; narrower, the detail is pushed.
+    expect(shrinkFor({ ...knobs, width: 944, gutter: 24, sidebar: "full" })).toBe("rail")
+    expect(shrinkFor({ ...knobs, width: 943, gutter: 24, sidebar: "full" })).toBe("push")
+    // Collapsed by choice it is already the rail: nothing to give up but the split.
+    expect(shrinkFor({ ...knobs, width: 1000, gutter: 24, sidebar: "rail" })).toBe("none")
+    expect(shrinkFor({ ...knobs, width: 943, gutter: 24, sidebar: "rail" })).toBe("push")
+    // No sidebar (Warpcore's top bar): only the push is left.
+    expect(shrinkFor({ ...knobs, width: 872, gutter: 24, sidebar: "none" })).toBe("none")
+    expect(shrinkFor({ ...knobs, width: 871, gutter: 24, sidebar: "none" })).toBe("push")
+  })
+
+  it("follows the knobs: a wider least detail moves the lines", () => {
+    expect(shrinkFor({ ...knobs, detailMin: 900, width: 1440, gutter: 48, sidebar: "full" })).toBe("rail")
+    expect(shrinkFor({ ...knobs, detailMin: 1100, width: 1440, gutter: 48, sidebar: "full" })).toBe("push")
+  })
+
+  function Screen({ detail = true }: { detail?: boolean }) {
+    return (
+      <AppFrame>
+        <AppFrameSidebar lockup={<span>Vale</span>}>
+          <NavSection title="Mail">
+            <NavItem href="#inbox" label="Inbox" icon="email" current />
+          </NavSection>
+        </AppFrameSidebar>
+        <AppFrameMain>
+          <AppFrameList aria-label="Inbox">The list</AppFrameList>
+          {detail ? <AppFrameDetail aria-label="Message">The message</AppFrameDetail> : null}
+        </AppFrameMain>
+      </AppFrame>
+    )
+  }
+  const sidebar = () => document.querySelector('nav[data-slot="app-frame-sidebar"]') as HTMLElement
+  const frame = () => document.querySelector('[data-slot="app-frame"]') as HTMLElement
+
+  it("in the frame: the full sidebar where there is room; its rail when the list and detail need it; expanding then lays it over as a drawer", () => {
+    setViewport(1440, 900)
+    const { unmount } = render(<Screen />)
+    expect(frame()).not.toHaveAttribute("data-shrink")
+    expect(sidebar()).toHaveAttribute("data-state", "expanded")
+    unmount()
+
+    setViewport(1050, 800)
+    render(<Screen />)
+    expect(frame()).toHaveAttribute("data-layout", "expanded")
+    expect(frame()).toHaveAttribute("data-shrink", "rail")
+    expect(sidebar()).toHaveAttribute("data-state", "rail")
+    // The list and the detail still stand side by side.
+    expect(document.querySelector('[data-slot="app-frame-detail"]')).toHaveAttribute("data-shown")
+    expect(document.querySelector('[data-slot="app-frame-list"]')).toHaveAttribute("data-shown")
+    fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }))
+    expect(screen.getByRole("dialog", { name: "Places" })).toBeInTheDocument()
+  })
+
+  it("a screen with no detail keeps the full sidebar at the same width", () => {
+    setViewport(1050, 800)
+    render(<Screen detail={false} />)
+    expect(frame()).not.toHaveAttribute("data-shrink")
+    expect(sidebar()).toHaveAttribute("data-state", "expanded")
+  })
+
+  it("comes back as the window widens", () => {
+    setViewport(1050, 800)
+    render(<Screen />)
+    expect(sidebar()).toHaveAttribute("data-state", "rail")
+    setViewport(1300, 800)
+    expect(frame()).not.toHaveAttribute("data-shrink")
+    expect(sidebar()).toHaveAttribute("data-state", "expanded")
+  })
+})
+
+describe("one polite region per frame (contract 5.1c C7)", () => {
+  it("status items and strips say their sentence in the frame's one region, not one each", async () => {
+    setViewport(1440, 900)
+    render(
+      <AppFrame>
+        <AppFrameStatusLine crumbs={[{ label: "Mail" }]}>
+          <StatusItem tone="live" mark="square" text="Sending" countdown={8} announce="Sending. 10 seconds to undo." />
+          <StatusItem text="Synced // 09:16" />
+        </AppFrameStatusLine>
+        <AppFrameMain>
+          <AppFrameColumn>
+            <Accessory tone="live" meta="Checking" title="Checking 2 accounts" />
+          </AppFrameColumn>
+        </AppFrameMain>
+      </AppFrame>
+    )
+    const regions = document.querySelectorAll('[role="status"], [aria-live]')
+    expect(regions).toHaveLength(1)
+    const region = regions[0]
+    expect(region).toHaveAttribute("data-slot", "app-frame-announcer")
+    expect(region).toHaveAttribute("aria-live", "polite")
+    expect(region.className).toContain("sr-only")
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    // The live item and the strip are news; the screen's quiet fact is not said on arrival.
+    expect(region).toHaveTextContent("Sending. 10 seconds to undo. Checking 2 accounts")
+    expect(region).not.toHaveTextContent("Synced")
+  })
+
+  it("a ticking countdown is hidden, and the sentence is said again only when it changes", async () => {
+    setViewport(1440, 900)
+    function Line({ left, announce }: { left: number; announce: string }) {
+      return (
+        <AppFrame>
+          <AppFrameStatusLine>
+            <StatusItem tone="live" text="Sending" countdown={left} announce={announce} />
+          </AppFrameStatusLine>
+        </AppFrame>
+      )
+    }
+    const { rerender } = render(<Line left={10} announce="Sending. 10 seconds to undo." />)
+    const tick = async () =>
+      act(async () => {
+        await new Promise((r) => setTimeout(r, 0))
+      })
+    await tick()
+    const region = document.querySelector('[data-slot="app-frame-announcer"]')!
+    expect(region).toHaveTextContent("Sending. 10 seconds to undo.")
+    expect(document.querySelector('[data-slot="status-item-countdown"]')).toHaveAttribute("aria-hidden", "true")
+    rerender(<Line left={9} announce="Sending. 10 seconds to undo." />)
+    await tick()
+    expect(region).toHaveTextContent(/^Sending\. 10 seconds to undo\.$/)
+    rerender(<Line left={0} announce="Sent." />)
+    await tick()
+    expect(region).toHaveTextContent("Sent.")
   })
 })

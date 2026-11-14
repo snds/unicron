@@ -5,10 +5,11 @@
 
 import * as React from "react"
 import { useTheme } from "next-themes"
-import { Toaster as Sonner, toast as sonnerToast, type ExternalToast, type ToasterProps } from "sonner"
+import { Toaster as Sonner, toast as sonnerToast, useSonner, type ExternalToast, type ToasterProps } from "sonner"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
+import { AppFrameContext, toastPlacementFor, type AppFrameToastPlacement } from "./app-frame-context"
 import { Button } from "./button"
 import { Spinner } from "./spinner"
 
@@ -102,6 +103,37 @@ function ToastActionButton({
 
 type ToastKind = "default" | "success" | "info" | "warning" | "error"
 
+/**
+ * Toasts held back while a phone's status strip with an action shows (contract 5.1c C6): the
+ * Toaster in that frame holds them, and lets them out, in order, when the strip ends. Per Toaster
+ * (`id`), so two frames on one page keep their own.
+ */
+const holds = new Map<string, { held: boolean; waiting: { id: string | number; fire: () => void }[] }>()
+
+function holdOf(toasterId: string | undefined) {
+  const key = toasterId ?? ""
+  let hold = holds.get(key)
+  if (!hold) {
+    hold = { held: false, waiting: [] }
+    holds.set(key, hold)
+  }
+  return hold
+}
+
+/** Hold toasts back, or let the waiting ones out. The Toaster calls it from its frame's strip. */
+function setToastHold(toasterId: string | undefined, held: boolean) {
+  const hold = holdOf(toasterId)
+  hold.held = held
+  if (held) return
+  const waiting = hold.waiting.splice(0)
+  for (const entry of waiting) entry.fire()
+}
+
+/** How many toasts wait for a strip to end, for a Toaster `id` (or the default one). */
+export function waitingToasts(toasterId?: string): number {
+  return holds.get(toasterId ?? "")?.waiting.length ?? 0
+}
+
 function show(kind: ToastKind, title: React.ReactNode, options: ToastOptions = {}) {
   const { action, takeFocus = false, returnFocus, tone = kind === "error" ? "critical" : "neutral", duration, id: given, className, ...rest } = options
   const id = given ?? `unicron-toast-${++nextId}`
@@ -112,7 +144,14 @@ function show(kind: ToastKind, title: React.ReactNode, options: ToastOptions = {
     action: action ? <ToastActionButton id={id} action={action} takeFocus={takeFocus} returnFocus={returnFocus} /> : undefined,
     className: cn(tone === "critical" && "[&_[data-icon]]:text-critical-text", className),
   }
-  return kind === "default" ? sonnerToast(title, data) : sonnerToast[kind](title, data)
+  const fire = () => (kind === "default" ? sonnerToast(title, data) : sonnerToast[kind](title, data))
+  const hold = holdOf(rest.toasterId)
+  if (hold.held) {
+    // A strip with an action is never covered: this toast waits until it ends, then shows its full time.
+    hold.waiting.push({ id, fire })
+    return id
+  }
+  return fire()
 }
 
 /**
@@ -136,8 +175,11 @@ toast.warning = (title: React.ReactNode, options?: ToastOptions) => show("warnin
  * person can fix is a critical Banner, not a toast (decisions §1).
  */
 toast.error = (title: React.ReactNode, options?: ToastOptions) => show("error", title, options)
-/** Take a toast away; without an id, all of them. */
-toast.dismiss = (id?: string | number) => sonnerToast.dismiss(id)
+/** Take a toast away; without an id, all of them, the waiting ones too. */
+toast.dismiss = (id?: string | number) => {
+  for (const hold of holds.values()) hold.waiting = id === undefined ? [] : hold.waiting.filter((entry) => entry.id !== id)
+  return sonnerToast.dismiss(id)
+}
 
 /** A length knob read once, in pixels, or the fallback without the stylesheet. */
 function readPx(name: string, fallback: number) {
@@ -154,10 +196,19 @@ function readPx(name: string, fallback: number) {
 const TOAST_GAP_FALLBACK = 8
 
 /**
- * The place for toasts (contract §5.1b row 19): the bottom left of the content on a desktop, above
- * the bottom row on a phone. The frame says where that is with two CSS variables on an ancestor
- * (or the root): `--frame-toast-left` and `--frame-toast-bottom`. Without them toasts sit
- * --c-toaster-offset from the window's corner (--c-toaster-offset-compact on a phone).
+ * The place for toasts (contract §5.1b row 19, 5.1c C6). Put it inside the `AppFrame`; the frame
+ * then tells it where to go, with CSS variables (`--frame-toast-left`, `--frame-toast-bottom`,
+ * `--frame-toast-top`, `--frame-toast-width`) and its status strip's state:
+ *
+ * - Desktop: the bottom left of the content, three at most (unchanged).
+ * - Phone: the status strip's slot, just above the bottom row, as wide as the strip, so the bottom
+ *   never holds three bars. A strip with an action (undo send) is never covered: new toasts wait
+ *   until it ends, and toasts already up move under the top row. A strip without an action gives
+ *   way for the toast's time, then comes back (the frame hides it meanwhile). A needs-you strip
+ *   never gives way: toasts sit under the top row instead.
+ *
+ * Outside a frame toasts sit --c-toaster-offset from the window's corner (--c-toaster-offset-compact
+ * on a phone).
  *
  * Each toast is solid: the raised surface, a 1px rule, the 2px corner, no shadow. The title is in
  * the ui-emphasis role, the description in the caption role, the glyph in the body ink, and in the
@@ -168,23 +219,51 @@ const TOAST_GAP_FALLBACK = 8
  * `style-src` strips it at build and loads `sonner/dist/styles.css` as a file instead. The toasts'
  * look comes from these classes either way (`unstyled`), so only placement and motion are sonner's.
  */
-const Toaster = ({ className, style, toastOptions, ...props }: ToasterProps) => {
+const Toaster = ({ className, style, toastOptions, id, ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
   const [gap] = React.useState(() => readPx("--c-toaster-gap", TOAST_GAP_FALLBACK))
+  const frame = React.useContext(AppFrameContext)
+  const placement: AppFrameToastPlacement = frame ? toastPlacementFor(frame.phone, frame.strip) : "content"
+  const held = placement === "wait"
+  const { toasts } = useSonner()
+  const showing = toasts.filter((t) => (t.toasterId ?? undefined) === (id ?? undefined)).length > 0
+
+  // Hold new toasts while the strip with an action shows; let them out when it ends.
+  React.useLayoutEffect(() => {
+    setToastHold(id, held)
+  }, [id, held])
+  React.useEffect(() => () => setToastHold(id, false), [id])
+
+  // The frame hides a strip without an action while toasts take its slot.
+  const setToastShowing = frame?.setToastShowing
+  React.useLayoutEffect(() => {
+    if (!setToastShowing) return
+    setToastShowing(showing)
+  }, [showing, setToastShowing])
+  React.useEffect(() => () => setToastShowing?.(false), [setToastShowing])
+
+  // Under the top row for a needs-you strip, and for toasts already up when a held strip arrives.
+  const top = placement === "top" || (held && showing)
 
   return (
     <Sonner
+      id={id}
       theme={theme as ToasterProps["theme"]}
-      position="bottom-left"
+      position={top ? "top-left" : "bottom-left"}
       visibleToasts={toasterVisibleToasts}
       duration={toastDurations.plain}
       gap={gap}
       expand
-      offset={{ left: "var(--frame-toast-left, var(--c-toaster-offset))", bottom: "var(--frame-toast-bottom, var(--c-toaster-offset))" }}
+      offset={{
+        left: "var(--frame-toast-left, var(--c-toaster-offset))",
+        bottom: "var(--frame-toast-bottom, var(--c-toaster-offset))",
+        top: "var(--frame-toast-top, var(--c-toaster-offset))",
+      }}
       mobileOffset={{
         left: "var(--frame-toast-left, var(--c-toaster-offset-compact))",
         right: "var(--frame-toast-left, var(--c-toaster-offset-compact))",
         bottom: "var(--frame-toast-bottom, var(--c-toaster-offset-compact))",
+        top: "var(--frame-toast-top, var(--c-toaster-offset-compact))",
       }}
       className={cn("toaster group", className)}
       icons={{
@@ -196,7 +275,8 @@ const Toaster = ({ className, style, toastOptions, ...props }: ToasterProps) => 
       }}
       style={
         {
-          "--width": "var(--c-toaster-width)",
+          // On a phone the frame gives the strip's width, so a toast is exactly the bar it stands in for.
+          "--width": "var(--frame-toast-width, var(--c-toaster-width))",
           ...style,
         } as React.CSSProperties
       }
