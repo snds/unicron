@@ -357,7 +357,17 @@ never a raw `text-sm` or `font-medium`.
 - A line box shorter than its type is intended on `display` (72 / 68) and `number-hero`
   (168 / 148).
 - Case and figure style are not variables. The stylesheet sets them: `type-overline` is upper
-  case; the number roles and the mono roles use tabular figures.
+  case; the mono roles (overline, folio, meta, code-inline, code-display, number-count) use
+  tabular figures. The three sans number roles (number-hero, number-metric, number-index) keep
+  proportional figures, as Figma draws them. A value that counts up in place can add
+  `tabular-nums` itself.
+- One exception to "every text is a role": on a touch screen a field's value is 16px, on the ui
+  role's weight and 20px line (the code-inline role's, in a mono field). iOS zooms the page into
+  any field set under 16px when it takes focus. Every field does it (`fieldTextOnTouch`: Input,
+  Textarea, TextField, ChipField, Select, the command menu's search, the Composer, SecretField's
+  edit input), and nothing else may. The browser gate (`apps/playground/tests/rules.spec.ts`)
+  names it, with bold text in response prose (17/28 strong, contract 5.1c C20) and the fitted
+  characters of the large type view.
 - No role sets a colour.
 - The utilities from before 1.0 stay as deprecated aliases in the stylesheet:
   `type-page-title` → `title`, `type-section-title` → `subtitle`, `type-group-title` → `label`,

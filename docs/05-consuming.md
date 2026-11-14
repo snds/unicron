@@ -61,6 +61,43 @@ is verified against a plain Vite + React app outside the workspace on every rele
 bundler still misses classes, add `@source "../node_modules/@unicron/ui/dist/components";` to your
 entry (adjust the relative path to your CSS file).
 
+### A smaller stylesheet
+
+`@unicron/ui/styles` makes classes for every component in the package, whether your app uses it or
+not. For an app with a CSS budget there is a second entry, `@unicron/ui/styles/lean.css`: the same
+stylesheet without the line that scans the whole package. A small tool writes the entry for the
+modules you name:
+
+```sh
+npx unicron-sources src/unicron.css button dialog app-frame list-row security/code-display
+```
+
+```css
+@import "./unicron.css";             /* instead of @unicron/ui/styles */
+@import "./app-extension.css";
+```
+
+A module is what you import: `button` for `@unicron/ui/button`, or for `Button` from the package
+root. A listed module brings the files it imports with it (`dist/styles/sources.json` holds that
+map). **A module you use but leave off the list loses its classes**, so list every one, and run
+the tool again when the list changes. The file it writes scans the package's components and leaves
+out the rest with `@source not`, because Tailwind 4.3 does not narrow a scan inside `node_modules`
+to single files.
+
+Measured on 2026-11-14, a Vite app, stylesheet minified, gzip -9:
+
+| What the app imports | Stylesheet | gzip |
+|---|---|---|
+| `@unicron/ui/styles`, any app | 249 kB | 38.3 kB |
+| lean, about 50 modules (a whole app: frame, lists, chat, overlays, forms) | 207 kB | 32.9 kB |
+| lean, `button` alone | 99 kB | 17.6 kB |
+| lean, no module (tokens, type roles, fonts, base, motion, sonner's rules) | 77 kB | 14.1 kB |
+
+For scale: 0.24 measured 157 kB / 25.5 kB for the first row. 1.0 adds four themes on two grounds,
+23 type roles, about 50 more modules and sonner's rules as a file (2.5 kB gzip; they used to
+arrive in a `<style>` tag, uncounted). An app that held its initial CSS to 25 kB on 0.24 has to
+set that budget again on purpose: the lean entry gets a whole app to about 33 kB, not to 25.
+
 ## 3. Add your app-extension token layer
 
 Copy `@unicron/tokens/examples/app-extension.css` as a starting point. Put roles only your app
@@ -123,15 +160,19 @@ it breaks a "no console errors" bar; prefer the hook above there.
 vault). No component adds a `<style>` tag or writes a `style` attribute into markup, the fonts
 ship as files, and nothing loads from a `data:` URL.
 
-One dependency does add a tag: sonner, which `Toaster` is built on, inserts its own stylesheet
-as its script loads. That policy refuses it, and without those rules a toast would fall into the
-page's flow. So `@unicron/ui/styles` carries the same rules as a file (it imports
-`sonner/dist/styles.css`), and the refused tag does no harm: toasts take their place either way.
-You need to do nothing, and you do not need to strip the tag at build. The browser will log one
-"Refused to apply inline style" line for sonner's tag; that line is the policy working. (Base UI's
-scroll area also tries one tag, for hiding scrollbars; the stylesheet's `no-scrollbar` utility
-already covers it.) A browser check loads the Toaster under this policy
-(`apps/playground/tests/parts.spec.ts`).
+`Toaster` is built on sonner, and sonner's own module adds its stylesheet to the page in a
+`<style>` tag as it loads. That would break the rule above, so `@unicron/ui` does not load it:
+the Toaster uses a copy of sonner's module with that one step taken out
+(`vendor/sonner.js`, written by `scripts/build-sonner.mjs` and checked against the installed
+sonner in `pnpm test`), and `@unicron/ui/styles` carries sonner's rules as a file (it imports
+`sonner/dist/styles.css`). No page gets a tag from this package, with a Toaster on it or without.
+
+**Import `toast` from `@unicron/ui`, not from `sonner`.** The Toaster listens to the copy, so a
+toast raised with sonner's own `toast` never shows in it, and importing `sonner` yourself brings
+the `<style>` tag back. The Toaster warns in the console, once, when it finds that tag on the page.
+(Base UI's scroll area also tries one tag, for hiding scrollbars; the stylesheet's `no-scrollbar`
+utility already covers it.) A browser check loads the Toaster under `style-src 'self'`, and
+another counts the style tags on a page (`apps/playground/tests/parts.spec.ts`).
 
 ## 4a. Icons (Carbon)
 
@@ -211,7 +252,7 @@ height is what's scarce. A phone in landscape, or a folded Duo at 594 × 368. Sh
 time, and put controls beside the content, not above it. `AppFrameNav`, `Textarea` and `Empty`
 already do their part.
 
-**Where the nav goes** (`useViewport().navPlacement`, the `nav-rail:` variant). A floating capsule along the bottom, or `rail`, a pill at the foot of the right edge, on a short screen or a narrow one less than 1.6 times as tall as it is wide. That's where iOS puts tab bars on iPhone Duo in every pose but the inner display in portrait, and it's what a folded Duo and an iPhone sideways have in common. Don't use `100vh` or `100lvh` for a full-screen box: they can be taller than the screen in a home-screen app. `AppFrame` measures instead.
+**Where the nav goes** (`useViewport().navPlacement`, the `nav-rail:` variant). A floating capsule along the bottom, or `rail`, a pill at the foot of the right edge, on a short screen, or a narrow one that is under 600 tall and less than 1.6 times as tall as it is wide (a folded Duo at 382 × 580, two windows at 385 × 571). A narrow window that is tall is not squat: 430 × 667 and 560 × 844 keep the bottom row. That's where iOS puts tab bars on iPhone Duo in every pose but the inner display in portrait, and it's what a folded Duo and an iPhone sideways have in common. Don't use `100vh` or `100lvh` for a full-screen box: they can be taller than the screen in a home-screen app. `AppFrame` measures instead.
 
 **A keyboard** (`useViewport().keyboardOpen` and `room`, or the `frame-tight:` and `frame-minimal:`
 variants inside an `AppFrame`). `AppFrame` keeps clear of it and drops its bars when `room` is

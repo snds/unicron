@@ -56,9 +56,13 @@ Layout: up to 3 options with no detail and labels of 24 characters or fewer make
 - Y and N answer the first and second options of `permission` and `continue`. 1 to 9 answer any option.
 - A reply's field: Enter sends, Shift+Enter is a new line. Keys typed there never answer an option.
 - The timer is `role="timer"`, so it isn't read out on every tick; its name says what happens and when.
-- Keys count only when focus isn't in an input, a textarea, a select or an editable region, and with no modifier key.
+- Keys count only when focus isn't in something that takes text (an input, a textarea, a select, an editable region, or a part with the role `textbox`, `combobox`, `searchbox` or `spinbutton`), and with no modifier key. A held key (auto-repeat) does not count.
 - Only the newest listening prompt takes keys.
-- Key hints (`Kbd`) show only with a fine pointer, and are aria-hidden.
+- A stray key never answers (added 2026-11-14, after review):
+  - The keys are inert for `--c-agent-prompt-arm-delay` (500ms) after a prompt starts listening: when it arrives, and when the prompt after it is answered. The same window as `ApprovalSheet`.
+  - An option marked `standing` (an answer that keeps applying, "Always for Lockdown") takes its key only while focus is inside the prompt. The safe answer and a one-time yes keep the plain key. Mark every "always" answer `standing`.
+  - `listen={false}` turns the single-key answers off (WCAG 2.1.4). Every option is still a button.
+- Each option says its key through `aria-keyshortcuts`. Key hints (`Kbd`) show only with a fine pointer, and are aria-hidden.
 - Tab reaches every option. The region is named by its title.
 - A polite `role="status"` says "Waiting for you" once, when the prompt appears.
 - Pair it with the `indicator` prop (`attention`) on the nav item and the row, so the place shows it's waiting too.

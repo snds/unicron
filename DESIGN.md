@@ -114,7 +114,8 @@ hand-picked size or `text-sm` / `font-medium` in a component:
 `code-inline` mono 15/20 · `code-display` mono 36/40 · `number-hero` 168/148 · `number-metric`
 44/44 · `number-index` 28/32 · `number-count` mono 24/28 · `brand-wordmark` 13/16 · `icon-glyph`.
 
-`type-overline` is the only role with a case. Mono and number roles use tabular figures. Mixed
+`type-overline` is the only role with a case. The mono roles use tabular figures; the three sans
+number roles (hero, metric, index) keep proportional figures, as Figma draws them. Mixed
 sizes on one line align on the baseline. The old names stay as aliases: `type-page-title` → title,
 `type-section-title` → subtitle, `type-group-title` → label, `type-support` → caption.
 `type-measure` caps prose at 72ch.

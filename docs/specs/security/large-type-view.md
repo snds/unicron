@@ -94,7 +94,7 @@ Tier 3 under `large-type`:
 | `--c-large-type-letter-ink` | `{foreground}` | |
 | `--c-large-type-symbol-ink` | `{warning}` | |
 | `--c-large-type-caption-ink` | `{muted-foreground}` | |
-| `--c-large-type-caption-size` | `0.75rem` | |
+| `--c-large-type-leading` | `1` | The character's line, as a ratio of its fitted size. The size is a multiple of 8px, so the line is on the 4px grid. A caption is the `caption` type role (13/20), 4 under its character. |
 | `--c-large-type-lifetime` | `120s` | |
 
 ## Keyboard and screen reader

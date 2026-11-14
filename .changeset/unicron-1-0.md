@@ -20,11 +20,17 @@ Unicron 1.0: the 2026-11 design direction, read from the Figma file `Unicron / C
 - Scrims: `--c-scrim-sheet`, `-dialog` and `-menu` are 0.5, 0.6 and 0.32 on graphite and 1 on stone, where the role's own 64% is the whole dim, as every stone frame draws it.
 - Knob values that moved: `--c-dialog-padding` 1rem → 1.5rem, `--c-popover-width` 18rem → 20rem, `--c-sheet-compact-height` 75dvh → `calc(100% - 3rem)`, `--c-progress-fill` is the live colour. Knobs no longer read are removed (`--c-icon-*`, `--c-agent-prompt-edge*`, the old code, approval-timer and risk-tier colours, `--c-nav-*`).
 
+**Stylesheet and package**
+
+- `@unicron/ui/styles` is larger: about 249 kB (38 kB gzip) in a Vite app, from 157 kB (25.5 kB). An app with a CSS budget can import `@unicron/ui/styles/lean.css` through a file `npx unicron-sources <out.css> <module>…` writes, which makes classes for the named modules only (a whole app lands near 33 kB gzip). See docs/05-consuming.md.
+- The root index names its exports for `adaptive`, `input`, `rail`, `sonner` and `text-field`: helpers their sibling files share are not public. The parts of `app-frame` (`app-frame-desktop`, `-phone`, `-focus`, `-deprecated`, `-context`, `-pull`) are not subpaths; import from `@unicron/ui/app-frame`.
+- The three sans number roles (`type-number-hero`, `-metric`, `-index`) use proportional figures, as Figma draws them. Add `tabular-nums` to a value that counts up in place.
+
 **Controls**
 
 - `Button`: `secondary` is the ink outline (was a grey fill); `destructive` is the solid critical fill; labels are mono caps; sizes grew (`default` 32 → 40, `sm` 28 → 32, `lg` 36 → 48, icons the same); `shape="pill"` does nothing; edges are inset rings, so a `border-*` class does nothing. New: `block`, `wrap`, `loading`, `disabledReason`, the three `needs-you*` kinds.
 - Fields are 48 tall with a 2px inside border on focus; `Label` and `FieldLabel` are mono caps overlines (`variant="choice"` for running text); `Textarea` no longer grows with its text (use `TextField multiline`).
-- `Switch` is one size, 44 × 24. `Checkbox` checked is ink. `Toggle` pressed is inverted ink. `Badge` takes `tone` (`data-variant` became `data-tone`). `Chip` is 24 tall and square. `Avatar` is square. `Tabs` default is a square segmented control; the line variant is the Top Tab. `Empty` is left aligned. Segmented `Progress` cuts `segments` cells (32), not one per step: pass `segments={max}` for a checklist. `Skeleton variant="row"` is 76 tall. A horizontal `Separator` adds no height.
+- `Switch` is one size, 44 × 24. `Checkbox` checked is ink. `Toggle` pressed is inverted ink. `Badge` takes `tone` (`data-variant` became `data-tone`). `Chip` is 24 tall and square. `Avatar` is square, and `AvatarBadge` is the body ink (`tone="live"` for presence), not the primary fill. A pressed `link` button takes the body ink. Joined parts of a `ButtonGroup` no longer overlap by 1px. `Tabs` default is a square segmented control; the line variant is the Top Tab. `Empty` is left aligned. Segmented `Progress` cuts `segments` cells (32), not one per step: pass `segments={max}` for a checklist. `Skeleton variant="row"` is 76 tall. A horizontal `Separator` adds no height.
 
 **Overlays**
 
