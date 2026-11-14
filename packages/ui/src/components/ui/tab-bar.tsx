@@ -184,7 +184,11 @@ function TabBar({
           "touch-none",
           // Minimizing moves the bar's share of the row and the gaps on the state role.
           "transition-[flex-grow,flex-basis,gap] duration-(--motion-state) ease-(--motion-ease-move)",
-          horizontal ? "h-control min-w-0 grow basis-0 flex-row" : "w-control flex-col",
+          // Vertical (the short screen's trailing column): it is the one part of that column that
+          // gives way. Where four tabs at 40 do not fit (a phone on its side in a browser, 320
+          // tall), the tabs share what is left, down to 24 each, and the column's last button, the
+          // app's create, stays on screen.
+          horizontal ? "h-control min-w-0 grow basis-0 flex-row" : "w-control min-h-0 shrink flex-col",
           minimized && "gap-0 overflow-hidden",
           minimized && horizontal && "grow-0 basis-control",
           className
@@ -298,7 +302,7 @@ function TabBarItem({ value, icon, label, mark, render, className, onClick, ...p
           // Colours answer at once (fast); folding away when minimized moves on the state role.
           "[transition:color_var(--motion-fast)_var(--motion-ease),background-color_var(--motion-fast)_var(--motion-ease),flex-grow_var(--motion-state)_var(--motion-ease-move),height_var(--motion-state)_var(--motion-ease-move),opacity_var(--motion-state)_var(--motion-ease-move),visibility_var(--motion-state)]",
           "hover:bg-state-hover active:bg-state-pressed",
-          vertical ? "h-10 w-full" : "h-full grow basis-0",
+          vertical ? "h-10 min-h-6 w-full" : "h-full grow basis-0",
           active && "bg-primary-soft text-primary-text hover:bg-primary-soft active:bg-primary-soft",
           // Minimized: the other tabs fold away and leave the tab order.
           collapsed && (vertical ? "invisible h-0 opacity-0" : "invisible grow-0 opacity-0"),

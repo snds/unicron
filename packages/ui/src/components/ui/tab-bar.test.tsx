@@ -171,6 +171,11 @@ describe("TabBar (Figma 20:1657)", () => {
     expect(bar).toHaveAttribute("aria-orientation", "vertical")
     expect(classesOf(bar)).toEqual(expect.arrayContaining(["w-control", "flex-col"]))
     expect(classesOf(screen.getByRole("tab", { name: "Notes" }))).toEqual(expect.arrayContaining(["h-10", "w-full"]))
+    // It is the part of the short screen's column that gives way: the bar may shrink, and its tabs
+    // share what is left, down to 24 each, so the create button under it stays on screen.
+    expect(classesOf(bar)).toEqual(expect.arrayContaining(["min-h-0", "shrink"]))
+    expect(classesOf(bar)).not.toContain("shrink-0")
+    expect(classesOf(screen.getByRole("tab", { name: "Notes" }))).toEqual(expect.arrayContaining(["min-h-6", "shrink"]))
     await user.tab()
     await user.keyboard("{ArrowDown}")
     expect(screen.getByRole("tab", { name: "Calendar", selected: true })).toHaveFocus()

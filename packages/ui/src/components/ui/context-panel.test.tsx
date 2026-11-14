@@ -95,6 +95,61 @@ describe("ContextPanel", () => {
     expect(screen.getByRole("tab", { name: "Envs 03" })).toHaveAttribute("aria-selected", "true")
   })
 
+  it("after a collapse or an expand by its own controls, focus goes to the counterpart, never to the page's body", () => {
+    setViewport(1440, 900)
+    render(<Workspace />)
+    const collapse = screen.getByRole("button", { name: "Collapse panel" })
+    act(() => collapse.focus())
+    fireEvent.click(collapse)
+    // The panel was swapped for its rail: the pressed control is gone. Focus is on Expand.
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Expand panel" }))
+    // A rail item opens the panel at its tab, and focus lands on that tab.
+    const envs = screen.getByRole("button", { name: "Envs, 3" })
+    act(() => envs.focus())
+    fireEvent.click(envs)
+    expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Envs 03" }))
+    // And Expand itself: the chosen tab again.
+    fireEvent.click(screen.getByRole("button", { name: "Collapse panel" }))
+    fireEvent.click(screen.getByRole("button", { name: "Expand panel" }))
+    expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Envs 03" }))
+  })
+
+  it("a state the app changes by itself moves no focus", () => {
+    setViewport(1440, 900)
+    function Driven() {
+      const [state, setState] = React.useState<ContextPanelState>("open")
+      return (
+        <AppFrame>
+          <AppFrameMain>
+            <AppFrameColumn aria-label="Chat">
+              <button type="button" onClick={() => setState("rail")}>
+                Focus the chat
+              </button>
+            </AppFrameColumn>
+            <ContextPanel state={state} onStateChange={setState} tabs={TABS} value="tasks" onValueChange={() => {}}>
+              The tasks panel
+            </ContextPanel>
+          </AppFrameMain>
+        </AppFrame>
+      )
+    }
+    render(<Driven />)
+    const chat = screen.getByRole("button", { name: "Focus the chat" })
+    act(() => chat.focus())
+    fireEvent.click(chat)
+    expect(screen.getByRole("complementary", { name: "Context" })).toHaveAttribute("data-state", "rail")
+    expect(document.activeElement).toBe(chat)
+  })
+
+  it("starts on the columns' line: no space of its own above its head or its rail (Figma cw-01, cw-04)", () => {
+    setViewport(1440, 900)
+    const { unmount } = render(<Workspace />)
+    expect(screen.getByRole("complementary", { name: "Context" }).className).not.toMatch(/(^|\s)pt-/)
+    unmount()
+    render(<Workspace initial="rail" />)
+    expect(screen.getByRole("complementary", { name: "Context" }).className).not.toMatch(/(^|\s)pt-/)
+  })
+
   it("expands from the rail with its own button", () => {
     setViewport(1440, 900)
     render(<Workspace initial="rail" />)

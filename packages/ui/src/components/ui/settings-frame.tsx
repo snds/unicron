@@ -110,7 +110,7 @@ function SettingsFrame({ label = "Settings sections", sections, value, onValueCh
 
   return (
     <div data-slot="settings-frame" className={cn("contents", className)} {...props}>
-      <AppFrameList size="narrow" aria-label={label} className={cn(frame.split && "w-[calc(var(--c-app-frame-settings-list)+--spacing(3))]")}>
+      <AppFrameList size="narrow" aria-label={label} className={cn(frame.split && "w-[calc(var(--c-app-frame-settings-list)+--spacing(3)+var(--column-start-room,0px))]")}>
         {head}
         {!frame.split && overview ? <div data-slot="settings-frame-overview" className="pb-8">{overview}</div> : null}
         <AppFrameInset className="flex flex-col gap-6">

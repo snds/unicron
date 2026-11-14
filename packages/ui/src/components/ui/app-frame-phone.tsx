@@ -38,13 +38,49 @@ function useClearance(el: HTMLElement | null, edge: "top" | "bottom", active: bo
   }, [el, active, edge, extra, pad, setClearance])
 }
 
+/**
+ * How far the phone's content must end above the frame's bottom to rest clear of the bottom row
+ * and of the whole fade above it. The fade is fixed to the row (`bar`): solid from
+ * --c-app-frame-scroll-edge-solid above the row's top, fading over --c-app-frame-scroll-edge
+ * above that, whether or not a strip stands on the row. On a short screen there is no row at the
+ * foot (`bar` null): the fade sits on the dock, 16 of ground above it.
+ */
+function useBottomClearance(dock: HTMLElement | null, bar: HTMLElement | null, active: boolean) {
+  const { setClearance } = useAppFrame()
+  React.useLayoutEffect(() => {
+    if (!dock || !active) return
+    const measure = () => {
+      const fade = readLength(dock, "--c-app-frame-scroll-edge", 0)
+      if (!bar) {
+        setClearance("bottom", Math.round(dock.getBoundingClientRect().height + fade + 16))
+        return
+      }
+      const solid = readLength(dock, "--c-app-frame-scroll-edge-solid", 0)
+      const underRowTop = dock.getBoundingClientRect().bottom - bar.getBoundingClientRect().top
+      setClearance("bottom", Math.round(underRowTop + solid + fade))
+    }
+    measure()
+    if (typeof ResizeObserver !== "function") return () => setClearance("bottom", 0)
+    const observer = new ResizeObserver(measure)
+    observer.observe(dock)
+    if (bar) observer.observe(bar)
+    return () => {
+      observer.disconnect()
+      setClearance("bottom", 0)
+    }
+  }, [dock, bar, active, setClearance])
+}
+
 /* ── Scroll edge ─────────────────────────────────────────────────────────────────────────────── */
 
 export type AppFrameScrollEdgeProps = React.ComponentProps<"div"> & {
   /**
    * `top`: the solid ground under the top row (content scrolls under it and is gone). `bottom`:
    * the fade above the bottom row: content fades into the ground over `--c-app-frame-scroll-edge`
-   * (80) and the ground is solid from 16 above the chrome down (Vale Mobile / 01, y 640 to 720).
+   * (80), and the ground is solid below that. The bottom row fixes it to itself: solid from
+   * `--c-app-frame-scroll-edge-solid` (40) above the row's top, as Figma draws it with and without
+   * a status strip (Vale Mobile / 01 and Lockdown Mobile / 01: y 640 to 720, the row at 760).
+   * Placed by hand it starts 16 above what it sits in.
    */
   edge: "top" | "bottom"
 }
@@ -267,8 +303,8 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
     return () => setBottom(null)
   }, [shows, kind, rail, above, inside, setBottom])
 
-  // The content scrolls clear of the dock and its fade, with 16 of air.
-  useClearance(dock, "bottom", shows, "--c-app-frame-scroll-edge", 16)
+  // The content scrolls clear of the row and of the whole fade above it.
+  useBottomClearance(dock, rail ? null : bar, shows)
 
   // A toast takes the strip's slot just above this bar (C6): the frame measures it.
   React.useLayoutEffect(() => {
@@ -325,10 +361,9 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
       className={cn("pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col gap-2 px-4", inset, className)}
       {...props}
     >
-      <AppFrameScrollEdge edge="bottom" />
       {/* The status strip's slot, above the row (rules.md 6.4). One strip at a time. */}
       <div ref={setAbove} data-slot="app-frame-strip" className="pointer-events-auto flex flex-col empty:hidden [&>*:not(:first-child)]:hidden" />
-      <div ref={setBar} data-slot="app-frame-bottom-row-bar" className="pointer-events-auto flex min-h-control min-w-0 items-end gap-2">
+      <div ref={setBar} data-slot="app-frame-bottom-row-bar" className="pointer-events-auto relative flex min-h-control min-w-0 items-end gap-2">
         {start}
         {tabBar}
         {/* Scrolled: the strip, compact, takes the room the tab bar gives up, as the bar gives it. */}
@@ -344,6 +379,13 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
             {end}
           </div>
         ) : null}
+        {/* Fixed to the row, not to the chrome's top: it fades over 80 and is solid from 40 above
+            the row, the same with a strip on the row and without one. It spans the screen's width
+            (the dock's 16 each side) and runs down past the row to the screen's end. */}
+        <AppFrameScrollEdge
+          edge="bottom"
+          className="-inset-x-4 -top-[calc(var(--c-app-frame-scroll-edge)+var(--c-app-frame-scroll-edge-solid))] -bottom-4"
+        />
       </div>
     </div>
   )

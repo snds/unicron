@@ -342,7 +342,10 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
           {children}
           {layout === "rail" ? (
             // The short screen's trailing column (Warpcore U-03): the top row's buttons at the top,
-            // the bottom row's search, tab bar and create at the foot. 16 from each edge.
+            // the bottom row's search, tab bar and create at the foot. 16 from each edge. The column
+            // has a floor: its buttons never shrink, and where the height cannot hold everything
+            // (four tabs need 380) the foot gives way through its tab bar, whose tabs share what is
+            // left. So create, the app's primary action, is always on screen.
             <div
               data-slot="app-frame-rail"
               className={cn(
@@ -350,8 +353,8 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
                 keyboardOpen && "hidden"
               )}
             >
-              <div ref={setRailTop} data-slot="app-frame-rail-top" className="pointer-events-auto flex flex-col items-center gap-2" />
-              <div ref={setRailBottom} data-slot="app-frame-rail-bottom" className="pointer-events-auto flex flex-col items-center gap-2" />
+              <div ref={setRailTop} data-slot="app-frame-rail-top" className="pointer-events-auto flex shrink-0 flex-col items-center gap-2" />
+              <div ref={setRailBottom} data-slot="app-frame-rail-bottom" className="pointer-events-auto flex min-h-0 shrink flex-col items-center gap-2" />
             </div>
           ) : null}
         </div>
@@ -435,6 +438,17 @@ const ColumnContext = React.createContext<ColumnContextValue | null>(null)
  */
 const LAST_COLUMN_ROOM = "last:-me-4 last:pe-4"
 
+/**
+ * The room a desktop column keeps before its content when no shown column stands before it: 4px,
+ * a focus ring's reach (2px wide, 2px clear of its control). A control at the column's start edge
+ * (the first filter chip of a list) drew its ring into the column's own clip and lost its start
+ * side. The box steps back by --column-start-room with a negative margin and gives it back as
+ * padding, so the content starts where it did. A column that follows a shown one has its 12 or 24
+ * to the rule instead, and no extra room. A fixed-width column adds the variable to its width.
+ */
+const START_COLUMN_ROOM =
+  "[--column-start-room:--spacing(1)] [[data-column][data-shown]+&]:[--column-start-room:0px] -ms-(--column-start-room) ps-(--column-start-room)"
+
 /** Whether the column the part sits in is showing. True outside a column. */
 export function useAppFrameColumnShown(): boolean {
   return React.useContext(ColumnContext)?.shown ?? true
@@ -479,8 +493,12 @@ function useColumn(kind: ColumnKind, shown: boolean, onRefresh?: () => unknown) 
       : cn(
           "h-full pt-2",
           !shown && "absolute inset-y-6 start-0 w-full",
+          shown && START_COLUMN_ROOM,
           kind === "side"
-            ? "pe-3 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l"
+            ? // The 12 to the rule is kept only while a shown column follows. Alone (a list at medium
+              // width, its detail pushed away) the rows reach the content line, where the header's
+              // rule ends, instead of stopping 12 short of it.
+              "has-[+[data-column][data-shown]]:pe-3 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l"
             : "has-[+[data-column][data-shown]]:pe-6 [[data-column][data-shown]+&]:ps-6 [[data-column][data-shown]+&]:rule-l",
           // The last content column ends at the content line, and its own clip (overflow-x) would
           // end there too: a row action that reaches past the row's end (a Field Row's Copy, the
@@ -556,8 +574,14 @@ function AppFrameList({ size = "default", onRefresh, className, children, ...pro
         className={cn(
           columnClass,
           !frame.phone && frame.split && shown && (size === "fill" ? "flex-1" : "shrink-0"),
-          !frame.phone && frame.split && size === "default" && (wide ? "w-[calc(var(--c-app-frame-list)+--spacing(3))]" : "w-[calc(var(--c-app-frame-list-compact)+--spacing(3))]"),
-          !frame.phone && frame.split && size === "narrow" && "w-[calc(var(--c-app-frame-list-narrow)+--spacing(3))]",
+          // Its own width, the 12 to the rule after it, and the start room when it is the first column.
+          !frame.phone &&
+            frame.split &&
+            size === "default" &&
+            (wide
+              ? "w-[calc(var(--c-app-frame-list)+--spacing(3)+var(--column-start-room,0px))]"
+              : "w-[calc(var(--c-app-frame-list-compact)+--spacing(3)+var(--column-start-room,0px))]"),
+          !frame.phone && frame.split && size === "narrow" && "w-[calc(var(--c-app-frame-list-narrow)+--spacing(3)+var(--column-start-room,0px))]",
           !frame.phone && !frame.split && shown && "flex-1",
           className
         )}
@@ -627,7 +651,7 @@ function AppFrameDetail({ open = false, onBack, backLabel = "Back", size = "fill
             shown &&
             (frame.split && size === "narrow"
               ? // 24 to the rule at its start; as the last column, 16 more for the room past the content line.
-                "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6))] last:w-[calc(var(--c-app-frame-detail-narrow)+--spacing(10))] shrink-0"
+                "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6)+var(--column-start-room,0px))] last:w-[calc(var(--c-app-frame-detail-narrow)+--spacing(10)+var(--column-start-room,0px))] shrink-0"
               : "flex-1"),
           className
         )}
@@ -771,9 +795,15 @@ function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, class
 
   const inset = React.useContext(InsetContext)
   const hasBelow = below !== undefined && below !== null && below !== false
-  const under = gap === "none" ? "" : gap === "sm" || frame.phone ? "pb-4" : hasBelow ? "pb-7" : "pb-8"
+  // A conversation's head (`xs`: an overline over a lead title, 52 tall) stands centred on the row
+  // of 44px controls the columns beside it start with (the chat list's button, the context panel's
+  // collapse), so it starts 12 above a column's page-head line: Figma cw-01 draws its overline from
+  // y 84 and those buttons from y 88 to 132. What it heads starts 24 under that row, which is 20
+  // under the head (the first message's meta from y 156).
+  const lifted = props.size === "xs" && !frame.phone && frame.layout !== "rail"
+  const under = gap === "none" ? "" : gap === "sm" || frame.phone ? "pb-4" : lifted ? "pb-5" : hasBelow ? "pb-7" : "pb-8"
   return (
-    <div data-slot="app-frame-page-head" data-gap={gap} className={cn(under, frame.phone && !inset && "px-4", className)}>
+    <div data-slot="app-frame-page-head" data-gap={gap} className={cn(under, lifted && "-mt-3", frame.phone && !inset && "px-4", className)}>
       <PageHead title={title} switcher={switcher} collapsed={collapsed ?? frame.layout === "rail"} {...props} />
       {hasBelow ? (
         <div data-slot="app-frame-page-head-below" className="mt-4 min-w-0">

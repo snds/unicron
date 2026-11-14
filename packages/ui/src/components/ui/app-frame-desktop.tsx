@@ -134,7 +134,25 @@ function AppFrameSidebar({
   }, [frame.phone, collapsed, setSidebar])
   const drawerShows = medium && drawerOpen
   const expandButton = React.useRef<HTMLButtonElement>(null)
+  const collapseButton = React.useRef<HTMLButtonElement>(null)
   const drawerRef = React.useRef<HTMLDivElement>(null)
+
+  // Collapsing and expanding at the expanded width swap the whole sidebar for another element, so
+  // the control that was pressed is gone and focus would fall to the page's body. When one of the
+  // sidebar's own two controls asked for the change, focus goes to its counterpart: Expand after a
+  // collapse, Collapse after an expand. The ⌘\ key and a change the app makes move nothing.
+  const asked = React.useRef(false)
+  const askCollapsed = (next: boolean) => {
+    asked.current = true
+    onCollapsedChange?.(next)
+  }
+  React.useEffect(() => {
+    if (!asked.current) return
+    asked.current = false
+    const active = document.activeElement
+    if (active && active !== document.body && active.isConnected) return
+    ;(collapsed ? expandButton.current : collapseButton.current)?.focus()
+  }, [collapsed])
 
   // ⌘\ (Ctrl+\): collapse and expand at the expanded width; open and close the drawer at medium.
   React.useEffect(() => {
@@ -170,14 +188,23 @@ function AppFrameSidebar({
   // a press outside). Only then: while the drawer shows, the rail under it is inert, and a browser
   // refuses to focus anything inside an inert box, so a focus() in the closing handler itself left
   // focus on the body. If the app has already put focus somewhere of its own, it stays there.
+  // Not when the drawer closed because focus walked out of it into the page (see its onBlur): the
+  // browser is still moving focus to where the person sent it, and pulling it back to the expand
+  // control would undo their Tab.
   const drawerWasShowing = React.useRef(false)
+  const focusWalkedOut = React.useRef(false)
   React.useEffect(() => {
     if (drawerShows) {
       drawerWasShowing.current = true
+      focusWalkedOut.current = false
       return
     }
     if (!drawerWasShowing.current) return
     drawerWasShowing.current = false
+    if (focusWalkedOut.current) {
+      focusWalkedOut.current = false
+      return
+    }
     const active = document.activeElement
     if (!active || active === document.body) expandButton.current?.focus()
   }, [drawerShows])
@@ -210,7 +237,7 @@ function AppFrameSidebar({
           {inDrawer ? (
             <SidebarControl label="Close sidebar" icon="side-panel--close" onClick={() => setDrawerOpen(false)} />
           ) : onCollapsedChange ? (
-            <SidebarControl label="Collapse sidebar" icon="side-panel--close" onClick={() => onCollapsedChange(true)} />
+            <SidebarControl ref={collapseButton} label="Collapse sidebar" icon="side-panel--close" onClick={() => askCollapsed(true)} />
           ) : null}
         </div>
       ) : null}
@@ -279,7 +306,7 @@ function AppFrameSidebar({
                   icon="side-panel--open"
                   aria-expanded={medium ? drawerOpen : false}
                   aria-keyshortcuts="Meta+Backslash Control+Backslash"
-                  onClick={() => (medium ? setDrawerOpen(true) : onCollapsedChange?.(false))}
+                  onClick={() => (medium ? setDrawerOpen(true) : askCollapsed(false))}
                 />
               </Rail>
             ) : null}
@@ -296,6 +323,17 @@ function AppFrameSidebar({
             role="dialog"
             aria-label={label}
             className="motion-slide motion-slide-from-left absolute inset-y-0 start-0 z-40 flex bg-surface-ground ps-6 pe-6 rule-r"
+            // The scrim stops a pointer, not the Tab key: focus that walks on out of the drawer into
+            // the page behind it closes the drawer, as a press outside does. Focus that goes to a
+            // layer the drawer itself opened (a switcher's menu, in a portal outside the frame)
+            // keeps it open.
+            onBlur={(event) => {
+              const next = event.relatedTarget as Node | null
+              if (!next || event.currentTarget.contains(next)) return
+              if (!event.currentTarget.closest('[data-slot="app-frame-body"]')?.contains(next)) return
+              focusWalkedOut.current = true
+              setDrawerOpen(false)
+            }}
           >
             <nav aria-label={label} className="flex min-h-0 w-(--c-app-frame-sidebar-width) flex-col pt-4 pb-9">
               {full(true)}
@@ -308,10 +346,11 @@ function AppFrameSidebar({
 }
 
 /** The sidebar's own control in its foot: a ghost icon button with a tooltip naming its key. */
-function SidebarControl({ label, icon, onClick }: { label: string; icon: IconName; onClick: () => void }) {
+function SidebarControl({ label, icon, onClick, ref }: { label: string; icon: IconName; onClick: () => void; ref?: React.Ref<HTMLButtonElement> }) {
   return (
     <Tooltip>
       <TooltipTrigger
+        ref={ref}
         render={<Button variant="ghost" size="icon" />}
         data-slot="app-frame-sidebar-control"
         aria-label={label}
@@ -532,7 +571,10 @@ function Crumbs({ crumbs, badge }: { crumbs: AppFrameCrumb[]; badge?: React.Reac
         {crumbs.map((crumb, i) => {
           const last = i === crumbs.length - 1
           const link = !last && (crumb.href || crumb.onClick)
-          const crumbClass = "hit-area truncate rounded-sm underline-offset-4 hover:underline"
+          // The link carries the 44px touch target; its words are cut in a span inside it. `truncate`
+          // on the link itself would clip the target too (overflow: hidden clips an element's own
+          // ::before), leaving a 16px tall link on a touch tablet.
+          const crumbClass = "hit-area inline-flex min-w-0 rounded-sm underline-offset-4 hover:underline"
           return (
             <li key={`${i}-${crumb.label}`} className={cn("flex min-w-0 items-center", last ? "shrink" : "shrink-0")}>
               {i > 0 ? (
@@ -542,11 +584,11 @@ function Crumbs({ crumbs, badge }: { crumbs: AppFrameCrumb[]; badge?: React.Reac
               ) : null}
               {link && crumb.href ? (
                 <a href={crumb.href} className={crumbClass}>
-                  {crumb.label}
+                  <span className="truncate">{crumb.label}</span>
                 </a>
               ) : link ? (
                 <ButtonPrimitive onClick={crumb.onClick} className={crumbClass}>
-                  {crumb.label}
+                  <span className="truncate">{crumb.label}</span>
                 </ButtonPrimitive>
               ) : (
                 <span className="truncate" aria-current={last ? "page" : undefined}>

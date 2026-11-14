@@ -113,7 +113,14 @@ describe("AppFrameBottomRow", () => {
     const bar = dock.querySelector('[data-slot="app-frame-bottom-row-bar"]')!
     // The end sits in its own slot, held at the trailing edge (`ms-auto`): the create button does
     // not move while the tab bar and the strip trade room.
-    expect([...bar.children].map((el) => el.getAttribute("data-slot"))).toEqual(["float-button", "tab-bar", "app-frame-bottom-row-strip", "app-frame-bottom-row-end"])
+    // The scroll edge is the row's last child: decoration behind the parts, fixed to the row.
+    expect([...bar.children].map((el) => el.getAttribute("data-slot"))).toEqual([
+      "float-button",
+      "tab-bar",
+      "app-frame-bottom-row-strip",
+      "app-frame-bottom-row-end",
+      "app-frame-scroll-edge",
+    ])
     const end = bar.querySelector('[data-slot="app-frame-bottom-row-end"]')!
     expect(end.className.split(/\s+/)).toEqual(expect.arrayContaining(["ms-auto", "shrink-0"]))
     expect(end).toContainElement(screen.getByRole("button", { name: "New item" }))
@@ -132,6 +139,13 @@ describe("AppFrameBottomRow", () => {
     expect(edge.className).toContain("[mask-image:linear-gradient(to_bottom,transparent,black_var(--c-app-frame-scroll-edge))]")
     expect(edge.className).toContain("[-webkit-mask-image:")
     expect(edge.className).not.toMatch(/blur/)
+    // Fixed to the row, not to the chrome's top: 80 of fade over 40 of solid ground above the row,
+    // the same with a strip standing on the row (Vale Mobile / 01 and Lockdown Mobile / 01).
+    expect(edge.parentElement).toBe(bar)
+    expect(bar.className.split(/\s+/)).toContain("relative")
+    expect(edge.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["-top-[calc(var(--c-app-frame-scroll-edge)+var(--c-app-frame-scroll-edge-solid))]", "-inset-x-4", "-bottom-4"])
+    )
   })
 
   it("has a detail form: start, fill and end, no tab bar (contract 5.1b #2)", () => {

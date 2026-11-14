@@ -37,6 +37,12 @@ describe("the shell a width picks (contract 5.2)", () => {
     ["a small iPhone", 375, 667, "phone"],
     ["an Android cover screen", 344, 882, "phone"],
     ["599 wide and tall", 599, 1100, "phone"],
+    // Tall narrow windows: the short-screen rule is for scarce height, and none of these is short.
+    ["a large iPhone's width in a short browser tab", 430, 667, "phone"],
+    ["a narrow window, 844 tall", 560, 844, "phone"],
+    ["528 wide, 844 tall", 528, 844, "phone"],
+    ["599 wide, 844 tall", 599, 844, "phone"],
+    ["599 wide, 900 tall", 599, 900, "phone"],
     ["600 wide", 600, 900, "medium"],
     ["an iPhone Duo open", 669, 867, "medium"],
     ["an iPad upright", 820, 1180, "medium"],

@@ -79,6 +79,77 @@ describe("AppFrameSidebar", () => {
     expect(onCollapsedChange).toHaveBeenLastCalledWith(false)
   })
 
+  it("after a collapse or an expand by its own control, focus goes to the counterpart control, never to the page's body", () => {
+    setViewport(1440, 900)
+    function Live() {
+      const [collapsed, setCollapsed] = React.useState(false)
+      return <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+    }
+    render(<Live />)
+    const collapse = screen.getByRole("button", { name: "Collapse sidebar" })
+    act(() => collapse.focus())
+    fireEvent.click(collapse)
+    // The whole sidebar was swapped for its rail: the pressed control is gone.
+    expect(screen.getByRole("navigation", { name: "Places" })).toHaveAttribute("data-state", "rail")
+    const expand = screen.getByRole("button", { name: "Expand sidebar" })
+    expect(document.activeElement).toBe(expand)
+    fireEvent.click(expand)
+    expect(screen.getByRole("navigation", { name: "Places" })).toHaveAttribute("data-state", "expanded")
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Collapse sidebar" }))
+  })
+
+  it("a collapse the person did not ask for with those controls (the key, the app) moves no focus", () => {
+    setViewport(1440, 900)
+    function Live() {
+      const [collapsed, setCollapsed] = React.useState(false)
+      return (
+        <>
+          <button type="button">Elsewhere</button>
+          <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+        </>
+      )
+    }
+    render(<Live />)
+    const elsewhere = screen.getByRole("button", { name: "Elsewhere" })
+    act(() => elsewhere.focus())
+    fireEvent.keyDown(document, { key: "\\", metaKey: true })
+    expect(screen.getByRole("navigation", { name: "Places" })).toHaveAttribute("data-state", "rail")
+    expect(document.activeElement).toBe(elsewhere)
+  })
+
+  it("the drawer closes when focus walks out of it into the page behind the scrim, and stays for a layer it opened itself", () => {
+    setViewport(820, 1180)
+    render(
+      <>
+        <AppFrame>
+          <AppFrameSidebar lockup={<AppLockup name="Vale" />} footer={<NavItem label="Settings" icon="settings" href="#settings" />}>
+            <NavSection title="Mail">
+              <NavItem label="Inbox" icon="email" current href="#inbox" />
+            </NavSection>
+          </AppFrameSidebar>
+          <AppFrameStatusLine crumbs={[{ label: "Mail", href: "#mail" }, { label: "Inbox" }]} />
+          <AppFrameMain />
+        </AppFrame>
+        <button type="button" data-testid="menu-item">
+          A menu in a portal, outside the frame
+        </button>
+      </>
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }))
+    const drawer = screen.getByRole("dialog", { name: "Places" })
+    const inside = drawer.querySelector<HTMLElement>("a[href]")!
+    act(() => inside.focus())
+    // To a layer outside the frame (a menu the drawer opened): the drawer stays.
+    act(() => screen.getByTestId("menu-item").focus())
+    expect(screen.getByRole("dialog", { name: "Places" })).toBeInTheDocument()
+    // Tab walks on to the crumb behind the scrim: the drawer is done, and focus stays on the crumb.
+    act(() => inside.focus())
+    const crumb = screen.getByRole("link", { name: "Mail" })
+    act(() => crumb.focus())
+    expect(screen.queryByRole("dialog", { name: "Places" })).not.toBeInTheDocument()
+    expect(document.activeElement).toBe(crumb)
+  })
+
   it("toggles on ⌘\\ and Ctrl+\\", () => {
     setViewport(1440, 900)
     const onCollapsedChange = vi.fn()
@@ -210,6 +281,23 @@ describe("AppFrameStatusLine", () => {
     expect(line).toHaveClass("rule-b", "h-16")
     expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toHaveTextContent("Personal // OverviewSample")
     expect(line.querySelectorAll('[data-slot="status-item"]')).toHaveLength(2)
+  })
+
+  it("a crumb that is a link or a button keeps its 44px touch target: the cut is on a span inside it, never on the control", () => {
+    setViewport(1440, 900)
+    render(
+      <AppFrame>
+        <AppFrameStatusLine crumbs={[{ label: "Mail", href: "#mail" }, { label: "Accounts", onClick: () => {} }, { label: "Inbox" }]} />
+      </AppFrame>
+    )
+    for (const control of [screen.getByRole("link", { name: "Mail" }), screen.getByRole("button", { name: "Accounts" })]) {
+      const cls = control.className.split(" ")
+      expect(cls).toContain("hit-area")
+      // overflow: hidden on the control would clip its own ::before, the touch target.
+      expect(cls.some((name) => name === "truncate" || name.startsWith("overflow-") || name.startsWith("line-clamp"))).toBe(false)
+      expect(control.firstElementChild).toHaveClass("truncate")
+    }
+    expect(screen.getByText("Inbox")).toHaveAttribute("aria-current", "page")
   })
 
   it("draws nothing on a phone", () => {

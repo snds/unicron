@@ -191,8 +191,9 @@ describe("list and detail (contract 5.2)", () => {
     expect(list()).toHaveAttribute("data-shown")
     expect(detail()).toHaveAttribute("data-shown")
     expect(list()).not.toHaveAttribute("inert")
-    // The list is 432 (+12 to the rule) at 1280 and up; the detail fills and draws the rule.
-    expect(list().className).toContain("w-[calc(var(--c-app-frame-list)+--spacing(3))]")
+    // The list is 432 (+12 to the rule, + its start room as the first column) at 1280 and up; the
+    // detail fills and draws the rule.
+    expect(list().className).toContain("w-[calc(var(--c-app-frame-list)+--spacing(3)+var(--column-start-room,0px))]")
     expect(detail().className).toContain("[[data-column][data-shown]+&]:rule-l")
     expect(detail().className).toContain("[[data-column][data-shown]+&]:ps-6")
   })
@@ -200,7 +201,38 @@ describe("list and detail (contract 5.2)", () => {
   it("narrows the list to 320 in an expanded window under 1280 (Lockdown 4.0)", () => {
     setViewport(1180, 820)
     render(show(false))
-    expect(list().className).toContain("w-[calc(var(--c-app-frame-list-compact)+--spacing(3))]")
+    expect(list().className).toContain("w-[calc(var(--c-app-frame-list-compact)+--spacing(3)+var(--column-start-room,0px))]")
+  })
+
+  it("the first shown column keeps 4 before its content, a focus ring's reach, so a ring at its start edge is not cut by the column's own clip", () => {
+    setViewport(1440, 900)
+    render(show(false))
+    // Taken with a negative margin and given back as padding: the content starts where it did.
+    for (const column of [list(), detail()]) {
+      expect(column.className.split(" ")).toEqual(
+        expect.arrayContaining([
+          "[--column-start-room:--spacing(1)]",
+          "-ms-(--column-start-room)",
+          "ps-(--column-start-room)",
+          // A column after a shown one has its 12 or 24 to the rule instead, and no extra room.
+          "[[data-column][data-shown]+&]:[--column-start-room:0px]",
+        ])
+      )
+    }
+  })
+
+  it("a list keeps its 12 to the rule only while a shown column follows it: alone, its rows reach the content line", () => {
+    setViewport(1440, 900)
+    const { unmount } = render(show(false))
+    const cls = list().className.split(" ")
+    expect(cls).toContain("has-[+[data-column][data-shown]]:pe-3")
+    expect(cls).not.toContain("pe-3")
+    unmount()
+    // At medium width the detail is not shown, so nothing follows the list.
+    setViewport(820, 1180)
+    render(show(false))
+    expect(detail()).not.toHaveAttribute("data-shown")
+    expect(list().className.split(" ")).not.toContain("pe-3")
   })
 
   it("keeps 16 of the page gutter past the content line on the last content column, so a row action that reaches past the row and its focus ring are not cut", () => {
@@ -224,8 +256,8 @@ describe("list and detail (contract 5.2)", () => {
       </AppFrame>
     )
     expect(detail()).toHaveClass(
-      "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6))]",
-      "last:w-[calc(var(--c-app-frame-detail-narrow)+--spacing(10))]",
+      "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6)+var(--column-start-room,0px))]",
+      "last:w-[calc(var(--c-app-frame-detail-narrow)+--spacing(10)+var(--column-start-room,0px))]",
       "last:-me-4",
       "last:pe-4"
     )
@@ -391,6 +423,35 @@ describe("columns that are always the screen", () => {
       )
       expect(classes()).toContain("pb-4")
       expect(classes()).not.toContain("pb-8")
+    })
+
+    it("a conversation's head (xs) starts 12 above a desktop column's page-head line, centred on the 44px controls beside it; not on a phone", () => {
+      setViewport(1440, 900)
+      const { unmount } = render(
+        <AppFrame>
+          <AppFramePageHead size="xs" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
+        </AppFrame>
+      )
+      expect(classes()).toContain("-mt-3")
+      // And what it heads starts 24 under that row of controls: 20 under the head, not 32.
+      expect(classes()).toContain("pb-5")
+      expect(classes()).not.toContain("pb-8")
+      unmount()
+      setViewport(1440, 900)
+      const other = render(
+        <AppFrame>
+          <AppFramePageHead size="sm" title="Login flow" />
+        </AppFrame>
+      )
+      expect(classes()).not.toContain("-mt-3")
+      other.unmount()
+      setViewport(390, 844)
+      render(
+        <AppFrame>
+          <AppFramePageHead size="xs" title="OPAQUE login" />
+        </AppFrame>
+      )
+      expect(classes()).not.toContain("-mt-3")
     })
 
     it("none: no space, for a head that is one block of a stack; sm: 16", () => {

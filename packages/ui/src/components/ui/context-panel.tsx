@@ -91,6 +91,26 @@ function ContextPanel({
   const id = React.useId()
   const listRef = React.useRef<HTMLDivElement>(null)
   const beside = frame.split && !frame.phone
+  const expandRef = React.useRef<HTMLButtonElement>(null)
+  const collapseRef = React.useRef<HTMLButtonElement>(null)
+  // Collapsing and expanding swap the panel for another element, so the control that was pressed
+  // is gone and focus would fall to the page's body. When one of the panel's own controls asked
+  // for the change, focus goes to its counterpart: the expand button after a collapse; the chosen
+  // tab (or the collapse button) after an expand. A change the app makes by itself moves nothing.
+  const asked = React.useRef(false)
+  const ask = (next: ContextPanelState) => {
+    asked.current = true
+    onStateChange?.(next)
+  }
+  const shownState = !beside || artifact ? null : frame.foldBook ? "open" : state
+  React.useEffect(() => {
+    if (!asked.current) return
+    asked.current = false
+    const active = document.activeElement
+    if (active && active !== document.body && active.isConnected) return
+    if (shownState === "rail") expandRef.current?.focus()
+    else if (shownState === "open") (listRef.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]') ?? collapseRef.current)?.focus()
+  }, [shownState])
 
   if (!beside) {
     if (artifact) {
@@ -129,10 +149,12 @@ function ContextPanel({
         data-column="side"
         data-shown=""
         aria-label={label}
-        className={cn("flex h-full min-h-0 shrink-0 flex-col items-center gap-2 pt-2 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l", className)}
+        // No space of its own above the expand button: it starts on the columns' line, 24 under the
+        // top bar's rule (Figma cw-04: the button from y 88 to 132, the first glyph at 149).
+        className={cn("flex h-full min-h-0 shrink-0 flex-col items-center gap-2 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l", className)}
         {...props}
       >
-        <FloatButton label={expandLabel} icon="open-panel--right" aria-expanded={false} onClick={() => onStateChange?.("open")} />
+        <FloatButton ref={expandRef} label={expandLabel} icon="open-panel--right" aria-expanded={false} onClick={() => ask("open")} />
         <Rail edge="right" aria-label={label}>
           {tabs.map((tab) => (
             <RailItem
@@ -144,7 +166,7 @@ function ContextPanel({
               mark={tab.count}
               onClick={() => {
                 onValueChange(tab.value)
-                onStateChange?.("open")
+                ask("open")
               }}
             />
           ))}
@@ -167,7 +189,9 @@ function ContextPanel({
       data-shown=""
       aria-label={label}
       className={cn(
-        "flex h-full min-h-0 w-[calc(var(--c-app-frame-context-panel)+--spacing(3))] shrink-0 flex-col pt-2 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l",
+        // No space of its own above the head: the collapse button starts on the columns' line, 24
+        // under the top bar's rule (Figma cw-01: the button from y 88 to 132, the chips from 98).
+        "flex h-full min-h-0 w-[calc(var(--c-app-frame-context-panel)+--spacing(3))] shrink-0 flex-col [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l",
         className
       )}
       {...props}
@@ -216,7 +240,7 @@ function ContextPanel({
             )
           })}
         </div>
-        {pinned ? null : <FloatButton label={collapseLabel} icon="open-panel--filled--right" aria-expanded={true} onClick={() => onStateChange?.("rail")} />}
+        {pinned ? null : <FloatButton ref={collapseRef} label={collapseLabel} icon="open-panel--filled--right" aria-expanded={true} onClick={() => ask("rail")} />}
       </div>
       <div
         id={panelId}

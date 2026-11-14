@@ -34,8 +34,18 @@ const KEYBOARD_MIN_HEIGHT = 120
 /** With a keyboard up, less room than these leaves no space for an app's bars. */
 const TIGHT_HEIGHT = 560
 const MINIMAL_HEIGHT = 400
-/** Narrow, and taller than wide by less than this: a folded Duo, or a window beside another. Not an iPhone. */
+/**
+ * Squat: narrow, under `SQUAT_MAX_HEIGHT` tall, and taller than wide by less than `RAIL_MAX_RATIO`.
+ * A folded Duo (382 × 580) or a window beside another (385 × 571): height is what is scarce there,
+ * so the bottom row stands at the side. Not an iPhone (620 tall and up), and not a tall narrow
+ * window: the ratio alone called 430 × 667 and every width from 528 to 599 at 844 tall squat, and
+ * drew a vertical tab bar beside 400px of empty column on screens that are not short at all.
+ *
+ * By size alone a small phone in a browser with both of its bars showing (375 × 553, 360 × 560)
+ * is the folded Duo, and still takes the side rail; nothing here can tell the two apart.
+ */
 const RAIL_MAX_RATIO = 1.6
+const SQUAT_MAX_HEIGHT = 600
 
 /**
  * - `book`: folded along a vertical line, so there's a left and a right part.
@@ -132,7 +142,7 @@ export function classifyViewport(r: ViewportReading, previous: Viewport | null):
 
   const landscape = r.width >= height
   const short = landscape && height < SHORT_HEIGHT
-  const squat = viewportWidthFor(r.width) === "compact" && height / r.width < RAIL_MAX_RATIO
+  const squat = viewportWidthFor(r.width) === "compact" && height < SQUAT_MAX_HEIGHT && height / r.width < RAIL_MAX_RATIO
   // The smaller of the two, when they disagree: a little spare room beats a cropped control.
   const zoomed = (r.visualScale ?? 1) > 1.01
   const pageHeight = keyboardOpen || zoomed ? r.height : Math.min(r.height, r.visualHeight + r.visualOffsetTop)
