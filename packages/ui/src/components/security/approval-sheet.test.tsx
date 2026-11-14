@@ -99,7 +99,7 @@ describe("ApprovalSheet: number matching gates the approve action", () => {
   it("4. Past expiresAt, onDeny('timeout') fires, no approve control remains, and Deny becomes Close", async () => {
     const { onDeny, onApprove } = setup({ expiresAt: Date.now() + 15_000 })
     await arm()
-    expect(screen.getByRole("timer")).toHaveTextContent("15 s left")
+    expect(screen.getByRole("timer")).toHaveTextContent("15 S left")
     await advance(5_000)
     expect(screen.getByRole("status")).toHaveTextContent(approvalSheetAnnouncements.urgent)
     await advance(10_000)
@@ -211,9 +211,9 @@ describe("ApprovalSheet: the other states", () => {
     try {
       setup({ expiresAt: Date.now() + 58_000 })
       await arm()
-      expect(screen.getByRole("timer")).toHaveTextContent("60 s left")
+      expect(screen.getByRole("timer")).toHaveTextContent("01:00 left")
       await advance(4_000)
-      expect(screen.getByRole("timer")).toHaveTextContent("55 s left")
+      expect(screen.getByRole("timer")).toHaveTextContent("55 S left")
     } finally {
       window.matchMedia = original
     }

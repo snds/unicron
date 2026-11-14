@@ -12,6 +12,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "../../lib/utils"
+import { formatCountdown } from "../../lib/format"
 import { useMediaQuery } from "../../lib/motion/use-reduced-motion"
 import { Icon, type IconName } from "../icon"
 import { FloatButton } from "../ui/float-button"
@@ -19,17 +20,8 @@ import { Spinner } from "../ui/spinner"
 
 // ── Words for time ────────────────────────────────────────────────────────────────────────────
 
-/**
- * A countdown in the cross-app words (decisions §13): `NN s` up to a minute, `MM:SS` past it, with
- * a leading zero. Type it in sentence case; the overline role sets the capitals.
- */
-export function formatCountdown(seconds: number): string {
-  const s = Math.max(0, Math.ceil(seconds))
-  if (s <= 60) return `${s} s`
-  const m = Math.floor(s / 60)
-  const r = s % 60
-  return `${m < 10 ? "0" : ""}${m}:${r < 10 ? "0" : ""}${r}`
-}
+/** A countdown in the cross-app words (decisions §13): `NN S` under a minute, `MM:SS` from it. One home: lib/format. */
+export { formatCountdown }
 
 // ── Text action ───────────────────────────────────────────────────────────────────────────────
 

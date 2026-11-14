@@ -9,6 +9,7 @@ import { useRender } from "@base-ui/react/use-render"
 import { cva } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
+import { formatCount } from "../../lib/format"
 import { Icon } from "../icon"
 import { Button } from "./button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "./dropdown-menu"
@@ -36,10 +37,7 @@ export interface ListRowProgress {
  * 1,000 (`1,204`). Shared by the data parts that show a count (SectionHeader, FilterChip, ListRow).
  */
 export function formatListCount(count: number): string {
-  if (!Number.isFinite(count)) return String(count)
-  const n = Math.max(0, Math.round(count))
-  if (n >= 1000) return n.toLocaleString("en-US")
-  return String(n).padStart(n >= 100 ? 3 : 2, "0")
+  return formatCount(count)
 }
 
 const ROW = cva(

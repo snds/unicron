@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
+import { formatCount } from "../../lib/format"
 
 /**
  * Where the person is wanted, on a nav item, a row, or a control (Button, IconButton,
@@ -44,7 +45,7 @@ export function indicatorLabel(indicator: IndicatorProp | undefined): string {
  * capped at "99+".
  */
 export function indicatorCount(count: number): string {
-  return count > 99 ? "99+" : String(Math.max(0, Math.floor(count))).padStart(2, "0")
+  return formatCount(count, { cap: true })
 }
 
 /**

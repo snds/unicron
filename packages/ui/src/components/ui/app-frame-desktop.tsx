@@ -6,6 +6,7 @@ import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
+import { formatCountdown } from "../../lib/format"
 import { Icon, type IconName } from "../icon"
 import { AppFrameRailContext, useAppFrame, type AppFrameBack } from "./app-frame-context"
 import { Button } from "./button"
@@ -361,11 +362,7 @@ const STATUS_PROGRESS: Record<StatusItemTone, ProgressTone> = {
 }
 
 /** A countdown as decisions §13 writes one: `NN S` under a minute, `MM:SS` from one. */
-export function formatCountdown(seconds: number): string {
-  const s = Math.max(0, Math.ceil(seconds))
-  if (s < 60) return `${String(s).padStart(2, "0")} S`
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
-}
+export { formatCountdown }
 
 export type StatusItemProps = Omit<React.ComponentProps<"div">, "children"> & {
   tone?: StatusItemTone

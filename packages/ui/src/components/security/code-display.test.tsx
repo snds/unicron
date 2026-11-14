@@ -485,7 +485,7 @@ describe("CodeDisplay 1.0: layouts and the segmented countdown", () => {
     expect(cells()).toHaveLength(30)
     expect(cells().filter((c) => c.className.includes("bg-(--c-progress-live)"))).toHaveLength(18)
     const seconds = document.querySelector('[data-slot="code-display-timer"]')!
-    expect(seconds).toHaveTextContent("18 s")
+    expect(seconds).toHaveTextContent("18 S")
     expect(seconds).toHaveClass("type-overline", "text-secondary-live")
     rerender(<CodeDisplay {...at(4)} />)
     expect(cells().filter((c) => c.className.includes("bg-(--c-progress-critical)"))).toHaveLength(4)

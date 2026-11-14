@@ -3,13 +3,14 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { ReviewFrame, TextAction, formatCountdown, rowClasses } from "./parts"
 
 describe("formatCountdown: the cross-app words (decisions §13)", () => {
-  it("is NN s up to a minute and MM:SS past it, with a leading zero", () => {
-    expect(formatCountdown(4)).toBe("4 s")
-    expect(formatCountdown(18.2)).toBe("19 s")
-    expect(formatCountdown(60)).toBe("60 s")
+  it("is NN S under a minute and MM:SS from it, with a leading zero (the one shared helper)", () => {
+    expect(formatCountdown(4)).toBe("04 S")
+    expect(formatCountdown(18.2)).toBe("19 S")
+    expect(formatCountdown(59)).toBe("59 S")
+    expect(formatCountdown(60)).toBe("01:00")
     expect(formatCountdown(100)).toBe("01:40")
     expect(formatCountdown(600)).toBe("10:00")
-    expect(formatCountdown(-3)).toBe("0 s")
+    expect(formatCountdown(-3)).toBe("00 S")
   })
 })
 

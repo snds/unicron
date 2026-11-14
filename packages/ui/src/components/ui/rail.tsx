@@ -8,6 +8,7 @@ import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 import { cva } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
+import { formatCount } from "../../lib/format"
 import { Icon, type IconName } from "../icon"
 import { Kbd } from "./kbd"
 import { Tooltip, TooltipContent } from "./tooltip"
@@ -52,10 +53,7 @@ export interface NavMarkResolved {
  * a comma from 1,000 (`1,204`). `cap` stops at `99+`, for a mark at an icon's corner.
  */
 export function formatNavCount(count: number, { cap = false }: { cap?: boolean } = {}): string {
-  const n = Math.max(0, Math.floor(count))
-  if (cap && n > 99) return "99+"
-  if (n < 10) return `0${n}`
-  return n.toLocaleString("en-US")
+  return formatCount(count, { cap })
 }
 
 /** Reads a mark prop. Null when there is nothing to draw (no mark, or a count of 0). */
