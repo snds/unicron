@@ -10,6 +10,7 @@ import { useRender } from "@base-ui/react/use-render"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
+import { AppFrameRailContext } from "./app-frame-context"
 import { NavMark, formatNavCount, nameWithMark, railItemVariants, resolveNavMark, rovingTarget, type NavMarkProp } from "./rail"
 import { Tooltip, TooltipContent } from "./tooltip"
 
@@ -34,7 +35,8 @@ export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
   action?: React.ReactNode
   /**
    * The sidebar's rail: every item draws as a `RailItem` (icon over count, its label in a tooltip),
-   * and the heading stays only for assistive tech. The frame drives it.
+   * and the heading stays only for assistive tech. The frame drives it: inside `AppFrameSidebar`
+   * drawn as its rail it defaults to true.
    */
   collapsed?: boolean
   /**
@@ -49,7 +51,9 @@ export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
  * ("Apps // 04", "Mail // folders"): the heading, then the items, each 4px apart. The space
  * between two sections is the sidebar's (Vale draws 28). The group is named by its heading.
  */
-function NavSection({ title, count, action, collapsed = false, checkable, className, children, ...props }: NavSectionProps) {
+function NavSection({ title, count, action, collapsed: collapsedProp, checkable, className, children, ...props }: NavSectionProps) {
+  const rail = React.useContext(AppFrameRailContext)
+  const collapsed = collapsedProp ?? rail
   const headingId = React.useId()
   const listRef = React.useRef<HTMLUListElement>(null)
   const context = React.useMemo(() => ({ collapsed, checkable }), [collapsed, checkable])
@@ -224,7 +228,9 @@ function NavItem({
   ...props
 }: NavItemProps) {
   const section = React.useContext(NavSectionContext)
-  const collapsed = section?.collapsed ?? false
+  // In a section, the section says; alone (the sidebar's pinned Settings), the sidebar's rail does.
+  const rail = React.useContext(AppFrameRailContext)
+  const collapsed = section?.collapsed ?? rail
   const descriptionId = React.useId()
   const resolved = resolveNavMark(mark ?? count)
   const critical = tone === "critical"

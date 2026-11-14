@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import { AppFrame, AppFrameMain, AppFrameNav, AppFrameNavItem } from "./app-frame"
+import { AppFrame, AppFrameBottomRow, AppFrameMain } from "./app-frame"
+import { TabBar, TabBarItem } from "./tab-bar"
 import { IndicatorMark, indicatorCount, indicatorLabel, indicatorsOf } from "./indicator"
 import { Item, ItemContent, ItemTitle } from "./item"
 import { Button } from "./button"
@@ -50,38 +51,44 @@ describe("IndicatorMark", () => {
   })
 })
 
-describe("AppFrameNavItem indicator", () => {
+// AppFrameNavItem (the floating capsule's place) is gone in 1.0: a top-level place is a TabBarItem
+// in the phone's bottom row, and its count or waiting state is the shared `mark` (rail.tsx), whose
+// words join the name the same way. These two keep the old checks on the part that replaced it.
+describe("a place's mark in the frame's tab bar (was AppFrameNavItem indicator)", () => {
   it("adds the count and the meaning to the item's name", () => {
     render(
-      <AppFrame>
+      <AppFrame layout="phone">
         <AppFrameMain />
-        <AppFrameNav aria-label="Places">
-          <AppFrameNavItem icon="chat" label="Conversations" indicator={{ kind: "attention", count: 2 }} />
-          <AppFrameNavItem icon="home" label="Home" />
-        </AppFrameNav>
+        <AppFrameBottomRow
+          tabs={
+            <TabBar label="Places" value="home">
+              <TabBarItem value="chat" icon="chat" label="Conversations" mark={{ count: 2, tone: "needs-you" }} />
+              <TabBarItem value="home" icon="home" label="Home" />
+            </TabBar>
+          }
+        />
       </AppFrame>
     )
-    expect(screen.getByRole("button", { name: "Conversations, 2 waiting for you" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Home" })).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Conversations, 2 waiting on you" })).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Home" })).toBeInTheDocument()
   })
 
-  it("has a count badge for the bar and a dot for the rail and the pivot", () => {
+  it("draws a count at the icon's corner, capped where it would not fit", () => {
     render(
-      <AppFrame>
+      <AppFrame layout="phone">
         <AppFrameMain />
-        <AppFrameNav aria-label="Places">
-          <AppFrameNavItem icon="chat" label="Conversations" indicator={{ kind: "unread", count: 14 }} />
-        </AppFrameNav>
+        <AppFrameBottomRow
+          tabs={
+            <TabBar label="Places" value="home">
+              <TabBarItem value="chat" icon="chat" label="Conversations" mark={{ count: 140, label: "140 unread" }} />
+              <TabBarItem value="home" icon="home" label="Home" />
+            </TabBar>
+          }
+        />
       </AppFrame>
     )
-    const button = screen.getByRole("button", { name: "Conversations, 14 unread" })
-    const badge = button.querySelector('[data-shape="badge"]')!
-    const dot = button.querySelector('[data-shape="dot"]')!
-    expect(badge.textContent).toBe("9+")
-    expect(badge.className).toContain("nav-rail:hidden")
-    expect(badge.className).toContain("in-data-[slot=app-frame-pivot]:hidden")
-    expect(dot.className).toContain("nav-rail:inline-block")
-    expect(dot.className).toContain("in-data-[slot=app-frame-pivot]:inline-block")
+    const tab = screen.getByRole("tab", { name: "Conversations, 140 unread" })
+    expect(tab.querySelector('[data-slot="nav-mark"]')?.textContent).toBe("99+")
   })
 })
 

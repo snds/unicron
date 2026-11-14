@@ -63,6 +63,8 @@
     "checkmark--filled",
     "locked--filled",
     "pause--outline--filled",
+    "side-panel--close",
+    "side-panel--open",
     "time--filled",
     "warning--filled"
   ],
