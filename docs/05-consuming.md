@@ -206,6 +206,10 @@ utility hides the bar instead. If your app uses a Base UI scroll area or select 
 same: wrap the app in `<CSPProvider disableStyleElements>` from `@base-ui/react/csp-provider` and
 put `no-scrollbar` on the part that scrolls.
 
+`next-themes` adds a `<style>` tag too, for a moment each time it sets the ground, when it is given
+`disableTransitionOnChange`. Leave that prop out under a strict policy, or set the ground with the
+hook above.
+
 Browser checks hold this: the Toaster, a `ScrollArea` and a `Select` are loaded under
 `style-src 'self'` and the policy must refuse nothing of theirs
 (`apps/playground/tests/parts.spec.ts`), and every view is checked for a `<style>` tag
