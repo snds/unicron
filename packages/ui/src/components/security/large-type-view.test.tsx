@@ -177,3 +177,21 @@ describe("hosts and variants", () => {
     expect(screen.getByText("Couldn't read this value")).toBeInTheDocument()
   })
 })
+
+describe("LargeTypeView 1.0: the viewer", () => {
+  it("counts down in the cross-app words and closes from Done", async () => {
+    const onOpenChange = vi.fn()
+    await open({ onOpenChange, lifetime: 120 })
+    expect(document.querySelector('[data-slot="large-type-view-timer"]')).toHaveTextContent("Hides in 02:00")
+    expect(document.querySelector('[data-slot="large-type-view-timer"]')).toHaveClass("text-secondary-live")
+    fireEvent.click(screen.getByRole("button", { name: "Done" }))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it("the legend's marks are squares", async () => {
+    await open()
+    const marks = document.querySelectorAll('[data-slot="large-type-view-legend"] [aria-hidden]')
+    expect(marks).toHaveLength(3)
+    for (const m of marks) expect(m.className).not.toContain("rounded")
+  })
+})

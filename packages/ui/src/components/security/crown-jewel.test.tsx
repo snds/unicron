@@ -370,3 +370,64 @@ describe("a host whose core judges the proof at call time", () => {
     expect(document.querySelector('[data-slot="code-display"]')).not.toHaveAttribute("data-copied")
   })
 })
+
+describe("CrownJewel 1.0: the surface on the inverted ground", () => {
+  it("is a square panel; coloured inks and a countdown's cells take the surface's ink", () => {
+    render(
+      <CrownJewelSurface host="app" title="Seed phrase" requestProof={async () => true}>
+        <p>inside</p>
+      </CrownJewelSurface>
+    )
+    const s = surface()
+    expect(s.className).not.toMatch(/rounded/)
+    expect(s.className).toContain("bg-surface-ground")
+    expect(s.style.getPropertyValue("--secondary-live")).toBe("var(--c-crown-jewel-ink)")
+    expect(s.style.getPropertyValue("--critical-text")).toBe("var(--c-crown-jewel-ink)")
+    expect(s.style.getPropertyValue("--c-progress-live")).toBe("var(--c-crown-jewel-ink)")
+    expect(s.style.getPropertyValue("--c-progress-track")).toBe("var(--c-crown-jewel-border)")
+    expect(s.style.getPropertyValue("--state-hover")).toBe("var(--c-crown-jewel-hover)")
+    expect(s.style.getPropertyValue("--state-pressed")).toBe("var(--c-crown-jewel-pressed)")
+    expect(screen.getByText("Crown jewel")).toHaveClass("type-overline")
+  })
+
+  it("an item that cannot be decrypted is a solid critical line, readable on either ground", () => {
+    render(<CrownJewelSurface host="app" title="Seed phrase" error="This item could not be decrypted." requestProof={async () => true} />)
+    const alert = screen.getByRole("alert")
+    expect(alert).toHaveTextContent("This item could not be decrypted.")
+    expect(alert).toHaveClass("bg-critical-fill", "text-critical-on-fill")
+  })
+})
+
+describe("CrownJewelGate 1.0: the question frame and SecretField's edit box", () => {
+  it("asks for the account password in SecretField's box, typed as a known password", () => {
+    render(<CrownJewelGate open level="password" reason="To show the recovery phrase for Ledger" onConfirm={() => {}} />)
+    const input = screen.getByLabelText("Account password")
+    expect(input.closest('[data-slot="secret-field"]')).toHaveAttribute("data-mode", "edit")
+    expect(input).toHaveAttribute("type", "password")
+    expect(input).toHaveAttribute("autocomplete", "current-password")
+    expect(screen.getByRole("button", { name: "Show Account password" })).toBeInTheDocument()
+    // No close glyph: Cancel is the way out, and it is inert for the arming delay like Confirm.
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull()
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
+  })
+
+  it("Enter in the password submits the form, once armed", async () => {
+    vi.useFakeTimers()
+    const onConfirm = vi.fn()
+    render(<CrownJewelGate open level="password" reason="To show the recovery phrase for Ledger" onConfirm={onConfirm} />)
+    await act(async () => {
+      vi.advanceTimersByTime(600)
+    })
+    const input = screen.getByLabelText("Account password")
+    fireEvent.change(input, { target: { value: "right" } })
+    fireEvent.submit(input.closest("form")!)
+    expect(onConfirm).toHaveBeenCalledWith({ level: "password", password: "right" })
+  })
+})
+
+describe("CrownJewelGate 1.0: the reason is the dialog's description", () => {
+  it("is read with the dialog's name", () => {
+    render(<CrownJewelGate open level="password" reason="To show the recovery phrase for Ledger" onConfirm={() => {}} />)
+    expect(screen.getByRole("dialog", { name: "Confirm it's you" })).toHaveAccessibleDescription("To show the recovery phrase for Ledger")
+  })
+})

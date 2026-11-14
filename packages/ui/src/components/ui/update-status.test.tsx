@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { vi } from "vitest"
 
@@ -158,7 +158,7 @@ describe("AutoCheckSwitch", () => {
   it("is a named switch, described by when the check runs", async () => {
     const onCheckedChange = vi.fn()
     render(<AutoCheckSwitch status={base} onCheckedChange={onCheckedChange} />)
-    const sw = screen.getByRole("switch", { name: "Check automatically" })
+    const sw = screen.getByRole("switch", { name: "Check for updates automatically" })
     expect(sw).toHaveAccessibleDescription("When the app opens, and every six hours.")
     expect(sw).toBeChecked()
     await userEvent.click(sw)
@@ -167,18 +167,56 @@ describe("AutoCheckSwitch", () => {
 
   it("says five minutes on the local channel", () => {
     render(<AutoCheckSwitch status={at({ channel: "local", auto_check: false })} onCheckedChange={() => {}} />)
-    const sw = screen.getByRole("switch", { name: "Check automatically" })
+    const sw = screen.getByRole("switch", { name: "Check for updates automatically" })
     expect(sw).toHaveAccessibleDescription("When the app opens, and every five minutes.")
     expect(sw).not.toBeChecked()
   })
 
   it("can be held disabled", () => {
     render(<AutoCheckSwitch status={base} onCheckedChange={() => {}} disabled />)
-    expect(screen.getByRole("switch", { name: "Check automatically" })).toHaveAttribute("aria-disabled", "true")
+    expect(screen.getByRole("switch", { name: "Check for updates automatically" })).toHaveAttribute("aria-disabled", "true")
   })
 
   it("renders nothing when the build has no updates", () => {
     const { container } = render(<AutoCheckSwitch status={at({ enabled: false })} onCheckedChange={() => {}} />)
     expect(container).toBeEmptyDOMElement()
+  })
+})
+
+describe("the update rows in the Field Row and Toggle Row looks", () => {
+  const status1: UpdateStatus = {
+    version: "0.1.0-main.20261107093000",
+    channel: "main",
+    enabled: true,
+    off: null,
+    auto_check: true,
+    state: "up_to_date",
+    percent: null,
+    offered: null,
+    error: null,
+    link: null,
+    link_why: null,
+    asked: false,
+  }
+  const noop = () => {}
+
+  it("UpdateStatusRow: a label column, the version in mono, the actions as overline words", () => {
+    const { container, rerender } = render(<UpdateStatusRow status={status1} appName="Lockdown" onCheck={noop} onRestart={noop} onReload={noop} />)
+    const row = container.querySelector('[data-slot="update-status-row"]')!
+    expect(row.className).toContain("rule-t")
+    expect(container.querySelector('[data-slot="update-status-row-label"]')).toHaveTextContent("Version")
+    expect(container.querySelector('[data-slot="update-status-row-version"]')).toHaveClass("type-code-inline")
+    expect(screen.getByRole("button", { name: "Check for updates" })).toHaveClass("type-overline")
+    rerender(<UpdateStatusRow status={status1} appName="Lockdown server" words={{ label: "Server", reload: "Reload server" }} onCheck={noop} onRestart={noop} onReload={noop} />)
+    expect(container.querySelector('[data-slot="update-status-row-label"]')).toHaveTextContent("Server")
+    expect(screen.getByRole("button", { name: "Reload server" })).toBeInTheDocument()
+  })
+
+  it("AutoCheckSwitch: the words are the switch's label, so a tap on them turns it", () => {
+    const onCheckedChange = vi.fn()
+    const { container } = render(<AutoCheckSwitch status={status1} onCheckedChange={onCheckedChange} />)
+    expect(container.querySelector('[data-slot="auto-check-switch"]')!.className).toContain("rule-t")
+    fireEvent.click(screen.getByText("Check for updates automatically"))
+    expect(onCheckedChange).toHaveBeenCalledWith(false)
   })
 })

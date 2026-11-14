@@ -465,3 +465,97 @@ describe("states", () => {
     expect(codes[codes.length - 1]).toHaveAttribute("data-rolling", "true")
   })
 })
+
+describe("CodeDisplay 1.0: layouts and the segmented countdown", () => {
+  const cells = () => Array.from(document.querySelectorAll('[data-slot="progress-segment"]'))
+
+  it("field is the default; density still maps (detail → field, list → row, compact → compact)", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} />)
+    expect(root()).toHaveAttribute("data-layout", "field")
+    rerender(<CodeDisplay {...at(18)} density="list" />)
+    expect(root()).toHaveAttribute("data-layout", "row")
+    rerender(<CodeDisplay {...at(18)} density="compact" />)
+    expect(root()).toHaveAttribute("data-layout", "compact")
+    rerender(<CodeDisplay {...at(18)} density="list" layout="tile" />)
+    expect(root()).toHaveAttribute("data-layout", "tile")
+  })
+
+  it("30 cells in the live colour with the seconds in words; critical cells and seconds near expiry", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} />)
+    expect(cells()).toHaveLength(30)
+    expect(cells().filter((c) => c.className.includes("bg-(--c-progress-live)"))).toHaveLength(18)
+    const seconds = document.querySelector('[data-slot="code-display-timer"]')!
+    expect(seconds).toHaveTextContent("18 s")
+    expect(seconds).toHaveClass("type-overline", "text-secondary-live")
+    rerender(<CodeDisplay {...at(4)} />)
+    expect(cells().filter((c) => c.className.includes("bg-(--c-progress-critical)"))).toHaveLength(4)
+    expect(document.querySelector('[data-slot="code-display-timer"]')).toHaveClass("text-critical-text")
+    // The countdown is drawn, not spoken: the group's label carries the seconds.
+    expect(document.querySelector('[data-slot="progress"]')).toHaveAttribute("aria-hidden", "true")
+  })
+
+  it("each layout sets the code in its Figma role", () => {
+    const code = () => document.querySelector('[data-slot="code-display-code"]')!
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="field" />)
+    expect(code()).toHaveClass("type-code-display")
+    rerender(<CodeDisplay {...at(18)} layout="row" />)
+    expect(code()).toHaveClass("type-number-count")
+    rerender(<CodeDisplay {...at(18)} layout="tile" />)
+    expect(code()).toHaveClass("type-number-metric")
+    expect(root()).toHaveClass("bg-surface-raised", "rule-box")
+  })
+
+  it("a row or a tile is one target: the copy button's hit area covers it, except while concealed", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="tile" />)
+    expect(screen.getByRole("button", { name: "Copy code" }).className).toContain("after:inset-0")
+    rerender(<CodeDisplay {...at(18)} layout="tile" concealed />)
+    expect(screen.getByRole("button", { name: "Copy code" }).className).not.toContain("after:inset-0")
+  })
+
+  it("concealed: a Show action reveals the code for this period", () => {
+    render(<CodeDisplay {...at(20)} concealed />)
+    expect(within(root()).queryByText("482")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Show code" }))
+    expect(within(root()).getByText("482")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Show code" })).toBeNull()
+  })
+
+  it("the counter kind: no cells, no seconds; Counter 14 and Next code", () => {
+    render(<CodeDisplay variant="hotp" issuer="Router admin" counter={14} code="330918" onAdvance={() => {}} />)
+    expect(cells()).toHaveLength(0)
+    expect(document.querySelector('[data-slot="code-display-counter"]')).toHaveTextContent("Counter 14")
+    expect(screen.getByRole("button", { name: "Next code" })).toHaveClass("type-overline")
+  })
+
+  it("the field layout's label: the label prop, else the issuer, else One-time code", () => {
+    const label = () => document.querySelector('[data-slot="code-display-label"]')
+    const { rerender } = render(<CodeDisplay {...at(18)} label="Steam Guard" />)
+    expect(label()).toHaveTextContent("Steam Guard")
+    rerender(<CodeDisplay {...at(18)} />)
+    expect(label()).toHaveTextContent("GitHub")
+    rerender(<CodeDisplay {...at(18)} issuer={undefined} />)
+    expect(label()).toHaveTextContent("One-time code")
+  })
+
+  it("the copy countdown reads as words on the copy control, in the live colour", async () => {
+    render(<CodeDisplay {...at(20)} clipboardTimer={12} onCopy={() => {}} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }))
+    })
+    const status = document.querySelector('[data-slot="code-display-copy-status"]')!
+    expect(status).toHaveTextContent("Clears in 12 s")
+    expect(status).toHaveClass("text-secondary-live")
+    expect(screen.getByRole("button", { name: "Copy code" })).toContainElement(status as HTMLElement)
+  })
+
+  it("CodeDisplayList layout=grid lays tiles in as many columns as fit", () => {
+    render(
+      <CodeDisplayList layout="grid">
+        <CodeDisplay {...at(18)} layout="tile" />
+      </CodeDisplayList>
+    )
+    const list = document.querySelector('[data-slot="code-display-list"]')!
+    expect(list).toHaveAttribute("data-layout", "grid")
+    expect(list.className).toContain("grid-cols-[repeat(auto-fill,minmax(var(--c-code-tile-min-width),1fr))]")
+  })
+})

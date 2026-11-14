@@ -1,0 +1,128 @@
+{
+  "$description": "Tier 3 · Component knobs for the security set and the update kit (packages/ui: components/security/*, ui/update-status.tsx), restyled for the 2026-11 direction. Merged with component.json at build and emitted as --c-*. It adds knobs and re-declares a few that component.json holds (secret-field revealed-bg and meter colours, code group-gap): the security area owns them from 1.0. Every colour reads a role. Sizes that sit on the 4px spacing scale or the size roles need no knob.",
+  "security-row": {
+    "$description": "The Field Row look the security set draws until the shared FieldRow lands (Figma 15:512): SecretField, CodeDisplay's field layout, ApprovalSheet's facts, UpdateStatusRow.",
+    "label-width": {
+      "$type": "dimension",
+      "$value": "8.75rem",
+      "$description": "The label column in the Default and Display sizes: 140, typed in Figma."
+    }
+  },
+  "review": {
+    "$description": "The review frame (ApprovalSheet, CrownJewelGate, LargeTypeView): a sheet on a phone, a dialog from the sm breakpoint up. Widths by name, as the cross-app decisions (§14) give them; they become overlays' dialog sizes when AdaptiveDialog lands.",
+    "question-width": {
+      "$type": "dimension",
+      "$value": "30rem",
+      "$description": "question 480: the gate, the crown-jewel explain."
+    },
+    "width": {
+      "$type": "dimension",
+      "$value": "35rem",
+      "$description": "review 560: a request to approve (Lockdown Desktop / 09, 41:3394)."
+    },
+    "viewer-width": {
+      "$type": "dimension",
+      "$value": "60rem",
+      "$description": "viewer 960: large type."
+    },
+    "sheet-top-gap": {
+      "$type": "dimension",
+      "$value": "{size-control}",
+      "$description": "The least room a phone sheet leaves above itself, so the page behind still shows that it is a sheet."
+    }
+  },
+  "secret-field": {
+    "mask-spacing": {
+      "$type": "dimension",
+      "$value": "0.2em",
+      "$description": "Between the dots of the mask (Lockdown 40:357 draws them apart)."
+    },
+    "revealed-bg": {
+      "$type": "color",
+      "$value": "{surface-raised}",
+      "$description": "Behind a shown value, with a hairline round it (rule-box): a raised chip, so a shown secret reads as out in the open on the page and in a sheet. Body ink on it holds Lc 90 in every mode; an ink wash did not on stone. Was a warning tint before 1.0."
+    },
+    "meter-weak": {
+      "$type": "color",
+      "$value": "{critical-text}",
+      "$description": "The strength rule's cells for Weak: the critical ink, which holds Lc 30 as a solid on both grounds (the critical fill does not on graphite). The word is always beside them."
+    },
+    "meter-fair": {
+      "$type": "color",
+      "$value": "{warning}",
+      "$description": "The strength rule's cells for Fair."
+    },
+    "meter-strong": {
+      "$type": "color",
+      "$value": "{primary-text}",
+      "$description": "The strength rule's cells for Strong: the identity ink, which holds Lc 30 as a solid on both grounds (the identity fill does not on graphite)."
+    }
+  },
+  "code": {
+    "group-gap": {
+      "$type": "dimension",
+      "$value": "0.3em",
+      "$description": "Between a code's groups (482 193): about a space, as the Lockdown frames draw it."
+    },
+    "row-min-height": {
+      "$type": "dimension",
+      "$value": "6.25rem",
+      "$description": "A row of the phone's Codes list: 100 (Lockdown 40:954)."
+    },
+    "tile-min-height": {
+      "$type": "dimension",
+      "$value": "10.625rem",
+      "$description": "A tile of the desktop Codes grid: 170 (Lockdown 41:2487)."
+    },
+    "tile-min-width": {
+      "$type": "dimension",
+      "$value": "18rem",
+      "$description": "The narrowest a tile gets in CodeDisplayList layout=grid before the grid drops a column."
+    },
+    "tile-gap": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "Between tiles: the 24 between desktop columns."
+    }
+  },
+  "approval": {
+    "urgent-at": {
+      "$type": "duration",
+      "$value": "20s",
+      "$description": "Seconds left at which the countdown rule turns critical (Lockdown brief A1: the last 20 seconds). The 10-second announcement is separate."
+    }
+  },
+  "digit-groups": {
+    "$description": "DigitGroups: a code in groups, to read aloud or compare.",
+    "gap": {
+      "$type": "dimension",
+      "$value": "0.6em",
+      "$description": "Between groups: wider than a space, so groups read apart at a glance."
+    }
+  },
+  "qr-code": {
+    "$description": "QrCode: one SVG path on a light square.",
+    "size": {
+      "$type": "dimension",
+      "$value": "15rem",
+      "$description": "240, as the Wi-Fi guest card draws it (Lockdown brief I9)."
+    }
+  },
+  "crown-jewel": {
+    "hover": {
+      "$type": "color",
+      "$value": "color-mix(in oklab, {protected-foreground} 3%, transparent)",
+      "$description": "state-hover inside the inverted surface, in the surface's own ink. 3%, not the page's 6%: on the light inverted ground a 6% wash takes body ink under Lc 90."
+    },
+    "pressed": {
+      "$type": "color",
+      "$value": "color-mix(in oklab, {protected-foreground} 4%, transparent)",
+      "$description": "state-pressed inside the inverted surface. 4%, for the same reason as hover."
+    },
+    "muted-ink": {
+      "$type": "color",
+      "$value": "color-mix(in oklab, {protected-foreground} 76%, transparent)",
+      "$description": "Assigned to --muted-foreground and --text-label inside. 76% (was 72%): label ink on the inverted ground holds Lc 60 in all eight modes."
+    }
+  }
+}
