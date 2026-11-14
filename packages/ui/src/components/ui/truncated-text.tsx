@@ -1,11 +1,12 @@
-// Owned component (not generated): text cut to one line (or a few) with an ellipsis, at the end or in the middle, that shows all of itself in a Tooltip on hover and keyboard focus, and only when it is cut.
+// Owned component (not generated): text cut to one line (or a few) with an ellipsis, at the end or in the middle, that shows all of itself in a Tooltip on hover (at the pointer's spot, where it stays) and keyboard focus (from the element), and only when it is cut.
 // Promoted from: Seeded in snds/unicron (2026-11 design direction, contract §5.1a and §5.1b row 20, Synapse f-hovercard and SNA3, Lockdown X6; no Figma component; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
+import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
 
 import { cn } from "../../lib/utils"
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
+import { Tooltip, TooltipTrigger } from "./tooltip"
 
 /** The mark a cut leaves: one ellipsis character. */
 export const TRUNCATION_MARK = "…"
@@ -70,10 +71,22 @@ export interface TruncatedTextProps extends Omit<React.ComponentProps<"span">, "
    * address or a host, whose end is what tells them apart (`~/code/…/src/app.tsx`).
    */
   cut?: TruncatedTextCut
-  /** Where the full text shows: above by default. It lines up with the start of the text. */
+  /**
+   * Where the full text shows: above by default. Opened by the pointer, it sits on that side of
+   * the spot where the pointer was, its start at the pointer; opened by keyboard focus, on that side
+   * of the text, its start at the start of the text.
+   */
   side?: "top" | "bottom"
   /** Another element to draw as (`<h3 />`, `<p />`). A span by default. */
   render?: React.ReactElement<Record<string, unknown>>
+}
+
+/** A point on the screen, as an anchor the tooltip can be placed against. */
+function pointAnchor(x: number, y: number, contextElement: Element | null) {
+  return {
+    contextElement: contextElement ?? undefined,
+    getBoundingClientRect: () => DOMRect.fromRect({ x, y, width: 0, height: 0 }),
+  }
 }
 
 /**
@@ -81,6 +94,12 @@ export interface TruncatedTextProps extends Omit<React.ComponentProps<"span">, "
  * only when, the text is cut, hovering it or focusing it from the keyboard shows the whole text in
  * a Tooltip: it joins the tab order then, and reads its whole text. Text that fits is plain text,
  * with no tooltip and no tab stop.
+ *
+ * Synapse's `f-hovercard` (contract 5.1c C17): from the pointer, the full text opens at the spot
+ * where the pointer was when it opened and stays there while the pointer moves over the text; from
+ * the keyboard, it opens from the element. It wraps between --c-truncated-text-min-width and
+ * --c-truncated-text-max-width (never wider than the room the screen leaves) and reads from the
+ * start of the line.
  *
  * It measures itself (a ResizeObserver), so it stays right as its column changes width. It takes
  * the type role and ink of where it sits; pass `render` to make it another element (`<h3 />`).
@@ -91,6 +110,13 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
   const clamp = !middle && lines > 1
   const [shown, setShown] = React.useState(text)
   const [truncated, setTruncated] = React.useState(false)
+  // Where the pointer is while it rests on the text, and where it was when the full text opened.
+  const pointer = React.useRef<{ x: number; y: number } | null>(null)
+  const [openAt, setOpenAt] = React.useState<{ x: number; y: number; element: Element | null } | null>(null)
+  const follow = (event: React.PointerEvent) => {
+    pointer.current = event.pointerType === "touch" ? null : { x: event.clientX, y: event.clientY }
+  }
+  const anchor = React.useMemo(() => (openAt ? pointAnchor(openAt.x, openAt.y, openAt.element) : undefined), [openAt])
 
   const measure = React.useCallback(() => {
     const el = ref.current
@@ -131,7 +157,15 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
   return (
     // One tree whether or not it is cut, so measuring never remounts it: the tooltip is off until
     // the text is cut.
-    <Tooltip disabled={!truncated}>
+    <Tooltip
+      disabled={!truncated}
+      onOpenChange={(open, details) => {
+        // Opened by the pointer: pin it where the pointer is now. By focus: from the element.
+        if (!open) return
+        const at = details.reason === "trigger-hover" ? pointer.current : null
+        setOpenAt(at ? { ...at, element: ref.current } : null)
+      }}
+    >
       <TooltipTrigger
         // A trigger is a button by default; this one is text, so it draws as a span (or `render`).
         ref={ref as React.Ref<HTMLButtonElement>}
@@ -150,6 +184,14 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
         )}
         style={clamp ? ({ "--truncated-text-lines": lines, ...style } as React.CSSProperties) : style}
         {...(props as React.ComponentProps<"button">)}
+        onPointerEnter={(event: React.PointerEvent<HTMLButtonElement>) => {
+          follow(event)
+          props.onPointerEnter?.(event as unknown as React.PointerEvent<HTMLSpanElement>)
+        }}
+        onPointerMove={(event: React.PointerEvent<HTMLButtonElement>) => {
+          follow(event)
+          props.onPointerMove?.(event as unknown as React.PointerEvent<HTMLSpanElement>)
+        }}
       >
         {cutText ? (
           <>
@@ -163,10 +205,29 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
           text
         )}
       </TooltipTrigger>
-      {/* Wraps at the tooltip's most width; starts where the text starts. */}
-      <TooltipContent side={side} align="start" data-slot="truncated-text-full">
-        {text}
-      </TooltipContent>
+      {/* The Tooltip's own look; wraps between the two knobs; reads from the start of the line. */}
+      <TooltipPrimitive.Portal>
+        <TooltipPrimitive.Positioner
+          anchor={anchor}
+          side={side}
+          sideOffset={4}
+          align="start"
+          className="isolate z-50"
+          data-anchor={openAt ? "pointer" : "element"}
+        >
+          <TooltipPrimitive.Popup
+            data-slot="truncated-text-full"
+            className={cn(
+              "bg-text-body text-surface-ground type-caption z-50 block rounded px-2 py-1 text-start whitespace-normal wrap-break-word",
+              "w-max min-w-[min(var(--c-truncated-text-min-width),var(--available-width,100vw))] max-w-[min(var(--c-truncated-text-max-width),var(--available-width,100vw))]",
+              // Fades in place: no zoom, no slide.
+              "data-open:animate-in data-open:fade-in-0 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-closed:animate-out data-closed:fade-out-0 duration-(--motion-fast) ease-(--motion-ease)"
+            )}
+          >
+            {text}
+          </TooltipPrimitive.Popup>
+        </TooltipPrimitive.Positioner>
+      </TooltipPrimitive.Portal>
     </Tooltip>
   )
 }

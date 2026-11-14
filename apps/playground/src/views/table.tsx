@@ -35,6 +35,7 @@ const CHECKS = [
 
 export default function TableView() {
   const [chosen, setChosen] = useState("S-03")
+  const [node, setNode] = useState("skills/close-out/SKILL.md")
   return (
     <div className="flex flex-col gap-10 p-6">
       <Specimen label="A table // overline head, hairline rows, numbers in mono (Synapse workspace)">
@@ -59,8 +60,8 @@ export default function TableView() {
         </Table>
       </Specimen>
 
-      <Specimen label="Selected row, header in view // failing checks in their own 112px scroll">
-        <Table stickyHeader label="Failing checks" containerClassName="max-h-28">
+      <Specimen label="Selected row, header in view // failing checks in their own 112px scroll; a row is chosen by a press, or ↑ ↓ and Enter">
+        <Table selectable stickyHeader label="Failing checks" containerClassName="max-h-28">
           <TableHeader>
             <TableRow>
               <TableHead>Id</TableHead>
@@ -83,6 +84,44 @@ export default function TableView() {
           </TableBody>
         </Table>
       </Specimen>
+
+      <Specimen label="Graph list // Synapse Y-15: the header stays in view, the chosen node's row is marked (SNA2)">
+        <Table selectable stickyHeader label="Files in the graph" containerClassName="max-h-60">
+          <TableHeader>
+            <TableRow>
+              <TableHead>File</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Region</TableHead>
+              <TableHead numeric>Links out</TableHead>
+              <TableHead numeric>Links in</TableHead>
+              <TableHead numeric>Issues</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {FILES.map((row) => (
+              <TableRow key={row.file} selected={node === row.file} onClick={() => setNode(row.file)}>
+                <TableCell>{row.file}</TableCell>
+                <TableCell>{row.type}</TableCell>
+                <TableCell>{row.region}</TableCell>
+                <TableCell numeric>{row.out}</TableCell>
+                <TableCell numeric>{row.in}</TableCell>
+                <TableCell numeric>{row.issues}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Specimen>
     </div>
   )
 }
+
+const FILES = [
+  { file: "decisions/memory-tiers.md", type: "decision", region: "context", out: "06", in: "14", issues: "00" },
+  { file: "skills/close-out/SKILL.md", type: "skill", region: "skills", out: "11", in: "31", issues: "01" },
+  { file: "frameworks/13-domain-rigor-stack.md", type: "framework", region: "frameworks", out: "09", in: "27", issues: "00" },
+  { file: "knowledge/legion/_INDEX.md", type: "index", region: "knowledge", out: "42", in: "03", issues: "02" },
+  { file: "projects/32-warpcore/SESSION-STATE.md", type: "baton", region: "projects", out: "08", in: "05", issues: "00" },
+  { file: "skills/ux-copy/SKILL.md", type: "skill", region: "skills", out: "04", in: "12", issues: "01" },
+  { file: "preferences/user-preferences.md", type: "preference", region: "preferences", out: "03", in: "48", issues: "00" },
+  { file: "shared/workspace-ontology.md", type: "reference", region: "shared", out: "19", in: "36", issues: "00" },
+]

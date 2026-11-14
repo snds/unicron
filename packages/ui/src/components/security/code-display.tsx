@@ -9,7 +9,9 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
+import { AdaptiveMenuItem, overflowMenuLabel } from "../ui/adaptive"
 import { Badge } from "../ui/badge"
+import { FieldRowOverflow } from "../ui/field-row"
 import { Progress } from "../ui/progress"
 import { Skeleton } from "../ui/skeleton"
 import { readSecondsToken, useCopyCountdown, useHighContrast, useReducedMotion } from "./copy-countdown"
@@ -127,6 +129,63 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   loading?: boolean
   /** "Can't make a code" with this reason; no digits are drawn. */
   error?: string
+  /**
+   * More actions behind a trailing overflow button (⋯) in the `field`, `row` and `tile` layouts
+   * (contract 5.1c C18, Lockdown LA5): `AdaptiveMenu` parts from the app ("Open item", "Show large
+   * type"). Always shown; a menu on a desktop, a sheet on a phone; it never copies by itself. A row
+   * that copies or shows the code uses `CodeDisplayMenuItem`, which runs this code's own copy (the
+   * clipboard countdown and clear) and reveal.
+   */
+  menu?: React.ReactNode
+  /** The overflow button's name and the menu's title. Default "More actions for {label or issuer}". */
+  menuLabel?: string
+}
+
+interface CodeDisplayMenuContextValue {
+  /** The code can be copied now (not loading, no error, no advance pending). */
+  canCopy: boolean
+  /** The code is concealed: a reveal row shows it for one period. */
+  hidden: boolean
+  /** Copying now takes the next code (the last seconds). */
+  copyNext: boolean
+  copy: () => void
+  reveal: () => void
+}
+
+const CodeDisplayMenuContext = React.createContext<CodeDisplayMenuContextValue | null>(null)
+
+export interface CodeDisplayMenuItemProps {
+  /**
+   * `copy`: this code's own copy, as a click on the code (the crown-jewel gate, the next code in
+   * the last seconds, the clipboard countdown and clear). `reveal`: a concealed code shown for one
+   * period, as Show does; it draws nothing when the code is not concealed.
+   */
+  action: "copy" | "reveal"
+  /** The row's words. Default "Copy code" (or "Copy the next code") / "Show code". */
+  children?: React.ReactNode
+}
+
+/**
+ * A row of a CodeDisplay's overflow menu that copies or shows the code (contract 5.1c C18). It
+ * runs the component's own copy and reveal, so the clipboard countdown, the clear and the gate
+ * hold. An app's own row must never copy the code itself.
+ */
+export function CodeDisplayMenuItem({ action, children }: CodeDisplayMenuItemProps) {
+  const code = React.useContext(CodeDisplayMenuContext)
+  if (!code) throw new Error("CodeDisplayMenuItem must be inside a CodeDisplay's menu.")
+  if (action === "reveal") {
+    if (!code.hidden) return null
+    return (
+      <AdaptiveMenuItem icon="view" onSelect={code.reveal}>
+        {children ?? "Show code"}
+      </AdaptiveMenuItem>
+    )
+  }
+  return (
+    <AdaptiveMenuItem icon="copy" disabled={!code.canCopy} onSelect={code.copy}>
+      {children ?? (code.copyNext ? "Copy the next code" : "Copy code")}
+    </AdaptiveMenuItem>
+  )
 }
 
 export type CodeDisplayState = "default" | "expiring" | "concealed" | "loading" | "error"
@@ -236,6 +295,8 @@ export function CodeDisplay({
   onClipboardClear,
   loading = false,
   error,
+  menu,
+  menuLabel,
   className,
   onKeyDown,
   onClick,
@@ -629,6 +690,10 @@ export function CodeDisplay({
     onClick: (e: React.MouseEvent<HTMLDivElement>) => {
       onClick?.(e)
       if (e.defaultPrevented) return
+      // A press in the overflow menu (its button, or its rows, which a portal draws elsewhere on the
+      // page) is the menu's own: it never shows a concealed code by reaching the row.
+      const target = e.target as Element
+      if (!e.currentTarget.contains(target) || target.closest?.("[data-overflow-menu]")) return
       if (hidden) setRevealedFor(code)
     },
     onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -640,6 +705,24 @@ export function CodeDisplay({
       }
     },
   } as const
+
+  // The trailing ⋯ (field, row and tile), above a row's or a tile's stretched copy target.
+  const menuEl =
+    menu && layout !== "compact" ? (
+      <CodeDisplayMenuContext.Provider
+        value={{
+          canCopy: Boolean(code) && !loading && !error && !advancing,
+          hidden: hidden && !error && !loading,
+          copyNext,
+          copy: () => void copy(),
+          reveal: () => setRevealedFor(code),
+        }}
+      >
+        <span data-slot="code-display-menu" className="relative z-10 inline-flex shrink-0 self-center">
+          <FieldRowOverflow label={menuLabel ?? overflowMenuLabel(labelProp ?? issuer ?? "One-time code")}>{menu}</FieldRowOverflow>
+        </span>
+      </CodeDisplayMenuContext.Provider>
+    ) : null
 
   if (layout === "field") {
     const row = rowClasses("display-auto")
@@ -657,6 +740,7 @@ export function CodeDisplay({
               {secondsEl}
               {counterEl}
               {showEl}
+              {menuEl}
             </span>
           </div>
           {(barEl || nextEl) && (
@@ -719,13 +803,14 @@ export function CodeDisplay({
           {codeEl}
         </span>
       )}
-      {(barEl || nextEl || secondsEl || counterEl || showEl) && (
+      {(barEl || nextEl || secondsEl || counterEl || showEl || menuEl) && (
         <span className="flex items-center gap-3">
           {nextEl}
           {barEl ?? <span className="flex-1" />}
           {secondsEl}
           {counterEl}
           {showEl}
+          {menuEl}
         </span>
       )}
       {noticeEl}

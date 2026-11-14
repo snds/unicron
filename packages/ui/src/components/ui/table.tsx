@@ -16,6 +16,69 @@ export type TableProps = React.ComponentProps<"table"> & {
   containerClassName?: string
   /** The box's name, read when the box scrolls and takes focus; the table's own caption is better when there is one. */
   label?: string
+  /**
+   * Rows can be chosen, one at a time (contract 5.1c C16, Synapse SNA2): the table is a `grid`,
+   * each body row says `aria-selected`, and the keyboard reaches the rows with one Tab stop (the
+   * chosen row, else the last one focused, else the first). ↑ ↓ move between rows, Home and End go
+   * to the first and the last, Enter or Space choose the focused row: they press it, so the row's
+   * own `onClick` is where the host chooses. Moving never chooses by itself, so a row that opens a
+   * detail only opens one on purpose.
+   */
+  selectable?: boolean
+}
+
+type TableSection = "head" | "body" | "foot"
+/** Which part of the table a row sits in: only body rows can be chosen. */
+const TableSectionContext = React.createContext<TableSection>("body")
+
+interface RowEntry {
+  id: string
+  element: HTMLTableRowElement | null
+  selected: boolean
+}
+
+interface TableSelection {
+  /** The row that takes the Tab stop. */
+  tabStop: string | null
+  register: (entry: RowEntry) => () => void
+  setActive: (id: string) => void
+}
+const TableSelectionContext = React.createContext<TableSelection | null>(null)
+
+/** The rows, in the page's order, so the Tab stop and the arrow keys follow what the person sees. */
+function byPosition(a: RowEntry, b: RowEntry) {
+  return a.element && b.element && a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_PRECEDING ? 1 : -1
+}
+
+function useTableSelection(on: boolean): TableSelection | null {
+  const [rows, setRows] = React.useState<RowEntry[]>([])
+  const [active, setActive] = React.useState<string | null>(null)
+  const register = React.useCallback((entry: RowEntry) => {
+    setRows((list) => [...list.filter((r) => r.id !== entry.id), entry].sort(byPosition))
+    return () => setRows((list) => list.filter((r) => r.id !== entry.id))
+  }, [])
+  const chosen = rows.find((r) => r.selected)?.id
+  const tabStop = (active !== null && rows.some((r) => r.id === active) ? active : null) ?? chosen ?? rows[0]?.id ?? null
+  return React.useMemo(() => (on ? { tabStop, register, setActive } : null), [on, tabStop, register])
+}
+
+const ROW_KEYS = ["ArrowDown", "ArrowUp", "Home", "End", "Enter", " "]
+
+/** Arrow keys between a selectable table's body rows; Enter and Space press the focused one. */
+function onRowKeys(event: React.KeyboardEvent<HTMLTableElement>) {
+  const row = (event.target as HTMLElement).closest?.<HTMLTableRowElement>('tr[data-selectable]')
+  // Only a row itself: a control inside a cell keeps its own keys.
+  if (!row || row !== event.target || !ROW_KEYS.includes(event.key)) return
+  event.preventDefault()
+  if (event.key === "Enter" || event.key === " ") {
+    row.click()
+    return
+  }
+  const rows = Array.from(event.currentTarget.querySelectorAll<HTMLTableRowElement>("tr[data-selectable]"))
+  const at = rows.indexOf(row)
+  const to = event.key === "Home" ? 0 : event.key === "End" ? rows.length - 1 : event.key === "ArrowDown" ? Math.min(at + 1, rows.length - 1) : Math.max(at - 1, 0)
+  rows[to]?.focus()
+  rows[to]?.scrollIntoView?.({ block: "nearest" })
 }
 
 /**
@@ -42,9 +105,10 @@ function useScrolls(ref: React.RefObject<HTMLElement | null>) {
   return scrolls
 }
 
-function Table({ className, containerClassName, stickyHeader = false, label, ...props }: TableProps) {
+function Table({ className, containerClassName, stickyHeader = false, label, selectable = false, onKeyDown, ...props }: TableProps) {
   const boxRef = React.useRef<HTMLDivElement>(null)
   const scrolls = useScrolls(boxRef)
+  const selection = useTableSelection(selectable)
   return (
     <div
       ref={boxRef}
@@ -57,13 +121,30 @@ function Table({ className, containerClassName, stickyHeader = false, label, ...
       aria-label={label}
       className={cn("group/table relative w-full overflow-x-auto overscroll-x-contain", stickyHeader && "overflow-y-auto", containerClassName)}
     >
-      <table data-slot="table" className={cn("w-full caption-bottom border-collapse text-left", className)} {...props} />
+      <TableSelectionContext.Provider value={selection}>
+        <table
+          data-slot="table"
+          data-selectable={selectable || undefined}
+          // A table whose rows can be chosen is a grid: that is where `aria-selected` on a row means something.
+          role={selectable ? "grid" : undefined}
+          className={cn("w-full caption-bottom border-collapse text-left", className)}
+          onKeyDown={(event) => {
+            onKeyDown?.(event)
+            if (selectable && !event.defaultPrevented) onRowKeys(event)
+          }}
+          {...props}
+        />
+      </TableSelectionContext.Provider>
     </div>
   )
 }
 
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
-  return <thead data-slot="table-header" className={cn(className)} {...props} />
+  return (
+    <TableSectionContext.Provider value="head">
+      <thead data-slot="table-header" className={cn(className)} {...props} />
+    </TableSectionContext.Provider>
+  )
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
@@ -71,7 +152,11 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
 }
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
-  return <tfoot data-slot="table-footer" className={cn("[&_td]:rule-t", className)} {...props} />
+  return (
+    <TableSectionContext.Provider value="foot">
+      <tfoot data-slot="table-footer" className={cn("[&_td]:rule-t", className)} {...props} />
+    </TableSectionContext.Provider>
+  )
 }
 
 export type TableRowProps = React.ComponentProps<"tr"> & {
@@ -82,16 +167,46 @@ export type TableRowProps = React.ComponentProps<"tr"> & {
   selected?: boolean
 }
 
-function TableRow({ className, selected, ...props }: TableRowProps) {
+function TableRow({ className, selected, onFocus, ref, ...props }: TableRowProps) {
+  const section = React.useContext(TableSectionContext)
+  const selection = React.useContext(TableSelectionContext)
+  // In a selectable table, a body row is one of the choices.
+  const choice = selection !== null && section === "body"
+  const id = React.useId()
+  const own = React.useRef<HTMLTableRowElement | null>(null)
+  const register = choice ? selection.register : undefined
+  React.useLayoutEffect(
+    () => (register ? register({ id, element: own.current, selected: Boolean(selected) }) : undefined),
+    [register, id, selected]
+  )
+  const setRef = React.useCallback(
+    (node: HTMLTableRowElement | null) => {
+      own.current = node
+      if (typeof ref === "function") ref(node)
+      else if (ref) ref.current = node
+    },
+    [ref]
+  )
   return (
     <tr
+      ref={setRef}
       data-slot="table-row"
       data-selected={selected ? "true" : undefined}
-      aria-selected={selected === undefined ? undefined : selected}
+      data-selectable={choice || undefined}
+      aria-selected={choice ? Boolean(selected) : selected === undefined ? undefined : selected}
+      tabIndex={choice ? (selection.tabStop === id ? 0 : -1) : undefined}
+      onFocus={(event) => {
+        onFocus?.(event)
+        if (choice && event.target === event.currentTarget) selection.setActive(id)
+      }}
       className={cn(
         // A row's hairline is on top of each cell (a tr cannot carry an inset shadow in every
         // engine). A selected row: soft fill, and the edge on its first cell.
         "group/table-row [&>td]:rule-t data-selected:bg-primary-soft data-selected:[&>*:first-child]:edge-l",
+        // A row that can be chosen: the whole row is the target, with the contract's washes; the
+        // keyboard ring sits inside the row, so the box's edge never clips it.
+        choice &&
+          "cursor-pointer hover:bg-[image:linear-gradient(var(--state-hover),var(--state-hover))] active:bg-[image:linear-gradient(var(--state-pressed),var(--state-pressed))] focus-visible:outline-offset-[calc(var(--stroke-emphasis)*-1)]",
         className
       )}
       {...props}

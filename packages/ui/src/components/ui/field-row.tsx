@@ -6,6 +6,8 @@ import * as React from "react"
 import { cva } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
+import { Icon } from "../icon"
+import { OverflowMenu, overflowMenuLabel, textOfNode, type OverflowMenuProps } from "./adaptive"
 import { Button, buttonVariants, type ButtonProps } from "./button"
 
 export type FieldRowSize = "default" | "display" | "stacked"
@@ -211,6 +213,28 @@ function FieldRowAction({
   )
 }
 
+/**
+ * The trailing ⋯ of a row (contract 5.1c C18, Lockdown LA5): an `OverflowMenu` drawn as the row's
+ * own icon action (a `FieldRowAction` S), so it sits flush with the row's end, after the text
+ * actions, and never makes the row taller. Always shown. `FieldRow`'s `menu` draws it; the security
+ * rows (`SecretField`, `CodeDisplay`) draw it too.
+ */
+function FieldRowOverflow({ label, disabled, children, ...menu }: Omit<OverflowMenuProps, "trigger">) {
+  return (
+    <OverflowMenu
+      {...menu}
+      label={label}
+      trigger={
+        <FieldRowAction data-overflow-menu="" size="icon-sm" aria-label={label} disabled={disabled ?? false}>
+          <Icon name="overflow-menu--horizontal" />
+        </FieldRowAction>
+      }
+    >
+      {children}
+    </OverflowMenu>
+  )
+}
+
 export type FieldRowProps = Omit<React.ComponentProps<"div">, "children" | "role"> & {
   /** Figma's Size. `default` 52, `display` 64 (a value read at a glance), `stacked` 64 (label above value, for phones). */
   size?: FieldRowSize
@@ -236,6 +260,15 @@ export type FieldRowProps = Omit<React.ComponentProps<"div">, "children" | "role
    * one (a menu's "Change"), or another small control (a trailing overflow button).
    */
   action?: React.ReactNode
+  /**
+   * More actions behind a trailing overflow button (⋯), after the text actions (contract 5.1c C18,
+   * Lockdown LA5): `AdaptiveMenu` parts from the app ("Show large type", "History"). The button is
+   * always shown, named "More actions for {label}", and opens a menu on a desktop and a sheet on a
+   * phone. It is the path that is not a gesture.
+   */
+  menu?: React.ReactNode
+  /** The overflow button's name and the menu's title. Default "More actions for {label}". */
+  menuLabel?: string
   /** Which side draws the hairline. Default `top`, as Figma draws it. */
   rule?: FieldRowRule
   /** Add the 16px side padding of a full-bleed phone row. Default false: no side padding, as drawn. */
@@ -261,6 +294,8 @@ function FieldRow({
   description,
   meta,
   action,
+  menu,
+  menuLabel,
   rule = "top",
   inset = false,
   disabledReason,
@@ -341,16 +376,19 @@ function FieldRow({
             </div>
           </>
         )}
-        {meta || action ? (
+        {meta || action || menu ? (
           <div data-slot="field-row-trailing" className="ml-auto flex shrink-0 items-baseline gap-4">
             {meta ? (
               <div data-slot="field-row-meta" className="type-overline text-muted-foreground flex items-baseline">
                 {meta}
               </div>
             ) : null}
-            {action ? (
+            {action || menu ? (
               <div data-slot="field-row-actions" className="flex items-baseline">
                 {action}
+                {menu ? (
+                  <FieldRowOverflow label={menuLabel ?? overflowMenuLabel(textOfNode(label))}>{menu}</FieldRowOverflow>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -360,4 +398,4 @@ function FieldRow({
   )
 }
 
-export { FieldRow, FieldRowAction, FieldRowValue, rowVariants as fieldRowVariants }
+export { FieldRow, FieldRowAction, FieldRowOverflow, FieldRowValue, rowVariants as fieldRowVariants }

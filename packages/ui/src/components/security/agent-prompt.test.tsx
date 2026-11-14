@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { AGENT_PROMPT_REPLY, AgentPrompt, agentPromptLayout, formatPromptCountdown } from "./agent-prompt"
+import { AGENT_PROMPT_REPLY, AgentPrompt, agentPromptKeys, agentPromptLayout, formatPromptCountdown } from "./agent-prompt"
 
 const key = (k: string, target: Element = document.body) =>
   fireEvent.keyDown(target, { key: k })
@@ -386,3 +386,109 @@ describe("formatPromptCountdown", () => {
     expect(formatPromptCountdown(0)).toBe("00 S")
   })
 })
+
+describe("AgentPrompt keys by meaning (contract 5.1c C15, Warpcore NA4)", () => {
+  const warpcore = [
+    { id: "deny", label: "Deny", safe: true },
+    { id: "once", label: "Allow once" },
+    { id: "always", label: "Always for Lockdown", key: "3" },
+  ]
+
+  it("each option names its key: Y allows once, N denies, 3 allows always, wherever they sit", () => {
+    const onAnswer = vi.fn()
+    // Always first on screen, Deny last: the keys follow the meaning, not the order.
+    const { unmount } = render(<AgentPrompt kind="permission" onAnswer={onAnswer} options={[warpcore[2], warpcore[1], warpcore[0]]} />)
+    key("3")
+    expect(onAnswer).toHaveBeenLastCalledWith("always")
+    key("y")
+    expect(onAnswer).toHaveBeenLastCalledWith("once")
+    key("n")
+    expect(onAnswer).toHaveBeenLastCalledWith("deny")
+    unmount()
+  })
+
+  it("a digit an option claims answers that option, never the one in that place", () => {
+    const onAnswer = vi.fn()
+    render(<AgentPrompt kind="permission" onAnswer={onAnswer} options={[warpcore[2], warpcore[0], warpcore[1]]} />)
+    // "1" would be Always by place; no option claims 1, and every option has a key by meaning, so 1 does nothing.
+    key("1")
+    expect(onAnswer).not.toHaveBeenCalled()
+    key("2")
+    expect(onAnswer).not.toHaveBeenCalled()
+    key("3")
+    expect(onAnswer).toHaveBeenCalledWith("always")
+  })
+
+  it("agentPromptKeys: own keys first; yes and no by meaning; place only for options with no key, never a claimed digit", () => {
+    expect(agentPromptKeys(warpcore, "permission", "deny")).toEqual(["n", "y", "3"])
+    expect(agentPromptKeys([warpcore[2], warpcore[1], warpcore[0]], "permission", "deny")).toEqual(["3", "y", "n"])
+    // A choice: numbered by place, except a digit another option claims.
+    const choice = [
+      { id: "a", label: "Patch it" },
+      { id: "b", label: "Rewrite it", key: "1" },
+      { id: "c", label: "Leave it" },
+    ]
+    expect(agentPromptKeys(choice, "choice")).toEqual([undefined, "1", "3"])
+    expect(agentPromptKeys([{ id: "a", label: "A" }, { id: "b", label: "B" }], "choice")).toEqual(["1", "2"])
+  })
+
+  it("shows each option's own key as its hint", () => {
+    render(<AgentPrompt kind="permission" onAnswer={() => {}} options={warpcore} />)
+    const hint = (name: RegExp) => screen.getByRole("button", { name }).querySelector('[data-slot="kbd"]')?.textContent
+    expect(hint(/^Deny/)).toBe("N")
+    expect(hint(/Allow once/)).toBe("Y")
+    expect(hint(/Always for Lockdown/)).toBe("3")
+  })
+})
+
+describe("AgentPrompt layout=\"inline\" (contract 5.1c C15)", () => {
+  const phone = () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 })
+    window.dispatchEvent(new Event("resize"))
+  }
+  afterEach(() => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 })
+    window.dispatchEvent(new Event("resize"))
+  })
+
+  it("by default a phone gets an Answer button and a sheet", async () => {
+    phone()
+    render(<AgentPrompt kind="permission" onAnswer={() => {}} />)
+    // The newest prompt's sheet opens by itself, so the page under it is hidden from the tree.
+    expect(document.querySelector('[data-slot="agent-prompt"]')).toHaveAttribute("data-layout", "sheet")
+    expect(document.querySelector('[data-slot="agent-prompt-sheet"]')).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Answer", hidden: true })).toBeInTheDocument()
+  })
+
+  it("inline: on a phone the options show in place, with no Answer button and no sheet", () => {
+    phone()
+    const onAnswer = vi.fn()
+    render(<AgentPrompt kind="permission" layout="inline" onAnswer={onAnswer} options={[{ id: "deny", label: "Deny", safe: true }, { id: "once", label: "Allow once" }, { id: "always", label: "Always for Lockdown", key: "3" }]} />)
+    expect(screen.getByRole("region")).toHaveAttribute("data-layout", "inline")
+    expect(screen.queryByRole("button", { name: "Answer" })).toBeNull()
+    expect(document.querySelector('[data-slot="agent-prompt-sheet"]')).toBeNull()
+    // In place, on the yellow: the safe answer solid, the rest text.
+    expect(screen.getByRole("button", { name: /^Deny/ })).toHaveAttribute("data-variant", "needs-you")
+    expect(screen.getByRole("button", { name: /Allow once/ })).toHaveAttribute("data-variant", "needs-you-text")
+    fireEvent.click(screen.getByRole("button", { name: /Always for Lockdown/ }))
+    expect(onAnswer).toHaveBeenCalledWith("always")
+  })
+
+  it("inline on a phone: the safe answer takes focus on arrival; a reply's field does not (no keyboard springs up)", async () => {
+    phone()
+    const { unmount } = render(<AgentPrompt kind="permission" layout="inline" onAnswer={() => {}} />)
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: /^Deny/ })).toHaveFocus())
+    unmount()
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    render(<AgentPrompt kind="reply" layout="inline" onAnswer={() => {}} />)
+    await act(async () => {})
+    expect(screen.getByRole("textbox", { name: "Your answer" })).not.toHaveFocus()
+  })
+
+  it("on a desktop inline and the default draw alike", () => {
+    render(<AgentPrompt kind="continue" layout="inline" onAnswer={() => {}} />)
+    expect(screen.getByRole("region")).toHaveAttribute("data-layout", "inline")
+    expect(screen.queryByRole("button", { name: "Answer" })).toBeNull()
+  })
+})
+

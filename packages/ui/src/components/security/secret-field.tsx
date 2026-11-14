@@ -11,6 +11,8 @@ import * as React from "react"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
+import { AdaptiveMenuItem, overflowMenuLabel } from "../ui/adaptive"
+import { FieldRowOverflow } from "../ui/field-row"
 import { FloatButton, type FloatButtonKind, type FloatButtonSize } from "../ui/float-button"
 import { Skeleton } from "../ui/skeleton"
 import { readSecondsToken, useCopyCountdown, type CopyCountdownState } from "./copy-countdown"
@@ -105,6 +107,19 @@ export const secretFieldWords = {
  */
 export type SecretFieldSize = "auto" | "default" | "stacked"
 
+/** A read row's trailing ⋯ (contract 5.1c C18). */
+interface MenuProps {
+  /**
+   * More actions behind a trailing overflow button (⋯), after the text actions (contract 5.1c C18,
+   * Lockdown LA5): `AdaptiveMenu` parts from the app ("Show large type", "History"). Always shown;
+   * a menu on a desktop, a sheet on a phone. A row that copies or shows the value from there uses
+   * `SecretFieldMenuItem`, which runs this field's own copy and reveal, never a path around them.
+   */
+  menu?: React.ReactNode
+  /** The overflow button's name and the menu's title. Default "More actions for {label}". */
+  menuLabel?: string
+}
+
 interface CommonProps {
   /** The field's name ("Password", "Secret Key"). Also the subject of the live-region texts. */
   label: string
@@ -117,7 +132,7 @@ interface CommonProps {
   className?: string
 }
 
-export interface SecretFieldReadProps extends CommonProps {
+export interface SecretFieldReadProps extends CommonProps, MenuProps {
   mode?: "read"
   /** Never set on a field that reveals and copies; see `SecretFieldFillOnlyProps`. */
   fillOnly?: false
@@ -212,7 +227,7 @@ export interface SecretFieldTextAction {
  * The row draws its label and one sentence; there is no reveal, no copy, no `more` slot, and
  * nothing is ever fetched. A remote bound to it draws nothing.
  */
-export interface SecretFieldFillOnlyProps extends Omit<CommonProps, "children" | "mono"> {
+export interface SecretFieldFillOnlyProps extends Omit<CommonProps, "children" | "mono">, MenuProps {
   mode?: "read"
   fillOnly: true
   size?: SecretFieldSize
@@ -389,6 +404,68 @@ export function SecretFieldRemoteButton({ remote, action, kind, size = "l" }: Se
   )
 }
 
+// ── the overflow menu's own rows: copy and show through the field's paths ────────────────────────
+
+interface SecretFieldMenuContextValue {
+  label: string
+  revealMode: SecretRevealMode
+  revealed: boolean
+  /** The field can be copied and shown (false for fill-only, a locked field, or one showing an error). */
+  available: boolean
+  busy: boolean
+  copy: () => void
+  /** A tap reveal or hide: the field's own `reveal` and `mask`. Absent in hold mode. */
+  toggle?: () => void
+}
+
+const SecretFieldMenuContext = React.createContext<SecretFieldMenuContextValue | null>(null)
+
+export interface SecretFieldMenuItemProps {
+  /**
+   * `copy`: the field's timed copy (its gate, the clipboard countdown, the conditional clear).
+   * `reveal`: the field's own reveal, shown in the row, gated, for the field's lifetime, one field
+   * at a time. A field that reveals only while held has no tap reveal, so its `reveal` row draws
+   * nothing: Hold to show stays on the row.
+   */
+  action: "copy" | "reveal"
+  /** The row's words. Default "Copy" / "Show" or "Hide". */
+  children?: React.ReactNode
+}
+
+/**
+ * A row of a SecretField's overflow menu that copies or shows its value (contract 5.1c C18). It
+ * runs the field's own handlers, exactly as the row's Copy and Show do, so the gate, the clipboard
+ * countdown and clear, the lifetime and the one-revealed rule all hold. Use it inside `menu`;
+ * an app's own row must never read the secret to copy or show it.
+ */
+export function SecretFieldMenuItem({ action, children }: SecretFieldMenuItemProps) {
+  const field = React.useContext(SecretFieldMenuContext)
+  if (!field) throw new Error("SecretFieldMenuItem must be inside a SecretField's menu.")
+  if (!field.available) return null
+  if (action === "copy") {
+    return (
+      <AdaptiveMenuItem icon="copy" disabled={field.busy} onSelect={field.copy}>
+        {children ?? secretFieldWords.copy}
+      </AdaptiveMenuItem>
+    )
+  }
+  if (!field.toggle) return null
+  return (
+    <AdaptiveMenuItem icon={field.revealed ? "view--off" : "view"} disabled={field.busy} onSelect={field.toggle}>
+      {children ?? (field.revealed ? secretFieldWords.hide : secretFieldWords.show)}
+    </AdaptiveMenuItem>
+  )
+}
+
+/** The trailing ⋯ of a SecretField row, with the field's context for its own menu rows. */
+function SecretFieldOverflow({ field, menu, menuLabel }: { field: SecretFieldMenuContextValue; menu: React.ReactNode; menuLabel?: string }) {
+  return (
+    <SecretFieldMenuContext.Provider value={field}>
+      <FieldRowOverflow label={menuLabel ?? overflowMenuLabel(field.label)}>{menu}</FieldRowOverflow>
+    </SecretFieldMenuContext.Provider>
+  )
+}
+
 // ── one revealed field per document ─────────────────────────────────────────────────────────────
 let revealed: (() => void) | null = null
 function claimReveal(mask: () => void) {
@@ -518,6 +595,8 @@ function SecretFieldRead({
   className,
   size = "auto",
   remote,
+  menu,
+  menuLabel,
 }: SecretFieldReadProps) {
   const autoId = React.useId()
   const id = idProp ?? autoId
@@ -955,6 +1034,22 @@ function SecretFieldRead({
             </span>
           )}
           {children && <span data-slot="secret-field-more" className="flex items-baseline gap-4">{children}</span>}
+          {menu ? (
+            <SecretFieldOverflow
+              menu={menu}
+              menuLabel={menuLabel}
+              field={{
+                label,
+                revealMode,
+                revealed: isRevealed,
+                available: !locked && phase !== "error",
+                busy: gateBusy || phase === "loading",
+                copy: () => void copy(),
+                // The same click the row's Show answers in toggle mode; a held reveal has no tap form.
+                toggle: revealMode === "toggle" ? () => (isRevealed ? mask() : void reveal()) : undefined,
+              }}
+            />
+          ) : null}
         </div>
       </div>
       {description && <p data-slot="secret-field-description" className="type-caption text-text-secondary -mt-2 pb-3">{description}</p>}
@@ -966,7 +1061,7 @@ function SecretFieldRead({
 }
 
 // ── fill only ────────────────────────────────────────────────────────────────────────────────────
-function SecretFieldFillOnly({ label, description, id: idProp, className, size = "auto", remote, fillOnlyText }: SecretFieldFillOnlyProps) {
+function SecretFieldFillOnly({ label, description, id: idProp, className, size = "auto", remote, fillOnlyText, menu, menuLabel }: SecretFieldFillOnlyProps) {
   const autoId = React.useId()
   const id = idProp ?? autoId
   const row = rowClasses(size)
@@ -987,6 +1082,17 @@ function SecretFieldFillOnly({ label, description, id: idProp, className, size =
             <span id={`${id}-words`}>{fillOnlyText ?? secretFieldFillOnlyText}</span>
           </span>
         </div>
+        {menu ? (
+          // No words here to share a baseline with: the ⋯ centres on the row's line instead.
+          <div data-slot="secret-field-actions" className={cn(row.actions, "self-center")}>
+            {/* Never shown or copied: its own copy and show rows draw nothing here. */}
+            <SecretFieldOverflow
+              menu={menu}
+              menuLabel={menuLabel}
+              field={{ label, revealMode: "toggle", revealed: false, available: false, busy: false, copy: () => {} }}
+            />
+          </div>
+        ) : null}
       </div>
       {description && <p data-slot="secret-field-description" className="type-caption text-text-secondary -mt-2 pb-3">{description}</p>}
     </div>

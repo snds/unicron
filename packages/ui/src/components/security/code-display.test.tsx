@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { CodeDisplay, CodeDisplayList, groupCode, spellCode } from "./code-display"
+import { AdaptiveMenuItem } from "../ui/adaptive"
+import { CodeDisplay, CodeDisplayList, CodeDisplayMenuItem, groupCode, spellCode } from "./code-display"
 
 const base = { issuer: "GitHub", account: "sean", code: "482917", next: "330558", period: 30, expiresAt: 1000 }
 const at = (secondsLeft: number) => ({ ...base, now: 1000 - secondsLeft })
@@ -559,3 +560,122 @@ describe("CodeDisplay 1.0: layouts and the segmented countdown", () => {
     expect(list.className).toContain("grid-cols-[repeat(auto-fill,minmax(var(--c-code-tile-min-width),1fr))]")
   })
 })
+
+describe("CodeDisplay menu: the trailing ⋯ (contract 5.1c C18, Lockdown LA5)", () => {
+  const menu = (onOpen?: () => void, onLarge?: () => void) => (
+    <>
+      <AdaptiveMenuItem icon="launch" onSelect={onOpen}>
+        Open item
+      </AdaptiveMenuItem>
+      <AdaptiveMenuItem icon="text--scale" onSelect={onLarge}>
+        Show large type
+      </AdaptiveMenuItem>
+      <CodeDisplayMenuItem action="reveal" />
+      <CodeDisplayMenuItem action="copy" />
+    </>
+  )
+  const more = (name = "More actions for GitHub") => screen.getByRole("button", { name })
+  const openMenu = async (name?: string) => {
+    await act(async () => {
+      fireEvent.click(more(name))
+    })
+    return screen.findByRole("menu")
+  }
+  const items = (menuEl: HTMLElement) => within(menuEl).getAllByRole("menuitem").map((i) => i.textContent)
+
+  it.each(["field", "row", "tile"] as const)("%s: a real button, always shown, named for the code, above the row's copy target", (layout) => {
+    render(<CodeDisplay {...at(20)} layout={layout} menu={menu()} />)
+    const button = more()
+    expect(button.tagName).toBe("BUTTON")
+    expect(button).toHaveAttribute("data-overflow-menu")
+    // Above a row's or a tile's stretched copy target, so a press on it never copies.
+    const wrap = root().querySelector('[data-slot="code-display-menu"]') as HTMLElement
+    expect(wrap.className.split(" ")).toEqual(expect.arrayContaining(["relative", "z-10"]))
+    expect(wrap).toContainElement(button)
+  })
+
+  it("compact draws no ⋯ (a popup's line has its own row menu)", () => {
+    render(<CodeDisplay {...at(20)} layout="compact" menu={menu()} />)
+    expect(screen.queryByRole("button", { name: /More actions/ })).toBeNull()
+  })
+
+  it("the field layout names it after its label", () => {
+    render(<CodeDisplay {...at(20)} label="Steam Guard" menu={menu()} />)
+    expect(more("More actions for Steam Guard")).toBeInTheDocument()
+  })
+
+  it("its copy row runs the code's own copy: onCopy, the countdown on the copy control, one clear", async () => {
+    const onCopy = vi.fn()
+    const onClear = vi.fn()
+    render(<CodeDisplay {...at(20)} clipboardTimer={10} onCopy={onCopy} onClipboardClear={onClear} menu={menu()} />)
+    const m = await openMenu()
+    expect(items(m)).toEqual(["Open item", "Show large type", "Copy code"])
+    vi.useFakeTimers()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Copy code" }))
+    })
+    expect(onCopy).toHaveBeenCalledWith("482917", "code")
+    expect(live()).toHaveTextContent("Copied. Clipboard clears in 10 seconds.")
+    expect(screen.getByRole("button", { name: "Copy code" })).toHaveTextContent("10")
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+    expect(onClear).toHaveBeenCalledTimes(1)
+  })
+
+  it("in the last seconds its copy row takes the next code, as the code itself does", async () => {
+    const onCopy = vi.fn()
+    render(<CodeDisplay {...at(2)} onCopy={onCopy} menu={menu()} />)
+    const m = await openMenu()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Copy the next code" }))
+    })
+    expect(onCopy).toHaveBeenCalledWith("330558", "next")
+  })
+
+  it("inside a crown jewel its copy row asks for the use proof first", async () => {
+    const onCopy = vi.fn()
+    const requestProof = vi.fn(() => Promise.resolve(false))
+    const { CrownJewelSurface } = await import("./crown-jewel")
+    render(
+      <CrownJewelSurface host="app" title="Steam Guard" requestProof={requestProof}>
+        <CodeDisplay {...at(20)} onCopy={onCopy} menu={menu()} />
+      </CrownJewelSurface>
+    )
+    const m = await openMenu()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Copy code" }))
+    })
+    expect(requestProof).toHaveBeenCalledWith("use")
+    expect(onCopy).not.toHaveBeenCalled()
+  })
+
+  it("concealed: a Show code row reveals it for this period; a press anywhere else in the menu never does", async () => {
+    const onOpen = vi.fn()
+    render(<CodeDisplay {...at(20)} layout="row" concealed menu={menu(onOpen)} />)
+    expect(root()).toHaveAttribute("data-state", "concealed")
+    // The ⋯ itself does not reveal by reaching the row.
+    let m = await openMenu()
+    expect(root()).toHaveAttribute("data-state", "concealed")
+    expect(items(m)).toEqual(["Open item", "Show large type", "Show code", "Copy code"])
+    // An app's row, drawn in a portal, does not reveal it by bubbling to the row either.
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Open item" }))
+    })
+    expect(onOpen).toHaveBeenCalledOnce()
+    expect(root()).toHaveAttribute("data-state", "concealed")
+    m = await openMenu()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Show code" }))
+    })
+    expect(root()).toHaveAttribute("data-state", "default")
+    expect(within(root()).getByText("482")).toBeInTheDocument()
+  })
+
+  it("a CodeDisplayMenuItem outside a code's menu is a mistake, said at once", () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {})
+    expect(() => render(<CodeDisplayMenuItem action="copy" />)).toThrow(/inside a CodeDisplay/)
+    quiet.mockRestore()
+  })
+})
+

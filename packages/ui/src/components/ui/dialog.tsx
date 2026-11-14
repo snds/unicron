@@ -66,8 +66,9 @@ function DialogOverlay({
  * Sizes by name (cross-app decisions §14; contract §5.1b row 15). Each is a range between two
  * knobs, `--c-dialog-<size>-min-width` and `-max-width`; both are the drawn width by default, so a
  * question is 480 whatever it holds. Raise a size's max to let wide content (a table, a long path)
- * widen it. Every size is capped at the screen less --c-dialog-margin on each side, so below a
- * size's width the dialog is as wide as it can be.
+ * widen it. Every size is capped at the screen less --c-dialog-margin on each side (48px in all);
+ * below a size's own width the dialog uses `full` (`useFittedSize`, Synapse SNA5), and
+ * `data-size-asked` keeps the name it was given.
  *
  * | size       | width | job                                                          |
  * |------------|-------|--------------------------------------------------------------|
@@ -109,6 +110,66 @@ export function dialogSizeName(size: DialogSize): DialogSizeName {
   return size in LEGACY_SIZES ? LEGACY_SIZES[size as DialogLegacySize] : (size as DialogSizeName)
 }
 
+/** A length knob read off the element, in px; NaN when it is missing or not a plain px or rem value. */
+function readKnob(el: Element, name: string): number {
+  if (typeof getComputedStyle !== "function") return Number.NaN
+  const match = /^([\d.]+)(px|rem)$/.exec(getComputedStyle(el).getPropertyValue(name).trim())
+  if (!match) return Number.NaN
+  const n = Number.parseFloat(match[1])
+  return match[2] === "px" ? n : n * (Number.parseFloat(getComputedStyle(el.ownerDocument.documentElement).fontSize) || 16)
+}
+
+type PortalContainer = DialogPrimitive.Portal.Props["container"]
+
+/**
+ * The box a dialog opens in: the portal's container when it is an element of its own (an
+ * extension's frame, a stage with a transform, which is what a fixed dialog is placed in), else the
+ * window.
+ */
+function containerElement(container: PortalContainer): HTMLElement | null {
+  const value = container && "current" in container ? container.current : container
+  if (!value || !(value instanceof HTMLElement)) return null
+  const doc = value.ownerDocument
+  return value === doc.body || value === doc.documentElement ? null : value
+}
+
+function availableWidth(box: HTMLElement | null, view: Window): number {
+  if (box) return box.clientWidth
+  return view.document.documentElement.clientWidth || view.innerWidth
+}
+
+/**
+ * Below a size's own width, a dialog uses `full` (Synapse SNA5, contract 5.1c C10): when the space
+ * it opens in, less --c-dialog-margin on each side, is narrower than the size's
+ * `--c-dialog-<size>-min-width`, it takes the whole space less the margin, both ways, instead of a
+ * squeezed copy of its size. Read again when the window or the container changes width. Without
+ * the knobs (no stylesheet) it keeps the size it was given.
+ */
+function useFittedSize(name: DialogSizeName, popup: HTMLElement | null, container: PortalContainer): DialogSizeName {
+  const [fits, setFits] = React.useState(true)
+  React.useLayoutEffect(() => {
+    if (!popup || name === "full") return
+    const view = popup.ownerDocument.defaultView
+    if (!view) return
+    const box = containerElement(container)
+    const measure = () => {
+      const width = readKnob(popup, `--c-dialog-${name}-min-width`)
+      const margin = readKnob(popup, "--c-dialog-margin")
+      if (!Number.isFinite(width) || !Number.isFinite(margin)) return setFits(true)
+      setFits(availableWidth(box, view) - 2 * margin >= width)
+    }
+    measure()
+    view.addEventListener("resize", measure)
+    const observer = box && typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null
+    if (box) observer?.observe(box)
+    return () => {
+      view.removeEventListener("resize", measure)
+      observer?.disconnect()
+    }
+  }, [popup, name, container])
+  return fits ? name : "full"
+}
+
 /** What DialogContent tells its parts: the header keeps clear of the close button only when there is one. */
 const DialogContentContext = React.createContext<{ showCloseButton: boolean }>({ showCloseButton: false })
 
@@ -121,6 +182,8 @@ function DialogContent({
   container,
   size = "form",
   initialFocus,
+  notice,
+  ref,
   ...props
 }: DialogPrimitive.Popup.Props & {
   /** The close button at the top right: a neutral FloatButton with the `close` glyph. On by default. */
@@ -138,8 +201,24 @@ function DialogContent({
   beforeContent?: React.ReactNode
   /** Where the portal goes: `<body>` by default. A shadow root or an extension's own frame passes its own. */
   container?: DialogPrimitive.Portal.Props["container"]
+  /**
+   * A line across the top of the dialog, above its header, that does not scroll: the compact
+   * needs-you line (`<NeedsYou size="compact" />`) when something with a time limit arrives while
+   * the dialog is open (Lockdown LA8, contract 5.1c C19). The close button moves down under it.
+   */
+  notice?: React.ReactNode
 }) {
-  const name = dialogSizeName(size)
+  const asked = dialogSizeName(size)
+  const [popup, setPopup] = React.useState<HTMLElement | null>(null)
+  const name = useFittedSize(asked, popup, container)
+  const popupRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      setPopup(node)
+      if (typeof ref === "function") ref(node)
+      else if (ref) ref.current = node
+    },
+    [ref]
+  )
   const context = React.useMemo(() => ({ showCloseButton }), [showCloseButton])
   const scroll = React.useRef<HTMLDivElement>(null)
   const focusFirst = useFocusFirstControl(scroll, "dialog-content")
@@ -148,8 +227,11 @@ function DialogContent({
       <DialogOverlay />
       {beforeContent}
       <DialogPrimitive.Popup
+        ref={popupRef}
         data-slot="dialog-content"
         data-size={name}
+        // The size it was asked for, when the space is too narrow for it and it draws `full` instead.
+        data-size-asked={name === asked ? undefined : asked}
         initialFocus={initialFocus ?? focusFirst}
         className={cn(
           // Solid and square: the raised surface, no shadow, no blur. Centred in the area below
@@ -167,6 +249,11 @@ function DialogContent({
         )}
         {...props}
       >
+        {notice ? (
+          <div data-slot="dialog-notice" className="flex shrink-0 flex-col">
+            {notice}
+          </div>
+        ) : null}
         <DialogContentContext.Provider value={context}>
           {/* The content scrolls here, inside the rule, so nothing that scrolls covers the edge. */}
           <div
@@ -182,7 +269,10 @@ function DialogContent({
         {showCloseButton && (
           // Last in the tab order, so focus starts in the content; drawn at the header's top right,
           // centred on the overline and title (16 + 4).
-          <span data-slot="dialog-close-anchor" className="absolute top-5 right-4 flex">
+          <span
+            data-slot="dialog-close-anchor"
+            className={cn("absolute right-4 flex", notice ? "top-[calc(var(--size-control)+var(--spacing)*5)]" : "top-5")}
+          >
             <DialogPrimitive.Close data-slot="dialog-close" render={<FloatButton label={closeLabel} icon="close" />} />
           </span>
         )}

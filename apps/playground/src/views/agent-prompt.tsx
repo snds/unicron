@@ -26,10 +26,11 @@ export default function AgentPromptView() {
 
   return (
     <div className="flex flex-col gap-10 p-6">
-      <Specimen label="Live // keys by meaning (Y allows once, N denies, 3 always); the safe answer takes focus">
+      <Specimen label="Live, inline // keys by meaning: Y allows once, N denies, 3 always, whatever the order; on a phone the options stay in place (Warpcore NA4, U-13)">
         <AgentPrompt
           key={round}
           kind="permission"
+          layout="inline"
           overline="Question"
           expiresAt={expiresAt}
           safeAnswer="deny"
@@ -52,6 +53,18 @@ export default function AgentPromptView() {
             Ask again
           </Button>
         </div>
+      </Specimen>
+
+      <Specimen label="Adaptive (the default) // on a phone an Answer button opens the options in a sheet">
+        <AgentPrompt kind="continue" overline="Continue? // SEA-48" listen={false} autoFocus={false} onAnswer={() => {}}>
+          The run reached 40 of 60 files. Keep going?
+        </AgentPrompt>
+      </Specimen>
+
+      <Specimen label="Keys follow the meaning, not the place // the same three options, Always first: 3 still answers Always, Y Allow once, N Deny">
+        <AgentPrompt kind="permission" overline="Question" layout="inline" listen={false} autoFocus={false} options={[TASK_OPTIONS[2], TASK_OPTIONS[1], TASK_OPTIONS[0]]} onAnswer={() => {}}>
+          Push the fix to snds/lockdown main?
+        </AgentPrompt>
       </Specimen>
 
       <Specimen label="Permission // more wait after this one">

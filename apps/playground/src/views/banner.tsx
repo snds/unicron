@@ -86,6 +86,21 @@ export default function BannerView() {
           action={<Button variant="secondary" size="sm">Leave the demo</Button>}
         />
       </Specimen>
+
+      <Specimen label="Compact // a server's long message in a 320 form column: every word shows, a long token breaks (Vale NA7)" width="max-w-[320px]">
+        <Banner
+          size="compact"
+          tone="critical"
+          title="Couldn't add the account."
+          body="imap.fastmail.com said: AUTHENTICATIONFAILED_INVALID_CREDENTIALS for sean@fastmail.com. Make an app password in Fastmail's settings, then try again."
+          action={<Button variant="secondary" size="sm">Try again</Button>}
+        />
+        <Banner
+          size="compact"
+          tone="info"
+          body="Google shows a warning page first because this build's sign-in is not verified yet. Choose Advanced, then Go to Vale."
+        />
+      </Specimen>
     </div>
   )
 }

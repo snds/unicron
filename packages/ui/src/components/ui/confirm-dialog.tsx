@@ -4,10 +4,12 @@
 
 import * as React from "react"
 
+import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { AdaptiveDialog, useLayerOpen, type AdaptivePresentation } from "./adaptive"
 import { Button } from "./button"
 import { type DialogSize } from "./dialog"
+import { useDisabledReason } from "./field"
 
 export interface ConfirmDialogProps {
   open?: boolean
@@ -37,15 +39,32 @@ export interface ConfirmDialogProps {
   onConfirm: () => void | Promise<unknown>
   /** Runs on the no, Escape, the close button or a press outside. */
   onCancel?: () => void
-  /** The yes is off until the person has done what the body asks (typed a name, ticked a box). */
+  /**
+   * The yes is off until the person has done what the body asks: typed the word that arms it
+   * (`reset`), ticked a box, picked a scope. Focus still starts on Cancel.
+   */
   confirmDisabled?: boolean
+  /**
+   * Why the yes is off, while `confirmDisabled` holds ("Type reset to turn this on."): one visible
+   * line at the foot of the body, above the yes, tied to it with `aria-describedby`. With a reason
+   * the yes stays in the tab order (`aria-disabled`), so the reason is read with its name
+   * (contract 5.1b #37).
+   */
+  disabledReason?: React.ReactNode
   /** A failed yes, in the server's words: one critical line in the body. */
   error?: React.ReactNode
-  /** More for the body: a Checkbox, RadioRows, a short list of consequences (Vale NA4, Lockdown LA3). */
+  /**
+   * More for the body, under the one line (contract 5.1c C11): `RadioRow`s (which events of a
+   * series), a short list of consequences (`ConfirmDialogConsequences`), a `Checkbox` ("Also forget
+   * the backup password"), or a Text Field that arms the yes with `confirmDisabled` and
+   * `disabledReason`. The size stays `question` (480).
+   */
   children?: React.ReactNode
   presentation?: AdaptivePresentation
   /** `question` (480) by default. */
   size?: DialogSize
+  /** A line across the top of the question: the compact needs-you line (see `AdaptiveDialog`). */
+  notice?: React.ReactNode
   container?: React.ComponentProps<typeof AdaptiveDialog>["container"]
 }
 
@@ -70,17 +89,20 @@ function ConfirmDialog({
   onConfirm,
   onCancel,
   confirmDisabled = false,
+  disabledReason,
   error,
   children,
   presentation = "auto",
   size = "question",
   container,
+  notice,
 }: ConfirmDialogProps) {
   const cancelRef = React.useRef<HTMLButtonElement>(null)
   const [isOpen, setOpen] = useLayerOpen(open, defaultOpen, onOpenChange)
   const [busy, setBusy] = React.useState(false)
   // Set while the yes closes it, so closing is not taken for a no.
   const confirming = React.useRef(false)
+  const reason = useDisabledReason(confirmDisabled && !busy, disabledReason)
 
   const change = (next: boolean) => {
     if (!next && busy) return
@@ -118,6 +140,7 @@ function ConfirmDialog({
       description={description}
       initialFocus={cancelRef}
       container={container}
+      notice={notice}
       footer={
         <>
           <Button ref={cancelRef} type="button" variant="secondary" data-slot="confirm-dialog-cancel" disabled={busy} onClick={() => change(false)}>
@@ -129,6 +152,9 @@ function ConfirmDialog({
             data-slot="confirm-dialog-confirm"
             loading={busy}
             disabled={confirmDisabled}
+            // With a reason the yes stays reachable, and its reason is read with its name.
+            focusableWhenDisabled={reason.active || undefined}
+            aria-describedby={reason.describedBy}
             onClick={() => void confirm()}
           >
             {confirmIcon ? <Icon name={confirmIcon} size="sm" /> : null}
@@ -138,6 +164,12 @@ function ConfirmDialog({
       }
     >
       {children}
+      {reason.active ? (
+        // At the foot of the body, at the end of the line: right above the yes it explains.
+        <div data-slot="confirm-dialog-reason" className="flex justify-end text-end">
+          {reason.line}
+        </div>
+      ) : null}
       {error ? (
         <p data-slot="confirm-dialog-error" role="alert" className="type-caption text-critical-text">
           {error}
@@ -147,4 +179,31 @@ function ConfirmDialog({
   )
 }
 
-export { ConfirmDialog }
+/**
+ * The short list of what a yes will do, for a question that needs more than one line (Vale's
+ * "Turn on end-to-end encryption?"): two to four `ConfirmDialogConsequence`s, each an icon and one
+ * sentence. A list, so a screen reader says how many there are.
+ */
+function ConfirmDialogConsequences({ className, ...props }: React.ComponentProps<"ul">) {
+  return <ul data-slot="confirm-dialog-consequences" className={cn("flex flex-col gap-3", className)} {...props} />
+}
+
+/** One consequence: a 20px glyph (decorative) and one sentence in the body role. */
+function ConfirmDialogConsequence({
+  icon,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"li"> & { icon: IconName }) {
+  return (
+    <li data-slot="confirm-dialog-consequence" className={cn("type-body text-text-body flex items-start gap-3", className)} {...props}>
+      {/* The glyph sits on the sentence's first 24px line. */}
+      <span aria-hidden data-slot="confirm-dialog-consequence-icon" className="text-text-secondary flex h-6 shrink-0 items-center">
+        <Icon name={icon} />
+      </span>
+      <span className="min-w-0 flex-1">{children}</span>
+    </li>
+  )
+}
+
+export { ConfirmDialog, ConfirmDialogConsequence, ConfirmDialogConsequences }

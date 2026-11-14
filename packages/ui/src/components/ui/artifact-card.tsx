@@ -8,6 +8,10 @@ import { useRender } from "@base-ui/react/use-render"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
+import { StatusOrb } from "./status-orb"
+
+/** `ready` (the default): the block is all there. `writing`: a reply is still writing it (contract 5.1c C14). */
+export type ArtifactCardState = "ready" | "writing"
 
 export interface ArtifactCardProps extends Omit<useRender.ComponentProps<"button">, "title" | "children"> {
   /** The kind's icon in the tile (Figma `Icon`, default `code`): `document`, `flow`, `checkmark`. */
@@ -20,6 +24,12 @@ export interface ArtifactCardProps extends Omit<useRender.ComponentProps<"button
   selected?: boolean
   /** Make it a link instead of a button. Or pass `render` for a router's link. */
   href?: string
+  /**
+   * `writing` while a reply is still writing the block (Warpcore NA3): the meta turns the live
+   * tone after a working `StatusOrb` ("HTML // writing"). The card still opens: the host shows what
+   * has arrived. Back to `ready` when the reply ends ("HTML // 124 lines").
+   */
+  state?: ArtifactCardState
 }
 
 /**
@@ -33,8 +43,9 @@ export interface ArtifactCardProps extends Omit<useRender.ComponentProps<"button
  * `primary-soft` fill and a 2px `primary-fill` edge on the left (contract §6.5), with the tile on
  * the raised surface so it still reads as a tile.
  */
-export function ArtifactCard({ icon = "code", title, meta, selected = false, href, render, className, ...props }: ArtifactCardProps) {
+export function ArtifactCard({ icon = "code", title, meta, selected = false, state = "ready", href, render, className, ...props }: ArtifactCardProps) {
   const asLink = href !== undefined
+  const writing = state === "writing"
   const content = (
     <>
       <span
@@ -49,8 +60,19 @@ export function ArtifactCard({ icon = "code", title, meta, selected = false, hre
           {title}
         </span>
         {/* A space between the two for the accessible name; the column draws none. */}
-        {meta ? " " : null}
-        {meta ? (
+        {meta || writing ? " " : null}
+        {writing ? (
+          // The one agent motion, before the meta in the live tone. The meta's words say it
+          // ("HTML // writing"), so the orb is decorative; with no meta, the orb's own name does.
+          <span data-slot="artifact-card-status" className="text-secondary-live flex min-w-0 items-center gap-2">
+            <StatusOrb state="working" size="xs" tooltip={false} aria-hidden={meta ? true : undefined} />
+            {meta ? (
+              <span data-slot="artifact-card-meta" className="type-meta text-secondary-live min-w-0 truncate">
+                {meta}
+              </span>
+            ) : null}
+          </span>
+        ) : meta ? (
           <span data-slot="artifact-card-meta" className="type-meta text-text-label truncate">
             {meta}
           </span>
@@ -84,6 +106,7 @@ export function ArtifactCard({ icon = "code", title, meta, selected = false, hre
       (asLink ? { href } : render ? {} : { type: "button" }) as React.ComponentProps<"button">,
       {
         "data-slot": "artifact-card",
+        "data-state": state,
         "data-selected": selected ? "true" : undefined,
         "aria-current": selected ? "true" : undefined,
       } as React.ComponentProps<"button">,

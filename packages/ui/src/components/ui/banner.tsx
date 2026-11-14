@@ -111,8 +111,11 @@ function Banner({
         </span>
       ) : null}
       {compact ? (
-        // One paragraph: the title starts the sentence in body ink, so the size stays 13/20.
-        <p data-slot="banner-text" className="type-caption text-support-foreground min-w-0 flex-1">
+        // One paragraph: the title starts the sentence in body ink, so the size stays 13/20. It wraps
+        // when it must and is never cut (Vale NA7, contract 5.1c C12): no clamp, no ellipsis, and a
+        // server's long unbroken token (an address, an error code) breaks inside itself rather than
+        // running out of the box.
+        <p data-slot="banner-text" className="type-caption text-support-foreground min-w-0 flex-1 wrap-break-word">
           {title ? (
             <span data-slot="banner-title" className="text-foreground">
               {title}{" "}
@@ -128,7 +131,7 @@ function Banner({
             </p>
           ) : null}
           {text ? (
-            <p data-slot="banner-body" className="type-caption text-support-foreground">
+            <p data-slot="banner-body" className="type-caption text-support-foreground wrap-break-word">
               {text}
             </p>
           ) : null}

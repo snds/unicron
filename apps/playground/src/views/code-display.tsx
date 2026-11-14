@@ -2,7 +2,7 @@
 // rows (40:954), the desktop tiles (41:2487) and one compact line; the counter kind; the states.
 // The clock is held still (`now`), so the picture shows the frames' seconds. View: ?view=code-display
 import type { ReactNode } from "react"
-import { CodeDisplay, CodeDisplayList, CrownJewelSurface } from "@unicron/ui"
+import { AdaptiveMenuItem, CodeDisplay, CodeDisplayList, CodeDisplayMenuItem, CrownJewelSurface } from "@unicron/ui"
 
 const AT = 1_800_000_000
 
@@ -52,6 +52,32 @@ export default function CodeDisplayView() {
         </CodeDisplayList>
       </Specimen>
 
+      <Specimen label="More // the trailing ⋯ on the field, a row and a tile, always shown (Lockdown LA5, C1): Open item, Show large type, Copy through the code's own copy">
+        <CodeDisplay
+          layout="field"
+          label="Steam Guard"
+          variant="steam"
+          issuer="Steam"
+          account="kestrel.04"
+          code="R7K2N"
+          period={30}
+          expiresAt={AT}
+          now={AT - 18}
+          menu={<CodeMenu />}
+        />
+      </Specimen>
+      <Specimen label="More // a row on the phone's Codes list" width="22.375rem">
+        <CodeDisplay layout="row" issuer="GitHub" account="kestrel04" code="482193" period={30} expiresAt={AT} now={AT - 23} menu={<CodeMenu />} />
+        <CodeDisplay layout="row" issuer="Fastmail" account="kestrel.04@proton.me" code="019552" period={30} expiresAt={AT} now={AT - 4} menu={<CodeMenu />} />
+      </Specimen>
+      <Specimen label="More // tiles on the desktop's Codes grid" width="full">
+        <CodeDisplayList layout="grid">
+          <CodeDisplay layout="tile" issuer="GitHub" account="kestrel04" code="482193" period={30} expiresAt={AT} now={AT - 23} menu={<CodeMenu />} />
+          <CodeDisplay layout="tile" issuer="Synology" account="admin" code="330918" period={30} expiresAt={AT} now={AT - 23} menu={<CodeMenu />} />
+          <CodeDisplay layout="tile" variant="hotp" issuer="Router admin" account="admin" code="330918" counter={14} onAdvance={() => {}} menu={<CodeMenu />} />
+        </CodeDisplayList>
+      </Specimen>
+
       <Specimen label="Compact // one line: a popup, a list in a sheet" width="22.375rem">
         <CodeDisplay layout="compact" issuer="GitHub" account="kestrel04" code="482193" period={30} expiresAt={AT} now={AT - 23} />
         <CodeDisplay layout="compact" issuer="Fastmail" account="kestrel.04@proton.me" code="019552" period={30} expiresAt={AT} now={AT - 4} />
@@ -73,3 +99,16 @@ export default function CodeDisplayView() {
     </div>
   )
 }
+
+/** A code's ⋯ rows (Lockdown C1): the app's own, then the code's own copy and reveal. */
+function CodeMenu() {
+  return (
+    <>
+      <AdaptiveMenuItem icon="launch">Open item</AdaptiveMenuItem>
+      <AdaptiveMenuItem icon="text--scale">Show large type</AdaptiveMenuItem>
+      <CodeDisplayMenuItem action="reveal" />
+      <CodeDisplayMenuItem action="copy" />
+    </>
+  )
+}
+

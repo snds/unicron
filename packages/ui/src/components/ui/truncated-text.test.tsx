@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -132,3 +134,83 @@ describe("TruncatedText", () => {
     expect(screen.getByRole("heading", { name: "Cabin for the 20th, confirmed" })).toHaveAttribute("data-slot", "truncated-text")
   })
 })
+
+describe("TruncatedText: the full text at the pointer's spot (contract 5.1c C17, Synapse SNA3)", () => {
+  const positioner = () => document.querySelector("[data-anchor]") as HTMLElement | null
+  const translate = () => /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(positioner()?.getAttribute("style") ?? "")?.slice(1).map(Number)
+
+  it("opened by the pointer: it sits at the spot where the pointer was, its start at the pointer, and stays put as the pointer moves", async () => {
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(<TruncatedText>Your November statement is ready to download</TruncatedText>)
+    await act(async () => {
+      fireEvent.pointerEnter(root(), { pointerType: "mouse", clientX: 100, clientY: 50 })
+      fireEvent.pointerMove(root(), { pointerType: "mouse", clientX: 140, clientY: 52 })
+      fireEvent.mouseEnter(root())
+      fireEvent.mouseMove(root(), { clientX: 140, clientY: 52 })
+    })
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    expect(positioner()).toHaveAttribute("data-anchor", "pointer")
+    // Above the spot (the default side), 4 clear of it; its start at the pointer's x.
+    await vi.waitFor(() => expect(translate()).toEqual([140, 48]))
+    await act(async () => {
+      fireEvent.pointerMove(root(), { pointerType: "mouse", clientX: 300, clientY: 60 })
+      fireEvent.mouseMove(root(), { clientX: 300, clientY: 60 })
+      await new Promise((r) => setTimeout(r, 20))
+    })
+    expect(translate()).toEqual([140, 48])
+  })
+
+  it("opened by keyboard focus: from the element itself", async () => {
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(<TruncatedText>Your November statement is ready to download</TruncatedText>)
+    await act(async () => {
+      root().focus()
+    })
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    expect(positioner()).toHaveAttribute("data-anchor", "element")
+    // Reachable, and read whole: the focused element's text is the whole text.
+    expect(document.activeElement).toBe(root())
+    expect(root()).toHaveTextContent("Your November statement is ready to download")
+  })
+
+  it("a touch never opens it at a finger's spot", async () => {
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(<TruncatedText>Your November statement is ready to download</TruncatedText>)
+    await act(async () => {
+      fireEvent.pointerEnter(root(), { pointerType: "touch", clientX: 100, clientY: 50 })
+      root().focus()
+    })
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    expect(positioner()).toHaveAttribute("data-anchor", "element")
+  })
+
+  it("wraps between the two knobs, never wider than the room on screen, and reads from the start of the line", async () => {
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(<TruncatedText>Your November statement is ready to download</TruncatedText>)
+    await act(async () => {
+      root().focus()
+    })
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    const cls = tip()!.className.split(" ")
+    expect(cls).toEqual(
+      expect.arrayContaining([
+        "w-max",
+        "min-w-[min(var(--c-truncated-text-min-width),var(--available-width,100vw))]",
+        "max-w-[min(var(--c-truncated-text-max-width),var(--available-width,100vw))]",
+        "text-start",
+        "whitespace-normal",
+        "wrap-break-word",
+        // The Tooltip's own look.
+        "bg-text-body",
+        "text-surface-ground",
+        "type-caption",
+      ])
+    )
+    const tokens = JSON.parse(
+      readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/component/overlays.json"), "utf8")
+    )
+    expect(tokens["truncated-text"]["min-width"].$value).toBe("12rem")
+    expect(tokens["truncated-text"]["max-width"].$value).toBe("22rem")
+  })
+})
+

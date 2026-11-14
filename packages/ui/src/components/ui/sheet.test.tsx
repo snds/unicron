@@ -395,3 +395,44 @@ describe("Sheet focus", () => {
     expect(screen.getByRole("button", { name: "Close" })).not.toHaveFocus()
   })
 })
+
+describe("SheetContent notice (contract 5.1c C19)", () => {
+  it("a side sheet: the line first, flush with its top, and the close button and header actions moved under it", () => {
+    render(
+      <Sheet open>
+        <SheetContent side="right" notice={<p data-testid="line">Sign-in request</p>}>
+          <SheetHeaderActions>
+            <span>pin</span>
+          </SheetHeaderActions>
+          <SheetHeader>
+            <SheetTitle>Filters</SheetTitle>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    )
+    const notice = document.querySelector('[data-slot="sheet-notice"]') as HTMLElement
+    expect(notice).toContainElement(screen.getByTestId("line"))
+    expect(notice.className.split(" ")).toEqual(expect.arrayContaining(["-mt-4", "in-data-[side=bottom]:-mt-2", "shrink-0"]))
+    const anchor = document.querySelector('[data-slot="sheet-close-anchor"]') as HTMLElement
+    expect(anchor.className).toContain("top-[calc(var(--size-control)+var(--spacing)*4)]")
+    expect(anchor.className.split(" ")).not.toContain("top-4")
+    expect((document.querySelector('[data-slot="sheet-header-actions"]') as HTMLElement).className).toContain("top-[calc(var(--size-control)+var(--spacing)*4)]")
+  })
+
+  it("without one, nothing moves", () => {
+    render(
+      <Sheet open>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>Filters</SheetTitle>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    )
+    expect(document.querySelector('[data-slot="sheet-notice"]')).toBeNull()
+    expect((document.querySelector('[data-slot="sheet-close-anchor"]') as HTMLElement).className.split(" ")).toEqual(
+      expect.arrayContaining(["top-4", "in-data-[side=bottom]:top-5"])
+    )
+  })
+})
+
