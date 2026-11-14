@@ -1,4 +1,4 @@
-// Float Button, as Figma draws it (20:1690), with the current state and the long press. View: ?view=float-button
+// Float Button, as Figma draws it (20:1690), with the current state, the long press, the extended form and the mark. View: ?view=float-button
 import { useState, type ReactNode } from "react"
 import { FloatButton } from "@unicron/ui"
 
@@ -34,6 +34,19 @@ export default function FloatButtonView() {
       <Specimen label="State // disabled">
         <FloatButton label="Search" icon="search" size="l" disabled />
         <FloatButton label="New task" icon="add" kind="primary" size="l" disabled />
+      </Specimen>
+
+      <Specimen label="Extended // a phone button that approves, allows or spends shows its word">
+        <FloatButton label="Approve" icon="checkmark" kind="primary" size="l" extended />
+        <FloatButton label="Share" icon="share" kind="primary" size="l" extended />
+        <FloatButton label="Reject" icon="close" size="l" extended />
+        <FloatButton label="Stop" icon="stop" size="m" extended />
+      </Specimen>
+
+      <Specimen label="Mark // the update square on Settings; a count on the comments button">
+        <FloatButton label="Settings" icon="settings" size="l" mark={{ square: true, label: "Update ready" }} />
+        <FloatButton label="Comments" icon="chat" size="l" mark={{ count: 3, label: "3 open" }} />
+        <FloatButton label="View options" icon="filter" size="l" mark={{ square: true, tone: "needs-you", label: "A filter is on" }} />
       </Specimen>
 
       <Specimen label="Close // the close button of a sheet or a dialog">

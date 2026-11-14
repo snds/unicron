@@ -63,6 +63,8 @@
     "checkmark--filled",
     "locked--filled",
     "pause--outline--filled",
+    "side-panel--close",
+    "side-panel--open",
     "stop--filled--alt",
     "time--filled",
     "warning--filled"
@@ -304,8 +306,6 @@
     "purchase",
     "recently-viewed",
     "reply--all",
-    "side-panel--close",
-    "side-panel--open",
     "snooze",
     "star--filled",
     "stop",

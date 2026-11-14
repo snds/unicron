@@ -1,221 +1,683 @@
 // Promoted from: snds/warpcore · PR snds/unicron#68 · DSA none
+// Promoted from: Seeded in snds/unicron (2026-11 design direction, contract 5.2 and 5.1b #1, #2, #4, #9 to #11, #13, #14; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
 import { cn } from "../../lib/utils"
-import { Icon, type IconName } from "../icon"
 import { DETAIL_MIN_WIDTH, useViewport } from "../use-viewport"
-import { Button } from "./button"
-import { IndicatorMark, indicatorLabel, indicatorsOf, type IndicatorProp } from "./indicator"
+import {
+  AppFrameContext,
+  frameLayoutFor,
+  isBookFold,
+  isExpandedWidth,
+  isPhoneLayout,
+  readLength,
+  useAppFrame,
+  useBoxViewport,
+  useScrollMinimize,
+  type AppFrameBack,
+  type AppFrameBottomSlots,
+  type AppFrameContextValue,
+  type AppFrameHead,
+  type AppFrameLayout,
+} from "./app-frame-context"
+import { FloatButton } from "./float-button"
+import { PageHead, type PageHeadProps } from "./page-head"
 import { ResizableHandle, ResizablePane, ResizablePanes, useResizablePanesLayout } from "./resizable-panes"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./sheet"
+
+/* ── AppFrame ────────────────────────────────────────────────────────────────────────────────── */
+
+export type AppFrameProps = React.ComponentProps<"div"> & {
+  /**
+   * Pin the shell instead of taking the one the width picks (contract 5.2): a preview, a test.
+   * Apps leave it out; the frame parts switch by themselves.
+   */
+  layout?: AppFrameLayout
+  /** Pin the phone's minimized state (a preview of the scrolled chrome). Left out, the content's scroll drives it. */
+  minimized?: boolean
+  /**
+   * A box inside a page instead of the whole screen (the playground, a preview): it measures its
+   * own size to pick its shell, and neither locks the page nor follows the keyboard.
+   */
+  contained?: boolean
+  /**
+   * Reading at length (Synapse Y-03 "focus"): the list column steps aside at the expanded width
+   * so the detail takes the room. The app keeps it, and a toggle with `aria-pressed` drives it.
+   */
+  focus?: boolean
+}
 
 /**
  * The outermost box of an app that fills the screen. It owns everything a device can do to one:
  *
- * - The page can't scroll, so a rotation can't leave it scrolled and hide the app's top bar.
+ * - The page can't scroll, so a rotation can't leave it scrolled and hide the app's chrome.
  * - It keeps clear of the notch, the home bar and any keyboard.
- * - Header and nav share the screen edge's colour, so they seem to reach the edges.
  * - Under a keyboard, or on a short screen, it gives the height back to the content.
  *
- * Children: `AppFrameHeader` (optional), `AppFrameMain`, `AppFrameNav` (optional). With room to spare,
- * `AppFramePivot` and `AppFrameSidebar` add columns on the left: places, then a list, then the content.
+ * And it picks the shell from the width (contract 5.2), so an app writes one composition and no
+ * shell CSS. Every part draws itself only where it belongs:
+ *
+ * - Phone (under 600): `AppFrameTopRow`, `AppFrameMain`, `AppFrameAccessory`, `AppFrameBottomRow`.
+ *   The chrome floats over full-bleed content; scrolling minimizes it (`useScrollMinimize`).
+ * - Short screens (a phone on its side): the bottom row stands at the trailing edge as a column.
+ * - Medium (600 to 1023): `AppFrameSidebar` as its rail (or `AppFrameTopBar`), the status line,
+ *   one content column; a detail is a pushed screen.
+ * - Expanded (1024 up): the sidebar or the top bar, the status line, list + detail side by side.
  */
-function AppFrame({ className, style, children, ...props }: React.ComponentProps<"div">) {
-  const viewport = useViewport()
+function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained = false, focus = false, className, style, children, ...props }: AppFrameProps) {
+  const screen = useViewport()
+  const [box, setBox] = React.useState<HTMLDivElement | null>(null)
+  const measured = useBoxViewport(box, contained)
+  const viewport = contained ? (measured ?? screen) : screen
+  const layout = pinnedLayout ?? frameLayoutFor(viewport)
+  const phone = isPhoneLayout(layout)
+  const foldBook = isBookFold(viewport)
+  const split = layout === "expanded" || (foldBook && !phone)
+
+  const [scroller, setScroller] = React.useState<HTMLElement | null>(null)
+  const scrolled = useScrollMinimize(scroller, { enabled: phone && pinnedMinimized === undefined })
+  const minimized = phone && (pinnedMinimized ?? scrolled)
+
+  const [head, setHead] = React.useState<AppFrameHead | null>(null)
+  const [bottom, setBottom] = React.useState<AppFrameBottomSlots | null>(null)
+  const [railTop, setRailTop] = React.useState<HTMLDivElement | null>(null)
+  const [railBottom, setRailBottom] = React.useState<HTMLDivElement | null>(null)
+  const [detailOpen, setDetailOpen] = React.useState(false)
+  const [back, setBack] = React.useState<AppFrameBack | null>(null)
+  const [clearance, setClearanceState] = React.useState({ top: 0, bottom: 0 })
+  const setClearance = React.useCallback((edge: "top" | "bottom", px: number) => {
+    setClearanceState((c) => (c[edge] === px ? c : { ...c, [edge]: px }))
+  }, [])
+
+  const keyboardOpen = !contained && viewport.keyboardOpen
+  const tight = !contained && viewport.room !== "full"
 
   // iOS pans the page to show a focused field and can keep that pan through a rotation. Everything
   // here already stays in view, so put it back whenever the screen changes.
   React.useLayoutEffect(() => {
+    if (contained) return
     if (window.scrollX !== 0 || window.scrollY !== 0) window.scrollTo(0, 0)
-  }, [viewport])
+  }, [screen, contained])
+
+  const context = React.useMemo<AppFrameContextValue>(
+    () => ({
+      framed: true,
+      layout,
+      phone,
+      width: viewport.widthClass,
+      split,
+      foldBook,
+      keyboardOpen,
+      tight,
+      minimized,
+      setScroller,
+      head,
+      setHead,
+      bottom,
+      setBottom,
+      rail: { top: railTop, bottom: railBottom },
+      detailOpen,
+      setDetailOpen,
+      back,
+      setBack,
+      focus,
+      setClearance,
+    }),
+    [layout, phone, viewport.widthClass, split, foldBook, keyboardOpen, tight, minimized, head, bottom, railTop, railBottom, detailOpen, back, focus, setClearance]
+  )
+
+  const wide = viewport.widthClass === "wide" || viewport.widthClass === "ultrawide"
 
   return (
     <div
-      data-slot="app-frame"
-      data-keyboard={viewport.keyboardOpen ? "open" : undefined}
-      data-room={viewport.room}
+      ref={setBox}
+      // The stylesheet's app-frame rules (fixed to the screen, the page lock, the safe areas, the
+      // keyboard) belong to the screen's frame only; a contained one is a plain box.
+      data-slot={contained ? "app-frame-contained" : "app-frame"}
+      data-layout={layout}
+      data-minimized={minimized ? "" : undefined}
+      data-keyboard={keyboardOpen ? "open" : undefined}
+      data-room={contained ? "full" : viewport.room}
       data-nav={viewport.navPlacement}
-      className={cn("text-foreground", className)}
+      className={cn(
+        "group/frame text-foreground",
+        contained && "relative isolate grid h-full w-full overflow-hidden bg-surface-ground",
+        className
+      )}
       style={
         {
-          ...(viewport.pageHeight > 0 && { "--viewport-page-height": `${viewport.pageHeight}px` }),
-          "--viewport-keyboard-inset": `${viewport.keyboardInset}px`,
-          "--viewport-offset-top": `${viewport.offsetTop}px`,
+          ...(!contained && viewport.pageHeight > 0 && { "--viewport-page-height": `${viewport.pageHeight}px` }),
+          ...(!contained && {
+            "--viewport-keyboard-inset": `${viewport.keyboardInset}px`,
+            "--viewport-offset-top": `${viewport.offsetTop}px`,
+          }),
+          "--app-frame-top-clear": `${clearance.top}px`,
+          "--app-frame-bottom-clear": `${clearance.bottom}px`,
           ...style,
         } as React.CSSProperties
       }
       {...props}
     >
-      {children}
+      <AppFrameContext.Provider value={context}>
+        <div
+          data-slot="app-frame-body"
+          className={cn(
+            // One cell: the whole frame. The stylesheet's grid places nothing else.
+            "relative col-[1/-1] row-[1/-1] min-h-0 min-w-0 bg-surface-ground",
+            phone
+              ? "overflow-hidden"
+              : // Sidebar on the left the whole height; the status line or top bar over the content.
+                cn(
+                  "grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] [grid-template-areas:'sidebar_header'_'sidebar_main']",
+                  // The page gutters: 48 at 1440 as every desktop frame draws them, 24 below 1280.
+                  wide ? "px-12" : "px-6"
+                )
+          )}
+        >
+          {children}
+          {layout === "rail" ? (
+            // The short screen's trailing column (Warpcore U-03): the top row's buttons at the top,
+            // the bottom row's search, tab bar and create at the foot. 16 from each edge.
+            <div
+              data-slot="app-frame-rail"
+              className={cn(
+                "pointer-events-none absolute inset-y-0 end-0 z-20 flex w-[calc(var(--spacing-control)+--spacing(8))] flex-col justify-between gap-2 p-4",
+                keyboardOpen && "hidden"
+              )}
+            >
+              <div ref={setRailTop} data-slot="app-frame-rail-top" className="pointer-events-auto flex flex-col items-center gap-2" />
+              <div ref={setRailBottom} data-slot="app-frame-rail-bottom" className="pointer-events-auto flex flex-col items-center gap-2" />
+            </div>
+          ) : null}
+        </div>
+      </AppFrameContext.Provider>
     </div>
   )
 }
 
-/** The bar along the top. Gone on a short screen and under a keyboard, so give its controls another home there. */
-function AppFrameHeader({ className, ...props }: React.ComponentProps<"header">) {
-  return (
-    <header
-      data-slot="app-frame-header"
-      className={cn(
-        "bg-(--c-app-frame-edge) flex h-(--c-app-frame-header-height) shrink-0 items-center gap-3 border-b px-4 short:hidden frame-tight:hidden",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+/* ── Content ─────────────────────────────────────────────────────────────────────────────────── */
 
 /**
- * The content. It keeps clear of a floating nav by itself. `bleed` lets it run underneath the nav, so
- * the glass has something to show: pad what scrolls by `--app-frame-nav-clearance` and
- * `--app-frame-nav-clearance-end`, so the end of it can still be reached.
+ * The content. Holds the columns: `AppFrameList`, `AppFrameDetail`, `AppFrameColumn`, and beside
+ * them `AppFrameSidePanel`, `ContextPanel`, `AppFrameCompanion`; `AppFramePeek` lays over them.
+ *
+ * On a phone it fills the screen under the floating chrome (each column scrolls under it, padded
+ * clear of it). On a desktop it sits under the status line, 24 below its rule and 24 above the
+ * screen's foot, and its columns stand side by side with a rule between them, as the frames draw.
  */
-function AppFrameMain({ bleed, className, ...props }: React.ComponentProps<"main"> & { bleed?: boolean }) {
+function AppFrameMain({ className, children, ...props }: React.ComponentProps<"main">) {
+  const frame = useAppFrame()
   return (
     <main
       data-slot="app-frame-main"
-      data-bleed={bleed ? "" : undefined}
-      className={cn("bg-background flex min-h-0 min-w-0 overflow-hidden", className)}
-      {...props}
-    />
-  )
-}
-
-/**
- * Moves between an app's top-level places. A glass capsule floating above the content: along the
- * bottom, or as a pill at the foot of the right edge when height is scarce (`data-nav="rail"` on the
- * frame). Needs an `aria-label`. Goes away under a keyboard when it would crowd the content, unless
- * it's a rail, which costs no height.
- */
-function AppFrameNav({ className, ...props }: React.ComponentProps<"nav">) {
-  return (
-    <nav
-      data-slot="app-frame-nav"
-      className={cn(
-        "bg-popover ring-foreground/10 flex gap-0.5 rounded-full p-1 shadow-lg ring-1",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-/**
- * One place in the nav: an icon, with the label for screen readers. `current` marks where the person
- * is. At least 44px each way, so it's easy to hit without a label to aim at.
- */
-/**
- * A top-level place. `indicator` marks it when something there wants the person: `attention`
- * (waiting on them) or `unread`, with an optional count. A dot at the icon's top right on the rail
- * and the pivot; a count badge on the bottom bar, "9+" past nine. Attention wins what's drawn; the
- * name says both, with the count ("Conversations, 2 waiting for you").
- */
-function AppFrameNavItem({
-  icon,
-  label,
-  current,
-  indicator,
-  className,
-  ...props
-}: Omit<React.ComponentProps<"button">, "children"> & {
-  icon: IconName
-  label: string
-  current?: boolean
-  indicator?: IndicatorProp
-}) {
-  const said = indicatorLabel(indicator)
-  const [top] = indicatorsOf(indicator)
-  return (
-    <button
-      type="button"
-      data-slot="app-frame-nav-item"
-      aria-current={current ? "page" : undefined}
-      className={cn(
-        "text-foreground hover:bg-muted focus-visible:ring-ring/50 flex size-11 w-(--c-app-frame-nav-item-width) shrink-0 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-3 focus-visible:ring-inset nav-rail:w-full in-data-[slot=app-frame-pivot]:w-full in-data-[slot=app-frame-pivot]:rounded-lg",
-        "aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground",
-        className
-      )}
+      data-layout={frame.layout}
+      className={cn("min-h-0 min-w-0", frame.phone ? "absolute inset-0" : "flex [grid-area:main]", className)}
       {...props}
     >
-      <span className="relative inline-flex">
-        <Icon name={icon} />
-        {top?.count !== undefined ? (
-          <>
-            {/* The bar has room for a count; the rail and the pivot show a dot. */}
-            <IndicatorMark indicator={indicator} shape="badge" className="absolute -top-2 left-1/2 nav-rail:hidden in-data-[slot=app-frame-pivot]:hidden" />
-            <IndicatorMark indicator={indicator} className="absolute -top-0.5 -right-0.5 hidden nav-rail:inline-block in-data-[slot=app-frame-pivot]:inline-block" />
-          </>
-        ) : (
-          <IndicatorMark indicator={indicator} className="absolute -top-0.5 -right-0.5" />
+      <div
+        // A book-pose fold: the stylesheet's FoldPanes grid puts the first column on one side and
+        // the last on the other, with the hinge between.
+        data-slot={frame.foldBook && !frame.phone ? "fold-panes" : "app-frame-columns"}
+        data-split={frame.foldBook && !frame.phone ? "columns" : undefined}
+        className={cn("relative flex h-full min-h-0 min-w-0 flex-1", !frame.phone && "py-6")}
+      >
+        {children}
+      </div>
+    </main>
+  )
+}
+
+type ColumnKind = "side" | "content"
+
+interface ColumnContextValue {
+  /** The column shows now (a pushed-away list is still mounted, but not shown). */
+  shown: boolean
+}
+
+const ColumnContext = React.createContext<ColumnContextValue | null>(null)
+
+/** Whether the column the part sits in is showing. True outside a column. */
+export function useAppFrameColumnShown(): boolean {
+  return React.useContext(ColumnContext)?.shown ?? true
+}
+
+/**
+ * The classes and behaviour every column shares. A column shown on a phone scrolls under the
+ * floating chrome and drives its minimize; a column not shown stays mounted (its scroll place and
+ * its state survive) but is invisible and inert. On a desktop, a column that follows a shown one
+ * draws the rule at its start; the padding to the rule is 12 on a side column (a list, a panel)
+ * and 24 on a content column, as the frames draw (Vale: list to x 708, rule at 720, detail at 744).
+ */
+function useColumn(kind: ColumnKind, shown: boolean) {
+  const frame = useAppFrame()
+  const [el, setEl] = React.useState<HTMLElement | null>(null)
+  const { setScroller } = frame
+  const drives = frame.phone && shown
+
+  React.useLayoutEffect(() => {
+    if (!drives || !el) return
+    setScroller(el)
+    return () => setScroller(null)
+  }, [drives, el, setScroller])
+
+  const className = cn(
+    "min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain",
+    frame.phone
+      ? cn(
+          "absolute inset-0",
+          // Clear of the floating chrome; a focused field scrolls clear of it too.
+          "pt-(--app-frame-top-clear) pb-(--app-frame-bottom-clear) scroll-pt-(--app-frame-top-clear) scroll-pb-(--app-frame-bottom-clear)",
+          // The short screen's trailing column: 16 + 48 + 16.
+          frame.layout === "rail" && "pe-20"
+        )
+      : cn(
+          "h-full pt-2",
+          !shown && "absolute inset-y-6 start-0 w-full",
+          kind === "side"
+            ? "pe-3 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l"
+            : "has-[+[data-column][data-shown]]:pe-6 [[data-column][data-shown]+&]:ps-6 [[data-column][data-shown]+&]:rule-l"
+        ),
+    !shown && "pointer-events-none invisible"
+  )
+
+  return {
+    attach: setEl,
+    className,
+    attrs: {
+      "data-column": kind,
+      "data-shown": shown ? "" : undefined,
+      inert: !shown || undefined,
+      "aria-hidden": shown ? undefined : true,
+    },
+    context: { shown },
+  }
+}
+
+export type AppFrameListSize = "default" | "narrow" | "fill"
+
+export type AppFrameListProps = React.ComponentProps<"section"> & {
+  /**
+   * `default`: 432 beside the detail (the sidebar apps; 320 in an expanded window under 1280).
+   * `narrow`: 270 (Warpcore's chat list). `fill`: the list takes the room and the detail is narrow
+   * (Warpcore's Tasks and Docs).
+   */
+  size?: AppFrameListSize
+}
+
+/**
+ * The list column. At the expanded width it stands beside the detail; narrower, it is the screen
+ * until a detail is pushed over it (`AppFrameDetail open`), and it comes back with its scroll place.
+ * Name it (`aria-label`) when the page has more than one list.
+ */
+function AppFrameList({ size = "default", className, children, ...props }: AppFrameListProps) {
+  const frame = useAppFrame()
+  const shown = frame.split ? !frame.focus : !frame.detailOpen
+  const { attach, className: columnClass, attrs, context } = useColumn("side", shown)
+  const wide = frame.width === "wide" || frame.width === "ultrawide"
+  return (
+    <ColumnContext.Provider value={context}>
+      <section
+        ref={attach}
+        data-slot="app-frame-list"
+        data-size={size}
+        {...attrs}
+        className={cn(
+          columnClass,
+          !frame.phone && frame.split && shown && (size === "fill" ? "flex-1" : "shrink-0"),
+          !frame.phone && frame.split && size === "default" && (wide ? "w-[calc(var(--c-app-frame-list)+--spacing(3))]" : "w-[calc(var(--c-app-frame-list-compact)+--spacing(3))]"),
+          !frame.phone && frame.split && size === "narrow" && "w-[calc(var(--c-app-frame-list-narrow)+--spacing(3))]",
+          !frame.phone && !frame.split && shown && "flex-1",
+          className
         )}
-      </span>
-      <span className="sr-only">{said ? `${label}, ${said}` : label}</span>
-    </button>
+        {...props}
+      >
+        {children}
+      </section>
+    </ColumnContext.Provider>
+  )
+}
+
+export type AppFrameDetailProps = React.ComponentProps<"section"> & {
+  /**
+   * Something is open. Narrower than expanded the detail is then pushed over the list; at the
+   * expanded width it always stands beside it (show "Nothing open." when nothing is, decisions §9).
+   */
+  open?: boolean
+  /**
+   * The way back from a pushed detail. At medium width the frame puts it in the status line's
+   * leading slot (decisions §14); on a phone the app's `TopBar` takes it.
+   */
+  onBack?: () => void
+  /** The back button's name. Default "Back". */
+  backLabel?: string
+  /** `fill` (default): the detail takes the room. `narrow`: 534 beside a list that fills (Warpcore). */
+  size?: "fill" | "narrow"
+}
+
+/** The detail column: what is open, beside the list or pushed over it. */
+function AppFrameDetail({ open = false, onBack, backLabel = "Back", size = "fill", className, children, ...props }: AppFrameDetailProps) {
+  const frame = useAppFrame()
+  const shown = frame.split || open
+  const { attach, className: columnClass, attrs, context } = useColumn("content", shown)
+  const { setDetailOpen, setBack } = frame
+  const pushed = !frame.split && open
+
+  React.useLayoutEffect(() => {
+    setDetailOpen(pushed)
+    return () => setDetailOpen(false)
+  }, [pushed, setDetailOpen])
+
+  const latestBack = React.useRef(onBack)
+  React.useLayoutEffect(() => {
+    latestBack.current = onBack
+  })
+  const hasBack = Boolean(onBack)
+  React.useLayoutEffect(() => {
+    if (!pushed || !hasBack) return
+    setBack({ label: backLabel, onBack: () => latestBack.current?.() })
+    return () => setBack(null)
+  }, [pushed, hasBack, backLabel, setBack])
+
+  return (
+    <ColumnContext.Provider value={context}>
+      <section
+        ref={attach}
+        data-slot="app-frame-detail"
+        data-size={size}
+        data-pushed={pushed ? "" : undefined}
+        {...attrs}
+        className={cn(
+          columnClass,
+          !frame.phone && shown && (frame.split && size === "narrow" ? "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6))] shrink-0" : "flex-1"),
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </section>
+    </ColumnContext.Provider>
+  )
+}
+
+export type AppFrameColumnProps = React.ComponentProps<"section"> & {
+  /** Center the content in the reading column (720 at most). */
+  reading?: boolean
+}
+
+/**
+ * A content column that is always the screen: a page with one column (Search, Spend, Overview), or
+ * the conversation between a chat list and a context panel. It fills the room.
+ */
+function AppFrameColumn({ reading = false, className, children, ...props }: AppFrameColumnProps) {
+  const frame = useAppFrame()
+  const { attach, className: columnClass, attrs, context } = useColumn("content", true)
+  return (
+    <ColumnContext.Provider value={context}>
+      <section
+        ref={attach}
+        data-slot="app-frame-column"
+        {...attrs}
+        className={cn(columnClass, !frame.phone && "flex-1", className)}
+        {...props}
+      >
+        {reading ? <AppFrameReading>{children}</AppFrameReading> : children}
+      </section>
+    </ColumnContext.Provider>
+  )
+}
+
+/** The reading column: centred, 720 at most (UX Patterns: 720 to 768), the phone's 16 on each side. */
+function AppFrameReading({ className, ...props }: React.ComponentProps<"div">) {
+  const frame = useAppFrame()
+  return (
+    <InsetContext.Provider value={true}>
+      <div
+        data-slot="app-frame-reading"
+        className={cn("mx-auto w-full max-w-(--c-app-frame-reading)", frame.phone && "px-4", className)}
+        {...props}
+      />
+    </InsetContext.Provider>
+  )
+}
+
+/** Inside an inset (or the reading column) the phone's 16 is already kept. */
+const InsetContext = React.createContext(false)
+
+export type AppFrameInsetProps = React.ComponentProps<"div"> & {
+  /**
+   * Fill the column's height as a column of its own, so the last thing in it can sit at the
+   * column's foot (Vale's reply field, Warpcore's needs-you block): give that thing `mt-auto`, or
+   * let a child grow.
+   */
+  fill?: boolean
+}
+
+/**
+ * Content that is not a full-bleed row: on a phone it keeps the 16 from the screen's edges the
+ * frames draw (the page head, a chip row, a form); on a desktop the column's own edge is the line.
+ */
+function AppFrameInset({ fill = false, className, ...props }: AppFrameInsetProps) {
+  const frame = useAppFrame()
+  const nested = React.useContext(InsetContext)
+  return (
+    <InsetContext.Provider value={true}>
+      <div data-slot="app-frame-inset" className={cn(frame.phone && !nested && "px-4", fill && "flex min-h-full flex-col", className)} {...props} />
+    </InsetContext.Provider>
   )
 }
 
 /**
- * Controls that belong in the nav only when the header is gone: at the head of the pill on a short
- * screen, and otherwise hidden.
+ * The page head of a column: `PageHead`, with the space the frames draw around it, and wired to the
+ * phone's chrome. While its column shows, its title (and switcher) is the small centred title the
+ * top row shows once the page has scrolled; on a short screen it draws in that collapsed form.
  */
-function AppFrameNavEnd({ className, ...props }: React.ComponentProps<"div">) {
+function AppFramePageHead({ title, switcher, collapsed, className, ...props }: PageHeadProps) {
+  const frame = useAppFrame()
+  const shown = useAppFrameColumnShown()
+  const { setHead } = frame
+  const registers = frame.phone && shown
+
+  const latest = React.useRef(switcher)
+  React.useLayoutEffect(() => {
+    latest.current = switcher
+  })
+  const switcherLabel = switcher?.label
+  const swipes = Boolean(switcher?.onSwipe)
+  const popup = switcher?.["aria-haspopup"]
+
+  React.useLayoutEffect(() => {
+    if (!registers) return
+    setHead({
+      title,
+      // The latest handlers, through a stable object: the head's own props change every render.
+      switcher:
+        switcherLabel !== undefined
+          ? {
+              label: switcherLabel,
+              "aria-haspopup": popup,
+              onClick: (event) => latest.current?.onClick?.(event),
+              onSwipe: swipes ? (direction) => latest.current?.onSwipe?.(direction) : undefined,
+            }
+          : undefined,
+    })
+    return () => setHead(null)
+  }, [registers, title, switcherLabel, swipes, popup, setHead])
+
+  const inset = React.useContext(InsetContext)
   return (
-    <div
-      data-slot="app-frame-nav-end"
-      className={cn(
-        "order-first hidden shrink-0 flex-col items-center border-b pb-0.5 *:size-11 *:rounded-full short:flex frame-minimal:hidden",
-        className
-      )}
-      {...props}
-    />
+    <div data-slot="app-frame-page-head" className={cn(frame.phone ? cn("pb-4", !inset && "px-4") : "pb-8", className)}>
+      <PageHead title={title} switcher={switcher} collapsed={collapsed ?? frame.layout === "rail"} {...props} />
+    </div>
   )
+}
+
+/* ── Beside the detail ───────────────────────────────────────────────────────────────────────── */
+
+export type AppFrameSidePanelProps = Omit<React.ComponentProps<"aside">, "title"> & {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** Its name: the panel's label, and the sheet's title when it is one. */
+  title: string
+  /**
+   * What the content column must keep beside it for the panel to stand as a column: `room`, 960
+   * (Vale 3.2: a panel beside a message), or `detail`, the least a detail gets, 480 (Synapse's
+   * activity beside the overview).
+   */
+  minContent?: "room" | "detail"
 }
 
 /**
- * The column of top-level places on a large screen, in place of `AppFrameNav`. Holds
- * `AppFrameNavItem`s, and needs an `aria-label`. Anything for the foot of it goes in `AppFramePivotEnd`.
+ * A third column beside the detail (Vale's sender panel, Synapse's activity), 312 wide, with a
+ * rule at its start. It stands as a column only when the content keeps `minContent` beside it;
+ * with less room, and on a phone, it is a sheet from the side.
  */
-function AppFramePivot({ className, ...props }: React.ComponentProps<"nav">) {
+function AppFrameSidePanel({ open, onOpenChange, title, minContent = "room", className, children, ...props }: AppFrameSidePanelProps) {
+  const frame = useAppFrame()
+  const [el, setEl] = React.useState<HTMLElement | null>(null)
+  const [anchor, setAnchor] = React.useState<HTMLSpanElement | null>(null)
+  const [room, setRoom] = React.useState(true)
+
+  // The room is measured on the columns: what the content column would keep with the panel beside it.
+  React.useLayoutEffect(() => {
+    const probe = el ?? anchor
+    const columns = probe?.parentElement
+    if (!columns || frame.phone || !frame.split) return
+    const measure = () => {
+      const panel = readLength(columns, "--c-app-frame-side-panel", 312) + 36
+      const need = minContent === "detail" ? readLength(columns, "--c-app-frame-detail-min", 480) : readLength(columns, "--c-app-frame-side-panel-room", 960)
+      let content = 0
+      for (const child of Array.from(columns.children)) {
+        if (child === el || child === anchor) continue
+        if (child instanceof HTMLElement && child.dataset.column === "content" && child.dataset.shown !== undefined) content = child.getBoundingClientRect().width
+      }
+      const without = content + (el ? panel : 0)
+      setRoom(without - panel >= need)
+    }
+    measure()
+    if (typeof ResizeObserver !== "function") return
+    const observer = new ResizeObserver(measure)
+    observer.observe(columns)
+    return () => observer.disconnect()
+  }, [el, anchor, frame.phone, frame.split, minContent])
+
+  const asColumn = !frame.phone && frame.split && room
+  if (asColumn) {
+    if (!open) return null
+    return (
+      <aside
+        ref={setEl}
+        data-slot="app-frame-side-panel"
+        data-column="side"
+        data-shown=""
+        aria-label={title}
+        className={cn(
+          "h-full w-[calc(var(--c-app-frame-side-panel)+--spacing(3))] min-h-0 shrink-0 overflow-y-auto pt-2 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </aside>
+    )
+  }
   return (
-    <nav
-      data-slot="app-frame-pivot"
-      className={cn(
-        "bg-(--c-app-frame-edge) flex w-(--c-app-frame-pivot-width) shrink-0 flex-col items-center gap-1 overflow-y-auto border-r p-1.5",
-        className
-      )}
-      {...props}
-    />
+    <>
+      {/* Holds the panel's place among the columns, so the room is still measured. */}
+      <span ref={setAnchor} hidden />
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" aria-label={title}>
+          <SheetHeader>
+            <SheetTitle>{title}</SheetTitle>
+          </SheetHeader>
+          <div data-slot="app-frame-side-panel" className="min-h-0 flex-1 overflow-y-auto">
+            {children}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }
 
-function AppFramePivotEnd({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="app-frame-pivot-end"
-      className={cn("mt-auto flex w-full shrink-0 flex-col items-center gap-1", className)}
-      {...props}
-    />
-  )
+export type AppFramePeekProps = Omit<React.ComponentProps<"aside">, "title"> & {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** The item's name: the peek's heading and its label. */
+  title: string
+  /** The kind, as the overline ("Check // K-14"). */
+  overline?: React.ReactNode
+  /** In the head before close: "Open in Checks" (a text Button with `launch`), an overflow menu, a back button. */
+  actions?: React.ReactNode
+  /** The close button's name. Default "Close". */
+  closeLabel?: string
 }
 
 /**
- * A list beside the content, such as conversations. It holds its place in the layout, so it suits a
- * screen with room for it. On a smaller screen, show the same content in a `SheetContent side="left"`,
- * which handles focus and dismissal. Render it only while it's open, and it collapses to nothing.
+ * A peek (Synapse Y-03, contract 5.1b #10): an item of another section, laid over the right 648
+ * of the content with no scrim. It is not modal: the page under it stays usable, and picking
+ * another row changes it. Esc closes it; focus moves to its heading when it opens. Narrower than
+ * expanded it is a pushed screen.
  */
-function AppFrameSidebar({ className, ...props }: React.ComponentProps<"aside">) {
+function AppFramePeek({ open, onOpenChange, title, overline, actions, closeLabel = "Close", className, children, onKeyDown, ...props }: AppFramePeekProps) {
+  const frame = useAppFrame()
+  const headingId = React.useId()
+  const heading = React.useRef<HTMLHeadingElement>(null)
+
+  React.useEffect(() => {
+    if (open) heading.current?.focus()
+  }, [open, title])
+
+  React.useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return
+      // A dialog or menu over the page takes its own Esc.
+      if ((event.target as Element | null)?.closest?.("[role=dialog],[role=menu],[role=listbox]")) return
+      onOpenChange(false)
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [open, onOpenChange])
+
+  if (!open) return null
+  const over = frame.split && !frame.phone
   return (
     <aside
-      data-slot="app-frame-sidebar"
+      data-slot="app-frame-peek"
+      aria-labelledby={headingId}
       className={cn(
-        "bg-(--c-app-frame-edge) flex w-(--c-app-frame-sidebar-width) min-h-0 shrink-0 flex-col border-r",
+        "z-10 flex min-h-0 flex-col bg-surface-ground",
+        over
+          ? "absolute inset-y-6 end-0 w-[calc(var(--c-app-frame-detail)+--spacing(6))] ps-6 pt-2 rule-l"
+          : frame.phone
+            ? cn("absolute inset-0 pt-(--app-frame-top-clear) pb-(--app-frame-bottom-clear)", frame.layout === "rail" && "pe-20")
+            : "absolute inset-0 py-6",
         className
       )}
+      onKeyDown={onKeyDown}
       {...props}
-    />
+    >
+      <div data-slot="app-frame-peek-head" className={cn("flex items-start gap-3 pb-6", frame.phone && "px-4")}>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          {overline ? <p className="type-overline text-text-label">{overline}</p> : null}
+          <h2 ref={heading} id={headingId} tabIndex={-1} className="type-title min-w-0 text-text-body outline-none">
+            {title}
+          </h2>
+        </div>
+        {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+        <FloatButton label={closeLabel} icon="close" onClick={() => onOpenChange(false)} />
+      </div>
+      <div data-slot="app-frame-peek-body" className={cn("min-h-0 flex-1 overflow-y-auto", frame.phone && "px-4")}>
+        {children}
+      </div>
+    </aside>
   )
 }
+
+const BESIDE_FALLBACK = 696
+const BESIDE_MIN_FALLBACK = 480
+
+/* ── The companion pane (was AppFrameDetail) ─────────────────────────────────────────────────── */
 
 /**
  * Two parts that land either side of a fold when the device is partly folded (the Viewport Segments
@@ -233,47 +695,53 @@ function FoldPanes({
   return <div data-slot="fold-panes" data-split={split} className={cn("min-h-0 min-w-0 flex-1", className)} {...props} />
 }
 
+export type AppFrameCompanionProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  /** What belongs to the content (a conversation's documents, an artifact): the pane's body. */
+  detail: React.ReactNode
+  /** Remembers where the line between the two was dragged. */
+  id?: string
+  children: React.ReactNode
+}
+
 /**
- * What belongs to the content, beside the content: a conversation's documents, an email's attachments.
- * Unlike a pivot it isn't another place, because it changes with what's open. Where it goes follows
- * `viewport.detailPlacement`:
+ * The resizable companion pane (contract 5.1b #10): what belongs to the content, beside the
+ * content: a conversation's documents, an artifact. Unlike the detail it is not another item; it
+ * changes with what is open. Where it goes follows `viewport.detailPlacement`:
  *
- * - `beside`: shares the width, with a line to drag. `id` remembers where that line was.
- * - `fold`: takes the far side of a book-pose fold, always, since the content alone would straddle it.
- *   There's nothing to close, so check the placement before offering a button that opens it.
- * - `sheet`: slides over, covering the screen on a phone. It takes over focus until dismissed, so an
- *   app that remembers `open` for `beside` should start this one closed.
+ * - `beside`: shares the width, with a line to drag (and arrow keys on it); `id` remembers where
+ *   the line was. It starts at the beside width (696) and keeps 480 at least.
+ * - `fold`: takes the far side of a book-pose fold, always, since the content alone would straddle
+ *   it. There's nothing to close, so check the placement before offering a button that opens it.
+ * - `sheet`: slides over, covering the screen on a phone. It takes over focus until dismissed, so
+ *   an app that remembers `open` for `beside` should start this one closed.
  *
  * `children` stays mounted while this opens and closes, so a scroll position or a reply survives it.
  * It does remount when the placement itself changes, as on a rotation, so keep state that matters above.
  */
-function AppFrameDetail({
-  open,
-  onOpenChange,
-  title,
-  detail,
-  id = "app-frame-detail",
-  children,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  detail: React.ReactNode
-  id?: string
-  children: React.ReactNode
-}) {
+function AppFrameCompanion({ open, onOpenChange, title, detail, id = "app-frame-companion", children }: AppFrameCompanionProps) {
   const { detailPlacement, widthClass, short } = useViewport()
   const covers = widthClass === "compact" || short
+  // The pane's sizes are knobs; the panes library takes pixels, so they are read once from the page.
+  const [sizes] = React.useState(() => {
+    const root = typeof document === "undefined" ? null : document.documentElement
+    return {
+      beside: root ? readLength(root, "--c-app-frame-beside", BESIDE_FALLBACK) : BESIDE_FALLBACK,
+      min: root ? readLength(root, "--c-app-frame-beside-min", BESIDE_MIN_FALLBACK) : BESIDE_MIN_FALLBACK,
+    }
+  })
   const panelIds = React.useMemo(() => (open ? ["main", "detail"] : ["main"]), [open])
   const { defaultLayout, onLayoutChanged } = useResizablePanesLayout({ id, panelIds })
 
   const main = (
-    <div data-slot="app-frame-detail-main" className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+    <div data-slot="app-frame-companion-main" className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
       {children}
     </div>
   )
   const body = (
-    <div data-slot="app-frame-detail-body" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+    <div data-slot="app-frame-companion-body" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       {detail}
     </div>
   )
@@ -296,14 +764,10 @@ function AppFrameDetail({
   }
 
   const panel = (closable: boolean) => (
-    <aside aria-label={title} data-slot="app-frame-detail" className="bg-background flex h-full min-h-0 min-w-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2">
-        <h2 className="truncate text-sm font-medium">{title}</h2>
-        {closable && (
-          <Button variant="ghost" size="icon" aria-label={`Close ${title}`} onClick={() => onOpenChange(false)}>
-            <Icon name="close" />
-          </Button>
-        )}
+    <aside aria-label={title} data-slot="app-frame-companion" className="flex h-full min-h-0 min-w-0 flex-1 flex-col bg-surface-ground ps-6 rule-l">
+      <div data-slot="app-frame-companion-head" className="flex shrink-0 items-center justify-between gap-2 pb-4">
+        <h2 className="type-subtitle min-w-0 truncate text-text-body">{title}</h2>
+        {closable && <FloatButton label={`Close ${title}`} icon="close" onClick={() => onOpenChange(false)} />}
       </div>
       {body}
     </aside>
@@ -326,8 +790,8 @@ function AppFrameDetail({
       {open && (
         <>
           {/* Nothing hovers on touch, so anything short of a laptop draws a grip to show the line moves. */}
-          <ResizableHandle label={`Resize ${title}`} withGrip={widthClass === "expanded"} />
-          <ResizablePane id="detail" defaultSize="36%" minSize={`${DETAIL_MIN_WIDTH}px`}>
+          <ResizableHandle label={`Resize ${title}`} withGrip={isExpandedWidth(widthClass)} />
+          <ResizablePane id="detail" defaultSize={`${sizes.beside}px`} minSize={`${sizes.min}px`}>
             {panel(true)}
           </ResizablePane>
         </>
@@ -338,14 +802,39 @@ function AppFrameDetail({
 
 export {
   AppFrame,
+  AppFrameColumn,
+  AppFrameCompanion,
   AppFrameDetail,
-  AppFrameHeader,
+  AppFrameInset,
+  AppFrameList,
   AppFrameMain,
-  AppFrameNav,
-  AppFrameNavEnd,
-  AppFrameNavItem,
-  AppFramePivot,
-  AppFramePivotEnd,
-  AppFrameSidebar,
+  AppFramePageHead,
+  AppFramePeek,
+  AppFrameReading,
+  AppFrameSidePanel,
   FoldPanes,
 }
+
+// The frame's parts live beside it; they are one family, and one import.
+// The frame's state for apps; the context objects and the helpers the parts share stay inside.
+export {
+  MINIMIZE_RESTORE_AT,
+  frameLayoutFor,
+  isExpandedWidth,
+  isPhoneLayout,
+  nextMinimized,
+  useAppFrame,
+  useScrollMinimize,
+  type AppFrameBack,
+  type AppFrameContextValue,
+  type AppFrameHead,
+  type AppFrameLayout,
+  type ScrollMinimizeOptions,
+} from "./app-frame-context"
+export * from "./app-frame-phone"
+export * from "./app-frame-desktop"
+export * from "./app-frame-focus"
+export * from "./context-panel"
+export * from "./settings-frame"
+// Deprecated 0.x names (the capsule): kept compiling until the apps and the showcase move off them.
+export * from "./app-frame-deprecated"

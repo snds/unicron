@@ -4,8 +4,12 @@
 import { useSyncExternalStore } from "react"
 
 /**
- * Minimum widths in CSS pixels, widest first. They are Tailwind's `sm`, `md` and `xl`, plus the
- * `ultrawide` breakpoint in the stylesheet, so a class and this hook always agree.
+ * Minimum widths in CSS pixels, widest first. The three shell classes are the contract's (Unicron
+ * 1.0, contract 5.2): `compact` under 600 is the phone chrome; `medium` 600 to 1023 is the desktop
+ * shell with one content column; `expanded` from 1024 (Tailwind's `lg`) is the full desktop shell.
+ * `wide` (Tailwind's `xl`) and `ultrawide` are expanded with more room: the frame widens its
+ * gutters and its list there. `medium` (600) has no Tailwind twin; decide layout from this hook or
+ * the frame parts, never from a `sm:` or `md:` class.
  *
  * The measured sizes these were checked against, width × height:
  *   iPhone 382–440 × 620–956, or 660–956 × 375–440 turned sideways.
@@ -16,8 +20,8 @@ import { useSyncExternalStore } from "react"
 export const VIEWPORT_WIDTHS = [
   { name: "ultrawide", minWidth: 2560 },
   { name: "wide", minWidth: 1280 },
-  { name: "expanded", minWidth: 768 },
-  { name: "medium", minWidth: 640 },
+  { name: "expanded", minWidth: 1024 },
+  { name: "medium", minWidth: 600 },
   { name: "compact", minWidth: 0 },
 ] as const
 

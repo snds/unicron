@@ -1,0 +1,105 @@
+{
+  "$description": "Tier 3 · Component knobs for the shell's frame (packages/ui: app-frame.tsx and the frame parts beside it, context-panel.tsx, settings-frame.tsx), merged with component.json at build and emitted as --c-*. The width table (contract 5.1b #14): one knob per column the four apps draw, at the width Figma draws it at 1440, plus the least widths the frame keeps when a window is narrower. Widths on the 4px spacing scale that the frame uses as gutters and gaps (48, 24, 16, 12) need no knob. Re-declares app-frame.sidebar-width (the sidebar is now the navigation column, 204).",
+  "app-frame": {
+    "sidebar-width": {
+      "$type": "dimension",
+      "$value": "12.75rem",
+      "$description": "AppFrameSidebar, the navigation column of Vale, Lockdown and Synapse: 204 wide, as every desktop frame draws it (x 48 to 252 at 1440). Re-declared from component.json, where it was the old list column (18rem)."
+    },
+    "sidebar-rail": {
+      "$type": "dimension",
+      "$value": "{size-control}",
+      "$description": "The sidebar collapsed to its rail (by choice, or at medium width): one column of rail items, 48 wide (Rail Item, Figma 44:106). Synapse's brief counts 56; the drawn rail item is 48."
+    },
+    "list": {
+      "$type": "dimension",
+      "$value": "27rem",
+      "$description": "AppFrameList, the list beside the detail in the sidebar apps: 432 (Vale, Lockdown and Synapse at 1440: x 276 to 708, then 12 to the column rule)."
+    },
+    "list-compact": {
+      "$type": "dimension",
+      "$value": "20rem",
+      "$description": "The list in an expanded window under 1280 wide (Lockdown 4.0: 320 under 1280), and the least a list gets beside a detail (contract 5.1c C8)."
+    },
+    "list-narrow": {
+      "$type": "dimension",
+      "$value": "16.875rem",
+      "$description": "AppFrameList size=\"narrow\": Warpcore's chat list beside the conversation, 270 (chat workspace frames: x 48 to 318)."
+    },
+    "detail": {
+      "$type": "dimension",
+      "$value": "40.5rem",
+      "$description": "The detail column as the sidebar apps draw it at 1440 (648: x 744 to 1392). It fills there; the knob is the peek's width (Synapse Y-03: a sheet over the right 648 of the content)."
+    },
+    "detail-narrow": {
+      "$type": "dimension",
+      "$value": "33.375rem",
+      "$description": "AppFrameDetail size=\"narrow\": a detail of fixed width beside a list that fills, as Warpcore's Tasks and Docs draw it (534: x 858 to 1392)."
+    },
+    "detail-min": {
+      "$type": "dimension",
+      "$value": "30rem",
+      "$description": "The least a detail (or a conversation) gets beside a list or a companion: 480 (Warpcore U-03, contract 5.1c C8)."
+    },
+    "reading": {
+      "$type": "dimension",
+      "$value": "45rem",
+      "$description": "AppFrameReading, the reading column: 720 at most (UX Patterns: 720 to 768; Warpcore's conversation in the rail and focus frames, x 474 to 1194)."
+    },
+    "side-panel": {
+      "$type": "dimension",
+      "$value": "19.5rem",
+      "$description": "AppFrameSidePanel, a third column beside the detail (Vale's sender panel, Synapse's activity): 312 (Synapse 4.0)."
+    },
+    "side-panel-room": {
+      "$type": "dimension",
+      "$value": "60rem",
+      "$description": "How wide the detail must be before a side panel stands beside it as a column; under it the panel is a sheet from the side (Vale 3.2: 960)."
+    },
+    "beside": {
+      "$type": "dimension",
+      "$value": "43.5rem",
+      "$description": "The beside pane: an artifact open beside the chat (Warpcore chat workspace 06: 696, x 696 to 1392), and AppFrameCompanion's starting width."
+    },
+    "beside-min": {
+      "$type": "dimension",
+      "$value": "30rem",
+      "$description": "The least a beside pane gets while it is dragged narrower (Warpcore U-10: 480)."
+    },
+    "context-panel": {
+      "$type": "dimension",
+      "$value": "25rem",
+      "$description": "ContextPanel open: 400 (Warpcore chat workspace 01: x 992 to 1392)."
+    },
+    "context-panel-min": {
+      "$type": "dimension",
+      "$value": "20rem",
+      "$description": "ContextPanel's least width while it is dragged (Warpcore N-17: 320 to 560)."
+    },
+    "context-panel-max": {
+      "$type": "dimension",
+      "$value": "35rem",
+      "$description": "ContextPanel's widest (Warpcore N-17: 560)."
+    },
+    "settings-list": {
+      "$type": "dimension",
+      "$value": "12.75rem",
+      "$description": "SettingsFrame's section list on desktop: 204 (cross-app decisions §5)."
+    },
+    "focus": {
+      "$type": "dimension",
+      "$value": "27rem",
+      "$description": "AppFrameFocus, the one centred column for sign-in, unlock and first run: 432 (cross-app decisions §4, §14)."
+    },
+    "minimize-threshold": {
+      "$type": "dimension",
+      "$value": "4rem",
+      "$description": "How far the phone's content scrolls before the chrome minimizes (the large title has gone under the top row by then): 64. A behaviour distance, not motion; useScrollMinimize reads it once a scroller attaches and falls back to this value without the stylesheet."
+    },
+    "scroll-edge": {
+      "$type": "dimension",
+      "$value": "5rem",
+      "$description": "How long the bottom scroll edge's fade is: content fades into the ground over 80 above the bottom chrome (Vale Mobile / 01: y 640 to 720), then the ground is solid under the chrome."
+    }
+  }
+}

@@ -1,4 +1,4 @@
-// Owned component (not generated): the square icon-only button of the floating phone chrome, also the close button of a sheet or a dialog.
+// Owned component (not generated): the square icon-only button of the floating phone chrome, also the close button of a sheet or a dialog; extended, it shows its word.
 // Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 20:1690; no app PR, no DSA record)
 "use client"
 
@@ -10,6 +10,7 @@ import { cva } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
+import { NavMark, nameWithMark, resolveNavMark, type NavMarkProp } from "./rail"
 import { Tooltip, TooltipContent } from "./tooltip"
 
 export type FloatButtonKind = "neutral" | "primary"
@@ -52,14 +53,26 @@ const variants = cva(
   }
 )
 
-/** A float button's classes, for something drawn as one. `current` takes the inverted look of either kind. */
+// Extended: the same height, as wide as its glyph and word. The word is a Button's label (mono
+// caps, overline), on the root so the kind's ink colours it.
+const EXTENDED: Record<FloatButtonSize, string> = {
+  m: "type-overline h-touch-min gap-2 px-4",
+  l: "type-overline h-control gap-2 px-4",
+}
+
+/**
+ * A float button's classes, for something drawn as one. `current` takes the inverted look of
+ * either kind; `extended` the form with a visible word.
+ */
 function floatButtonVariants({
   kind = "neutral",
   size = "m",
   current = false,
+  extended = false,
   className,
-}: { kind?: FloatButtonKind | null; size?: FloatButtonSize | null; current?: boolean; className?: string } = {}): string {
-  return cn(variants({ look: current ? "current" : (kind ?? "neutral"), size }), className)
+}: { kind?: FloatButtonKind | null; size?: FloatButtonSize | null; current?: boolean; extended?: boolean; className?: string } = {}): string {
+  const look = current ? "current" : (kind ?? "neutral")
+  return cn(extended ? cn(variants({ look, size: null }), EXTENDED[size ?? "m"]) : variants({ look, size }), className)
 }
 
 /** A token read off the element as milliseconds or pixels, or the fallback without the stylesheet. */
@@ -205,6 +218,14 @@ export type FloatButtonProps = Omit<TooltipPrimitive.Trigger.Props, "children" |
   onLongPress?: () => void
   /** What the long press does, in a few words ("Quick create"). Shown in the tooltip and described to assistive tech. */
   longPressLabel?: string
+  /**
+   * Shows `label` as a word beside the glyph (contract 5.1b #3): a phone button that approves,
+   * allows or spends says so (cross-app decisions §10). The same height; as wide as it needs.
+   * There is no tooltip, since the word is there.
+   */
+  extended?: boolean
+  /** A count or a square at the glyph's corner (the mark every navigation item shares): the update mark on Settings. Its words join the name. */
+  mark?: NavMarkProp
   className?: string
   children?: React.ReactNode
 }
@@ -222,6 +243,8 @@ function FloatButton({
   current = false,
   onLongPress,
   longPressLabel,
+  extended = false,
+  mark,
   disabled,
   className,
   children,
@@ -246,31 +269,60 @@ function FloatButton({
     },
     press
   )
+  const resolved = resolveNavMark(mark)
+  const glyph = children ?? (icon ? <Icon name={icon} /> : null)
+  const own = {
+    disabled,
+    "data-slot": "float-button",
+    "data-kind": kind,
+    "data-size": size,
+    "data-extended": extended ? "" : undefined,
+    "data-current": on ? "" : undefined,
+    "aria-label": nameWithMark(label, resolved),
+    "aria-current": current === true ? ("true" as const) : current || undefined,
+    "aria-keyshortcuts": onLongPress ? floatButtonLongPressKeys : undefined,
+    "aria-describedby": hint ? hintId : undefined,
+    className: floatButtonVariants({ kind, size, current: on, extended, className }),
+  }
+  const content = (
+    <>
+      {resolved ? (
+        <span data-slot="float-button-glyph" className="relative inline-flex">
+          {glyph}
+          <NavMark mark={resolved} placement="corner" />
+        </span>
+      ) : (
+        glyph
+      )}
+      {extended ? <span data-slot="float-button-word">{label}</span> : null}
+      {hint ? (
+        // Not drawn, and not part of the name: only what aria-describedby reads.
+        <span id={hintId} hidden>
+          {`${hint}: hold, or press ${floatButtonLongPressKeys}`}
+        </span>
+      ) : null}
+    </>
+  )
+
+  // The word is on the button, so an extended one needs no tooltip.
+  if (extended) {
+    return (
+      <ButtonPrimitive {...own} {...(props as ButtonPrimitive.Props)} {...handlers}>
+        {content}
+      </ButtonPrimitive>
+    )
+  }
+
   return (
     <Tooltip>
       <TooltipPrimitive.Trigger
         // TooltipTrigger's own `disabled` only stops the tooltip opening, so the button gets it too.
         render={<ButtonPrimitive disabled={disabled} />}
-        disabled={disabled}
-        data-slot="float-button"
-        data-kind={kind}
-        data-size={size}
-        data-current={on ? "" : undefined}
-        aria-label={label}
-        aria-current={current === true ? "true" : current || undefined}
-        aria-keyshortcuts={onLongPress ? floatButtonLongPressKeys : undefined}
-        aria-describedby={hint ? hintId : undefined}
-        className={floatButtonVariants({ kind, size, current: on, className })}
+        {...own}
         {...props}
         {...handlers}
       >
-        {children ?? (icon ? <Icon name={icon} /> : null)}
-        {hint ? (
-          // Not drawn, and not part of the name: only what aria-describedby reads.
-          <span id={hintId} hidden>
-            {`${hint}: hold, or press ${floatButtonLongPressKeys}`}
-          </span>
-        ) : null}
+        {content}
       </TooltipPrimitive.Trigger>
       <TooltipContent>
         {label}

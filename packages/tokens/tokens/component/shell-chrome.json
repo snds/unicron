@@ -1,0 +1,79 @@
+{
+  "$description": "Tier 3 · Component knobs for the shell's chrome parts (packages/ui: app-lockup.tsx, tab-bar.tsx, accessory.tsx, nav-item.tsx, top-tabs.tsx, rail.tsx, page-head.tsx, top-bar.tsx, float-button.tsx), merged with component.json at build and emitted as --c-*. It adds knobs and re-declares none. Each size is a fixed size Figma types in with no variable behind it (figma-components.md, \"Fixed sizes with no token\"); sizes that sit on the 4px spacing scale or on the size roles (the 48 control, the 44 touch floor, a 40 tab tile, 20 and 16 icons) need no knob. Colours are the roles themselves, written in the components.",
+  "app-lockup": {
+    "$description": "AppLockup (Figma 28:2297 \"App Lockup\").",
+    "mark": {
+      "$type": "dimension",
+      "$value": "2rem",
+      "$description": "The app mark: a 32 × 32 square on the control radius, the primary fill holding the initial. Figma: Mark."
+    }
+  },
+  "accessory": {
+    "$description": "Accessory, the phone's status strip (Figma 20:1713).",
+    "live-mark": {
+      "$type": "dimension",
+      "$value": "0.5rem",
+      "$description": "The 8 × 8 square live mark, first in a live strip. Figma: Live mark."
+    },
+    "swipe-threshold": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "How far a finger travels up the strip before the lift counts as a swipe up (opens the strip's sheet). A behaviour distance, not motion: the component reads it when a touch starts and falls back to this value without the stylesheet."
+    }
+  },
+  "tab-bar": {
+    "$description": "TabBar and TabBarItem (Figma 20:1657 \"Tab Bar\", 20:1656 \"Dock Tab\").",
+    "scrub-slop": {
+      "$type": "dimension",
+      "$value": "0.5rem",
+      "$description": "How far a press slides along the bar before it becomes a scrub (the active tab follows the finger). Under it, the press is a tap. A behaviour distance, not motion."
+    }
+  },
+  "nav-mark": {
+    "$description": "The one mark API on TabBarItem, TopTab, RailItem, NavItem and FloatButton: a count or a square, tone neutral or needs-you.",
+    "square": {
+      "$type": "dimension",
+      "$value": "0.375rem",
+      "$description": "A square mark with no number: an update, something new. The size of the unread mark Figma draws on List Row (6 × 6)."
+    },
+    "badge-height": {
+      "$type": "dimension",
+      "$value": "1rem",
+      "$description": "A count drawn at an icon's corner (a tab, a float button): one overline line high, so the digits sit in it without a box of their own."
+    }
+  },
+  "nav-item": {
+    "$description": "NavItem (Figma 15:487 \"Nav Item\").",
+    "indent": {
+      "$type": "dimension",
+      "$value": "1.875rem",
+      "$description": "How far each `level` steps in: the 20px icon and the 10px gap after it, so a child's icon lines up under its parent's label."
+    }
+  },
+  "page-head": {
+    "$description": "PageHead's switcher: the whole head is the button that switches account, vault or workspace, and a sideways swipe on it steps to the next one (rules.md 7.2).",
+    "swipe-threshold": {
+      "$type": "dimension",
+      "$value": "3rem",
+      "$description": "How far a finger travels sideways across the head before the lift counts as a swipe to the next or previous account. A behaviour distance, not motion."
+    },
+    "swipe-edge": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "A swipe that starts this close to the screen's left edge is left to the system's back gesture (cross-app decisions: 24px clear of the edge)."
+    }
+  },
+  "rail-item": {
+    "$description": "RailItem (Figma 44:106 \"Rail Item\"), and NavItem in a collapsed NavSection, which draws as one.",
+    "width": {
+      "$type": "dimension",
+      "$value": "3rem",
+      "$description": "Figma: fixed 48 wide."
+    },
+    "height": {
+      "$type": "dimension",
+      "$value": "3.5rem",
+      "$description": "Figma: fixed 56 high: a 20px icon, 4px gap, a 16px overline count, centred."
+    }
+  }
+}
