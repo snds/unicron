@@ -174,8 +174,11 @@ function FieldRowAction({
         // row at its drawn height and let the button's box reach into the row's padding.
         "inline-flex shrink-0",
         size === "sm" || size === "icon-sm" || size === "xs" || size === "icon-xs" ? "-my-2" : "",
-        textOnly && !iconOnly && "last:-mr-3",
-        textOnly && iconOnly && "last:-mr-2",
+        // The last action reaches past the row's end, so its words (or glyph) line up with the end.
+        // That overhang must not count when focus scrolls the button into view: in a column that
+        // ends where the row ends (a desktop detail), a click would slide the column sideways.
+        textOnly && !iconOnly && "last:-mr-3 last:*:-scroll-me-3",
+        textOnly && iconOnly && "last:-mr-2 last:*:-scroll-me-2",
         // An icon has no text baseline to share, so it centres instead.
         iconOnly && "self-center",
         "data-[tone=live]:[&>[data-slot=button]]:text-secondary-live"

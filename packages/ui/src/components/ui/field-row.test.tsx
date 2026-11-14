@@ -191,6 +191,18 @@ describe("FieldRowAction", () => {
     expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["Open", "Copy"])
   })
 
+  it("keeps the last action's overhang out of focus scrolling, so a column never slides sideways", () => {
+    render(
+      <FieldRow label="Website" action={<><FieldRowAction>Open</FieldRowAction><FieldRowAction>Copy</FieldRowAction></>}>
+        store.steampowered.com
+      </FieldRow>
+    )
+    // The overhang is 12 (-mr-3); the button's scroll margin takes the same 12 back.
+    for (const action of document.querySelectorAll('[data-slot="field-row-action"]')) {
+      expect(classesOf(action)).toEqual(expect.arrayContaining(["last:-mr-3", "last:*:-scroll-me-3"]))
+    }
+  })
+
   it("an outlined button keeps its edge inside the row", () => {
     render(<FieldRowAction variant="secondary">Change</FieldRowAction>)
     expect(classesOf(slot(document.body, "field-row-action"))).not.toContain("last:-mr-3")
@@ -291,6 +303,9 @@ describe("FieldRow menu: the trailing overflow button (contract 5.1c C18, Lockdo
     expect(buttons.map((b) => b.getAttribute("aria-label") ?? b.textContent)).toEqual(["Copy", "More actions for Network"])
     // A row's icon action: it keeps the row's height and sits flush with its end.
     expect(classesOf(more.parentElement!)).toEqual(expect.arrayContaining(["-my-2", "self-center", "last:-mr-2"]))
+    // Its 8 of overhang does not count when focus scrolls it into view (a click on it in a desktop
+    // detail column would otherwise slide the column 8 sideways).
+    expect(classesOf(more.parentElement!)).toContain("last:*:-scroll-me-2")
   })
 
   it("opens a menu named for the row on a desktop; picking a row runs the app's item and closes", async () => {

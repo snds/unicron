@@ -233,7 +233,9 @@ function NeedsYouCompact({
       className={cn("flex h-control min-w-0 shrink-0 items-center gap-4 bg-needs-you-fill pr-2 pl-4 text-needs-you-on-fill", className)}
       {...props}
     >
-      <p id={titleId} data-slot="needs-you-title" className="type-overline text-needs-you-on-fill min-w-0 flex-1 truncate">
+      {/* `relative`: the title is the box of its own hidden words (", 1 more waiting"). They sit after
+          the cut text, past the title's edge; without it they would escape the cut and widen the page. */}
+      <p id={titleId} data-slot="needs-you-title" className="type-overline text-needs-you-on-fill relative min-w-0 flex-1 truncate">
         {title}
         {more ? (
           <>

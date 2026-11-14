@@ -65,6 +65,7 @@
       "default": "./dist/components/security/*.js"
     },
     "./app-frame-context": null,
+    "./app-frame-pull": null,
     "./*": {
       "types": "./dist/components/ui/*.d.ts",
       "import": "./dist/components/ui/*.js",

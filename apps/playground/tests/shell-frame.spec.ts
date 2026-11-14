@@ -254,8 +254,11 @@ test.describe("list + detail shrink order (C8)", () => {
     expect(Math.round((await sidebar.boundingBox())!.width)).toBe(48)
     await expect(rail.locator('[data-slot="app-frame-list"]')).toHaveAttribute("data-shown", "")
     await expect(rail.locator('[data-slot="app-frame-detail"]')).toHaveAttribute("data-shown", "")
-    // The detail keeps its least width beside the list.
-    expect((await rail.locator('[data-slot="app-frame-detail"]').boundingBox())!.width).toBeGreaterThanOrEqual(480)
+    // The detail keeps its least width beside the list. Its box, less the room it keeps past the
+    // content line as the last column (padding at its end; none before that room existed).
+    const beside = rail.locator('[data-slot="app-frame-detail"]')
+    const kept = await beside.evaluate((el) => parseFloat(getComputedStyle(el).paddingInlineEnd))
+    expect((await beside.boundingBox())!.width - kept).toBeGreaterThanOrEqual(480)
 
     const push = contained(page, "1050, the least detail")
     await expect(push).toHaveAttribute("data-shrink", "push")
@@ -342,5 +345,91 @@ test.describe("pull to refresh (C9)", () => {
     const mark = frame.locator('[data-slot="app-frame-pull-mark"]')
     await expect(mark).toBeVisible()
     await expect(mark).toHaveAttribute("data-state", "armed")
+  })
+})
+
+// The late additions inside the real shell demos, where the two 5.1c lanes meet: a part from one
+// lane in a frame from the other.
+test.describe("the late additions in the shell demos (5.1c)", () => {
+  test("Vale on a phone: Archive raises its toast in the frame's own Toaster, in the strip's slot; Undo brings the message back", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await open(page, "shell-vale", "vale")
+    const row = page.locator("li", { hasText: "Mira Chen" })
+    await row.locator('[data-slot="list-row-main"]').click()
+    await page.getByRole("button", { name: "Archive", exact: true }).click()
+    const toast = page.locator("[data-sonner-toast]")
+    await expect(toast).toHaveCount(1)
+    await expect(toast).toContainText("Archived Cabin for the 20th, confirmed")
+    await expect(row).toHaveCount(0)
+    const bar = (await page.locator('[data-slot="app-frame-bottom-row-bar"]').boundingBox())!
+    const t = await settledBox(toast)
+    expect(Math.abs(bar.y - (t.y + t.height) - 8)).toBeLessThanOrEqual(2)
+    expect(Math.abs(t.x - 16)).toBeLessThanOrEqual(2)
+    await toast.getByRole("button", { name: "Undo" }).click()
+    await expect(row).toHaveCount(1)
+  })
+
+  test("Vale on a desktop: Search names its key; Settings carries the update mark in its name", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await open(page, "shell-vale", "vale")
+    await expect(page.getByRole("link", { name: "Search" })).toHaveAttribute("aria-keyshortcuts", "/")
+    await expect(page.getByRole("link", { name: /^Settings.*Update ready/ })).toHaveCount(1)
+  })
+
+  test("Lockdown on a desktop: the password's and the code's ⋯ open menus with Show large type first; no click slides the detail sideways", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await open(page, "shell-lockdown", "lockdown")
+    const detail = page.locator('[data-slot="app-frame-detail"]')
+    const sideways = () => detail.evaluate((el) => el.scrollLeft)
+    for (const name of ["More actions for Password", "More actions for Steam Guard"]) {
+      await page.getByRole("button", { name }).click()
+      const menu = page.getByRole("menu", { name })
+      await expect(menu).toBeVisible()
+      await expect(menu.getByRole("menuitem").first()).toHaveText("Show large type")
+      expect(await sideways()).toBe(0)
+      await page.keyboard.press("Escape")
+      await expect(menu).toBeHidden()
+    }
+    // The username's Copy reaches 12 past the row's end too; a click on it does not slide either.
+    await detail.getByRole("button", { name: "Copy", exact: true }).first().click()
+    expect(await sideways()).toBe(0)
+  })
+
+  for (const width of [1440, 1100]) {
+    test(`Lockdown at ${width}: Copy and the ⋯ reach past the row's end, and the detail column cuts neither them nor their focus rings`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await open(page, "shell-lockdown", "lockdown")
+      const detail = page.locator('[data-slot="app-frame-detail"]')
+      const shows = (await detail.boundingBox())!
+      const main = (await page.locator('[data-slot="app-frame-main"]').boundingBox())!
+      // The content still ends on the content line: a row ends where the main area does.
+      const row = (await detail.locator('[data-slot="field-row"]').first().boundingBox())!
+      expect(Math.abs(row.x + row.width - (main.x + main.width))).toBeLessThanOrEqual(1)
+      const actions = [
+        detail.getByRole("button", { name: "Copy", exact: true }).first(),
+        page.getByRole("button", { name: "More actions for Password" }),
+        page.getByRole("button", { name: "More actions for Steam Guard" }),
+      ]
+      for (const action of actions) {
+        const box = (await action.boundingBox())!
+        // Its words (or glyph) line up with the row's end, so its box reaches past it ...
+        expect(box.x + box.width).toBeGreaterThan(row.x + row.width)
+        // ... and the box with the ring around it (2 + 2) is inside what the column shows.
+        expect(box.x + box.width + 4).toBeLessThanOrEqual(shows.x + shows.width)
+      }
+      // And the room is the page gutter's: the column stays inside the window.
+      expect(shows.x + shows.width).toBeLessThanOrEqual(width)
+    })
+  }
+
+  test("the compact needs-you line on a phone: a title cut to one line keeps its hidden words inside, so the page does not scroll sideways", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await open(page, "needs-you", "lockdown")
+    // The line whose title is too long for a phone and ends "// +1" (", 1 more waiting" for a screen reader).
+    const title = page.locator('[data-slot="needs-you"][data-size="compact"] [data-slot="needs-you-title"]', { hasText: "Pairing request" }).first()
+    await expect(title).toBeVisible()
+    expect(await title.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true)
+    const pageBox = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }))
+    expect(pageBox.scroll).toBeLessThanOrEqual(pageBox.client)
   })
 })

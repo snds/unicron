@@ -202,6 +202,41 @@ describe("list and detail (contract 5.2)", () => {
     expect(list().className).toContain("w-[calc(var(--c-app-frame-list-compact)+--spacing(3))]")
   })
 
+  it("keeps 16 of the page gutter past the content line on the last content column, so a row action that reaches past the row and its focus ring are not cut", () => {
+    setViewport(1440, 900)
+    render(show(false))
+    // Taken with a negative margin and given back as padding: the content is as wide as before.
+    expect(detail()).toHaveClass("last:-me-4", "last:pe-4")
+    // A list is a side column: it keeps its own 12 to the rule and takes no more.
+    expect(list()).not.toHaveClass("last:-me-4")
+    expect(list()).not.toHaveClass("last:pe-4")
+  })
+
+  it("adds the same 16 to a narrow detail's width when it is the last column, so its content stays 534", () => {
+    setViewport(1440, 900)
+    render(
+      <AppFrame>
+        <AppFrameMain>
+          <AppFrameList size="fill" aria-label="Tasks">The list</AppFrameList>
+          <AppFrameDetail size="narrow" aria-label="Task">The task</AppFrameDetail>
+        </AppFrameMain>
+      </AppFrame>
+    )
+    expect(detail()).toHaveClass(
+      "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6))]",
+      "last:w-[calc(var(--c-app-frame-detail-narrow)+--spacing(10))]",
+      "last:-me-4",
+      "last:pe-4"
+    )
+  })
+
+  it("a column that is not shown keeps no room (it is laid over the list, out of reach)", () => {
+    setViewport(820, 1180)
+    render(show(false))
+    expect(detail()).not.toHaveAttribute("data-shown")
+    expect(detail()).not.toHaveClass("last:-me-4")
+  })
+
   it.each([
     ["medium", 820, 1180],
     ["a phone", 390, 844],
@@ -269,6 +304,8 @@ describe("columns that are always the screen", () => {
     const column = screen.getByRole("region", { name: "Chat" })
     expect(column).toHaveAttribute("data-shown")
     expect(column.querySelector('[data-slot="app-frame-reading"]')!.className).toContain("max-w-(--c-app-frame-reading)")
+    // The only column is the last one: it keeps the room past the content line too.
+    expect(column).toHaveClass("last:-me-4", "last:pe-4")
   })
 
   it("keeps the phone's 16 from the edges for content that is not a full-bleed row", () => {

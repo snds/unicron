@@ -150,6 +150,16 @@ describe("NeedsYou size=\"compact\" (contract 5.1c C19, Lockdown LA8)", () => {
     expect(screen.getByRole("region")).toHaveAccessibleName("Sign-in request // 01:40 left, 1 more waiting")
   })
 
+  it("keeps the hidden words of a cut title inside the title, so a long title on a phone does not widen the page", () => {
+    render(<Line title="Pairing request // Chrome on Linux // 01:12 left" more={1} />)
+    const title = document.querySelector('[data-slot="needs-you-title"]') as HTMLElement
+    const hidden = title.querySelector(".sr-only") as HTMLElement
+    expect(hidden).toHaveTextContent(", 1 more waiting")
+    // The hidden words are positioned (sr-only) and sit after the cut text. The title cuts them
+    // only if it is their containing box: positioned, with its overflow hidden.
+    expect(classesOf(title)).toEqual(expect.arrayContaining(["relative", "truncate"]))
+  })
+
   it("one yellow shape: while a compact line shows, the full block hides (and keeps its space); it comes back when the line goes", () => {
     function Screen({ request }: { request: boolean }) {
       return (

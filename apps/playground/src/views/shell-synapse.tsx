@@ -2,8 +2,8 @@
 // sidebar with its workspace switcher, the status line, one column with the activity beside it at
 // 1440 (Desktop 01, 43:735); the floating rows, the needs-you strip and the scrolled chrome at 390
 // (Mobile 01, 42:45; States 02, 51:11134). It switches by width. The score, the counts, the
-// needs-you block, the check rows and the activity are the system's own parts.
-// View: ?view=shell-synapse
+// needs-you block, the check rows and the activity are the system's own parts. Search with its key
+// sits above the first group (decisions §6). View: ?view=shell-synapse
 import { useState } from "react"
 import {
   AppFrame,
@@ -68,6 +68,7 @@ function Overview() {
         action={{ label: "New skill", icon: "add" }}
         footer={<NavItem label="Settings" icon="settings" href="#settings" />}
       >
+        <NavItem label="Search" icon="search" mark={{ keys: "/" }} href="#search" />
         <NavSection title="Workspace">
           <NavItem label="Overview" icon="dashboard" current href="#overview" />
           <NavItem label="Skills" icon="skill-level" count={145} href="#skills" />

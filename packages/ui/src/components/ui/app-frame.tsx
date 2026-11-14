@@ -428,6 +428,13 @@ interface ColumnContextValue {
 
 const ColumnContext = React.createContext<ColumnContextValue | null>(null)
 
+/**
+ * The room a desktop content column keeps past the content line when it is the last one: 16 of the
+ * page gutter (24 at least), taken with a negative margin and given back as padding. A fixed-width
+ * column adds the same 16 to its width (`AppFrameDetail size="narrow"`).
+ */
+const LAST_COLUMN_ROOM = "last:-me-4 last:pe-4"
+
 /** Whether the column the part sits in is showing. True outside a column. */
 export function useAppFrameColumnShown(): boolean {
   return React.useContext(ColumnContext)?.shown ?? true
@@ -439,6 +446,7 @@ export function useAppFrameColumnShown(): boolean {
  * its state survive) but is invisible and inert. On a desktop, a column that follows a shown one
  * draws the rule at its start; the padding to the rule is 12 on a side column (a list, a panel)
  * and 24 on a content column, as the frames draw (Vale: list to x 708, rule at 720, detail at 744).
+ * The last content column keeps room past the content line (`LAST_COLUMN_ROOM`).
  */
 function useColumn(kind: ColumnKind, shown: boolean, onRefresh?: () => unknown) {
   const frame = useAppFrame()
@@ -473,7 +481,12 @@ function useColumn(kind: ColumnKind, shown: boolean, onRefresh?: () => unknown) 
           !shown && "absolute inset-y-6 start-0 w-full",
           kind === "side"
             ? "pe-3 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l"
-            : "has-[+[data-column][data-shown]]:pe-6 [[data-column][data-shown]+&]:ps-6 [[data-column][data-shown]+&]:rule-l"
+            : "has-[+[data-column][data-shown]]:pe-6 [[data-column][data-shown]+&]:ps-6 [[data-column][data-shown]+&]:rule-l",
+          // The last content column ends at the content line, and its own clip (overflow-x) would
+          // end there too: a row action that reaches past the row's end (a Field Row's Copy, the
+          // trailing ⋯) and any focus ring at that edge would be cut. So its box keeps 16 of the
+          // page gutter (the action's 12 and the ring's 4); the content is exactly as wide as before.
+          kind === "content" && shown && LAST_COLUMN_ROOM
         ),
     !shown && "pointer-events-none invisible"
   )
@@ -610,7 +623,12 @@ function AppFrameDetail({ open = false, onBack, backLabel = "Back", size = "fill
         {...attrs}
         className={cn(
           columnClass,
-          !frame.phone && shown && (frame.split && size === "narrow" ? "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6))] shrink-0" : "flex-1"),
+          !frame.phone &&
+            shown &&
+            (frame.split && size === "narrow"
+              ? // 24 to the rule at its start; as the last column, 16 more for the room past the content line.
+                "w-[calc(var(--c-app-frame-detail-narrow)+--spacing(6))] last:w-[calc(var(--c-app-frame-detail-narrow)+--spacing(10))] shrink-0"
+              : "flex-1"),
           className
         )}
         {...props}

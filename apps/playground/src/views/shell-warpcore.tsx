@@ -2,6 +2,7 @@
 // the top bar, a list that fills and a 534 detail at 1440 (Desktop 01, 38:756); the floating rows,
 // the live strip and the scrolled chrome at 390 (Mobile 06, 37:666; States 02, 51:5902). It
 // switches by width. The chips, rows, steps and the needs-you block are the system's own parts.
+// The top bar's Search names its key, `/` (decisions §6, C2), in its tooltip and aria-keyshortcuts.
 // View: ?view=shell-warpcore
 import { useState } from "react"
 import {
@@ -78,7 +79,7 @@ function Tasks() {
         action={{ label: "New task", icon: "add" }}
         actions={
           <>
-            <FloatButton label="Search" icon="search" />
+            <FloatButton label="Search" icon="search" mark={{ keys: "/" }} />
             <FloatButton label="Settings" icon="settings" />
           </>
         }

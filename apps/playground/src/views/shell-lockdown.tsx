@@ -2,9 +2,13 @@
 // parts: the sidebar, the status line, list + detail at 1440 (Desktop 01, 41:720); the floating
 // rows, the needs-you strip and the scrolled chrome at 390 (Phone 01, 40:45; States 02, 51:8443).
 // It switches by width. The search, letters, rows, field rows, secret, code and the needs-you block
-// are the system's own parts. View: ?view=shell-lockdown
+// are the system's own parts. Beyond the frames, the screen carries what the decisions and the late
+// asks add: Search with its key above the first group (decisions §6), and the trailing ⋯ on the
+// password and the code (5.1c C18, LA5) with Show large type first (D242); its copy and show rows
+// are the parts' own, so the vault's rules hold. View: ?view=shell-lockdown
 import { Fragment, useState } from "react"
 import {
+  AdaptiveMenuItem,
   AppFrame,
   AppFrameAccessory,
   AppFrameBottomRow,
@@ -19,6 +23,7 @@ import {
   AppLockup,
   Button,
   CodeDisplay,
+  CodeDisplayMenuItem,
   FieldRow,
   FieldRowAction,
   FilterChip,
@@ -30,6 +35,7 @@ import {
   NeedsYou,
   SearchField,
   SecretField,
+  SecretFieldMenuItem,
   SectionHeader,
   StatusItem,
   TabBar,
@@ -78,6 +84,7 @@ function Items() {
         action={{ label: "New item", icon: "add" }}
         footer={<NavItem label="Settings" icon="settings" href="#settings" />}
       >
+        <NavItem label="Search" icon="search" mark={{ keys: "/" }} href="#search" />
         <NavSection title="Items // 06 types">
           <NavItem label="All items" icon="folder" count={248} current href="#all" />
           <NavItem label="Logins" icon="password" count={142} href="#logins" />
@@ -168,9 +175,36 @@ function Items() {
                 <FieldRow size={frame.split ? "default" : "stacked"} label="Username" action={<FieldRowAction>Copy</FieldRowAction>}>
                   kestrel.04
                 </FieldRow>
-                <SecretField label="Password" getSecret={getPassword} host={host} />
+                <SecretField
+                  label="Password"
+                  getSecret={getPassword}
+                  host={host}
+                  menu={
+                    <>
+                      <AdaptiveMenuItem icon="text--scale">Show large type</AdaptiveMenuItem>
+                      <SecretFieldMenuItem action="reveal" />
+                      <SecretFieldMenuItem action="copy" />
+                    </>
+                  }
+                />
                 <FieldRow size={frame.split ? "default" : "stacked"} label="Passkey">Lockdown // 2026.10.02</FieldRow>
-                <CodeDisplay layout="field" label="Steam Guard" variant="steam" issuer="Steam" account="kestrel.04" code="R7K2N" period={30} expiresAt={AT} now={AT - 18} />
+                <CodeDisplay
+                  layout="field"
+                  label="Steam Guard"
+                  variant="steam"
+                  issuer="Steam"
+                  account="kestrel.04"
+                  code="R7K2N"
+                  period={30}
+                  expiresAt={AT}
+                  now={AT - 18}
+                  menu={
+                    <>
+                      <AdaptiveMenuItem icon="text--scale">Show large type</AdaptiveMenuItem>
+                      <CodeDisplayMenuItem action="copy" />
+                    </>
+                  }
+                />
               </div>
               <div className="flex flex-col gap-1">
                 <p className="type-overline text-text-label">Protected</p>
