@@ -368,7 +368,9 @@ never a raw `text-sm` or `font-medium`.
   edit input), and nothing else may. The browser gate (`apps/playground/tests/rules.spec.ts`)
   names it, with bold text in response prose (17/28 strong, contract 5.1c C20) and the fitted
   characters of the large type view.
-- No role sets a colour.
+- No role holds a colour. Three utilities add a default ink: `type-overline` and `type-meta`
+  take the label ink, and the old `type-support` takes the secondary ink. A colour class on the
+  same element wins; a colour set on a parent does not reach them.
 - The utilities from before 1.0 stay as deprecated aliases in the stylesheet:
   `type-page-title` → `title`, `type-section-title` → `subtitle`, `type-group-title` → `label`,
   `type-support` → `caption`. `type-body`, `type-body-strong`, `type-meta` and `type-overline`
@@ -428,8 +430,8 @@ Semantic roles carry motion; components use these, never a raw duration or curve
 | `--motion-base` | 200ms (`duration.base`) | a small surface arriving: a dialog, a popover, a toast |
 | `--motion-state` | 280ms (`duration.state`) | a surface changing state: a sheet or a panel opening, a selection moving |
 | `--motion-move` | 400ms (`duration.move`) | travel across the screen |
-| `--motion-tick` | 1000ms (`duration.tick`) | one step of a countdown ring, run linear |
-| `--motion-spin` | 900ms (`duration.spin`) | one turn of a spinner or a working ring; `animate-spin` runs on it |
+| `--motion-tick` | 1000ms (`duration.tick`) | one second of a countdown, run linear; one turn of `Spinner` (`--c-spinner-turn-duration`), eased on `--motion-ease-move` |
+| `--motion-spin` | 900ms (`duration.spin`) | one even turn of the working ring (`StatusOrb`, `RunTrace`); `animate-spin` runs on it. Generic loading (`Spinner`) is on the tick role, so it never reads as an agent at work |
 | `--motion-pulse` | 1400ms (`duration.pulse`) | one beat of a pulse or a breathing halo; `animate-pulse` runs on it |
 
 400ms is the ceiling: no default transition runs longer (`spin`, `pulse` and `tick` are loops, not

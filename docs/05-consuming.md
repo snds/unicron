@@ -1,24 +1,29 @@
 # 05 · Consuming unicron
 
-How Warpcore, Vale (formerly Mailbird), Lockdown and Synapse use the system. The shape is the same for each: install two
-packages, import one stylesheet, add your extension layer, import components.
+How the four apps (Vale, Warpcore, Lockdown and Synapse) use the system. The shape is the same
+for each: install two packages, import one stylesheet, set your theme, add your extension layer,
+import components.
+
+**Coming from 0.x?** Read [07 · Migrating to 1.0](07-migrating-to-1.0.md) first. It lists what an
+app does to move, in order.
 
 ## 1. Install
 
-Every release is a git tag (`@unicron/ui@0.1.0`), a GitHub Release with the packed tarball
+Every release is a git tag (`@unicron/ui@1.0.0`), a GitHub Release with the packed tarball
 attached, and, when npm publishing is configured, an npm version. Two ways in, same package either
 way:
 
 **a. From npm** (when the versions you want are published there):
 
 ```bash
-pnpm add @unicron/ui@^0.1.0 @unicron/tokens@^0.1.0
+pnpm add @unicron/ui@^1.0.0 @unicron/tokens@^1.0.0
 ```
 
 **b. From the GitHub Release tarball** (no registry account needed; works before or without npm):
 
 ```bash
-pnpm add https://github.com/snds/unicron/releases/download/%40unicron%2Fui%400.1.0/unicron-ui-0.1.0.tgz          https://github.com/snds/unicron/releases/download/%40unicron%2Ftokens%400.1.0/unicron-tokens-0.1.0.tgz
+pnpm add https://github.com/snds/unicron/releases/download/%40unicron%2Fui%401.0.0/unicron-ui-1.0.0.tgz \
+         https://github.com/snds/unicron/releases/download/%40unicron%2Ftokens%401.0.0/unicron-tokens-1.0.0.tgz
 ```
 
 The tag is part of the URL, URL-encoded (`@` → `%40`, `/` → `%2F`); the file is
@@ -29,21 +34,24 @@ the override lives in `pnpm-workspace.yaml`:
 
 ```yaml
 overrides:
-  "@unicron/tokens": https://github.com/snds/unicron/releases/download/%40unicron%2Ftokens%400.1.0/unicron-tokens-0.1.0.tgz
+  "@unicron/tokens": https://github.com/snds/unicron/releases/download/%40unicron%2Ftokens%401.0.0/unicron-tokens-1.0.0.tgz
 ```
 
 In a single-package repo, the same entry goes under `"pnpm": { "overrides": { … } }` in
-`package.json`. Without it, pnpm looks for `@unicron/tokens@0.1.0` on the registry and the install
+`package.json`. Without it, pnpm looks for `@unicron/tokens@1.0.0` on the registry and the install
 fails. One override means one copy of the tokens, so the app and `@unicron/ui` read the same CSS.
 
 Bumping is then editing the two URLs (and the override, when tokens moved too). The lockfile
 records each tarball's hash, so a later install cannot pick up different bytes. Pin exact versions and bump inside the
-support window (current and previous minor); a `major` ships with a codemod linked from its PR.
+support window (current and previous minor); a `major` ships with a codemod and a migration guide,
+linked from its changeset.
 
 Peer dependencies: `react@19`, `react-dom@19`. The app also needs `tailwindcss@4` and
 `@tailwindcss/vite` (or the PostCSS plugin). Both packages ship `dist/` only, with `.d.ts` files.
 `@unicron/ui` exports the root (`@unicron/ui`), per-component subpaths (`@unicron/ui/button`,
-`@unicron/ui/icon`) and the stylesheet (`@unicron/ui/styles`).
+`@unicron/ui/icon`, `@unicron/ui/security/code-display`) and the stylesheet (`@unicron/ui/styles`).
+The parts of the frame are one module: import them from the root or from `@unicron/ui/app-frame`.
+The package also installs two tools, `unicron-codemod` and `unicron-sources`.
 
 ## 2. Import the stylesheet once
 
@@ -60,6 +68,11 @@ so a strict `font-src 'self'` holds), `@unicron/tokens/dist/tokens.css`, registe
 is verified against a plain Vite + React app outside the workspace on every release; if your
 bundler still misses classes, add `@source "../node_modules/@unicron/ui/dist/components";` to your
 entry (adjust the relative path to your CSS file).
+
+**A page with no Tailwind** (an extension's in-page frame) links `@unicron/tokens/plain.css`
+instead. It is the same custom properties, flat: use the roles by name
+(`var(--surface-raised)`), and load the fonts from the page's own origin. `class="system"` on its
+root follows the browser's light or dark setting ([02 · Tokens → Plain CSS](02-tokens.md#plain-css-for-a-page-with-no-tailwind)).
 
 ### A smaller stylesheet
 
@@ -102,14 +115,24 @@ set that budget again on purpose: the lean entry gets a whole app to about 33 kB
 
 Copy `@unicron/tokens/examples/app-extension.css` as a starting point. Put roles only your app
 has there: panes, per-area hues, status markers, tints, plus `--c-*` knobs for app-only
-components. Alias core tokens, swap only in `.dark`, expose to Tailwind with your own
-`@theme inline` block. Never edit the core semantic tier to add a role.
+components. Never edit the core semantic tier to add a role.
 
-```css
-:root  { --unread: var(--g-blue-500); }
-.dark  { --unread: var(--g-blue-400); }
-@theme inline { --color-unread: var(--unread); }
-```
+- **Alias a role, not a raw value.** `--g-neutral-*` and the other old ramps are not themed: a
+  surface or an ink built on them does not follow your app's tint.
+- **A role that only points at core roles** is the same on both grounds. Declare it once, on all
+  four selectors, so it also follows a nested box:
+
+  ```css
+  :root, .light, .dark, [data-theme] { --unread: var(--text-body); }
+  @theme inline { --color-unread: var(--unread); }
+  ```
+
+- **A role that differs by ground** swaps on the core's own two ground selectors. Copy them from
+  the example as they are. A plain `.dark` would leave a `data-theme` box inside a dark page on
+  the light values.
+- **An app outside the four** can bring its own theme: declare all 28 theme slots under its own
+  `[data-theme="…"]`. Unicron's contrast gate does not measure a theme it does not ship, so
+  measure yours.
 
 ## 4. Switch themes
 
@@ -217,42 +240,59 @@ survive, so a strict CSP has nothing to object to.
 ## 5. Use the components
 
 ```tsx
-import { Button, Icon, Field, FieldLabel, Input } from "@unicron/ui"
+import { Button, Icon, TextField } from "@unicron/ui"
 
-<Field>
-  <FieldLabel htmlFor="q">Search</FieldLabel>
-  <Input id="q" />
-</Field>
-<Button><Icon name="send" data-icon="inline-start" />Send</Button>
+<TextField label="Website" defaultValue="github.com" />
+<Button><Icon name="send" />Send</Button>
 ```
 
-Prefer a variant prop over a `className` override. `dsa ratchet` counts overrides on system
-components and fails CI when the count grows.
+- **Prefer a prop over a `className`.** `dsa ratchet` counts `className` and `style` overrides and
+  spread props on system components, and fails CI when a count grows. If a part cannot do what
+  you need, that is a variant to propose, not a class to add.
+- **Build the shell from the frame parts.** One tree of `AppFrame` parts draws the phone chrome,
+  the desktop shell and everything between; an app writes no shell media query
+  ([03 · Components → The frame](03-components.md#the-frame); a worked example is in
+  [07 → The new shells](07-migrating-to-1.0.md#9-the-new-shells)).
+- **Put the `Toaster` inside the `AppFrame`,** and raise toasts with `toast` from `@unicron/ui`.
+- **The look is not yours to restyle.** One solid primary on a screen; the identity colour for
+  that action, identity text and selection; `secondary-live` for live work; the yellow only for
+  "this needs you". [DESIGN.md](../DESIGN.md) has the rules.
 
 ## 5a. Fit every screen
 
 Decide from the space you have, never from the device. WebKit asks for the same: there's no iPhone
 Duo check anywhere in here, and the next foldable needs no new code.
 
-**Width classes** come from `useViewport().widthClass`, and match Tailwind's breakpoints:
+**Width classes** come from `useViewport().widthClass`. The frame parts read them, so most apps
+never do:
 
-| Class | From | Tailwind | For example |
+| Class | From | What the frame draws | For example |
 |---|---|---|---|
-| `compact` | 0 | | iPhone 390 · Duo folded 382 · Duo's two windows 385 |
-| `medium` | 640 | `sm:` | small iPhone sideways 667 · Duo open 669 · iPad mini 744 |
-| `expanded` | 768 | `md:` | iPad 820 · iPhone sideways 844 · Duo open sideways 951 |
-| `wide` | 1280 | `xl:` | iPad Pro sideways · laptops |
-| `ultrawide` | 2560 | `ultrawide:` | ultrawide monitors |
+| `compact` | 0 | the phone chrome | iPhone 390 · Duo folded 382 · Duo's two windows 385 |
+| `medium` | 600 | the desktop shell with one content column; the sidebar as its rail; a detail is pushed | Duo open 669 · iPad mini 744 · iPad 820 · Duo open sideways 951 |
+| `expanded` | 1024 | the full desktop shell, list and detail side by side | iPad sideways 1024 to 1194 · a small laptop window |
+| `wide` | 1280 | the same, with wider gutters and a wider list | iPad Pro sideways 1366 · laptops |
+| `ultrawide` | 2560 | the same | ultrawide monitors |
 
-Width doesn't tell you a phone from a tablet: an iPhone on its side is as wide as an iPad mini, at a
-third of the height. So check `short` before you add a second pane.
+`medium` (600) has no Tailwind twin. Decide a layout from the hook or from a frame part, never
+from an `sm:` or `md:` class. (Before 1.0 `medium` began at 640 and `expanded` at 768.)
+
+Width does not tell you a phone from a tablet: an iPhone on its side (667 to 956 wide) is as wide
+as an iPad, at a third of the height. So the frame checks `short` first, and so should you before
+you add a second pane.
 
 **Short** (`useViewport().short`, or the `short:` variant) means sideways and under 480px tall, so
 height is what's scarce. A phone in landscape, or a folded Duo at 594 × 368. Show one thing at a
-time, and put controls beside the content, not above it. `AppFrameNav`, `Textarea` and `Empty`
-already do their part.
+time, and put controls beside the content, not above it. The frame already does its part: on a
+short screen under 1024 wide the bottom row stands as a column at the trailing edge.
 
-**Where the nav goes** (`useViewport().navPlacement`, the `nav-rail:` variant). A floating capsule along the bottom, or `rail`, a pill at the foot of the right edge, on a short screen, or a narrow one that is under 600 tall and less than 1.6 times as tall as it is wide (a folded Duo at 382 × 580, two windows at 385 × 571). A narrow window that is tall is not squat: 430 × 667 and 560 × 844 keep the bottom row. That's where iOS puts tab bars on iPhone Duo in every pose but the inner display in portrait, and it's what a folded Duo and an iPhone sideways have in common. Don't use `100vh` or `100lvh` for a full-screen box: they can be taller than the screen in a home-screen app. `AppFrame` measures instead.
+**Where the bottom row goes** (`useViewport().navPlacement`, the `nav-rail:` variant). Along the
+bottom, or as `rail`, a column at the trailing edge, on a short screen, or a narrow one that is
+under 600 tall and less than 1.6 times as tall as it is wide (a folded Duo at 382 × 580, two
+windows at 385 × 571). A narrow window that is tall is not squat: 430 × 667 and 560 × 844 keep the
+bottom row. That is where iOS puts tab bars on iPhone Duo in every pose but the inner display in
+portrait. Do not use `100vh` or `100lvh` for a full-screen box: they can be taller than the
+screen in a home-screen app. `AppFrame` measures instead.
 
 **A keyboard** (`useViewport().keyboardOpen` and `room`, or the `frame-tight:` and `frame-minimal:`
 variants inside an `AppFrame`). `AppFrame` keeps clear of it and drops its bars when `room` is
@@ -267,9 +307,9 @@ always an extra. The layout has to work without one.
 **Folding and rotating are window resizes.** Nothing reloads, so keep state above whatever the
 layout swaps out: a draft shouldn't live in a component that only exists at one size.
 
-**Touch fields stay at 16px.** iOS zooms the whole page into a focused field under 16px and doesn't
-zoom back out. `Input`, `Textarea`, `NativeSelect` and `CommandInput` only drop to 14px with a
-mouse (`pointer-fine:`). A custom field needs the same.
+**Touch fields are 16px.** iOS zooms the whole page into a focused field under 16px and does not
+zoom back out. Every system field is 16px on a coarse pointer and 15px (`type-ui`) with a mouse.
+A custom field needs the same: build it on `fieldBoxVariants`.
 
 ## 6. Regenerate or add components
 
@@ -279,10 +319,11 @@ checkout (see the README → Regenerating components). An app that needs a primi
 with `@/…` aliases, runs the same tool with `--alias-mode app`. Do not fork a primitive into your app under the same name;
 `dsa` reports local look-alikes of system names as violations.
 
-## 7. Moving off the submodule (Mailbird)
+## 7. Moving off the submodule (history)
 
-Mailbird consumed unicron as a git submodule at `vendor/unicron` with `workspace:*` links during
-week one. The versioned packages replace it; nothing in `src/` changes.
+Kept for the record: no app uses the submodule today. Vale, when it was called Mailbird,
+consumed unicron as a git submodule at `vendor/unicron` with `workspace:*` links during week one.
+The versioned packages replaced it; nothing in `src/` changed.
 
 1. **Remove the submodule.** `git submodule deinit -f vendor/unicron && git rm -f vendor/unicron`,
    delete the `vendor/unicron` entry from `.gitmodules` (and the directory under `.git/modules`),
@@ -299,10 +340,10 @@ week one. The versioned packages replace it; nothing in `src/` changes.
 4. **Check.** `pnpm typecheck && pnpm build && pnpm dsa ratchet`. The ratchet baseline does not
    move: the components are the same, only the path they come from changed.
 5. **Bump inside the window.** Watch the unicron Releases page; take each `minor` within the
-   support window (current and previous minor). A `major` arrives with a codemod linked from its
-   PR; run it, then bump.
+   support window (current and previous minor). A `major` arrives with a codemod and a migration
+   guide; follow the guide.
 
-Synapse and Lockdown start at step 2: they never had the submodule.
+Synapse, Lockdown and Warpcore never had the submodule.
 
 ## 8. Measure
 
@@ -345,7 +386,7 @@ export function TitleBarDragStrip() {
 
 The popups keep clear of the strip through one knob, `--c-dialog-titlebar-inset` (`0px` by
 default, so nothing moves on the web). A dialog centres in the area below it; a side or top sheet
-starts under it; a `fullscreen` sheet stops short of it. Set it to the strip's height, under the
+starts under it; a full-height sheet stops short of it. Set it to the strip's height, under the
 same condition the strip renders under, in your app-extension layer:
 
 ```css

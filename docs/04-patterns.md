@@ -28,27 +28,36 @@ assemble from primitives; climb an escalation ladder only on evidence.
 
 | Pattern | Job | Composition from `@unicron/ui` |
 |---|---|---|
-| **Form / data entry** | Collect and validate values | `FieldSet` → `Field` + `Input` / `NativeSelect` / `Checkbox` / `Switch` → one primary `Button` → `FieldError` inline |
-| **Master–detail** | Browse a set, inspect one | `Item` list or table (master) → `Sheet` / `AdaptiveSheetContent`, or `ResizablePanes` when both stay on screen (detail) → `ButtonGroup` toolbar |
-| **Dashboard** | Show status at a glance | card grid → `Badge` / progress → `Skeleton` on load → `Empty` when there is nothing |
-| **Wizard / multi-step** | Sequence a long task | stepper (position) → one form per step → progress → `Toaster` on completion |
-| **The async triad** | Survive every data condition | `Skeleton` or `Spinner` (loading) → content → `Empty` (no data) → alert (error). Every data view needs all three. |
-| **Confirmation** | Prevent costly mistakes | action → `Dialog` with a destructive `Button` (irreversible) *or* toast + undo (reversible); choose by reversibility |
-| **Filtering** | Narrow a large set | `Command` / search `InputGroup` → removable `Chip`s (active filters, each with a `ChipRemove`) → `ButtonGroup` toolbar → results |
+| **Form / data entry** | Collect and validate values | `TextField` / `NativeSelect` / `Checkbox` / `RadioRow` / `ToggleRow` (or `FieldSet` → `Field` for a custom control) → one primary `Button` → the error under its field |
+| **List + detail** | Browse a set, inspect one | `AppFrameList` of `ListRow`s → `AppFrameDetail` (beside it when expanded, pushed over it below that) → `PageHead` with its actions. A detail that only peeks is `AppFramePeek` |
+| **Dashboard** | Show status at a glance | `Metric`s (one `size="hero"` at most) → `Tile`s or `ListRow`s → `Badge` / segmented `Progress` → `Skeleton` on load → `EmptyState` when there is nothing |
+| **Wizard / multi-step** | Sequence a long task | `Steps` (on a phone, `StepsFolio`) → one form per step → `toast` on completion. A first run sits in `AppFrameFocus` |
+| **The async triad** | Survive every data condition | `Skeleton variant="row"` or `Spinner` (loading) → content → `EmptyState` (no data) → `EmptyState tone="critical"` or a `Banner` (error). Every data view needs all three |
+| **Confirmation** | Prevent costly mistakes | `ConfirmDialog` (irreversible; focus starts on Cancel, the yes repeats the verb) *or* `toast` with Undo (reversible); choose by reversibility |
+| **Filtering** | Narrow a large set | `SearchField` → `FilterChipGroup` (what is on shows as inverted chips) → `Highlight` on the matches → results |
 
-Escalation ladders: NativeSelect → Select (an option needs more than plain text) → Combobox (list grows past ~15); Tooltip → Popover (content
-becomes interactive); toast → alert → banner → alert dialog (urgency rises).
+Escalation ladders: NativeSelect → Select (an option needs more than plain text) → Combobox (list
+grows past ~15); Tooltip → Popover (content becomes interactive); toast → Banner → NeedsYou (the
+person is needed) → ConfirmDialog (a decision blocks the task).
 
 ## Promoting a candidate
 
 1. Read the suggestion record. Check `nearestExisting`; if it scores high, it is a variant.
 2. Write the pattern here: job, composition, the shape props that matter, and a do/don't line.
-3. Add a playground section that renders it in light and dark.
+3. Add a playground view (a file in `apps/playground/src/views`) and look at it in the app themes
+   on both grounds.
 4. If it earns a component (repeats in three products or needs its own behaviour), generate or
    write it in `packages/ui`, add it to [03-components.md](03-components.md), and let the next
    `ds:scan` count it as system usage.
 
 ## Promotion log
+
+Most rows below came through the loop: an app built something, `dsa` or a person raised it, and
+core decided. **The 1.0 rows dated 2026-11-13 did not.** They were seeded here from Sean's
+2026-11 design direction and the Figma file, with no app PR and no DSA record, because the
+direction changed the look of everything at once and the four apps were rebuilt on it together.
+Each of those files says so in its header (`Promoted from: Seeded in snds/unicron (2026-11
+design direction…; no app PR, no DSA record)`). After 1.0 the loop is the way in again.
 
 | Date | Candidate (dsa record) | Evidence | Decision |
 |---|---|---|---|
@@ -77,6 +86,18 @@ becomes interactive); toast → alert → banner → alert dialog (urgency rises
 | 2026-11-04 | `ResizablePanes` (hand-raised) | Warpcore's shell has fixed CSS grid slots waiting on it; the Warpcore plan expects list-detail use in Synapse and Lockdown too | **Component**: generated with the transform ([#66](https://github.com/snds/unicron/pull/66)) |
 | 2026-11-05 | `AppFrame`, `AppFrameNav`, `FoldPanes`, `useViewport` and the `short:` and fold variants (hand-raised) | Warpcore on a real iPhone: turning it sideways left the top bar off screen and a gap below the tabs, because the page could scroll and a 14px field made iOS zoom. Nothing here is Warpcore's: Mailbird, Synapse and Lockdown fill the screen too | **Components**: they have their own behaviour, the page lock, keyboard tracking and fold layout; the checks live in one hook |
 | 2026-11-13 | Solid menus, reversed (the 2026-10-15 "glass" decision) | Sean's 2026-11 design direction and the Figma components: overlays are solid `surface-raised` with a 1 px rule, no glass, no blur | **Reversed**: `DropdownMenu` and `Select` lists are solid `bg-popover`; dialog and sheet backdrops are the `surface-scrim` role at a knob (`scrim-dialog`, `scrim-sheet`), never blurred. A browser check fails on any `backdrop-blur` in the built stylesheet. |
+| 2026-11-13 | The 1.0 look (seeded; DSA none) | Sean's decision record of 2026-11-12 (kept in his workspace; [DESIGN.md](../DESIGN.md) is its summary here) and the Figma pages `Unicron / Components`, `Vale`, `Warpcore`, `Lockdown`, `Synapse`: Industrial Spec. Square 2px corners, hairline rules, Geist and Geist Mono, one identity colour per app on two grounds, one yellow for "needs you" | **Tokens and every primitive restyled.** Four app themes in the core, 23 type roles, `--radius` 2px, the Figma role names with the shadcn names kept as aliases. `primary` now means the app's identity, not the strongest ink |
+| 2026-11-13 | Icons: Material Symbols → IBM Carbon (seeded; DSA none) | Decision record §4: "Stay with Carbon", 20px by default and 16px in compact controls. Figma draws 57 icons; the four apps used 252 Material names | **Replaced**: `Icon` draws inline SVG from a curated, typed set. The icon font and `fill`, `weight`, `grade`, `opticalSize` are gone. `unicron-codemod icons` moves an app's names; `registerIcons` is for a glyph Carbon lacks |
+| 2026-11-13 | The components Figma draws (seeded; DSA none) | The 27 components on `Unicron / Components` (decision record §8) | **Components**: `ListRow`, `SwipeRow` + `SwipeAction`, `FieldRow`, `ToggleRow`, `FilterChip`, `SectionHeader`, `Metric`, `NeedsYou`, `Banner`, `CalendarEvent`, `EmptyState`, `InitialTile`, `TextField`, `AppLockup`, `FloatButton`, `TabBar`, `Accessory`, `NavItem`, `TopTabs`, `Rail`, `Composer`, `ChatMessage`, `ArtifactCard`; `Button`, `Switch` and the Sheet Header restyled to theirs. No app PR, no DSA record |
+| 2026-11-13 | The shells (seeded; DSA none) | Decision record §5 (Apple's floating pattern in Unicron's look) and §7 (Warpcore's chat workspace); the desktop frames of all four apps | **Components**: the `AppFrame` parts (`AppFrameTopRow`, `AppFrameBottomRow`, `AppFrameAccessory`, `AppFrameScrollEdge`, `AppFrameSidebar`, `AppFrameStatusLine`, `StatusItem`, `AppFrameTopBar`, `AppFrameList`, `AppFrameDetail`, `AppFrameFocus`, `AppFrameSidePanel`, `AppFramePeek`), `PageHead`, `TopBar`, `ContextPanel`, `SettingsFrame`. An app writes one tree; the parts carry the layout |
+| 2026-11-13 | The parts the apps needed that Figma does not draw (seeded; DSA none) | Four undrawn-area briefs asked for 105 things and then 31 more; a cross-app critic merged them into 58 parts and 20 late ones (build contract 5.1b and 5.1c) | **Components and props**: `AdaptiveDialog`, `AdaptiveMenu`, `AdaptivePopover`, `OverflowMenu`, `ConfirmDialog`, `TruncatedText`, `Table`, `Steps`, `Tile`, `MetaList`, `LogRow`, `DiffBlock`, `FileChip`, `Highlight`, `SearchField`, `ChipField`, `RadioGroup` + `RadioRow`, `Toolbar`, `SplitButton`, `SummaryBlock`, `Prose`, `CodeBlock` + `CopyButton`, `DigitGroups`, `QrCode`; `disabledReason`; the one `mark` on navigation items. The evidence is a design brief, not a repeat `dsa` counted: revisit any of these that only one app ends up using |
+| 2026-11-13 | `CalendarEvent` in the core (seeded; **for Sean**) | It is on Figma's `Unicron / Components` page; only Vale has a calendar | **Component, with a question.** It carries a domain noun, which [What core will decline](06-contributing.md#what-core-will-decline) rules out, and it bends principle 1. Kept because Figma holds it as a system component; Sean decides whether it moves to Vale's own layer |
+| 2026-11-13 | Pill chips, retired (the 2026-10-15 `Button shape="pill"`) | The direction has no round control; Figma's Filter Chip is square | **Reversed**: a chip that filters is `FilterChip`. `shape="pill"` is still accepted and draws the 2px corner |
+| 2026-11-13 | Dialog actions keep their words on a phone (the 2026-10-15 row of icon buttons) | Every dialog and sheet Figma draws keeps worded buttons at phone width (Lockdown Mobile / 11) | **Reversed**: `DialogAction` shows its words at every width; `icon` adds a 16px glyph before them |
+| 2026-11-13 | Dialog sizes by job (the 2026-10-17 `xs` to `2xl`) | Cross-app decisions §14: the four apps' dialogs reduce to five widths | **Renamed**: `question` 480, `review` 560, `form` 640 (the default), `compose` 720, `viewer` 960, `full`. The old names map to the nearest |
+| 2026-11-13 | The full-screen phone sheet is a height (the 2026-10-15 `SheetContent fullscreen`) | Figma's sheets hug their content or take the screen | **Renamed**: `height` is `content` or `full`; `fullscreen` stays as a deprecated alias |
+| 2026-11-13 | The floating action is a component (the 2026-10-15 parked `Fab`) | All four apps now have a create button in the phone's bottom row, and float buttons in the top row | **Component**: `FloatButton` |
+| 2026-11-13 | The frosted nav capsule and the pivot, retired (2026-11-05) | Decision record §5: use Apple's pattern, "not the visual style"; no glass | **Removed**: `AppFrameHeader`, `AppFramePivot`, `AppFramePivotEnd`. `AppFrameNav`, `AppFrameNavItem` and `AppFrameNavEnd` stay as deprecated shims, not floating and not frosted, until the apps have moved to `AppFrameBottomRow` and `TabBar` |
 | 2026-11-14 | Stone scrims at the role's own 64% (review finding: stone dimmed half as much as drawn) | Figma's stone frames dim 64% behind sheets, dialogs and menus alike (Vale Mobile / 05 and Desktop / 02, Lockdown Mobile / 11 and Desktop / 09, Warpcore Mobile / 03); the build multiplied the role's 64% by the graphite knobs (32%, 38%, 20%) | **Token**: `--c-scrim-sheet`, `-dialog`, `-menu` are per ground: 0.5 / 0.6 / 0.32 on graphite, 1 on stone. The 1.0 contract (§1.5) and rules.md §2.6 said "about 32 / 38 / 20"; Figma wins. If Sean prefers the lighter stone scrim, that is his decision to record. |
 | 2026-11-14 | Menu rows are Nav Items (review finding) | Figma's two drawn menus (quick create, Vale and Lockdown States / 03; Vale Mobile / 05's folder sheet) are built from Nav Items: the label role (14/20 Medium) in `text-secondary`, the open row on `primary-soft` in body ink, a count at the end | **Component**: `DropdownMenuItem` and the `AdaptiveMenu` rows take the label role and secondary ink, body ink when highlighted, checked or `current`; `AdaptiveMenuItem` gains `count` and `current`. The drawn menu is also 4px taller than the built one (12 under the last row, not 8): left open, the Figma read-out gives a padding of 8. |
 | 2026-11-14 | The active tab's icon is `primary-text` (review finding) | Figma's Dock Tab (20:1656) and 32 phone frames of Warpcore, Lockdown, Synapse and Vale's Calendar, Contacts and Notes; only Vale's Mail tab draws body ink | **Component**: `TabBarItem` active is `text-primary-text`, as `RailItem` active. Contract §9.9 had settled on body ink from the one override. |

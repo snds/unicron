@@ -1,5 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: a horizontal rule is 1px of paint that adds no height; no app PR, no DSA record)
 "use client"
 
 import { Separator as SeparatorPrimitive } from "@base-ui/react/separator"

@@ -1186,5 +1186,5 @@ export { usePullToRefresh, type PullState, type PullToRefreshOptions } from "./a
 export * from "./app-frame-phone"
 export * from "./app-frame-desktop"
 export * from "./app-frame-focus"
-// Deprecated 0.x names (the capsule): kept compiling until the apps and the showcase move off them.
+// Deprecated 0.x names (the capsule): kept compiling until the four apps move off them (docs/07-migrating-to-1.0.md).
 export * from "./app-frame-deprecated"
