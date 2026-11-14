@@ -1,7 +1,17 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { beforeAll, describe, expect, it, vi } from "vitest"
 
-import { Command, CommandDialog, CommandInput, CommandItem, CommandItemAction, CommandList } from "./command"
+import {
+  Command,
+  CommandDialog,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandItemAction,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "./command"
 
 // cmdk scrolls the highlighted item into view; jsdom has no layout.
 beforeAll(() => {
@@ -185,20 +195,101 @@ describe("CommandItemAction", () => {
 })
 
 describe("CommandDialog size", () => {
-  it("is sm by default and takes the dialog's sizes", () => {
+  // The command menu is a form-size layer (cross-app decisions §14, Warpcore 4.0).
+  it("is form (640) by default and takes the dialog's sizes by name, old names included", () => {
     const { rerender } = render(
       <CommandDialog open>
         <Command><CommandList /></Command>
       </CommandDialog>
     )
     const content = () => document.querySelector('[data-slot="dialog-content"]') as HTMLElement
-    expect(content()).toHaveAttribute("data-size", "sm")
+    expect(content()).toHaveAttribute("data-size", "form")
+    rerender(
+      <CommandDialog open size="review">
+        <Command><CommandList /></Command>
+      </CommandDialog>
+    )
+    expect(content()).toHaveAttribute("data-size", "review")
     rerender(
       <CommandDialog open size="lg">
         <Command><CommandList /></Command>
       </CommandDialog>
     )
-    expect(content()).toHaveAttribute("data-size", "lg")
+    expect(content()).toHaveAttribute("data-size", "form")
+  })
+
+  it("pads nothing itself (the palette pads) and has no close button", () => {
+    render(
+      <CommandDialog open>
+        <Command><CommandList /></Command>
+      </CommandDialog>
+    )
+    const cls = (document.querySelector('[data-slot="dialog-content"]') as HTMLElement).className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["[--c-dialog-padding:0px]", "[--c-dialog-padding-top:0px]"]))
+    expect(document.querySelector('[data-slot="dialog-close"]')).toBeNull()
+  })
+})
+
+describe("Command in the 2026-11 look", () => {
+  function Palette() {
+    return (
+      <Command label="Go to">
+        <CommandInput placeholder="Search Lockdown" />
+        <CommandList>
+          <CommandGroup heading="Go to">
+            <CommandItem value="Health">Health</CommandItem>
+            <CommandItem value="Settings">
+              Settings
+              <CommandShortcut>⌘,</CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Items">
+            <CommandItem value="Steam">Steam</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    )
+  }
+
+  it("is solid and square: the raised surface, the 2px corner, no blur", () => {
+    render(<Palette />)
+    const cls = (document.querySelector('[data-slot="command"]') as HTMLElement).className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rounded"]))
+    expect(cls.some((c) => c.includes("blur") || c.includes("rounded-xl"))).toBe(false)
+  })
+
+  it("draws the search field as a Text Field box: a 1px rule, 48 tall, the 2px primary border on focus, no outer ring", () => {
+    render(<Palette />)
+    const box = document.querySelector('[data-slot="command-input-wrapper"]') as HTMLElement
+    expect(box.className.split(" ")).toEqual(
+      expect.arrayContaining(["rule-box", "focus-within:rule-box-emphasis", "min-h-control", "bg-surface-raised"])
+    )
+    const input = screen.getByRole("combobox")
+    expect(input.className.split(" ")).toEqual(expect.arrayContaining(["outline-none", "focus-visible:outline-none", "type-body"]))
+    expect(box.querySelector('[data-icon-name="search"]')).not.toBeNull()
+  })
+
+  it("labels each group with an overline that names the group", () => {
+    render(<Palette />)
+    expect(screen.getByRole("group", { name: "Go to" })).toBeInTheDocument()
+    const group = document.querySelector('[data-slot="command-group"]') as HTMLElement
+    expect(group.className).toContain("**:[[cmdk-group-heading]]:type-overline")
+    expect(group.className).toContain("**:[[cmdk-group-heading]]:text-text-label")
+  })
+
+  it("rows are menu rows: the ui role, 36 tall (44 on touch), the highlight fill", () => {
+    render(<Palette />)
+    const row = screen.getByRole("option", { name: /Health/ })
+    expect(row.className.split(" ")).toEqual(
+      expect.arrayContaining(["type-ui", "min-h-9", "pointer-coarse:min-h-touch-min", "data-selected:bg-accent"])
+    )
+  })
+
+  it("shows a row's keys in a Kbd", () => {
+    render(<Palette />)
+    const shortcut = document.querySelector('[data-slot="command-shortcut"]') as HTMLElement
+    expect(shortcut.querySelector('[data-slot="kbd"]')).toHaveTextContent("⌘,")
   })
 })
 
@@ -217,5 +308,25 @@ describe("Command scrolling (VQA 2026-10-28)", () => {
     } finally {
       Element.prototype.scrollIntoView = original
     }
+  })
+})
+
+describe("CommandDialog focus", () => {
+  it("starts in its own search field, not another palette's on the page", async () => {
+    render(
+      <>
+        <Command label="Inline">
+          <CommandInput placeholder="Inline field" />
+          <CommandList />
+        </Command>
+        <CommandDialog open>
+          <Command label="Command menu">
+            <CommandInput placeholder="Dialog field" />
+            <CommandList />
+          </Command>
+        </CommandDialog>
+      </>
+    )
+    await vi.waitFor(() => expect(screen.getByPlaceholderText("Dialog field")).toHaveFocus())
   })
 })

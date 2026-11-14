@@ -1,6 +1,7 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
 // Promoted from: snds/lockdown · PR snds/unicron (host-contract slice 4) · DSA none (match="keywords" and CommandItemAction; Lockdown 10-desktop-shell §10.6 gaps 4 and 5)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: the search field as a Text Field box, overline group labels, menu rows; no Figma component; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
@@ -8,6 +9,7 @@ import { Command as CommandPrimitive, defaultFilter } from "cmdk"
 import { cn } from "../../lib/utils"
 
 import { buttonVariants } from "./button"
+import { Kbd } from "./kbd"
 import {
   Dialog,
   DialogContent,
@@ -16,10 +18,6 @@ import {
   DialogTitle,
   type DialogSize,
 } from "./dialog"
-import {
-  InputGroup,
-  InputGroupAddon,
-} from "./input-group"
 import { Icon, type IconName } from "../icon"
 
 /**
@@ -59,7 +57,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "bg-popover text-popover-foreground rounded-xl! p-1 flex size-full flex-col overflow-hidden",
+        "bg-surface-raised text-text-body type-body flex size-full flex-col gap-2 overflow-hidden rounded p-2",
         className
       )}
       filter={filter ?? (match === "keywords" ? keywordsFilter : undefined)}
@@ -86,67 +84,82 @@ function CommandDialog({
   description = "Search for a command to run...",
   children,
   className,
-  size = "sm",
+  size = "form",
   showCloseButton = false,
   beforeContent,
+  container,
   ...props
 }: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
   title?: string
   description?: string
   className?: string
-  /** How wide it grows from `sm` up: `DialogContent`'s sizes (`sm` by default, as before). A palette with two-line results reads better at `lg`. */
+  /** How wide it is: `DialogContent`'s sizes by name, `form` (640) by default, as the command menu is in the cross-app decisions (§14). */
   size?: DialogSize
   showCloseButton?: boolean
   /** Passed to `DialogContent`: rendered between the backdrop and the popup (a desktop app's drag strip). */
   beforeContent?: React.ReactNode
+  /** Passed to `DialogContent`: where the portal goes. */
+  container?: React.ComponentProps<typeof DialogContent>["container"]
   children: React.ReactNode
 }) {
+  const inner = React.useRef<HTMLDivElement>(null)
   return (
     <Dialog {...props}>
       <DialogContent
         className={cn(
-          // A third of the way down the area below --c-dialog-titlebar-inset (0px by default).
-          "rounded-xl! top-[calc(var(--c-dialog-titlebar-inset)+(100%-var(--c-dialog-titlebar-inset))/3)] translate-y-0 overflow-hidden p-0",
+          // A third of the way down the area below --c-dialog-titlebar-inset (0px by default). The
+          // palette pads itself, so the dialog does not.
+          "top-[calc(var(--c-dialog-titlebar-inset)+(100%-var(--c-dialog-titlebar-inset))/3)] translate-y-0 [--c-dialog-padding:0px] [--c-dialog-padding-top:0px]",
           // A fixed width (the size's min), so the palette doesn't resize as results change.
-          "sm:w-(--dialog-min-width)",
+          "w-[min(var(--dialog-min-width),calc(100%-2*var(--c-dialog-margin)))]",
           className
         )}
         size={size}
         showCloseButton={showCloseButton}
         beforeContent={beforeContent}
+        container={container}
         // Straight to the search field, so typing right after ⌘K isn't lost.
-        initialFocus={() => document.querySelector<HTMLElement>("[cmdk-input]") ?? true}
+        initialFocus={() => inner.current?.querySelector<HTMLElement>("[cmdk-input]") ?? true}
       >
         {/* Inside the popup, so the dialog takes its accessible name from it. */}
         <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {children}
+        {/* Takes no layout (contents): there so focus finds this palette's field, not another's. */}
+        <div ref={inner} data-slot="command-dialog-inner" className="contents">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   )
 }
 
+/**
+ * The search field, in the Text Field box: the raised surface, a 1px rule, 48 tall, the search glyph
+ * at the start. Focus draws the field's 2px inside border in the primary fill, and no outer ring
+ * (contract §6.2).
+ */
 function CommandInput({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
-    <div data-slot="command-input-wrapper" className="p-1 pb-0">
-      <InputGroup className="bg-muted border-transparent h-8! rounded-lg! shadow-none! *:data-[slot=input-group-addon]:pl-2!">
-        <CommandPrimitive.Input
-          data-slot="command-input"
-          className={cn(
-            "w-full text-base pointer-fine:text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
-            className
-          )}
-          {...props}
-        />
-        <InputGroupAddon>
-          <Icon className="size-4 shrink-0 opacity-50" name="search" />
-        </InputGroupAddon>
-      </InputGroup>
+    <div
+      data-slot="command-input-wrapper"
+      className="bg-surface-raised text-text-body rule-box focus-within:rule-box-emphasis flex min-h-control shrink-0 items-center gap-3 rounded px-3"
+    >
+      <span className="text-text-label flex shrink-0">
+        <Icon name="search" />
+      </span>
+      <CommandPrimitive.Input
+        data-slot="command-input"
+        className={cn(
+          "type-body placeholder:text-text-label min-w-0 flex-1 bg-transparent py-3 outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        {...props}
+      />
     </div>
   )
 }
@@ -159,7 +172,7 @@ function CommandList({
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        "no-scrollbar max-h-72 scroll-py-1 outline-none overflow-x-hidden overflow-y-auto",
+        "no-scrollbar max-h-72 scroll-py-2 outline-none overflow-x-hidden overflow-y-auto",
         className
       )}
       {...props}
@@ -174,7 +187,7 @@ function CommandEmpty({
   return (
     <CommandPrimitive.Empty
       data-slot="command-empty"
-      className={cn("py-6 text-center text-sm", className)}
+      className={cn("type-body text-text-secondary px-2.5 py-6 text-center", className)}
       {...props}
     />
   )
@@ -216,7 +229,8 @@ function CommandGroup({
     <CommandPrimitive.Group
       ref={groupRef}
       data-slot="command-group"
-      className={cn("text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium", className)}
+      // The group's label is an overline in label ink, as a menu's section label is.
+      className={cn("text-text-body overflow-hidden py-1 **:[[cmdk-group-heading]]:type-overline **:[[cmdk-group-heading]]:text-text-label **:[[cmdk-group-heading]]:px-2.5 **:[[cmdk-group-heading]]:pt-1 **:[[cmdk-group-heading]]:pb-1 [&_[cmdk-group-items]]:flex [&_[cmdk-group-items]]:flex-col [&_[cmdk-group-items]]:gap-1", className)}
       {...props}
     />
   )
@@ -229,7 +243,7 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
-      className={cn("bg-border -mx-1 h-px", className)}
+      className={cn("bg-line-rule -mx-2 my-1 h-px", className)}
       {...props}
     />
   )
@@ -273,14 +287,18 @@ function CommandItem({
         data-has-action={action ? "true" : undefined}
         aria-keyshortcuts={action?.shortcut}
         className={cn(
-          "data-selected:bg-muted data-selected:text-foreground data-selected:*:[svg]:text-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! [&_svg:not([class*='size-'])]:size-4 group/command-item data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+          // A menu row: 36 tall (44 on a touch screen), a 20px glyph 10 from the words in the ui
+          // role, the highlighted row on the opaque highlight fill.
+          "type-ui text-text-body data-selected:bg-accent relative flex min-h-9 cursor-default items-center gap-2.5 rounded px-2.5 py-2 outline-hidden select-none pointer-coarse:min-h-touch-min [&_svg:not([class*='size-'])]:size-5 group/command-item data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
           className
         )}
         {...props}
         aria-describedby={describedBy}
       >
         <CommandItemActionContext.Provider value={register}>{children}</CommandItemActionContext.Provider>
-        <Icon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-has-data-[slot=command-item-action]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" name="checkmark" />
+        <span className="ml-auto flex opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-has-data-[slot=command-item-action]/command-item:hidden group-data-[checked=true]/command-item:opacity-100">
+          <Icon name="checkmark" size="sm" />
+        </span>
       </CommandPrimitive.Item>
       {/* Outside the item, so cmdk's text-derived value never takes these words in. */}
       {action && (
@@ -346,7 +364,8 @@ function CommandItemAction({ label, icon, onAction, disabled, className }: Comma
   return (
     <span
       data-slot="command-item-action-wrapper"
-      className={cn("ml-auto inline-flex shrink-0", className)}
+      // A 32px button in a 20px line: it overhangs the row's padding, so the row stays 36 tall.
+      className={cn("-my-1.5 ml-auto inline-flex shrink-0", className)}
       onPointerDown={hold}
       onMouseDown={hold}
       onClick={(e) => e.stopPropagation()}
@@ -367,16 +386,16 @@ function CommandItemAction({ label, icon, onAction, disabled, className }: Comma
   )
 }
 
+/** The row's keys, in a Kbd at its end. */
 function CommandShortcut({
   className,
+  children,
   ...props
 }: React.ComponentProps<"span">) {
   return (
-    <span
-      data-slot="command-shortcut"
-      className={cn("text-muted-foreground group-data-selected/command-item:text-foreground ml-auto text-xs tracking-widest", className)}
-      {...props}
-    />
+    <span data-slot="command-shortcut" className={cn("ml-auto flex shrink-0 pl-4", className)} {...props}>
+      <Kbd>{children}</Kbd>
+    </span>
   )
 }
 
