@@ -16,9 +16,11 @@ import { formatNavCount } from "./rail"
  * `lg`: display (72/68), a desktop list or detail head (Warpcore Tasks, Lockdown's Steam). Its
  *   overline and meta line sit directly on the title's line box, with no gap, as drawn.
  * `md`: display/compact (48/48), every phone list and Vale's desktop lists. The default.
- * `sm`: title (32/36), a two-word phone title, a conversation or a detail head beside a pane.
+ * `sm`: title (32/36), a two-word phone title or a detail head beside a pane.
+ * `xs`: lead (24/32), a conversation's head, as Warpcore's chat workspace draws it (cw-01:
+ *   "OPAQUE login" 24px medium, 4 under its overline).
  */
-export type PageHeadSize = "lg" | "md" | "sm"
+export type PageHeadSize = "lg" | "md" | "sm" | "xs"
 
 /** Which way a sideways swipe on the switcher went. */
 export type PageHeadSwipe = "previous" | "next"
@@ -55,7 +57,10 @@ export type PageHeadProps = Omit<React.ComponentProps<"div">, "title"> & {
   metaPosition?: "baseline" | "below"
   /** Makes `meta` a button (go to today, open the site). */
   onMetaClick?: () => void
-  /** The meta button's name, when its text is not enough ("Go to today"). */
+  /**
+   * What pressing the meta button does, when its text does not say ("Go to today"). It is read as
+   * the button's description; the button's name stays the text it shows ("THU 11.12").
+   */
   metaLabel?: string
   /** A status Badge after the title ("Read-only", "Active"). */
   status?: React.ReactNode
@@ -71,6 +76,7 @@ const TITLE: Record<PageHeadSize, string> = {
   lg: "type-display",
   md: "type-display-compact",
   sm: "type-title",
+  xs: "type-lead",
 }
 
 const SWIPE_FALLBACK = 48
@@ -162,6 +168,7 @@ function PageHead({
   className,
   ...props
 }: PageHeadProps) {
+  const metaHintId = React.useId()
   const { label: switcherLabel, onSwipe, ...switcherProps } = switcher ?? { label: "" }
   const gestures = useSwitcherGestures(switcher ? onSwipe : undefined)
   const switcherButtonProps = switcher
@@ -211,7 +218,9 @@ function PageHead({
   const metaNode = !meta ? null : onMetaClick ? (
     <ButtonPrimitive
       data-slot="page-head-meta"
-      aria-label={metaLabel}
+      // Its name is the text it shows (WCAG 2.5.3: a screen reader hears the date, voice control
+      // can say it); what the press does is its description.
+      aria-describedby={metaLabel ? metaHintId : undefined}
       onClick={onMetaClick}
       className={cn(
         "type-folio hit-area w-fit rounded-sm underline-offset-4 transition-[color] duration-(--motion-fast) ease-(--motion-ease) hover:text-text-body hover:underline",
@@ -220,6 +229,11 @@ function PageHead({
       )}
     >
       {meta}
+      {metaLabel ? (
+        <span id={metaHintId} hidden>
+          {metaLabel}
+        </span>
+      ) : null}
     </ButtonPrimitive>
   ) : (
     <span data-slot="page-head-meta" className={cn("type-folio", sideInk)}>

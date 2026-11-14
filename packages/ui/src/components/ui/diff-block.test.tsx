@@ -166,3 +166,42 @@ describe("DiffBlock (contract 5.1a, 5.1b #43)", () => {
     vi.useRealTimers()
   })
 })
+
+describe("DiffBlock's box when a line is wider than it", () => {
+  /** jsdom has no layout: give every element the widths a browser would measure. */
+  function widths(scrollWidth: number, clientWidth: number) {
+    const spies = [
+      vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(scrollWidth),
+      vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(clientWidth),
+    ]
+    return () => spies.forEach((spy) => spy.mockRestore())
+  }
+  const box = (container: HTMLElement) => container.querySelector('[data-slot="diff-block-box"]') as HTMLElement
+
+  it("takes focus, is a group and has a name, so a keyboard can scroll it in every engine", () => {
+    const restore = widths(900, 320)
+    const { container } = render(<DiffBlock path="apps/web/src/auth/login.ts" lines={LOGIN} />)
+    expect(box(container)).toHaveAttribute("tabindex", "0")
+    expect(box(container)).toHaveAttribute("data-scrolls")
+    expect(screen.getByRole("group", { name: "Changes to apps/web/src/auth/login.ts, lines" })).toBe(box(container))
+    restore()
+  })
+
+  it("the same with no header, where there is no Wrap button to fall back on", () => {
+    const restore = widths(900, 320)
+    const { container } = render(<DiffBlock lines={LOGIN} />)
+    expect(screen.queryByRole("button", { name: "Wrap" })).toBeNull()
+    expect(box(container)).toHaveAttribute("tabindex", "0")
+    expect(screen.getByRole("group", { name: "Changes, lines" })).toBe(box(container))
+    restore()
+  })
+
+  it("a box whose lines fit is no tab stop and has no role", () => {
+    const restore = widths(320, 320)
+    const { container } = render(<DiffBlock path="apps/web/src/auth/login.ts" lines={LOGIN} />)
+    expect(box(container)).not.toHaveAttribute("tabindex")
+    expect(box(container)).not.toHaveAttribute("role")
+    expect(box(container)).not.toHaveAttribute("aria-label")
+    restore()
+  })
+})

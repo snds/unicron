@@ -58,6 +58,10 @@ describe("SectionHeader (Figma 32:60)", () => {
     expect(slot(container, "section-header-title")).toHaveClass("type-number-index")
     expect(header).toHaveTextContent("S // 04")
     expect(container.querySelector('[data-slot="section-header-rule"]')).toBeNull()
+    // 48 tall, the letter's line 4 above the bottom (its ink from 17 to 38), not centred.
+    const cls = header.className.split(/\s+/)
+    expect(cls).toEqual(expect.arrayContaining(["h-12", "items-end", "pb-1"]))
+    expect(cls).not.toContain("items-center")
   })
 
   it("index: a longer title (a group of letters, Favorites) keeps the overline and the rule", () => {

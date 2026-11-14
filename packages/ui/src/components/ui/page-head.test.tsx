@@ -71,10 +71,27 @@ describe("PageHead", () => {
     const user = userEvent.setup()
     const onMetaClick = vi.fn()
     render(<PageHead title="Today" meta="THU 11.12" onMetaClick={onMetaClick} metaLabel="Go to today" switcher={{ label: "Switch account" }} />)
-    const meta = screen.getByRole("button", { name: "Go to today" })
+    // The name is the text on screen (WCAG 2.5.3, label in name); what it does is its description.
+    const meta = screen.getByRole("button", { name: "THU 11.12" })
+    expect(meta).toHaveAccessibleDescription("Go to today")
+    expect(meta).not.toHaveAttribute("aria-label")
+    expect(screen.queryByRole("button", { name: "Go to today" })).toBeNull()
     expect(classesOf(meta)).toEqual(expect.arrayContaining(["type-folio", "relative", "z-10", "hit-area"]))
     await user.click(meta)
     expect(onMetaClick).toHaveBeenCalledTimes(1)
+  })
+
+  it("a meta button with no metaLabel is named by its text and has no description", () => {
+    render(<PageHead title="Steam" meta="store.steampowered.com" onMetaClick={() => {}} />)
+    const meta = screen.getByRole("button", { name: "store.steampowered.com" })
+    expect(meta).not.toHaveAttribute("aria-describedby")
+  })
+
+  it("xs is the lead role (24/32), a conversation's head, 4 under its overline", () => {
+    const { container } = render(<PageHead size="xs" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />)
+    expect(container.querySelector('[data-slot="page-head"]')).toHaveAttribute("data-size", "xs")
+    expect(classesOf(screen.getByRole("heading", { name: "OPAQUE login" }))).toContain("type-lead")
+    expect(classesOf(container.querySelector('[data-slot="page-head-main"]') as HTMLElement)).toContain("gap-1")
   })
 
   it("a status Badge after the title, and actions at the end", () => {

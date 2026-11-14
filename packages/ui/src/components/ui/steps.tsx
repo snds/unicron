@@ -206,9 +206,10 @@ export type StepsFolioProps = Omit<React.ComponentProps<"p">, "title"> & {
 function StepsFolio({ current, total, title, label = "Step", className, ...props }: StepsFolioProps) {
   return (
     <p data-slot="steps-folio" className={cn("flex min-w-0 items-baseline gap-3", className)} {...props}>
-      {/* On the title's baseline. Its own line box is cut to its glyphs, so the two line heights
-          (folio 12/20 beside ui 15/20) cannot stack into a 21px line (as LogRow's time). */}
-      <span aria-hidden="true" data-slot="steps-folio-count" className="type-folio text-muted-foreground shrink-0 leading-none!">
+      {/* On the title's baseline, in the folio role whole (12/20). Its line reaches 1px under the
+          title's on a shared baseline; that pixel comes off its own margin, so the line is 20
+          (as LogRow's time). */}
+      <span aria-hidden="true" data-slot="steps-folio-count" className="type-folio text-muted-foreground -mb-px shrink-0">
         {`${label.toUpperCase()} ${folio(current)} // ${folio(total)}`}
       </span>
       {title ? (

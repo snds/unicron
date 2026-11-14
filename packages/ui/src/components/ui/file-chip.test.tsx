@@ -11,7 +11,9 @@ describe("FileChip (contract 5.1a, 5.1b #30)", () => {
     const { container } = render(<FileChip name="Pine Hollow booking.pdf" type="PDF" size="84 KB" />)
     expect(slot(container, "file-chip").className.split(/\s+/)).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box"]))
     expect(slot(container, "file-chip-type").className.split(/\s+/)).toEqual(expect.arrayContaining(["type-overline", "bg-primary", "text-primary-foreground", "h-5"]))
-    expect(slot(container, "file-chip-name").className).toContain("type-ui")
+    // The label role (14/20), as Vale Desktop / 01 draws the name: its chip is 276 wide.
+    expect(slot(container, "file-chip-name").className.split(" ")).toContain("type-label")
+    expect(slot(container, "file-chip-name").className.split(" ")).not.toContain("type-ui")
     expect(slot(container, "file-chip-size").className).toContain("type-meta")
     expect(slot(container, "file-chip-main").className.split(/\s+/)).toEqual(expect.arrayContaining(["gap-3", "py-3", "pl-3", "pr-3"]))
     // Not pressable: no control.

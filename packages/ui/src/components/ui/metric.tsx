@@ -113,8 +113,12 @@ function Metric({
   const content = hero ? (
     <>
       {labelNode}{" "}
-      {/* Mixed sizes on one line share the baseline (contract §2). */}
-      <span data-slot="metric-figure" className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+      {/* Mixed sizes on one line share the baseline (decision record §10, contract §2). The unit is
+          24 from the number, as both drawn heroes space it (Lockdown Desktop / 07 "92 /100",
+          Synapse Desktop / 01 "94 /100"). Figma bottom-aligns the two boxes there, which puts the
+          unit's baseline about 5px under the number's; the baseline rule wins, so the unit sits 8px
+          higher than drawn. Recorded for Sean in docs/04-patterns.md. */}
+      <span data-slot="metric-figure" className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
         <span
           data-slot="metric-value"
           className={cn("type-number-hero", valueTone === "primary" ? "text-primary-display" : "text-foreground")}
@@ -131,7 +135,7 @@ function Metric({
       </span>{" "}
       {/* 16 under the number, as the Warpcore spend frame puts its bar. */}
       {children ? (
-        <div data-slot="metric-extra" className="pt-2">
+        <div data-slot="metric-extra" className="pt-4">
           {children}
         </div>
       ) : null}
@@ -159,7 +163,10 @@ function Metric({
       {
         href,
         className: cn(
-          "group/metric flex min-w-0 flex-col gap-2",
+          // The hero's label sits directly on the number's line box, as both drawn heroes have it
+          // (the number's ink starts 28 under the block's top: 16 of label, then the 148 line).
+          "group/metric flex min-w-0 flex-col",
+          hero ? "gap-0" : "gap-2",
           // The 2px ink rule, drawn inside the box, so the metric is 104 tall as drawn (12 + 16 +
           // 8 + 44 + 8 + 16) and the rule adds nothing.
           !hero && "pt-3 shadow-[inset_0_var(--stroke-emphasis)_0_0_var(--text-body)]",

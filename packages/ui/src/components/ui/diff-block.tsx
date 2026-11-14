@@ -226,6 +226,21 @@ function DiffBlock({
   }
   const [expanded, setExpanded] = React.useState(false)
   const [copied, setCopied] = React.useState(false)
+  // Whether a line is wider than the box, so the box scrolls sideways. Watched as the box, its
+  // lines and the wrap change.
+  const boxRef = React.useRef<HTMLDivElement>(null)
+  const [scrolls, setScrolls] = React.useState(false)
+  React.useEffect(() => {
+    const el = boxRef.current
+    if (!el) return
+    const check = () => setScrolls(el.scrollWidth > el.clientWidth + 1)
+    check()
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(check)
+    observer.observe(el)
+    if (el.firstElementChild) observer.observe(el.firstElementChild)
+    return () => observer.disconnect()
+  }, [open, wrap, expanded, lines])
   React.useEffect(() => {
     if (!copied) return
     const timer = setTimeout(() => setCopied(false), COPIED_MS)
@@ -263,13 +278,14 @@ function DiffBlock({
     </span>
   )
 
+  const regionLabel = ariaLabel ?? (path ? `Changes to ${path}` : "Changes")
   return (
     <section
       data-slot="diff-block"
       data-state={state}
       data-open={open || undefined}
       data-wrap={wrap || undefined}
-      aria-label={ariaLabel ?? (path ? `Changes to ${path}` : "Changes")}
+      aria-label={regionLabel}
       className={cn("flex min-w-0 flex-col gap-1", className)}
       {...props}
     >
@@ -321,9 +337,17 @@ function DiffBlock({
         </div>
       ) : null}
       <div
+        ref={boxRef}
         id={`${id}-lines`}
         data-slot="diff-block-box"
+        data-scrolls={scrolls || undefined}
         hidden={!open}
+        // While a line is wider than the box, the box takes focus and has a name, so a keyboard can
+        // scroll it sideways in every engine (Chromium makes a bare scroller a tab stop by itself,
+        // WebKit, which the Mac apps run in, does not), as CodeBlock and Table do.
+        tabIndex={scrolls ? 0 : undefined}
+        role={scrolls ? "group" : undefined}
+        aria-label={scrolls ? `${regionLabel}, lines` : undefined}
         className="overflow-x-auto overscroll-x-contain rounded-none bg-surface-raised py-2.5 rule-box"
         style={{ "--diff-digits": digits } as React.CSSProperties}
       >

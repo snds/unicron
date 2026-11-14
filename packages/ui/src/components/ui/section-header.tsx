@@ -128,7 +128,14 @@ function SectionHeader({
 
   if (!collapsible) {
     return (
-      <div data-slot="section-header" data-variant={variant} className={cn(header({ variant, inset }), letter && "h-12", className)} {...props}>
+      <div
+        data-slot="section-header"
+        data-variant={variant}
+        // A letter header is 48 with its letter's line 4 above the bottom, not centred: Lockdown
+        // Desktop / 01 draws the letter's ink from 17 to 38 of the 48 (its 32px line from 12 to 44).
+        className={cn(header({ variant, inset }), letter && "h-12 items-end pb-1", className)}
+        {...props}
+      >
         <Heading className="flex min-w-0 shrink-0 items-baseline gap-3">{words}</Heading>
         {rule}
         {actionSlot}

@@ -67,6 +67,20 @@ describe("Metric (Figma 15:513)", () => {
     expect(classesOf(part("metric-figure"))).toContain("items-baseline")
   })
 
+  it("hero: the label sits directly on the number's line box and the unit is 24 from the number, as the two drawn heroes space them", () => {
+    render(<Metric size="hero" valueTone="primary" label="Health // personal + family" value="92" unit="/100">
+      <div role="progressbar" aria-label="92 of 100" />
+    </Metric>)
+    const root = classesOf(part("metric"))
+    expect(root).toContain("gap-0")
+    expect(root).not.toContain("gap-2")
+    const figure = classesOf(part("metric-figure"))
+    expect(figure).toContain("gap-x-6")
+    expect(figure).not.toContain("gap-x-4")
+    // 16 under the number, with no gap of the stack's own to add to it.
+    expect(classesOf(part("metric-extra"))).toContain("pt-4")
+  })
+
   it("hero: the delta is the meta role beside the number, a badge follows it, children sit under it", () => {
     render(
       <Metric size="hero" label="Spend // Friday 11.13" value="$8.60" delta="of $10.00 today" badge={<Badge tone="warning">Near cap</Badge>}>

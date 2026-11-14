@@ -167,7 +167,9 @@ function RunTrace({
       onOpenChange={setOpen}
       data-slot="run-trace"
       data-live={live ? "" : undefined}
-      className={cn("flex min-w-0 flex-col gap-1.5", className)}
+      // 4 between the 24px line and the steps, and between steps (20 each): 24 closed, 48 with one
+      // step, 72 with two, all on the 4px grid (6 apart they were 50 and 98).
+      className={cn("flex min-w-0 flex-col gap-1", className)}
       {...props}
     >
       <CollapsibleTrigger
@@ -188,7 +190,7 @@ function RunTrace({
         ) : null}
         <Icon name="chevron--down" size="sm" className="transition-transform duration-(--motion-fast) ease-(--motion-ease) in-data-panel-open:rotate-180" />
       </CollapsibleTrigger>
-      <CollapsibleContent data-slot="run-trace-content" className="flex flex-col gap-1.5">
+      <CollapsibleContent data-slot="run-trace-content" className="flex flex-col gap-1">
         {reasoning ? (
           <div className="flex items-start gap-1">
             {showReasoning ? <Reasoning text={reasoning} /> : <span className="flex-1" />}
@@ -222,10 +224,9 @@ function Sep() {
 }
 
 /**
- * Three lines of the newest reasoning, the older lines fading out at the top. The fade is a plain
- * mask-image, not Tailwind's mask-t-* utilities: those bring a dozen @property rules, which every
- * app paid for (0.2 KB gzipped) because the stylesheet scans every component. Any opaque colour
- * works as the mask's solid end; --foreground is one.
+ * Three lines of the newest reasoning, cut at a whole line: the box is exactly three lines tall and
+ * scrolled to its end, so the older lines leave by its top edge. No fade: the system has one
+ * gradient, the scroll-edge under the phone's chrome (rules 1.1), and this is not it.
  */
 function Reasoning({ text }: { text: string }) {
   const ref = React.useRef<HTMLParagraphElement>(null)
@@ -236,7 +237,7 @@ function Reasoning({ text }: { text: string }) {
     <p
       ref={ref}
       data-slot="run-trace-reasoning"
-      className="type-caption text-text-secondary max-h-[calc(var(--type-caption-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap [mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]"
+      className="type-caption text-text-secondary max-h-[calc(var(--type-caption-leading)*3)] min-w-0 flex-1 overflow-hidden whitespace-pre-wrap"
     >
       {text}
     </p>

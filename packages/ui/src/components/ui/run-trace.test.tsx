@@ -145,11 +145,22 @@ describe("RunTrace", () => {
     expect(screen.getByRole("button", { name: "Show reasoning" })).toHaveAttribute("aria-pressed", "true")
   })
 
-  it("fades old reasoning with a plain mask, not Tailwind's heavier mask utilities", () => {
+  it("cuts old reasoning at a whole line, three lines tall, with no fade: the scroll edge is the system's one gradient (rules 1.1)", () => {
     render(<RunTrace steps={steps} live reasoning={["one", "two", "three", "four"].join("\n")} />)
     const reasoning = document.querySelector('[data-slot="run-trace-reasoning"]')!
-    expect(reasoning.className).toContain("[mask-image:linear-gradient(to_bottom,transparent,var(--foreground)_50%)]")
-    expect(reasoning.className).not.toMatch(/mask-[tblrxy]-/)
+    const cls = reasoning.className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["max-h-[calc(var(--type-caption-leading)*3)]", "overflow-hidden", "type-caption"]))
+    expect(reasoning.className).not.toMatch(/gradient|mask/)
+  })
+
+  it("its parts are 4 apart, so it is 24 closed and 48, 72 and so on open: on the 4px grid", () => {
+    render(<RunTrace steps={steps} defaultOpen />)
+    const root = document.querySelector('[data-slot="run-trace"]')!
+    expect(root.className.split(" ")).toContain("gap-1")
+    expect(root.className.split(" ")).not.toContain("gap-1.5")
+    const content = document.querySelector('[data-slot="run-trace-content"]')!
+    expect(content.className.split(" ")).toContain("gap-1")
+    expect(document.querySelector('[data-slot="run-trace-steps"]')!.className.split(" ")).toContain("gap-1")
   })
 })
 

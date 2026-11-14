@@ -10,7 +10,10 @@ describe("LogRow", () => {
     expect(row.tagName).toBe("DIV")
     expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(["min-h-10", "py-2.5", "items-baseline", "gap-4"]))
     const time = container.querySelector('[data-slot="log-row-time"]') as HTMLElement
-    expect(time.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-meta", "text-muted-foreground", "leading-none!"]))
+    // The meta role whole (12/20): no line height of its own. The pixel its line reaches under
+    // the words' on a shared baseline comes off its margin, so the row stays 40.
+    expect(time.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-meta", "text-muted-foreground", "-mb-px"]))
+    expect(time.className).not.toMatch(/leading-/)
     const text = container.querySelector('[data-slot="log-row-text"]') as HTMLElement
     expect(text.className).toContain("type-ui")
     // Wraps, never cut.

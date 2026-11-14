@@ -21,9 +21,11 @@ export type LogRowProps = Omit<useRender.ComponentProps<"div">, "children"> & {
   link?: boolean
 }
 
-// The time sits on the words' baseline. Its own line box is cut to its glyphs, so the two line
-// heights (meta 12/20 under ui 15/20) cannot stack into a 21px line and take the row off the grid.
-const TIME = "shrink-0 type-meta leading-none! text-muted-foreground"
+// The time sits on the words' baseline and keeps the meta role whole (12/20). On a shared baseline
+// a 20px line of 12px type reaches 1px under a 20px line of 15px type, which would make the line
+// 21 tall and take the row off the grid. That one pixel comes off the time's own margin, so the
+// row is 40 and no line height is changed.
+const TIME = "shrink-0 type-meta -mb-px text-muted-foreground"
 
 /**
  * LogRow: one line of an activity log ("Activity 06" on a running task, Synapse's "Activity //

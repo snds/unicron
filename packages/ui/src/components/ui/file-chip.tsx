@@ -74,7 +74,7 @@ function extensionOf(name: string) {
 
 /**
  * FileChip: an attached file (contract 5.1a, 5.1b #30). A type tag (overline on the primary
- * fill) or a thumbnail, the name in the ui role, the size in the meta role, on a raised surface
+ * fill) or a thumbnail, the name in the label role (14/20, as Vale Desktop / 01 draws it), the size in the meta role, on a raised surface
  * with a hairline. With `href` or `onClick` the file part is one link or button named by the
  * name, type and size; `action` (Save, Remove) is its own button after it, never inside it.
  * `busy` shows a spinner and says `aria-busy`; `critical` says what is wrong in place of the size.
@@ -119,7 +119,7 @@ function FileChip({
         </span>
       )}
       {" "}
-      <span id={`${id}-name`} data-slot="file-chip-name" className="min-w-0 truncate type-ui">
+      <span id={`${id}-name`} data-slot="file-chip-name" className="min-w-0 truncate type-label">
         {name}
       </span>
       {" "}
