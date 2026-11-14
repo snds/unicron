@@ -104,7 +104,12 @@
     "scroll-edge": {
       "$type": "dimension",
       "$value": "5rem",
-      "$description": "How long the bottom scroll edge's fade is: content fades into the ground over 80 above the bottom chrome (Vale Mobile / 01: y 640 to 720), then the ground is solid under the chrome."
+      "$description": "How long the bottom scroll edge's fade is: content fades into the ground over 80 (Vale Mobile / 01: y 640 to 720), then the ground is solid down to the screen's end."
+    },
+    "scroll-edge-solid": {
+      "$type": "dimension",
+      "$value": "2.5rem",
+      "$description": "How far above the phone's bottom row the ground is already solid: 40. The fade is fixed to the row, not to the chrome's top: Vale Mobile / 01 fades from y 640 to 720 with the row at 760, and Lockdown Mobile / 01, with a status strip at 704, fades over the same 640 to 720."
     },
     "pull-threshold": {
       "$type": "dimension",

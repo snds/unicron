@@ -16,6 +16,14 @@
       "$description": "How many lines of the `ui` role the field grows to before it scrolls inside itself (10 × 20px = 200px). Not drawn in Figma, which draws the empty state only."
     }
   },
+  "agent-prompt": {
+    "$description": "AgentPrompt (security/agent-prompt.tsx).",
+    "arm-delay": {
+      "$type": "duration",
+      "$value": "500ms",
+      "$description": "How long the single-key answers stay inert after a prompt starts listening (it arrives, or the one after it is answered), so a key already on its way down never answers a prompt the person has not read. The same window as the approval frame. Behaviour, not motion. The component reads it at run time and falls back to 500ms without the stylesheet."
+    }
+  },
   "status-orb": {
     "$description": "StatusOrb, re-declared for the 2026-11 restyle. Still and finished states take the label ink; thinking and working take the app's live colour (the one motion reserved for agent activity); needs-you takes the yellow, with the yellow's own ink as an outline, because the yellow has no lightness contrast with the stone surfaces (Lc 0 on the ground) and a small yellow square alone does not show there.",
     "idle": { "$type": "color", "$value": "{text-label}" },

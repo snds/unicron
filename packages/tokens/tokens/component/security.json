@@ -48,8 +48,8 @@
     },
     "tile-min-height": {
       "$type": "dimension",
-      "$value": "10.625rem",
-      "$description": "A tile of the desktop Codes grid: 170 (Lockdown 41:2487)."
+      "$value": "10.75rem",
+      "$description": "A tile of the desktop Codes grid: 172. Figma draws it 170 (Lockdown 41:2487: 20 + 20 + 10 + 20 + 10 + 44 + 10 + 16 + 20), which is off the 4px grid; the decision record (section 10) puts every component on it, and outranks a drawn value. The parts inside keep Figma's positions from the top; the 2px go under the bar. Flagged for Sean."
     },
     "tile-min-width": {
       "$type": "dimension",

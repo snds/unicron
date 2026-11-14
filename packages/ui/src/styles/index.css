@@ -336,8 +336,12 @@ html:has([data-slot="app-frame"]) body {
  * A role sets no ink, so text inherits its colour, with two exceptions kept from before 1.0:
  * type-overline and type-meta default to label ink. A colour class on the same element wins
  * (`type-overline text-secondary-live`): a single-property utility sorts after these.
- * Number roles and the mono roles line their figures up (tabular). Mixed sizes on one line align
- * on the baseline (`items-baseline`).
+ * The mono roles line their figures up (tabular): overline, folio, meta, code-inline,
+ * code-display, number-count. The three sans number roles (number-hero, number-metric,
+ * number-index) keep Geist's proportional figures, as Figma draws them: a Metric's "145" is 71px
+ * wide with a plain 1 there, and 77px with a footed 1 in tabular figures (rules.md 3.1: figure
+ * styles come from Figma). A value that counts up in place can add `tabular-nums` itself.
+ * Mixed sizes on one line align on the baseline (`items-baseline`).
  *
  * Eight of the names (page-title, section-title, group-title, body, body-strong, support, meta,
  * overline) were promoted from snds/synapse (UI review round 2, F14). The 23 roles are the
@@ -506,7 +510,6 @@ html:has([data-slot="app-frame"]) body {
   font-size: var(--type-number-hero-size);
   line-height: var(--type-number-hero-leading);
   letter-spacing: var(--type-number-hero-tracking);
-  font-variant-numeric: tabular-nums;
 }
 /* A Metric's value. */
 @utility type-number-metric {
@@ -515,7 +518,6 @@ html:has([data-slot="app-frame"]) body {
   font-size: var(--type-number-metric-size);
   line-height: var(--type-number-metric-leading);
   letter-spacing: var(--type-number-metric-tracking);
-  font-variant-numeric: tabular-nums;
 }
 /* An index numeral or a group's letter. */
 @utility type-number-index {
@@ -524,7 +526,6 @@ html:has([data-slot="app-frame"]) body {
   font-size: var(--type-number-index-size);
   line-height: var(--type-number-index-leading);
   letter-spacing: var(--type-number-index-tracking);
-  font-variant-numeric: tabular-nums;
 }
 /* A count or a code in a list, in mono. */
 @utility type-number-count {
@@ -743,6 +744,34 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-ring-offset-shadow, 0 0 transparent),
     var(--tw-ring-shadow, 0 0 transparent),
     var(--tw-shadow, 0 0 transparent);
+}
+/*
+ * A part joined to the one before it (ButtonGroup). Each part draws its 1px edge inside its own
+ * box, so two side by side would show a 2px seam. The second one draws no edge on the side they
+ * share: one 1px line between them, no overlap, and the group is exactly as tall and as wide as
+ * its parts, on the 4px grid. join-l is for a row (no left edge), join-t for a column (no top
+ * edge). They redraw the two edges a part may have, at rest: an outlined button's inset ring (in
+ * its own --tw-inset-ring-color) and a field's rule-box. A part with neither is unchanged.
+ */
+@utility join-l {
+  --tw-inset-ring-shadow:
+    inset 0 var(--stroke-rule) 0 0 var(--tw-inset-ring-color, transparent),
+    inset calc(var(--stroke-rule) * -1) 0 0 0 var(--tw-inset-ring-color, transparent),
+    inset 0 calc(var(--stroke-rule) * -1) 0 0 var(--tw-inset-ring-color, transparent);
+  --rule-box:
+    inset 0 var(--stroke-rule) 0 0 var(--line-rule),
+    inset calc(var(--stroke-rule) * -1) 0 0 0 var(--line-rule),
+    inset 0 calc(var(--stroke-rule) * -1) 0 0 var(--line-rule);
+}
+@utility join-t {
+  --tw-inset-ring-shadow:
+    inset var(--stroke-rule) 0 0 0 var(--tw-inset-ring-color, transparent),
+    inset calc(var(--stroke-rule) * -1) 0 0 0 var(--tw-inset-ring-color, transparent),
+    inset 0 calc(var(--stroke-rule) * -1) 0 0 var(--tw-inset-ring-color, transparent);
+  --rule-box:
+    inset var(--stroke-rule) 0 0 0 var(--line-rule),
+    inset calc(var(--stroke-rule) * -1) 0 0 0 var(--line-rule),
+    inset 0 calc(var(--stroke-rule) * -1) 0 0 var(--line-rule);
 }
 @utility edge-l {
   --rule-edge: inset var(--stroke-emphasis) 0 0 0 var(--edge-color, var(--primary-fill));
