@@ -174,6 +174,24 @@ describe("FloatButton (Figma 20:1690)", () => {
     expect(inbox.querySelector('[data-slot="nav-mark"]')).toBeNull()
   })
 
+  it("on a current button the mark takes the ground, so it does not vanish into the inverted ink", () => {
+    render(
+      <>
+        <FloatButton label="Settings" icon="settings" current="page" mark={{ square: true, label: "Update ready" }} />
+        <FloatButton label="Comments" icon="chat" current mark={3} />
+        <FloatButton label="Requests" icon="notification" current mark={{ count: 2, tone: "needs-you" }} />
+      </>
+    )
+    const square = screen.getByRole("button", { name: "Settings, Update ready" }).querySelector('[data-slot="nav-mark"]')!
+    expect(square.className.split(/\s+/)).toContain("bg-background")
+    expect(square.className.split(/\s+/)).not.toContain("bg-foreground")
+    const count = screen.getByRole("button", { name: "Comments, 3" }).querySelector('[data-slot="nav-mark"]')!
+    expect(count.className.split(/\s+/)).toEqual(expect.arrayContaining(["bg-background", "text-foreground"]))
+    // The yellow stays the yellow.
+    const waiting = screen.getByRole("button", { name: "Requests, 2 waiting on you" }).querySelector('[data-slot="nav-mark"]')!
+    expect(waiting.className.split(/\s+/)).toContain("bg-needs-you-fill")
+  })
+
   it("a key hint is said through aria-keyshortcuts, with the long press's keys after it, and shows in the tooltip, not on the glyph (contract 5.1c C2)", async () => {
     const user = userEvent.setup()
     render(<FloatButton label="Search" icon="search" mark={{ keys: "/" }} onLongPress={() => {}} longPressLabel="Search everything" />)

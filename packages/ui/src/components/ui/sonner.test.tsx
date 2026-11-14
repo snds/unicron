@@ -338,6 +338,8 @@ describe("the phone's status-strip slot (contract 5.1c C6)", () => {
     expect(list()).toHaveAttribute("data-x-position", "left")
     expect(frame().style.getPropertyValue("--frame-toast-left")).toMatch(/px$/)
     expect(frame().style.getPropertyValue("--frame-toast-width")).toBe("")
+    // A desktop frame keeps the toast's own width even in a window sonner treats as a phone.
+    expect(toasts()[0].className.split(/\s+/)).toContain("w-(--width)!")
     expect(toasts().filter((t) => t.getAttribute("data-visible") === "true").length).toBeLessThanOrEqual(toasterVisibleToasts)
   })
 })

@@ -294,7 +294,8 @@ function FloatButton({
       {resolved && resolved.kind !== "keys" ? (
         <span data-slot="float-button-glyph" className="relative inline-flex">
           {glyph}
-          <NavMark mark={resolved} placement="corner" />
+          {/* On the inverted (current) button an ink mark would vanish into the ink: it takes the ground instead. */}
+          <NavMark mark={resolved} placement="corner" className={on && resolved.tone === "neutral" ? "bg-background text-foreground" : undefined} />
         </span>
       ) : (
         glyph

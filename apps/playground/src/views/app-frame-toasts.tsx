@@ -136,21 +136,26 @@ export default function AppFrameToastsView() {
       </Specimen>
 
       <Specimen label="Desktop // the bottom left of the content, three at most">
-        <FrameBox width={1180} height={480} layout="expanded" label="Vale // beside a 204 sidebar, 24 above the foot">
-          <AppFrameSidebar lockup={<AppLockup name="Vale" />} action={{ label: "Compose", icon: "edit" }}>
-            <NavSection title="Apps" count={4}>
-              <NavItem label="Mail" icon="email" count={12} current href="#mail" />
-              <NavItem label="Calendar" icon="calendar" count={3} href="#calendar" />
-              <NavItem label="Contacts" icon="user--multiple" href="#contacts" />
-              <NavItem label="Notes" icon="notebook" href="#notes" />
-            </NavSection>
-          </AppFrameSidebar>
-          <AppFrameStatusLine crumbs={[{ label: "Mail", href: "#mail" }, { label: "Inbox" }]}>
-            <StatusItem text="Synced // 09:16" />
-          </AppFrameStatusLine>
-          <Inbox />
-          <Raise id="toast-desktop" title="Archived Budget for audits" />
-        </FrameBox>
+        {/* At its own width on any screen: a narrow window scrolls it sideways. */}
+        <div className="max-w-full overflow-x-auto">
+          <div className="w-max">
+            <FrameBox width={1180} height={480} layout="expanded" label="Vale // beside a 204 sidebar, 24 above the foot">
+              <AppFrameSidebar lockup={<AppLockup name="Vale" />} action={{ label: "Compose", icon: "edit" }}>
+                <NavSection title="Apps" count={4}>
+                  <NavItem label="Mail" icon="email" count={12} current href="#mail" />
+                  <NavItem label="Calendar" icon="calendar" count={3} href="#calendar" />
+                  <NavItem label="Contacts" icon="user--multiple" href="#contacts" />
+                  <NavItem label="Notes" icon="notebook" href="#notes" />
+                </NavSection>
+              </AppFrameSidebar>
+              <AppFrameStatusLine crumbs={[{ label: "Mail", href: "#mail" }, { label: "Inbox" }]}>
+                <StatusItem text="Synced // 09:16" />
+              </AppFrameStatusLine>
+              <Inbox />
+              <Raise id="toast-desktop" title="Archived Budget for audits" />
+            </FrameBox>
+          </div>
+        </div>
       </Specimen>
 
       <Specimen label="Try it // a toast in this page's own Toaster (4 s; 6 s with an action)">

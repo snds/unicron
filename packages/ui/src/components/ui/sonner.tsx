@@ -284,8 +284,12 @@ const Toaster = ({ className, style, toastOptions, id, ...props }: ToasterProps)
         ...toastOptions,
         unstyled: true,
         classNames: {
-          toast:
+          toast: cn(
             "group/toast bg-surface-raised text-text-body rule-box flex w-(--width) items-center gap-3 rounded px-4 py-3 outline-none",
+            // A desktop frame in a window under 600 (a pinned preview): sonner's phone rule would size
+            // the toast from the content's left offset; the frame's width is the one that holds.
+            frame && !frame.phone && "w-(--width)!"
+          ),
           content: "flex min-w-0 flex-1 flex-col",
           title: "type-ui-emphasis text-text-body",
           description: "type-caption text-text-secondary",

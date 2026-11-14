@@ -103,7 +103,7 @@ function Held({ label, travel, release = false }: { label: string; travel: numbe
   }, [travel, release])
 
   return (
-    <div ref={box}>
+    <div ref={box} className="min-w-0 max-w-full">
       <FrameBox width={390} height={640} layout="phone" label={label}>
         <Health onRefresh={onRefresh} checking={checking} />
       </FrameBox>
