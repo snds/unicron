@@ -95,17 +95,21 @@ function Tasks() {
 
       <AppFrameMain>
         <AppFrameList size="fill" aria-label="Tasks">
-          <AppFramePageHead size={frame.split ? "lg" : "md"} overline="Tasks // 03 running // 01 waiting on you" title="Tasks" count="/012" />
-          <AppFrameInset>
-            <div className="pb-7">
+          {/* The chips belong to the head: the frame places them under the title and sets the space to the list (Desktop / 01: chips at y 196, the first row at y 248). */}
+          <AppFramePageHead
+            size={frame.split ? "lg" : "md"}
+            overline="Tasks // 03 running // 01 waiting on you"
+            title="Tasks"
+            count="/012"
+            below={
               <FilterChipGroup label="Show" value={show} onValueChange={setShow}>
                 <FilterChip value="all" count={12}>All</FilterChip>
                 <FilterChip value="running" count={3}>Running</FilterChip>
                 <FilterChip value="waiting" count={1}>Waiting</FilterChip>
                 <FilterChip value="done" count={8}>Done</FilterChip>
               </FilterChipGroup>
-            </div>
-          </AppFrameInset>
+            }
+          />
           <ul aria-label="Tasks" className="flex flex-col">
             {TASKS.map((t) => (
               <ListRow
@@ -126,12 +130,16 @@ function Tasks() {
         <AppFrameDetail size="narrow" open={picked !== null} onBack={() => setPicked(null)} aria-label={task?.title ?? "Task"}>
           {task ? (
             <AppFrameInset fill>
+              {/* One stack, 32 between its blocks, as Desktop / 01 draws the detail: the task's line
+                  (y 96), its title (y 144), what it does (y 212), the steps (the header at y 292, the
+                  first step at y 356). The head adds no space of its own (`gap="none"`). */}
               <div className="flex flex-1 flex-col gap-8">
-                <AppFramePageHead size="sm" overline="SEA-51 // Claude Code // Risk 2" title={task.title} />
+                <p className="type-overline text-text-label">SEA-51 // Claude Code // Risk 2</p>
+                <AppFramePageHead size="sm" title={task.title} gap="none" />
                 <Prose>
                   <p>Replaces password-hash login with OPAQUE, so the server never sees the password. Touches the auth service, the client SDK, and the tests.</p>
                 </Prose>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-8">
                   <SectionHeader title="Steps" count={STEPS.length} level={3} />
                   <Steps aria-label="Steps">
                     {STEPS.map((step) => (

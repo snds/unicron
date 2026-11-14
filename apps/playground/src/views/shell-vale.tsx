@@ -147,13 +147,15 @@ export function ValeInbox({ toasterId }: { toasterId?: string } = {}) {
         <AppFrameDetail open={picked !== null} onBack={() => setPicked(null)} aria-label={message?.subject ?? "Message"}>
           {message ? (
             <AppFrameInset fill>
-              <div className="flex flex-1 flex-col gap-8">
+              {/* One stack, 24 between its blocks, as Desktop / 01 draws the message: the meta (y 96),
+                  the title (y 160), the summary (y 220), the body. The head adds no space of its own. */}
+              <div className="flex flex-1 flex-col gap-6">
                 <MetaList>
                   <MetaItem label="From">{message.sender}</MetaItem>
                   <MetaItem label="Received">{message.time}</MetaItem>
                   <MetaItem label="Attached">01</MetaItem>
                 </MetaList>
-                <AppFramePageHead size="sm" title={message.subject} />
+                <AppFramePageHead size="sm" title={message.subject} gap="none" />
                 <SummaryBlock
                   overline="Summary // 03 points"
                   lines={["Two-bedroom cabin is booked for Nov 20 to 22.", "Check-in is after 3 PM. No chains needed.", "Mira asks you to bring the board games."]}

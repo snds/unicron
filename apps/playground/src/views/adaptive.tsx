@@ -52,18 +52,29 @@ function Folders({ presentation, container }: { presentation: AdaptivePresentati
       align="end"
       trigger={<Button variant="secondary">Folders</Button>}
     >
-      <AdaptiveMenuItem icon="email" shortcut="G I">
+      {/* Vale Mobile / 05: Nav Item rows with counts, the open folder and account on the primary-soft tile. */}
+      <AdaptiveMenuItem icon="email" count={12} current>
         Inbox
       </AdaptiveMenuItem>
-      <AdaptiveMenuItem icon="star">Starred</AdaptiveMenuItem>
-      <AdaptiveMenuItem icon="edit">Drafts</AdaptiveMenuItem>
+      <AdaptiveMenuItem icon="star" count={4}>
+        Starred
+      </AdaptiveMenuItem>
+      <AdaptiveMenuItem icon="edit" count={2}>
+        Drafts
+      </AdaptiveMenuItem>
       <AdaptiveMenuItem icon="send">Sent</AdaptiveMenuItem>
       <AdaptiveMenuItem icon="archive">Archive</AdaptiveMenuItem>
-      <AdaptiveMenuItem icon="warning--alt">Spam</AdaptiveMenuItem>
+      <AdaptiveMenuItem icon="warning--alt" count={3}>
+        Spam
+      </AdaptiveMenuItem>
       <AdaptiveMenuSeparator />
       <AdaptiveMenuGroup label="Accounts // 02">
-        <AdaptiveMenuItem icon="user--avatar">Personal</AdaptiveMenuItem>
-        <AdaptiveMenuItem icon="document">Work</AdaptiveMenuItem>
+        <AdaptiveMenuItem icon="user--avatar" count={12} current>
+          Personal
+        </AdaptiveMenuItem>
+        <AdaptiveMenuItem icon="document" count={31}>
+          Work
+        </AdaptiveMenuItem>
       </AdaptiveMenuGroup>
     </AdaptiveMenu>
   )

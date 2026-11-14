@@ -92,8 +92,11 @@ function Overview() {
       <AppFrameMain>
         <AppFrameColumn aria-label="Overview">
           {/* The score is the head here: the hero Metric, its sentence and bar beside it on a desktop. */}
+          {/* Blocks 32 apart on a desktop (the request 48 under the counts, the list's header 28
+              under it, as Desktop / 01 draws them); 16 on a phone. The "Failing checks" header
+              stays with its list: nothing between them. */}
           <AppFrameInset>
-            <div className="flex flex-col gap-8 pb-8">
+            <div className={frame.split ? "flex flex-col gap-8" : "flex flex-col gap-4"}>
               <div className="flex flex-wrap items-end gap-x-12 gap-y-4">
                 <Metric
                   href="#checks"
@@ -103,7 +106,7 @@ function Overview() {
                   value="94"
                   unit="/100"
                 />
-                <div className="flex min-w-60 flex-1 flex-col gap-2 pb-4">
+                <div className={frame.split ? "flex min-w-60 flex-1 flex-col gap-2 pb-4" : "flex min-w-60 flex-1 flex-col gap-2"}>
                   <p className="type-lead text-text-body">212 of 218 checks pass.</p>
                   {frame.split ? <Progress variant="segmented" tone="primary" segments={48} value={212} max={218} aria-label="212 of 218 checks pass" /> : null}
                   <p className="type-body text-text-secondary">6 need attention. 2 changes wait for your review.</p>
@@ -117,14 +120,18 @@ function Overview() {
                 </div>
               ) : null}
               {frame.split ? (
-                <NeedsYou
-                  title="Awaiting your review // 02 harness changes"
-                  body="Claude Code and Codex proposed changes to visual-qa and the UI harness."
-                  action={<Button variant="needs-you">Review H-09</Button>}
-                  secondaryAction={<Button variant="needs-you-text">See both</Button>}
-                />
+                <div className="pt-4">
+                  <NeedsYou
+                    title="Awaiting your review // 02 harness changes"
+                    body="Claude Code and Codex proposed changes to visual-qa and the UI harness."
+                    action={<Button variant="needs-you">Review H-09</Button>}
+                    secondaryAction={<Button variant="needs-you-text">See both</Button>}
+                  />
+                </div>
               ) : null}
-              <SectionHeader title="Failing checks" count="03 of 06" level={2} />
+              <div className={frame.split ? "-mt-1" : undefined}>
+                <SectionHeader title="Failing checks" count="03 of 06" level={2} />
+              </div>
             </div>
           </AppFrameInset>
           <ul aria-label="Failing checks" className="flex flex-col">
@@ -133,8 +140,8 @@ function Overview() {
             ))}
           </ul>
         </AppFrameColumn>
-        {/* The activity stands beside the overview on a desktop; on a phone it is not part of the page, so the sheet starts closed. */}
-        <AppFrameSidePanel open={frame.split && activity} onOpenChange={setActivity} title="Activity" minContent="detail">
+        {/* The activity stands beside the overview while the window has the room. With less room, and on a phone, the panel is a sheet that starts closed (the part hands `open` back). */}
+        <AppFrameSidePanel open={activity} onOpenChange={setActivity} title="Activity" minContent="detail">
           <div className="flex flex-col gap-2">
             <SectionHeader title="Activity // Today" count={ACTIVITY.length} level={2} />
             <ul aria-label="Activity today" className="flex flex-col">

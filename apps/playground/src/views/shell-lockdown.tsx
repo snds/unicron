@@ -161,8 +161,9 @@ function Items() {
         <AppFrameDetail open={picked !== null} onBack={() => setPicked(null)} aria-label="Steam">
           {open ? (
             <AppFrameInset>
+              {/* The head, then 16 to what belongs with it (the request, or the fields); the blocks under it are 24 apart (Desktop / 01). */}
+              <AppFramePageHead size={frame.split ? "lg" : "md"} overline="Login // Passkey + Code // Steam Guard" title="Steam" meta="store.steampowered.com // added 2024.03.11" metaPosition="below" gap="sm" />
               <div className="flex flex-col gap-6">
-              <AppFramePageHead size={frame.split ? "lg" : "md"} overline="Login // Passkey + Code // Steam Guard" title="Steam" meta="store.steampowered.com // added 2024.03.11" metaPosition="below" />
               {frame.split ? (
                 <NeedsYou
                   title="Sign-in request // 00:40 ago"

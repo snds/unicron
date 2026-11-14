@@ -411,12 +411,14 @@ test("each rule draws its own line, in its own color", async ({ page }) => {
 // ── scrim ──────────────────────────────────────────────────────────────────────────────────────
 
 test("a scrim is the scrim role at its knob: never opaque, never blurred", async ({ page }) => {
-  const KNOBS = { "scrim-sheet": 0.5, "scrim-dialog": 0.6, "scrim-menu": 0.32 }
+  // Figma's paint opacity per ground: by use on graphite; on stone the role's own 64% behind
+  // every layer (the knob is 1 there), as every stone frame draws it.
+  const GRAPHITE = { "scrim-sheet": 0.5, "scrim-dialog": 0.6, "scrim-menu": 0.32 }
   for (const ground of GROUNDS) {
     await open(page, "warpcore", ground)
-    // Stone's role already carries 64%; the knob multiplies it.
     const base = ground === "stone" ? 0.64 : 1
-    for (const [name, knob] of Object.entries(KNOBS)) {
+    for (const [name, onGraphite] of Object.entries(GRAPHITE)) {
+      const knob = ground === "stone" ? 1 : onGraphite
       const layer = page.locator(`[data-scrim="${name}"] .${name}`)
       const seen = await layer.evaluate((el) => {
         const style = getComputedStyle(el)

@@ -15,6 +15,9 @@ export default function ComposerView() {
   const [sent, setSent] = useState("Nothing sent yet")
   const [streaming, setStreaming] = useState(false)
   const [draft, setDraft] = useState("")
+  const [waiting, setWaiting] = useState(true)
+  const [log, setLog] = useState<string[]>([])
+  const note = (line: string) => setLog((lines) => [...lines, line])
 
   return (
     <div className="flex flex-col gap-10 p-6">
@@ -62,16 +65,24 @@ export default function ComposerView() {
           value={draft}
           onValueChange={setDraft}
           streaming={streaming}
-          onStop={() => setStreaming(false)}
-          onSend={() => {
+          onStop={() => {
+            note("stop")
+            setStreaming(false)
+          }}
+          onSend={(text) => {
+            note(`send: ${text}`)
             setDraft("")
             setStreaming(true)
           }}
         />
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
           <Button size="sm" variant="secondary" onClick={() => setStreaming((on) => !on)}>
             {streaming ? "End the reply" : "Start a reply"}
           </Button>
+          {/* What the composers of this view did, in order: Stop must never be followed by a send it did not ask for. */}
+          <p data-composer-log="" className="type-meta text-text-label">
+            {log.length ? log.join(" // ") : "Nothing yet"}
+          </p>
         </div>
       </Specimen>
 
@@ -83,9 +94,21 @@ export default function ComposerView() {
         <Composer
           placeholder="Ask anything"
           defaultValue="Draw the new login flow so I can share it with the team."
-          waiting
-          status={<Accessory meta="Offline // waiting to send" title="Sends when you're back online." />}
+          waiting={waiting}
+          onCancelWaiting={() => {
+            note("cancel waiting")
+            setWaiting(false)
+          }}
+          onSend={(text) => note(`send: ${text}`)}
+          status={waiting ? <Accessory meta="Offline // waiting to send" title="Sends when you're back online." /> : undefined}
         />
+        {waiting ? null : (
+          <div>
+            <Button size="sm" variant="secondary" onClick={() => setWaiting(true)}>
+              Go offline again
+            </Button>
+          </div>
+        )}
       </Specimen>
 
       <Specimen label="Disabled with a line // Send is off; the line says why and stays in reach">

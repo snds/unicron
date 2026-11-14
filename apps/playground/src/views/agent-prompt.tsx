@@ -32,6 +32,8 @@ export default function AgentPromptView() {
           kind="permission"
           layout="inline"
           overline="Question"
+          tier="tolerated"
+          verified
           expiresAt={expiresAt}
           safeAnswer="deny"
           onExpire={() => {}}

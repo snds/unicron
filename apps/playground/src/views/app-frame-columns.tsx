@@ -58,6 +58,7 @@ function Inbox() {
 }
 
 export default function AppFrameColumnsView() {
+  const [activity, setActivity] = useState(true)
   const [peek, setPeek] = useState(true)
   return (
     <div className="flex flex-col gap-10 p-4 sm:p-6">
@@ -136,6 +137,24 @@ export default function AppFrameColumnsView() {
             <AppFrameSidePanel open onOpenChange={() => {}} title="Activity" minContent="detail">
               <SectionHeader title="Activity // Today" count={4} />
               <p className="type-ui text-text-body">Imported 12 notes from Obsidian</p>
+            </AppFrameSidePanel>
+          </AppFrameMain>
+        </FrameBox>
+      </Specimen>
+      <Specimen label="Side panel, no room // with under 960 of content beside it (Vale's rule) the panel is a sheet: it starts closed, and a press opens it">
+        <FrameBox width={1024} height={360} layout="expanded" label="Vale at 1024 // the sender panel is a sheet, opened by its button">
+          <Line crumbs={["Personal", "Overview"]} />
+          <AppFrameMain>
+            <AppFrameColumn aria-label="Overview">
+              <SectionHeader title="Failing checks" count="03 of 06" />
+              <Button variant="secondary" size="sm" aria-pressed={activity} onClick={() => setActivity((on) => !on)}>
+                Sender
+              </Button>
+            </AppFrameColumn>
+            {/* `open` starts true, as for a column that stands by default: with no room the part hands it back, and no sheet opens by itself. */}
+            <AppFrameSidePanel open={activity} onOpenChange={setActivity} title="Mira Chen" minContent="room">
+              <SectionHeader title="Recent mail" count={4} />
+              <p className="type-ui text-text-body">Cabin for the 20th, confirmed</p>
             </AppFrameSidePanel>
           </AppFrameMain>
         </FrameBox>
