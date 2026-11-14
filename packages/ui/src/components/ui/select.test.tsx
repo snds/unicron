@@ -107,6 +107,16 @@ describe("Select", () => {
     expect(trigger()).toHaveTextContent("Choose a model")
   })
 
+  it("adds no <style> tag as its list opens, and hides the inner list's bar with the stylesheet's utility", async () => {
+    render(<Subject />)
+    await openList()
+    expect(screen.getByRole("listbox")).toBeInTheDocument()
+    // Base UI's popup adds one (in <head>) unless it is told not to; a strict style-src refuses it.
+    expect(document.querySelectorAll("style")).toHaveLength(0)
+    // The inner list is what scrolls when the chosen item sits over the trigger.
+    expect(document.querySelector('[data-slot="select-list"]')?.className).toContain("no-scrollbar")
+  })
+
   it("marks the chosen option selected", async () => {
     render(<Subject defaultValue="code" />)
     await openList()

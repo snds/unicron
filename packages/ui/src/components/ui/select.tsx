@@ -5,6 +5,7 @@
 "use client"
 
 import * as React from "react"
+import { CSPProvider } from "@base-ui/react/csp-provider"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { useRender } from "@base-ui/react/use-render"
@@ -109,27 +110,40 @@ function SelectContent({
         alignItemWithTrigger={alignItemWithTrigger}
         className="isolate z-50"
       >
-        <SelectPrimitive.Popup
-          data-slot="select-content"
-          data-width={width}
-          data-align-trigger={alignItemWithTrigger}
-          className={cn(
-            "bg-popover text-popover-foreground rule-box rounded-lg data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 duration-(--motion-fast) data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 animate-none! relative isolate z-50 max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none",
-            // Base UI hides the list's scrollbar with an inline <style> when the chosen item sits
-            // over the trigger. A strict CSP (Lockdown: style-src 'self') blocks that tag, so the
-            // stylesheet's own utility does it too.
-            "data-[align-trigger=true]:no-scrollbar",
-            MENU_WIDTHS[width],
-            className
-          )}
-          {...props}
-        >
-          <SelectScrollUpButton />
-          <SelectPrimitive.List data-slot="select-list" className="p-1">
-            {children}
-          </SelectPrimitive.List>
-          <SelectScrollDownButton />
-        </SelectPrimitive.Popup>
+        {/*
+          Base UI adds a <style> tag to the page as the list opens, to hide a scrollbar. A strict
+          policy (Lockdown: style-src 'self') refuses that tag and reports it, so the list asks
+          Base UI for no tag at all (contract section 7); the stylesheet's `no-scrollbar` hides the
+          bar instead, on the element Base UI marks for it: the inner list (below).
+        */}
+        <CSPProvider disableStyleElements>
+          <SelectPrimitive.Popup
+            data-slot="select-content"
+            data-width={width}
+            className={cn(
+              "bg-popover text-popover-foreground rule-box rounded-lg data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 duration-(--motion-fast) data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 animate-none! relative isolate z-50 max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none",
+              // Over the trigger (Base UI marks that `data-side="none"`), Base UI sizes the list
+              // itself so the chosen item meets the trigger. The cap is the room on one side of
+              // the trigger, so it would cut the list short of the trigger when the chosen item is
+              // far down a long list.
+              "data-[side=none]:max-h-none",
+              MENU_WIDTHS[width],
+              className
+            )}
+            {...props}
+          >
+            <SelectScrollUpButton />
+            {/*
+              With the chosen item over the trigger (`alignItemWithTrigger`, a pointer), this inner
+              list is what scrolls, behind the two arrows, and it shows no bar. Everywhere else the
+              popup scrolls and keeps its bar, so the class changes nothing there.
+            */}
+            <SelectPrimitive.List data-slot="select-list" className="no-scrollbar p-1">
+              {children}
+            </SelectPrimitive.List>
+            <SelectScrollDownButton />
+          </SelectPrimitive.Popup>
+        </CSPProvider>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>
   )

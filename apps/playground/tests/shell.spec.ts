@@ -42,12 +42,22 @@ test("every file in src/views is a view, and the picker lists them all", async (
 })
 
 for (const name of VIEW_FILES) {
-  test(`?view=${name} mounts`, async ({ page }) => {
+  test(`?view=${name} mounts, and no part leaves a <style> tag in the page`, async ({ page }) => {
     const errors: string[] = []
     page.on("pageerror", (error) => errors.push(error.message))
     await page.goto(`/?view=${name}`)
     await ready(page, name)
     expect(errors).toEqual([])
+    // Contract section 7: no part adds a <style> tag at run time (a strict style-src refuses one
+    // and reports it). The built playground's own CSS is a linked file. Its theme switch adds a
+    // tag for a moment (next-themes, main.tsx), which is left out by its text.
+    const styleTags = await page.evaluate(() =>
+      [...document.querySelectorAll("style")]
+        .map((tag) => tag.textContent ?? "")
+        .filter((text) => !text.includes("transition:none!important"))
+        .map((text) => text.slice(0, 60))
+    )
+    expect(styleTags).toEqual([])
   })
 }
 

@@ -3,6 +3,7 @@
 // Promoted from: Seeded in snds/unicron (2026-11 design direction: a square thumb in the label ink, on the rule; no app PR, no DSA record)
 "use client"
 
+import { CSPProvider } from "@base-ui/react/csp-provider"
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
 import { cn } from "../../lib/utils"
 
@@ -12,24 +13,29 @@ function ScrollArea({
   ...props
 }: ScrollAreaPrimitive.Root.Props) {
   return (
-    <ScrollAreaPrimitive.Root
-      data-slot="scroll-area"
-      // min-h-0: in a flex or grid parent it takes the height it is given, and scrolls inside it.
-      className={cn("relative min-h-0 min-w-0", className)}
-      {...props}
-    >
-      <ScrollAreaPrimitive.Viewport
-        data-slot="scroll-area-viewport"
-        // Base UI hides the native scrollbar with an inline <style>; a strict CSP (Lockdown:
-        // style-src 'self') blocks that tag, so the stylesheet's utility does it too. A viewport
-        // that scrolls by keyboard takes the one focus ring, drawn inside it.
-        className="size-full rounded-[inherit] no-scrollbar focus-visible:-outline-offset-2"
+    // Base UI hides the viewport's own scrollbar with a <style> tag it adds to the page. A strict
+    // policy (Lockdown: style-src 'self') refuses that tag and reports it, so the root asks Base UI
+    // for no tag at all (contract section 7), and the stylesheet's `no-scrollbar` hides the bar.
+    // The setting reaches whatever sits inside: a Base UI part an app places here adds no tag either.
+    <CSPProvider disableStyleElements>
+      <ScrollAreaPrimitive.Root
+        data-slot="scroll-area"
+        // min-h-0: in a flex or grid parent it takes the height it is given, and scrolls inside it.
+        className={cn("relative min-h-0 min-w-0", className)}
+        {...props}
       >
-        {children}
-      </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
-      <ScrollAreaPrimitive.Corner />
-    </ScrollAreaPrimitive.Root>
+        <ScrollAreaPrimitive.Viewport
+          data-slot="scroll-area-viewport"
+          // no-scrollbar does the job of the tag Base UI no longer adds. A viewport that scrolls
+          // by keyboard takes the one focus ring, drawn inside it.
+          className="size-full rounded-[inherit] no-scrollbar focus-visible:-outline-offset-2"
+        >
+          {children}
+        </ScrollAreaPrimitive.Viewport>
+        <ScrollBar />
+        <ScrollAreaPrimitive.Corner />
+      </ScrollAreaPrimitive.Root>
+    </CSPProvider>
   )
 }
 

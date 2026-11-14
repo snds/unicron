@@ -14,4 +14,14 @@ describe("ScrollArea", () => {
     expect(viewport.className).toContain("no-scrollbar")
     expect(viewport.className).not.toContain("outline-none")
   })
+
+  it("adds no <style> tag to the page: a strict style-src refuses one and reports it", () => {
+    render(
+      <ScrollArea className="h-20">
+        <p>Mira Chen // 09:14</p>
+      </ScrollArea>
+    )
+    // Base UI's root adds one (in <head>) unless it is told not to.
+    expect(document.querySelectorAll("style")).toHaveLength(0)
+  })
 })

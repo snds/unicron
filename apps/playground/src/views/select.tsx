@@ -5,6 +5,12 @@ import { Column, Page, Specimen } from "./_primitives"
 
 const SEPARATORS = { dash: "A dash", space: "A space", dot: "A dot", none: "Nothing" }
 const MODELS = { general: "General", code: "Code", vision: "Vision" }
+// The 24 hours of a day, in order: more rows than a screen is tall. A list, not an object: an
+// object's keys would put "10" to "23" ahead of "00".
+const HOURS = Array.from({ length: 24 }, (_, hour) => {
+  const value = String(hour).padStart(2, "0")
+  return { value, label: `${value}:00` }
+})
 
 export default function SelectView() {
   return (
@@ -90,6 +96,26 @@ export default function SelectView() {
             </Select>
           </Field>
           </div>
+        </Column>
+      </Specimen>
+
+      <Specimen label="Select // the chosen hour over the trigger; a list taller than the screen scrolls with no bar">
+        <Column>
+          <Field>
+            <FieldLabel htmlFor="view-select-aligned">Quiet hours start</FieldLabel>
+            <Select items={HOURS} defaultValue="22">
+              <SelectTrigger id="view-select-aligned">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent alignItemWithTrigger>
+                {HOURS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
         </Column>
       </Specimen>
     </Page>

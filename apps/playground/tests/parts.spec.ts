@@ -1,8 +1,8 @@
 // Single parts in a real browser: what a unit test in jsdom cannot see. jsdom lays nothing out,
 // draws no outline and runs no form submission after a click, so these read the computed style and
 // the boxes of the built playground: focus rings, heights on the 4px grid, touch targets, a button
-// that fits its label, a press that must not become a submit, and the Toaster under a strict
-// style-src. Each check names the review finding (2026-11-14) it holds.
+// that fits its label, a press that must not become a submit, and the Toaster, a ScrollArea and
+// a Select under a strict style-src. Each check names the review finding (2026-11-14) it holds.
 import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const view = (page: Page) => page.locator('[data-slot="playground-view"]')
@@ -109,7 +109,8 @@ for (const [theme, ground] of [
 // ── the Toaster under a strict style-src (contract §7) ─────────────────────────────────────────
 
 test("under style-src 'self' the toasts still take their place: sonner's rules arrive in the stylesheet file", async ({ page }) => {
-  // Lockdown's web vault: no inline style tag is allowed. sonner adds its sheet in one as it loads.
+  // Lockdown's web vault: no inline style tag is allowed. sonner's own module adds its sheet in
+  // one as it loads; this package's copy of it does not (vendor/sonner.js).
   await page.route(
     (url) => url.pathname === "/",
     async (route) => {
@@ -125,7 +126,8 @@ test("under style-src 'self' the toasts still take their place: sonner's rules a
   const toaster = page.locator("[data-sonner-toaster]").first()
   const toast = toaster.locator("[data-sonner-toast]").first()
   await expect(toast).toBeVisible()
-  // The policy is on: sonner's own style tag was refused.
+  // The policy is on: it refused a style tag (the playground's own theme switch adds one for a
+  // moment; see THEME_SWITCH_TAG below).
   expect(blocked.some((text) => /style/i.test(text))).toBe(true)
   // The refused tag is in the document but styles nothing: it has no sheet.
   expect(await page.evaluate(() => [...document.querySelectorAll("style")].filter((tag) => /data-sonner-toaster/.test(tag.textContent ?? "")).every((tag) => tag.sheet === null))).toBe(true)
@@ -141,6 +143,117 @@ test("under style-src 'self' the toasts still take their place: sonner's rules a
   expect(place.top).toBeGreaterThan(place.height / 2)
   // Past the 204 sidebar and its gap: in the content column.
   expect(place.left).toBeGreaterThan(204)
+})
+
+// ── no part adds a <style> tag (contract §7; the clean-copy verification, 2026-11-14) ───────────
+
+/** Lockdown's web vault policy. `report-sample` puts the start of a refused tag's text in the report. */
+const STRICT_POLICY = "default-src 'self'; style-src 'self' 'report-sample'; font-src 'self'; script-src 'self'; img-src 'self'"
+
+/**
+ * The playground's own tag, not a part's: next-themes turns transitions off for a moment with a
+ * <style> tag each time it sets the ground (main.tsx, `disableTransitionOnChange`). These are the
+ * first 40 characters of it, which is what a report carries.
+ */
+const THEME_SWITCH_TAG = "*,*::before,*::after{-webkit-transition:"
+
+/** Serve the page under the strict policy, and read back what the policy refused. */
+async function underStrictPolicy(page: Page) {
+  await page.route(
+    (url) => url.pathname === "/",
+    async (route) => {
+      const response = await route.fetch()
+      await route.fulfill({ response, headers: { ...response.headers(), "content-security-policy": STRICT_POLICY } })
+    }
+  )
+  await page.addInitScript(() => {
+    const refused: string[] = []
+    Object.assign(window, { __refused: refused })
+    document.addEventListener("securitypolicyviolation", (event) => refused.push(`${event.effectiveDirective} ${event.sample}`))
+  })
+  return {
+    /** Everything the policy refused, less the playground's own theme switch. */
+    refused: () => page.evaluate((own) => (window as unknown as { __refused: string[] }).__refused.filter((entry) => !entry.includes(own)), THEME_SWITCH_TAG),
+    /** The <style> tags in the page, less the same. A refused tag stays in the document. */
+    styleTags: () =>
+      page.evaluate(
+        (own) =>
+          [...document.querySelectorAll("style")]
+            .map((tag) => tag.textContent ?? "")
+            .filter((text) => !text.startsWith(own))
+            .map((text) => text.slice(0, 60)),
+        THEME_SWITCH_TAG
+      ),
+    /** True when the policy really is on: a style tag added now gets no sheet. */
+    isOn: () =>
+      page.evaluate(() => {
+        const probe = document.createElement("style")
+        probe.textContent = ".strict-policy-probe{}"
+        document.head.append(probe)
+        const refused = probe.sheet === null
+        probe.remove()
+        return refused
+      }),
+  }
+}
+
+test("under style-src 'self' the Toaster adds no <style> tag", async ({ page }) => {
+  const policy = await underStrictPolicy(page)
+  await open(page, "toaster", "lockdown")
+  await expect(page.locator("[data-sonner-toast]").first()).toBeVisible()
+  expect(await policy.refused()).toEqual([])
+  expect(await policy.styleTags()).toEqual([])
+  expect(await policy.isOn()).toBe(true)
+})
+
+test("under style-src 'self' a ScrollArea adds no <style> tag, and its own bar stays hidden", async ({ page }) => {
+  // Base UI's scroll area hides the viewport's bar with a <style> tag. The policy refused it, logged
+  // an error and raised a report; the stylesheet's no-scrollbar was already doing the hiding.
+  const policy = await underStrictPolicy(page)
+  await open(page, "scroll-area", "lockdown")
+  const viewport = page.locator('[data-slot="scroll-area-viewport"]').first()
+  // It scrolls, so there is a bar to hide.
+  expect(await viewport.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
+  expect(await viewport.evaluate((el) => getComputedStyle(el).scrollbarWidth)).toBe("none")
+  expect(await policy.refused()).toEqual([])
+  expect(await policy.styleTags()).toEqual([])
+  expect(await policy.isOn()).toBe(true)
+})
+
+test("under style-src 'self' a Select's list adds no <style> tag as it opens; over its trigger, a long list scrolls with no bar", async ({ page }) => {
+  // Base UI's popup adds the same tag as it opens. With the chosen item over the trigger the inner
+  // list is what scrolls, and the tag was all that hid its bar: under the policy the bar showed.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const policy = await underStrictPolicy(page)
+  await open(page, "select", "lockdown")
+  const shown = page.locator('[data-slot="select-content"][data-open]')
+  // The view mounts with one list open.
+  await expect(shown).toBeVisible()
+  expect(await policy.refused()).toEqual([])
+  await page.keyboard.press("Escape")
+  await expect(shown).toHaveCount(0)
+
+  // "Quiet hours start": 24 rows, taller than the screen, the chosen hour laid over the trigger.
+  const trigger = page.locator("#view-select-aligned")
+  await trigger.click()
+  await expect(shown).toBeVisible()
+  const list = shown.locator('[data-slot="select-list"]')
+  // 22:00, near the list's end, meets the trigger: the list is not cut short of it (it was capped
+  // at the room above the trigger, which hid the chosen hour behind the lower arrow).
+  const middle = (el: Locator) =>
+    el.evaluate((node) => {
+      const box = node.getBoundingClientRect()
+      return (box.top + box.bottom) / 2
+    })
+  await expect.poll(async () => Math.abs((await middle(shown.getByRole("option", { selected: true }))) - (await middle(trigger)))).toBeLessThanOrEqual(2)
+  // The inner list scrolls (the popup does not), and an arrow says so: the bar is not its only sign.
+  await expect.poll(() => list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
+  expect(await shown.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(false)
+  await expect(shown.locator('[data-slot^="select-scroll-"]').first()).toBeVisible()
+  expect(await list.evaluate((el) => getComputedStyle(el).scrollbarWidth)).toBe("none")
+  expect(await policy.refused()).toEqual([])
+  expect(await policy.styleTags()).toEqual([])
+  expect(await policy.isOn()).toBe(true)
 })
 
 // ── menus ──────────────────────────────────────────────────────────────────────────────────────
