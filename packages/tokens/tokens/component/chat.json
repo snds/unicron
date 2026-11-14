@@ -1,0 +1,56 @@
+{
+  "$description": "Tier 3 · Component knobs for the chat area (packages/ui: composer.tsx, chat-message.tsx, artifact-card.tsx, summary-block.tsx, prose.tsx, code-block.tsx, status-orb.tsx, indicator.tsx, run-trace.tsx, security/agent-prompt.tsx), merged with component.json at build and emitted as --c-*. It re-declares the StatusOrb and Indicator colours and the Indicator's dot size from component.json, because the 2026-11 restyle (contract §5.1) moves them onto the new roles: live is secondary-live, needs-you is the yellow with its ink, marks are squares. The other sizes in these parts (the 40px send button and artifact tile, the 2px edge, padding 12 / 16) sit on the 4px spacing scale, the size roles and the stroke roles, and the Artifact Card's hover and pressed are the state roles themselves, so they need no knob.",
+  "chat": {
+    "$description": "ChatMessage (Figma 32:103).",
+    "bubble-max": {
+      "$type": "dimension",
+      "$value": "18.75rem",
+      "$description": "The widest a person's bubble grows (300px). Figma draws the bubble fixed at 300; the contract (§5.1) has it hug its text up to this."
+    }
+  },
+  "composer": {
+    "$description": "Composer (Figma 32:91).",
+    "max-lines": {
+      "$type": "number",
+      "$value": 10,
+      "$description": "How many lines of the `ui` role the field grows to before it scrolls inside itself (10 × 20px = 200px). Not drawn in Figma, which draws the empty state only."
+    }
+  },
+  "status-orb": {
+    "$description": "StatusOrb, re-declared for the 2026-11 restyle. Still and finished states take the label ink; thinking and working take the app's live colour (the one motion reserved for agent activity); needs-you takes the yellow, with the yellow's own ink as an outline, because the yellow has no lightness contrast with the stone surfaces (Lc 0 on the ground) and a small yellow square alone does not show there.",
+    "idle": { "$type": "color", "$value": "{text-label}" },
+    "queued": { "$type": "color", "$value": "{text-label}", "$description": "A clock glyph: waiting its turn." },
+    "paused": { "$type": "color", "$value": "{text-label}", "$description": "A pause glyph: on hold, and it picks up again." },
+    "stopped": { "$type": "color", "$value": "{text-label}", "$description": "A stop glyph: someone ended it. Not a failure, so not critical." },
+    "thinking": { "$type": "color", "$value": "{secondary-live}", "$description": "Live: the app's secondary colour." },
+    "working": { "$type": "color", "$value": "{secondary-live}", "$description": "Live: the app's secondary colour." },
+    "needs-you": { "$type": "color", "$value": "{needs-you-fill}", "$description": "The yellow, the same in every app." },
+    "needs-you-edge": {
+      "$type": "color",
+      "$value": "{needs-you-on-fill}",
+      "$description": "A 1px outline in the yellow's ink around the needs-you square, so the mark reads on stone, where the yellow alone has no lightness contrast."
+    },
+    "done": { "$type": "color", "$value": "{success-foreground}", "$description": "A check glyph. success keeps its accent ramp (contract §1.4)." },
+    "failed": { "$type": "color", "$value": "{critical-text}", "$description": "A warning glyph." },
+    "offline": { "$type": "color", "$value": "{text-label}" }
+  },
+  "indicator": {
+    "$description": "IndicatorMark, re-declared for the 2026-11 restyle. A dot is a square: unread is the ink square Figma draws on a message row (6 × 6, text-body); attention is the yellow square with a 1px ink outline (needs-you-edge), so it reads on stone. A badge is the count on the same two fills.",
+    "dot-size": {
+      "$type": "dimension",
+      "$value": "0.375rem",
+      "$description": "6px: Figma's Unread mark (List Row, Message layout)."
+    },
+    "attention": { "$type": "color", "$value": "{needs-you-fill}", "$description": "The attention square." },
+    "attention-edge": {
+      "$type": "color",
+      "$value": "{needs-you-on-fill}",
+      "$description": "The 1px ink outline on the attention square and the attention badge."
+    },
+    "unread": { "$type": "color", "$value": "{text-body}", "$description": "The unread square: ink, not the identity colour (Figma List Row)." },
+    "attention-badge-bg": { "$type": "color", "$value": "{needs-you-fill}" },
+    "attention-badge-ink": { "$type": "color", "$value": "{needs-you-on-fill}" },
+    "unread-badge-bg": { "$type": "color", "$value": "{text-body}", "$description": "Inverted ink, as an active Filter Chip (contract §6.5)." },
+    "unread-badge-ink": { "$type": "color", "$value": "{surface-ground}" }
+  }
+}

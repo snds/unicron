@@ -1,4 +1,5 @@
 // Promoted from: hand-raised from the Mercury review (none)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: live = secondary-live, needs-you = the yellow with an ink outline, square marks; contract 5.1; no app PR, no DSA record)
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
@@ -51,21 +52,26 @@ const GLYPHS: Partial<Record<StatusOrbState, IconName>> = {
  *
  * | state | shape | motion | colour |
  * |---|---|---|---|
- * | idle | small dot | none | muted |
- * | queued | `time--filled` glyph (a clock) | none | muted |
- * | thinking | dot in a soft halo | the halo breathes | running |
- * | working | dot in a ring with a gap | the ring turns | running |
- * | paused | `pause--outline--filled` glyph | none | muted |
- * | needs-you | dot in a solid ring | the ring pulses out | attention |
+ * | idle | small square | none | label ink |
+ * | queued | `time--filled` glyph (a clock) | none | label ink |
+ * | thinking | square in a soft halo | the halo breathes | live (`secondary-live`) |
+ * | working | square in a square ring with a gap | the ring turns | live |
+ * | paused | `pause--outline--filled` glyph | none | label ink |
+ * | needs-you | square with an ink outline in a solid ring | the ring pulses out | the yellow |
  * | done | check | none | success |
- * | stopped | `stop--filled` glyph | none | muted |
- * | failed | `warning--filled` glyph (a circle with an exclamation mark) | none | destructive |
- * | offline | hollow ring | none | muted |
+ * | stopped | `stop--filled` glyph | none | label ink |
+ * | failed | `warning--filled` glyph (a circle with an exclamation mark) | none | critical text |
+ * | offline | hollow square | none | label ink |
  *
  * Queued, paused and stopped are still: each is waiting or over, so none of them moves. Stopped is
  * a run someone ended, apart from one that failed or one that never started.
  *
  * With reduced motion the halo and the pulse hold still and the working ring becomes dashed.
+ *
+ * Marks are squares (contract §1.6). The yellow has no lightness contrast with the stone surfaces,
+ * so the needs-you square carries a 1px outline in the yellow's own ink
+ * (`--c-status-orb-needs-you-edge`): on stone the outline draws the shape, on graphite the yellow
+ * does. The turning ring is the one motion reserved for agent work; generic loading uses Spinner.
  */
 export function StatusOrb({ state, size = "sm", tooltip = true, label, className, ...props }: StatusOrbProps) {
   const words = label ?? statusOrbCopy[state]
@@ -85,7 +91,11 @@ export function StatusOrb({ state, size = "sm", tooltip = true, label, className
       ) : (
         <>
           <span data-slot="status-orb-halo" aria-hidden />
-          <span data-slot="status-orb-dot" aria-hidden />
+          <span
+            data-slot="status-orb-dot"
+            aria-hidden
+            className={state === "needs-you" ? "ring-(length:--stroke-rule) ring-(--c-status-orb-needs-you-edge)" : undefined}
+          />
         </>
       )}
     </span>

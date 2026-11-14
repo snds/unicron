@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { AGENT_PROMPT_REPLY, AgentPrompt, agentPromptLayout } from "./agent-prompt"
+import { AGENT_PROMPT_REPLY, AgentPrompt, agentPromptLayout, formatPromptCountdown } from "./agent-prompt"
 
 const key = (k: string, target: Element = document.body) =>
   fireEvent.keyDown(target, { key: k })
@@ -13,14 +13,20 @@ describe("AgentPrompt", () => {
     expect(screen.getByText("Run pnpm install in the sandbox")).toBeInTheDocument()
   })
 
-  it("draws two or three short options as buttons, the first primary", () => {
+  it("draws two or three short options as buttons: the safe one solid in the yellow's ink, the rest text", () => {
     const onAnswer = vi.fn()
     const { container } = render(<AgentPrompt kind="permission" onAnswer={onAnswer} />)
     expect(container.querySelector('[data-layout="buttons"]')).toBeInTheDocument()
-    const allow = screen.getByRole("button", { name: /Allow/ })
-    expect(allow.className).toContain("bg-primary")
-    // The second option is the outlined button: transparent, with a 1px ink edge drawn inside the box.
-    expect(screen.getByRole("button", { name: /Deny/ }).className).toContain("inset-ring inset-ring-foreground")
+    // Cross-app decisions §2: the safe answer (Deny) is the one solid button, and comes first.
+    const deny = screen.getByRole("button", { name: /Deny/ })
+    expect(deny).toHaveAttribute("data-variant", "needs-you")
+    expect(deny).toHaveAttribute("data-safe")
+    expect(deny.className).toContain("bg-needs-you-on-fill")
+    // The other option is a text button on the yellow: no fill, no edge.
+    const allow = screen.getByRole("button", { name: /Allow once/ })
+    expect(allow).toHaveAttribute("data-variant", "needs-you-text")
+    expect(allow.className).not.toMatch(/(^| )bg-needs-you-on-fill( |$)/)
+    expect(deny.compareDocumentPosition(allow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     fireEvent.click(allow)
     expect(onAnswer).toHaveBeenCalledWith("allow")
   })
@@ -42,7 +48,11 @@ describe("AgentPrompt", () => {
     )
     const rows = container.querySelector('[data-layout="rows"]')!
     expect(rows.tagName).toBe("OL")
-    expect(rows.querySelector('[data-slot="item-title"]')!.className).toContain("line-clamp-none")
+    // Each row is a button whose title and detail wrap; nothing is cut.
+    const title = rows.querySelector('[data-slot="agent-prompt-option-title"]')!
+    expect(title.className).toContain("break-words")
+    expect(title.className).not.toMatch(/truncate|line-clamp-\d/)
+    expect(screen.getByRole("button", { name: /Patch it/ })).toHaveTextContent("The smallest change that fixes the test")
     expect(screen.getByRole("region", { name: "Choose" })).toBeInTheDocument()
   })
 
@@ -143,12 +153,13 @@ describe("AgentPrompt", () => {
     expect(screen.getByText("Use with care")).toBeInTheDocument()
   })
 
-  it("shows key hints only with a fine pointer", () => {
-    const { container } = render(<AgentPrompt kind="permission" onAnswer={() => {}} />)
-    const kbd = container.querySelector('[data-slot="kbd"]')!
+  it("shows key hints only with a fine pointer, each the key of its meaning", () => {
+    render(<AgentPrompt kind="permission" onAnswer={() => {}} />)
+    const kbd = screen.getByRole("button", { name: /Allow once/ }).querySelector('[data-slot="kbd"]')!
     expect(kbd.textContent).toBe("Y")
     expect(kbd.className).toContain("hidden")
     expect(kbd.className).toContain("pointer-fine:inline-flex")
+    expect(screen.getByRole("button", { name: /Deny/ }).querySelector('[data-slot="kbd"]')!.textContent).toBe("N")
   })
 
   describe("deadline", () => {
@@ -159,10 +170,15 @@ describe("AgentPrompt", () => {
       vi.useFakeTimers({ now: T })
       render(<AgentPrompt kind="permission" expiresAt={T + 65_000} safeAnswer="deny" onAnswer={() => {}} />)
       const timer = screen.getByRole("timer")
-      expect(timer).toHaveTextContent("1:05")
-      expect(timer).toHaveAccessibleName("Deny in 1:05")
+      // Cross-app decisions §13: MM:SS with a leading zero.
+      expect(timer).toHaveTextContent("01:05")
+      expect(timer).toHaveAccessibleName("Deny in 01:05")
       act(() => vi.advanceTimersByTime(5_000))
-      expect(screen.getByRole("timer")).toHaveTextContent("1:00")
+      expect(screen.getByRole("timer")).toHaveTextContent("01:00")
+      // Under a minute: NN S.
+      act(() => vi.advanceTimersByTime(15_000))
+      expect(screen.getByRole("timer")).toHaveTextContent("45 S")
+      expect(screen.getByRole("timer")).toHaveAccessibleName("Deny in 45 S")
     })
 
     it("answers itself with the safe answer, once, and marks it", () => {
@@ -251,5 +267,122 @@ describe("AgentPrompt", () => {
       fireEvent.click(screen.getByRole("button", { name: /Allow/ }))
       expect(onAnswer).toHaveBeenCalledWith("allow")
     })
+  })
+})
+
+describe("AgentPrompt in the needs-you look (2026-11)", () => {
+  it("is the yellow field while it waits, with the yellow's ink and its focus ring", () => {
+    render(<AgentPrompt kind="permission" onAnswer={() => {}}>Run pnpm install in the sandbox</AgentPrompt>)
+    const region = screen.getByRole("region", { name: "Allow?" })
+    expect(region.className).toContain("bg-needs-you-fill")
+    expect(region.className).toContain("text-needs-you-on-fill")
+    // Controls inside draw their focus ring in the yellow's ink.
+    expect(region.className).toContain("on-needs-you")
+    // The title is a mono caps overline.
+    expect(region.querySelector("h3")!.className).toContain("type-overline")
+  })
+
+  it("turns quiet once answered: the raised surface, a hairline, no yellow", () => {
+    render(<AgentPrompt kind="permission" answer="deny" onAnswer={() => {}} />)
+    const region = screen.getByRole("region")
+    expect(region.className).not.toContain("bg-needs-you-fill")
+    expect(region.className).toContain("bg-surface-raised")
+    expect(region.className).toContain("rule-box")
+    expect(screen.getByRole("button", { name: /Deny/ })).toHaveAttribute("data-variant", "secondary")
+  })
+
+  it("moves focus to the safe answer when it arrives and nothing else has focus", () => {
+    render(<AgentPrompt kind="permission" onAnswer={() => {}} />)
+    expect(screen.getByRole("button", { name: /Deny/ })).toHaveFocus()
+  })
+
+  it("leaves focus where it is when the person is busy elsewhere, or when told not to move it", () => {
+    const { unmount } = render(
+      <>
+        <input aria-label="Message" autoFocus />
+        <AgentPrompt kind="permission" onAnswer={() => {}} />
+      </>
+    )
+    expect(screen.getByRole("textbox", { name: "Message" })).toHaveFocus()
+    unmount()
+    render(<AgentPrompt kind="permission" autoFocus={false} onAnswer={() => {}} />)
+    expect(screen.getByRole("button", { name: /Deny/ })).not.toHaveFocus()
+  })
+
+  it("marks the host's safe option solid, wherever it sits, and keys by meaning, not by place", () => {
+    const onAnswer = vi.fn()
+    render(
+      <AgentPrompt
+        kind="permission"
+        onAnswer={onAnswer}
+        options={[
+          { id: "deny", label: "Deny", safe: true },
+          { id: "once", label: "Allow once" },
+          { id: "always", label: "Always for Lockdown", key: "3" },
+        ]}
+      />
+    )
+    expect(screen.getByRole("button", { name: /^Deny/ })).toHaveAttribute("data-variant", "needs-you")
+    expect(screen.getByRole("button", { name: /Allow once/ })).toHaveAttribute("data-variant", "needs-you-text")
+    // Y allows once and N denies, though Deny is first on screen.
+    key("y")
+    expect(onAnswer).toHaveBeenLastCalledWith("once")
+    key("n")
+    expect(onAnswer).toHaveBeenLastCalledWith("deny")
+  })
+
+  it("takes the safe option from safeAnswer too, and makes it the solid one", () => {
+    render(
+      <AgentPrompt
+        kind="choice"
+        safeAnswer="skip"
+        onAnswer={() => {}}
+        options={[
+          { id: "run", label: "Run it" },
+          { id: "skip", label: "Skip" },
+        ]}
+      />
+    )
+    expect(screen.getByRole("button", { name: /Skip/ })).toHaveAttribute("data-variant", "needs-you")
+    expect(screen.getByRole("button", { name: /Run it/ })).toHaveAttribute("data-variant", "needs-you-text")
+  })
+
+  it("names itself from the host's overline, and says when more wait", () => {
+    render(<AgentPrompt kind="reply" overline="Question" more={1} onAnswer={() => {}} />)
+    const region = screen.getByRole("region", { name: "Question" })
+    expect(region).toHaveTextContent("// +1")
+  })
+
+  it("keeps an open question's send button solid, with the host's word, and focuses the field", () => {
+    render(<AgentPrompt kind="reply" sendLabel="Reply" options={[{ id: "deny", label: "Deny" }]} onAnswer={() => {}} />)
+    expect(screen.getByRole("button", { name: /Reply/ })).toHaveAttribute("data-variant", "needs-you")
+    expect(screen.getByRole("button", { name: /Deny/ })).toHaveAttribute("data-variant", "needs-you-text")
+    expect(screen.getByRole("textbox", { name: "Your answer" })).toHaveFocus()
+  })
+
+  it("keeps a long question in six lines of the body role, scrolling inside", () => {
+    const { container } = render(<AgentPrompt kind="permission" onAnswer={() => {}}>Run pnpm install</AgentPrompt>)
+    const body = container.querySelector('[data-slot="agent-prompt-body"]')!
+    expect(body.className).toContain("type-body")
+    expect(body.className).toContain("max-h-[calc(var(--type-body-leading)*6)]")
+    expect(body.className).toContain("overflow-y-auto")
+  })
+
+  it("says a failed send in the yellow's ink, with a warning glyph", () => {
+    render(<AgentPrompt kind="permission" error="That call is no longer waiting." onAnswer={() => {}} />)
+    const alert = screen.getByRole("alert")
+    expect(alert.className).toContain("text-needs-you-on-fill")
+    expect(alert.querySelector('[data-icon-name="warning--alt"]')).toBeInTheDocument()
+  })
+})
+
+describe("formatPromptCountdown", () => {
+  it("writes MM:SS with a leading zero, then NN S under a minute (decisions §13)", () => {
+    expect(formatPromptCountdown(28 * 60_000 + 14_000)).toBe("28:14")
+    expect(formatPromptCountdown(65_000)).toBe("01:05")
+    expect(formatPromptCountdown(60_000)).toBe("01:00")
+    expect(formatPromptCountdown(45_000)).toBe("45 S")
+    expect(formatPromptCountdown(4_200)).toBe("05 S")
+    expect(formatPromptCountdown(0)).toBe("00 S")
   })
 })

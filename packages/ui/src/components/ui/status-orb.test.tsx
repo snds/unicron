@@ -92,3 +92,30 @@ describe("StatusOrb", () => {
     expect(reduced).toMatch(/\[data-state="working"\] > \[data-slot="status-orb-halo"\] \{\s*border-style: dashed;/)
   })
 })
+
+describe("StatusOrb in the 2026-11 look", () => {
+  const knobs = JSON.parse(readFileSync(resolve(__dirname, "../../../../tokens/tokens/component/chat.json"), "utf8"))["status-orb"]
+
+  it("takes live from secondary-live, needs-you from the yellow, and the rest from label ink", () => {
+    expect(knobs.thinking.$value).toBe("{secondary-live}")
+    expect(knobs.working.$value).toBe("{secondary-live}")
+    expect(knobs["needs-you"].$value).toBe("{needs-you-fill}")
+    expect(knobs.failed.$value).toBe("{critical-text}")
+    for (const state of ["idle", "queued", "paused", "stopped", "offline"]) expect(knobs[state].$value).toBe("{text-label}")
+  })
+
+  it("outlines the needs-you square in the yellow's ink, so it reads on stone", () => {
+    expect(knobs["needs-you-edge"].$value).toBe("{needs-you-on-fill}")
+    const { container, rerender } = render(<StatusOrb state="needs-you" tooltip={false} />)
+    const dot = container.querySelector('[data-slot="status-orb-dot"]')!
+    expect(dot.className).toContain("ring-(length:--stroke-rule)")
+    expect(dot.className).toContain("ring-(--c-status-orb-needs-you-edge)")
+    rerender(<StatusOrb state="working" tooltip={false} />)
+    expect(container.querySelector('[data-slot="status-orb-dot"]')!.className).not.toContain("ring-")
+  })
+
+  it("draws its dot and halo square: the stylesheet gives them no radius", () => {
+    const block = css.slice(css.indexOf("StatusOrb (components/ui/status-orb.tsx)"), css.indexOf("Indicator (components/ui/indicator.tsx)"))
+    expect(block).not.toMatch(/border-radius/)
+  })
+})
