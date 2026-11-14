@@ -72,7 +72,7 @@ function PopoverContent({
       {scrim ? (
         <PopoverPrimitive.Backdrop
           data-slot="popover-scrim"
-          className="scrim-menu fixed inset-0 z-50 transition-opacity duration-(--motion-fast) data-ending-style:opacity-0 data-starting-style:opacity-0"
+          className="motion-fade scrim-menu fixed inset-0 z-50"
         />
       ) : null}
       <PopoverPrimitive.Positioner
@@ -88,8 +88,8 @@ function PopoverContent({
           className={cn(
             "bg-surface-raised text-text-body type-body rule-box flex flex-col gap-4 rounded p-4 outline-hidden",
             "w-(--c-popover-width) max-w-(--available-width) max-h-(--available-height) overflow-y-auto origin-(--transform-origin) z-50",
-            // Fades and moves 8px off its anchor: no zoom.
-            "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 duration-(--motion-fast) ease-(--motion-ease)",
+            // The pop recipe, growing from its trigger edge (origin above): 200ms in, 120ms out.
+            "motion-pop",
             className
           )}
           {...props}

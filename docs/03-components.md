@@ -685,6 +685,9 @@ A primitive never writes its own duration or curve. It picks a recipe from
 |---|---|---|---|---|
 | press | `motion-press`, `motion-press-sm` | a control going down under a press | scale to `--motion-press-depth` in `--motion-press`; back in `--motion-fast` | no scale; colour still changes |
 | pop | `motion-pop` | a small surface arriving from its anchor | opacity and scale from 0.96, `--motion-base` in, `--motion-fast` out | fades in place |
+| pop, short | `motion-pop` + `motion-pop-fast` | a small surface met often: a tooltip, a menu, the command palette | the same pop, `--motion-fast` both ways | fades in place |
+| pop, pointer only | `motion-pop` + `motion-pop-pointer` | a list of items: a menu, a select | the same pop; no motion when opened or closed from the keyboard, since the highlight is already on an item | fades in place |
+| fade | `motion-fade` | a backdrop behind a surface | opacity, `--motion-base` in, `--motion-fast` out | the same |
 | slide | `motion-slide` + `motion-slide-from-{top,bottom,left,right}` | a surface arriving from an edge | opacity and translate on `--motion-spring-firm`; `--motion-base` out | fades in place |
 | collapse | `motion-collapse` | a panel opening by height | height and opacity, `--motion-state`, move curve | height changes at once; content fades |
 | stagger | `motion-stagger` on the parent | a list appearing for the first time | children rise 4px, `--motion-stagger` apart, capped at `--motion-stagger-max` steps | every row is there at once |
@@ -697,6 +700,15 @@ A primitive never writes its own duration or curve. It picks a recipe from
 - **Two exceptions to "transform and opacity".** collapse animates height, because the content below
   has to move with the panel. draw animates a stroke offset, because that is the only way to draw a
   line. Each is written into its contract.
+- **Components on recipes so far:** Dialog (`motion-pop`, backdrop `motion-fade`) and Popover
+  (`motion-pop`, its optional scrim `motion-fade`) open in 200ms and close in 120ms; so do
+  ConfirmDialog and the dialog and popover forms of AdaptiveDialog and AdaptivePopover, which are
+  built on them. Tooltip, TruncatedText's tooltip and the command palette use the short pop, 120ms
+  both ways. DropdownMenu, its submenus, AdaptiveMenu's menu form and the Select list use the short
+  pop and stay still from the keyboard. Menus and lists are solid, so they fade whole: there is no
+  blur to keep alive. Each has its own contract and browser check. Sheet keeps its own slide; the
+  rest follow in later releases. (The dialog was 120ms both ways from the 2026-10-28 review until
+  2026-11-12, when its entrance moved to the recipe's 200ms.)
 - **Contracts are data.** `motionContracts` (`@unicron/ui/motion`) lists, for each recipe, its
   trigger, the properties it may animate, its duration role, how often it is met, what happens when
   it is interrupted, and what is left under reduced motion. The playground's Motion view

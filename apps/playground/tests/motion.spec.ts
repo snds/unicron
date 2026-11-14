@@ -1,18 +1,22 @@
 // Each motion contract, checked in a real browser against the playground's Motion view.
 //
 // The contracts are data (packages/ui/src/lib/motion/contracts.ts). For each one this file
-// triggers its specimen, reads the live animations, and asserts that it moves only what the
-// contract lists, for no longer than its role allows, and never past the 400ms ceiling. It then
-// repeats the run under reduced motion, checks that a reversal carries on from where it was, and
-// saves a start, middle and end frame of every entrance to the test output.
+// triggers it, reads the live animations, and asserts that it moves only what the contract lists,
+// for no longer than its role allows, and never past the 400ms ceiling. It then repeats the run
+// under reduced motion, checks that a reversal carries on from where it was, and saves a start,
+// middle and end frame of every entrance to the test output.
+//
+// A recipe is shown on a specimen inside its card. A component (a contract with `surfaces`) is
+// the real thing, and its moving parts are found in the document, since most render in a portal.
 import { expect, test, type Locator, type Page } from "@playwright/test"
 
 import { motionContracts, type MotionContract } from "../../../packages/ui/src/lib/motion/contracts"
 
 const CEILING_MS = 400
-/** Recipes that open and close, so they have an exit and can be reversed mid-way. */
-const TOGGLES = new Set(["pop", "slide", "collapse"])
-
+/** Contracts that open and close, so they have an exit and can be reversed mid-way. */
+const TOGGLES = new Set(["pop", "slide", "collapse", "dialog", "popover", "tooltip", "menu", "select"])
+/** Lists of items: solid surfaces (1.0 has no glass) that do not animate from the keyboard. */
+const LISTS = new Set(["menu", "select"])
 /**
  * Under reduced motion the system still lets colour fade (index.css → reduced motion): a colour
  * change moves nothing. So a colour may animate there whatever the recipe; anything else may not.
@@ -26,14 +30,20 @@ interface Seen {
   end: number
 }
 
-/** Pause the specimen's animations where they are and describe them. */
-async function freeze(card: Locator): Promise<Seen[]> {
-  return card.evaluate((el) => {
+/** Where a contract's motion happens: its surfaces in the document, or the specimen in its card. */
+function roots(contract: MotionContract): string {
+  return contract.surfaces?.join(", ") ?? `[data-contract="${contract.id}"] [data-specimen]`
+}
+
+/** Pause the contract's animations where they are and describe them. */
+async function freeze(page: Page, contract: MotionContract): Promise<Seen[]> {
+  return page.evaluate((selector) => {
     const kebab = (name: string) => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
     const seen: { property: string; duration: number; end: number }[] = []
-    for (const animation of el.getAnimations({ subtree: true })) {
+    const animations = [...document.querySelectorAll(selector)].flatMap((el) => el.getAnimations({ subtree: true }))
+    for (const animation of new Set(animations)) {
       const effect = animation.effect as KeyframeEffect | null
-      if (!effect?.target?.closest("[data-specimen]")) continue
+      if (!effect) continue
       animation.pause()
       const timing = effect.getComputedTiming()
       const duration = Number(timing.duration)
@@ -49,25 +59,27 @@ async function freeze(card: Locator): Promise<Seen[]> {
       for (const property of new Set(named)) seen.push({ property, duration, end })
     }
     return seen
-  })
+  }, roots(contract))
 }
 
-/** Move every paused specimen animation to a share of the whole run (0 = start, 1 = end). */
-async function seek(card: Locator, share: number) {
-  await card.evaluate((el, at) => {
-    const animations = el
-      .getAnimations({ subtree: true })
-      .filter((a) => (a.effect as KeyframeEffect | null)?.target?.closest("[data-specimen]"))
-    const total = Math.max(0, ...animations.map((a) => Number(a.effect!.getComputedTiming().endTime)))
-    for (const animation of animations) {
-      animation.currentTime = Math.min(total * at, Number(animation.effect!.getComputedTiming().endTime))
-    }
-  }, share)
+/** Move every paused animation of the contract to a share of the whole run (0 = start, 1 = end). */
+async function seek(page: Page, contract: MotionContract, share: number) {
+  await page.evaluate(
+    ({ selector, at }) => {
+      const animations = [...new Set([...document.querySelectorAll(selector)].flatMap((el) => el.getAnimations({ subtree: true })))]
+      const total = Math.max(0, ...animations.map((a) => Number(a.effect!.getComputedTiming().endTime)))
+      for (const animation of animations) {
+        animation.currentTime = Math.min(total * at, Number(animation.effect!.getComputedTiming().endTime))
+      }
+    },
+    { selector: roots(contract), at: share }
+  )
 }
 
-async function release(card: Locator) {
-  await card.evaluate((el) => {
-    for (const animation of el.getAnimations({ subtree: true })) animation.finish()
+/** Let everything on the page finish at once. */
+async function release(page: Page) {
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) animation.finish()
   })
 }
 
@@ -78,17 +90,45 @@ async function roleMs(page: Page, role: string): Promise<number> {
   return Number(match[1]) * (match[2] === "s" ? 1000 : 1)
 }
 
-/** Start the contract's motion and return its card. Press is held; everything else is a click. */
-async function trigger(page: Page, contract: MotionContract): Promise<Locator> {
-  const card = page.locator(`[data-contract="${contract.id}"]`)
-  await card.scrollIntoViewIfNeeded()
+function card(page: Page, contract: MotionContract): Locator {
+  return page.locator(`[data-contract="${contract.id}"]`)
+}
+
+/** The part that moves: the first surface of a component, or the specimen of a recipe. */
+function surface(page: Page, contract: MotionContract): Locator {
+  return contract.surfaces ? page.locator(contract.surfaces[0]!) : card(page, contract).locator("[data-specimen]")
+}
+
+/** Start the contract's motion with the pointer: press is held, a tooltip is hovered, the rest are clicked. */
+async function open(page: Page, contract: MotionContract) {
+  const box = card(page, contract)
+  await box.scrollIntoViewIfNeeded()
   if (contract.id === "press") {
-    await card.locator("[data-specimen]").hover()
+    await box.locator("[data-specimen]").hover()
     await page.mouse.down()
+  } else if (contract.id === "tooltip") {
+    await box.locator("[data-trigger]").hover()
   } else {
-    await card.locator("[data-trigger]").click()
+    await box.locator("[data-trigger]").click()
   }
-  return card
+  if (contract.surfaces) await entered(page, contract)
+}
+
+/**
+ * A popup mounts in its starting state and begins to move a frame later, when Base UI lifts
+ * `data-starting-style`. Wait for that, so a reading never lands in the frame before.
+ */
+async function entered(page: Page, contract: MotionContract) {
+  const popup = surface(page, contract)
+  await popup.waitFor({ state: "attached" })
+  await expect(popup).not.toHaveAttribute("data-starting-style", /.*/)
+}
+
+/** Send it away again, still with the pointer. */
+async function close(page: Page, contract: MotionContract) {
+  if (contract.id === "tooltip") await page.mouse.move(2, 2)
+  else if (contract.surfaces) await page.mouse.click(2, 2)
+  else await card(page, contract).locator("[data-trigger]").click()
 }
 
 function expectWithinContract(seen: Seen[], contract: MotionContract, allowed: readonly string[], limitMs: number) {
@@ -100,13 +140,18 @@ function expectWithinContract(seen: Seen[], contract: MotionContract, allowed: r
 }
 
 test.beforeEach(async ({ page }) => {
+  // Run every animation at a fiftieth of its speed, so a 120ms entrance is still under way when
+  // it is read. This slows the clock, not the animation: its own duration is unchanged.
+  const devtools = await page.context().newCDPSession(page)
+  await devtools.send("Animation.enable")
+  await devtools.send("Animation.setPlaybackRate", { playbackRate: 0.02 })
   await page.goto("/?view=motion")
   await expect(page.locator('[data-slot="motion-view"]')).toBeVisible()
 })
 
 test("every contract has a card, and every card a contract", async ({ page }) => {
   const ids = await page.locator("[data-contract]").evaluateAll((cards) => cards.map((c) => c.getAttribute("data-contract")))
-  expect(ids).toEqual(motionContracts.map((c) => c.id))
+  expect([...ids].sort()).toEqual(motionContracts.map((c) => c.id).sort())
 })
 
 test("the roles resolve, and none of the transition roles is over the ceiling", async ({ page }) => {
@@ -123,78 +168,119 @@ for (const contract of motionContracts as readonly MotionContract[]) {
   test.describe(contract.id, () => {
     test("moves only what it says, for as long as it says", async ({ page }, testInfo) => {
       const limit = await roleMs(page, contract.duration)
-      const card = await trigger(page, contract)
-      const seen = await freeze(card)
+      await open(page, contract)
+      const seen = await freeze(page, contract)
       expect(seen.length, `${contract.id} did not animate`).toBeGreaterThan(0)
       expectWithinContract(seen, contract, contract.properties, limit)
       // At least one thing it promises to move is moving.
       expect(seen.some((s) => contract.properties.includes(s.property))).toBe(true)
 
       // Start, middle and end of the entrance, as pictures.
+      const shot = contract.surfaces ? page : card(page, contract)
       for (const [name, share] of [["start", 0], ["middle", 0.5], ["end", 1]] as const) {
-        await seek(card, share)
+        await seek(page, contract, share)
         const file = testInfo.outputPath(`${contract.id}-${name}.png`)
-        await card.screenshot({ path: file })
+        await shot.screenshot({ path: file })
         await testInfo.attach(`${contract.id} ${name}`, { path: file, contentType: "image/png" })
       }
-      await release(card)
+      await release(page)
       if (contract.id === "press") await page.mouse.up()
 
       if (TOGGLES.has(contract.id)) {
-        await card.locator("[data-trigger]").click()
-        const leaving = await freeze(card)
+        await close(page, contract)
+        const leaving = await freeze(page, contract)
         expect(leaving.length, `${contract.id} did not animate on the way out`).toBeGreaterThan(0)
         expectWithinContract(leaving, contract, contract.properties, limit)
-        await release(card)
+        await release(page)
       }
     })
 
     test("does not move under reduced motion", async ({ page }) => {
       await page.emulateMedia({ reducedMotion: "reduce" })
-      const card = await trigger(page, contract)
-      const seen = await freeze(card)
+      await open(page, contract)
+      const seen = await freeze(page, contract)
       for (const { property } of seen) {
         expect([...contract.reducedProperties, ...COLOUR_ONLY], `${contract.id} still animates ${property} under reduced motion`).toContain(property)
       }
-      await release(card)
+      await release(page)
       if (contract.id === "press") {
         // Held down and reduced: the control keeps its size.
-        expect(await card.locator("[data-specimen]").evaluate((el) => getComputedStyle(el).scale)).toBe("none")
+        expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
         await page.mouse.up()
       } else {
         // The end state is there all the same: nothing is lost with the movement.
-        await expect(card.locator("[data-specimen]")).toBeVisible()
+        await expect(surface(page, contract)).toBeVisible()
+        expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
       }
     })
 
-    test("does not move inside a data-motion=reduced box", async ({ page }) => {
-      await page.locator('[data-mode="reduced"]').click()
-      const card = await trigger(page, contract)
-      const seen = await freeze(card)
-      for (const { property } of seen) {
-        expect([...contract.reducedProperties, ...COLOUR_ONLY], `${contract.id} still animates ${property} in a reduced box`).toContain(property)
-      }
-      await release(card)
-      if (contract.id === "press") await page.mouse.up()
-    })
+    // The box is the Motion view; a component in a portal renders outside it, so this is for recipes.
+    if (!contract.surfaces) {
+      test("does not move inside a data-motion=reduced box", async ({ page }) => {
+        await page.locator('[data-mode="reduced"]').click()
+        await open(page, contract)
+        const seen = await freeze(page, contract)
+        for (const { property } of seen) {
+          expect([...contract.reducedProperties, ...COLOUR_ONLY], `${contract.id} still animates ${property} in a reduced box`).toContain(property)
+        }
+        await release(page)
+        if (contract.id === "press") await page.mouse.up()
+      })
+    }
 
     if (TOGGLES.has(contract.id)) {
       test("reversed mid-way, it carries on from where it was", async ({ page }) => {
-        const card = await trigger(page, contract)
-        await freeze(card)
-        await seek(card, 0.5)
-        const specimen = card.locator("[data-specimen]")
-        const mid = Number(await specimen.evaluate((el) => getComputedStyle(el).opacity))
+        await open(page, contract)
+        await freeze(page, contract)
+        await seek(page, contract, 0.5)
+        const fading = surface(page, contract)
+        const mid = Number(await fading.evaluate((el) => getComputedStyle(el).opacity))
         expect(mid).toBeGreaterThan(0)
         expect(mid).toBeLessThan(1)
-        // Close it while it is half open. The new transition must start from the half-way value,
-        // not jump to either end.
-        await card.locator("[data-trigger]").click()
-        const reversing = await freeze(card)
+        // Send it away while it is half open. The new transition must start from the half-way
+        // value, not jump to either end.
+        await close(page, contract)
+        const reversing = await freeze(page, contract)
         expect(reversing.length).toBeGreaterThan(0)
-        const after = Number(await specimen.evaluate((el) => getComputedStyle(el).opacity))
+        const after = Number(await fading.evaluate((el) => getComputedStyle(el).opacity))
         expect(Math.abs(after - mid)).toBeLessThan(0.1)
-        await release(card)
+        await release(page)
+      })
+    }
+
+    if (LISTS.has(contract.id)) {
+      test("is a solid surface that blurs nothing, all the way through", async ({ page }) => {
+        await open(page, contract)
+        await freeze(page, contract)
+        for (const share of [0, 0.5, 1]) {
+          await seek(page, contract, share)
+          const seen = await surface(page, contract).evaluate((el) => {
+            const probe = document.createElement("canvas").getContext("2d")!
+            probe.fillStyle = getComputedStyle(el).backgroundColor
+            probe.fillRect(0, 0, 1, 1)
+            return {
+              // The fill as drawn, so any colour syntax reads the same: alpha out of 255.
+              alpha: probe.getImageData(0, 0, 1, 1).data[3],
+              blur: [undefined, "::before", "::after"].map((part) => getComputedStyle(el, part).backdropFilter),
+            }
+          })
+          expect(seen.alpha, `${contract.id} fill at ${share}`).toBe(255)
+          expect(seen.blur, `${contract.id} blur at ${share}`).toEqual(["none", "none", "none"])
+        }
+        await release(page)
+      })
+
+      test("does not animate when opened and closed from the keyboard", async ({ page }) => {
+        const trigger = card(page, contract).locator("[data-trigger]")
+        await trigger.scrollIntoViewIfNeeded()
+        await trigger.focus()
+        await page.keyboard.press("Enter")
+        await entered(page, contract)
+        expect(await freeze(page, contract), `${contract.id} animated on keyboard open`).toEqual([])
+        await expect(surface(page, contract)).toBeVisible()
+        await page.keyboard.press("Escape")
+        expect(await freeze(page, contract), `${contract.id} animated on keyboard close`).toEqual([])
+        await expect(surface(page, contract)).toBeHidden()
       })
     }
   })

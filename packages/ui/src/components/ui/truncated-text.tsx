@@ -188,6 +188,10 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
       disabled={!truncated}
       open={open && truncated}
       onOpenChange={(next, details) => {
+        // A finger's press is ours (onClick below). Base UI closes a tooltip when its trigger is
+        // pressed, which would put the text away in the same tap that asks for it.
+        const pointerType = (details.event as PointerEvent | undefined)?.pointerType
+        if (!next && details.reason === "trigger-press" && (pointerType === "touch" || press.current.touch)) return
         if (next) {
           // Opened by the pointer: pin it where the pointer is now. By focus: from the element.
           const at = details.reason === "trigger-hover" ? pointer.current : null
@@ -216,14 +220,19 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
         style={clamp ? ({ "--truncated-text-lines": lines, ...style } as React.CSSProperties) : style}
         {...(props as React.ComponentProps<"button">)}
         onPointerDown={(event: React.PointerEvent<HTMLButtonElement>) => {
-          press.current = { touch: event.pointerType === "touch", wasOpen: open }
+          // Open already only counts when a tap opened it: the focus a tap brings with it opens the
+          // tooltip a moment before the press lands, and that must not read as "tap to put away".
+          press.current = { touch: event.pointerType === "touch", wasOpen: open && byTouch.current }
           props.onPointerDown?.(event as unknown as React.PointerEvent<HTMLSpanElement>)
         }}
         onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
           // A tap on cut text shows all of it, from the text itself; a second tap puts it away.
           if (truncated && press.current.touch) {
             const next = !press.current.wasOpen
-            press.current = { touch: false, wasOpen: false }
+            // Cleared once this click is over, so Base UI's own press handler (above) still sees a tap.
+            queueMicrotask(() => {
+              press.current = { touch: false, wasOpen: false }
+            })
             byTouch.current = next
             if (next) setOpenAt(null)
             setOpen(next)
@@ -266,8 +275,8 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
             className={cn(
               "bg-text-body text-surface-ground type-caption z-50 block rounded px-2 py-1 text-start whitespace-normal wrap-break-word",
               "w-max min-w-[min(var(--c-truncated-text-min-width),var(--available-width,100vw))] max-w-[min(var(--c-truncated-text-max-width),var(--available-width,100vw))]",
-              // Fades in place: no zoom, no slide.
-              "data-open:animate-in data-open:fade-in-0 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-closed:animate-out data-closed:fade-out-0 duration-(--motion-fast) ease-(--motion-ease)"
+              // The short pop, as Tooltip.
+              "motion-pop motion-pop-fast"
             )}
           >
             {text}
