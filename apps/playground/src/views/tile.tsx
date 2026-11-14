@@ -1,8 +1,6 @@
 // Tile: a raised panel with a hairline and a 4px top edge (contract 5.1b #33): Lockdown's card art, Vale's note cards. View: ?view=tile
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import { useState, type ReactNode } from "react"
-import { Tile } from "../../../../packages/ui/src/components/ui/tile"
+import { Tile } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

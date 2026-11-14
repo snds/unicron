@@ -1,6 +1,6 @@
 // Top Tab, as Figma draws it (15:498), and Warpcore's desktop top bar sections. View: ?view=top-tabs
 import { useState, type ReactNode } from "react"
-import { TopTab, TopTabs } from "@unicron/ui/top-tabs"
+import { TopTab, TopTabs } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

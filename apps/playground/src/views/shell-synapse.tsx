@@ -17,14 +17,16 @@ import {
   AppFrameStatusLine,
   AppFrameSwitcher,
   AppFrameTopRow,
+  AppLockup,
   Button,
   FloatButton,
+  NavItem,
+  NavSection,
   StatusItem,
+  TabBar,
+  TabBarItem,
   useAppFrame,
 } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
-import { NavItem, NavSection } from "@unicron/ui/nav-item"
-import { TabBar, TabBarItem } from "@unicron/ui/tab-bar"
 
 import { StandInInlineRow, StandInNeedsYou, StandInRows, StandInSection } from "./_shell-parts"
 

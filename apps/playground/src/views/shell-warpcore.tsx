@@ -15,15 +15,17 @@ import {
   AppFramePageHead,
   AppFrameTopBar,
   AppFrameTopRow,
+  AppLockup,
   Button,
   FloatButton,
   StatusItem,
+  TabBar,
+  TabBarItem,
+  TopBar,
+  TopTab,
+  TopTabs,
   useAppFrame,
 } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
-import { TabBar, TabBarItem } from "@unicron/ui/tab-bar"
-import { TopBar } from "@unicron/ui/top-bar"
-import { TopTab, TopTabs } from "@unicron/ui/top-tabs"
 
 import { StandInChips, StandInInlineRow, StandInNeedsYou, StandInRows, StandInSection, StandInText } from "./_shell-parts"
 

@@ -28,7 +28,7 @@ _Spec v0.4 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5
 
 Unchanged: the host contract (`SecretFieldHost`, `SecretFieldReferenceHost`, `copyRef`, `clipboardHolds`, `gate`), every timer, the one-revealed rule, hide on blur, lock and leaving the viewport, the gated-reveal-is-a-toggle rule, Cmd/Ctrl+C, the spelled name, the announcements and every name. The ring countdown, the icon buttons and their tooltips are gone; the tooltip's words ("Copied · clears in 28 s, even if you copy something else") are now the copy control's description.
 
-Tokens added in `tokens/component/security.json`: `--c-security-row-label-width`, `--c-secret-field-mask-spacing`; re-declared there: `revealed-bg`, `meter-weak`, `meter-fair`, `meter-strong`. No longer read: `--c-secret-field-copy-track`, `--c-secret-field-copy-progress`.
+Tokens added in `tokens/component/security.json`: `--c-security-row-label-width`, `--c-secret-field-mask-spacing`; re-declared there: `revealed-bg`, `meter-weak`, `meter-fair`, `meter-strong`. Removed in 1.0 (no longer read): `--c-secret-field-copy-track`, `--c-secret-field-copy-progress`.
 
 ## Purpose and the user job
 
@@ -123,8 +123,6 @@ Tier 3 under `secret-field`:
 | `--c-secret-field-reveal-lifetime` | `30s` | |
 | `--c-secret-field-clipboard-timer` | `30s` | Default; host may override within 10–90 s |
 | `--c-secret-field-revealed-bg` | `color-mix(in oklab, {warning} 10%, transparent)` | Exposure cue |
-| `--c-secret-field-copy-track` | `{border}` | |
-| `--c-secret-field-copy-progress` | `{foreground}` | |
 | `--c-secret-field-meter-weak` | `{destructive}` | |
 | `--c-secret-field-meter-fair` | `{warning}` | |
 | `--c-secret-field-meter-strong` | `{primary}` | |

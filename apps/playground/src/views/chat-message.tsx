@@ -1,7 +1,16 @@
 // Chat Message, as Figma draws it (32:103), and its states. View: ?view=chat-message
 import type { ReactNode } from "react"
-import { Button, IconButton, Popover, PopoverContent, PopoverTrigger } from "@unicron/ui"
-import { ChatMessage, ChatMessageMetaButton, CopyButton, Prose } from "./_chat-ui"
+import {
+  Button,
+  ChatMessage,
+  ChatMessageMetaButton,
+  CopyButton,
+  IconButton,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Prose,
+} from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

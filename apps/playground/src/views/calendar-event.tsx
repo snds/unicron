@@ -1,9 +1,6 @@
 // CalendarEvent: Figma's Calendar Event (32:116), its two tones, and what Vale adds: swatch, compact, selected, a mark (contract 5.1b #39). View: ?view=calendar-event
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import { useState, type ReactNode } from "react"
-import { Icon } from "@unicron/ui"
-import { CalendarEvent } from "../../../../packages/ui/src/components/ui/calendar-event"
+import { CalendarEvent, Icon } from "@unicron/ui"
 
 function Specimen({ label, children, width = "max-w-[300px]" }: { label: string; children: ReactNode; width?: string }) {
   return (

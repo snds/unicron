@@ -1,5 +1,6 @@
 // Search Field (contract 5.1a): a Text Field with the search icon and a clear button. View: ?view=search-field
-import { Column, Page, SearchField, Specimen } from "./_primitives"
+import { SearchField } from "@unicron/ui"
+import { Column, Page, Specimen } from "./_primitives"
 
 export default function SearchFieldView() {
   return (

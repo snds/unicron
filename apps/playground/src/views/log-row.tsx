@@ -1,7 +1,6 @@
 // Log Row: the activity lines on Warpcore's running task and Synapse's overview (contract 5.1a, 5.1b #38). View: ?view=log-row
 import type { ReactNode } from "react"
-import { LogRow } from "../../../../packages/ui/src/components/ui/log-row"
-import { SectionHeader } from "../../../../packages/ui/src/components/ui/section-header"
+import { LogRow, SectionHeader } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

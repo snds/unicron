@@ -76,7 +76,3 @@ function TooltipContent({
 }
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
-
-// TruncatedText shows its full text in a Tooltip. Until packages/ui/src/index.ts (the integrator's
-// file) lists its module, the package root reaches it through here.
-export { TruncatedText, middleCut, TRUNCATION_MARK, type TruncatedTextCut, type TruncatedTextProps } from "./truncated-text"

@@ -1,7 +1,6 @@
 // Rail Item, as Figma draws it (44:106), and the collapsed Warpcore context panel. View: ?view=rail
 import { useState, type ReactNode } from "react"
-import { FloatButton } from "@unicron/ui"
-import { Rail, RailItem } from "@unicron/ui/rail"
+import { FloatButton, Rail, RailItem } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

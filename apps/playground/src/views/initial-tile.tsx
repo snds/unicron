@@ -1,7 +1,7 @@
 // Initial Tile (Figma 32:121) and the square Avatar. View: ?view=initial-tile
-import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@unicron/ui"
+import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount, InitialTile } from "@unicron/ui"
 
-import { InitialTile, Page, Specimen } from "./_primitives"
+import { Page, Specimen } from "./_primitives"
 
 export default function InitialTileView() {
   return (

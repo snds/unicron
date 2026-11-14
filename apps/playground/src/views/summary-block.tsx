@@ -1,8 +1,7 @@
 // Summary Block: the one "model output" mark for every app (Vale's summary, drawn by hand on
 // Figma 53:2448), with its states. View: ?view=summary-block
 import type { ReactNode } from "react"
-import { Button, IconButton } from "@unicron/ui"
-import { CopyButton, SummaryBlock } from "./_chat-ui"
+import { Button, CopyButton, IconButton, SummaryBlock } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

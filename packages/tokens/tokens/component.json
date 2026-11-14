@@ -9,44 +9,21 @@
   "app-frame": {
     "$description": "AppFrame: the outermost box of an app that fills the screen, with its header, its nav, and the strips beside the notch and home bar.",
     "edge": { "$type": "color", "$value": "{sidebar}", "$description": "Header, nav and the strips at the screen's edges. One colour, so the bars seem to reach the edges." },
-    "header-height": { "$type": "dimension", "$value": "3rem" },
     "nav-height": { "$type": "dimension", "$value": "3.25rem", "$description": "The floating capsule, along the bottom: a 44px item in 4px of padding." },
-    "nav-item-width": { "$type": "dimension", "$value": "4.5rem", "$description": "Each place in the capsule along the bottom." },
     "nav-gap": { "$type": "dimension", "$value": "0.75rem", "$description": "Around the floating nav, and its least distance from the screen's edge." },
-    "rail-width": { "$type": "dimension", "$value": "3.25rem", "$description": "The same nav as a pill down the side, when height is scarce." },
-    "pivot-width": { "$type": "dimension", "$value": "3.5rem", "$description": "AppFramePivot, the column of top-level places on a large screen." },
-    "sidebar-width": { "$type": "dimension", "$value": "18rem", "$description": "AppFrameSidebar, the list beside the content." }
+    "rail-width": { "$type": "dimension", "$value": "3.25rem", "$description": "The same nav as a pill down the side, when height is scarce." }
   },
   "dialog": {
-    "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent). From the sm breakpoint up a dialog fits its content between its size's min-width and max-width, and never gets wider than the screen less 1rem each side. Each size's min-width is the fixed width it had before, so no dialog got narrower.",
-    "titlebar-inset": { "$type": "dimension", "$value": "0px", "$description": "Height of the app's own title bar at the top of the window (a desktop app with the native title bar hidden). The popups keep clear of it: a dialog centres in the area below it; a side or top sheet starts under it. 0px for a web page or a window with a native title bar. Set it with beforeContent, the slot that holds the app's drag strip." },
-    "padding": { "$type": "dimension", "$value": "1rem", "$description": "The space inside DialogContent. DialogFooter reads it too: it reaches out by it to run edge to edge, pads its buttons by it so they line up with the content, and a sticky footer pins by it. Change a dialog's padding by setting this (className=\"[--c-dialog-padding:1.5rem]\"), not with a p-* class, so the footer still reaches the edges." },
-    "xs": {
-      "$description": "Very narrow. Allowed only for one short sentence (or none), at most two one-word actions and at most one short field (a PIN, a 6-digit code). The rule is in docs/03-components.md, Dialog widths.",
-      "min-width": { "$type": "dimension", "$value": "16rem" },
-      "max-width": { "$type": "dimension", "$value": "20rem" }
-    },
-    "sm": { "$description": "A question.", "min-width": { "$type": "dimension", "$value": "24rem" }, "max-width": { "$type": "dimension", "$value": "28rem" } },
-    "md": { "$description": "A short form.", "min-width": { "$type": "dimension", "$value": "28rem" }, "max-width": { "$type": "dimension", "$value": "36rem" } },
-    "lg": { "$description": "Settings.", "min-width": { "$type": "dimension", "$value": "32rem" }, "max-width": { "$type": "dimension", "$value": "42rem" } },
-    "xl": { "$description": "A composer.", "min-width": { "$type": "dimension", "$value": "42rem" }, "max-width": { "$type": "dimension", "$value": "56rem" } },
-    "2xl": { "$description": "A preview.", "min-width": { "$type": "dimension", "$value": "48rem" }, "max-width": { "$type": "dimension", "$value": "64rem" } }
+    "$description": "Dialog and Sheet popups (DialogContent, CommandDialog, SheetContent, AdaptiveSheetContent). The sizes, padding and margins are in component/overlays.json.",
+    "titlebar-inset": { "$type": "dimension", "$value": "0px", "$description": "Height of the app's own title bar at the top of the window (a desktop app with the native title bar hidden). The popups keep clear of it: a dialog centres in the area below it; a side or top sheet starts under it. 0px for a web page or a window with a native title bar. Set it with beforeContent, the slot that holds the app's drag strip." }
   },
   "menu": {
     "$description": "Popup lists: DropdownMenuContent and DropdownMenuSubContent. A list sized apart from its trigger (width=\"fit\" or \"auto\") stays between these two widths, so it never gets too narrow or too wide; past max-width its items wrap.",
     "min-width": { "$type": "dimension", "$value": "8rem", "$description": "The narrowest a list gets, whatever its trigger (Tailwind's min-w-32, the floor it always had)." },
     "max-width": { "$type": "dimension", "$value": "20rem", "$description": "The widest a list sized by its items gets. A list that matches its trigger (width=\"trigger\") follows the trigger instead." }
   },
-  "popover": {
-    "$description": "PopoverContent. It never outgrows the space on screen, whatever this says.",
-    "width": { "$type": "dimension", "$value": "18rem", "$description": "Its width (Tailwind's w-72, the shadcn default). For one wider popover, set the variable in its className." }
-  },
   "sheet": {
-    "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up.",
-    "compact-height": { "$type": "dimension", "$value": "75dvh" },
-    "compact-radius": { "$type": "dimension", "$value": "{radius}", "$description": "The phone sheet's top corners: the one 2px corner (contract §1.6; the sheet container is square, §5.1). A radius knob reads the radius role, never a size of its own." },
-    "handle": { "$type": "color", "$value": "color-mix(in oklab, {muted-foreground} 45%, transparent)" },
-    "close-size": { "$type": "dimension", "$value": "2.5rem" },
+    "$description": "Adaptive sheet: a bottom sheet on phones, a side panel from the sm breakpoint up. The height and grabber knobs are in component/overlays.json.",
     "regular-width": { "$type": "dimension", "$value": "24rem" },
     "wide-width": { "$type": "dimension", "$value": "36rem", "$description": "The wide variant (AdaptiveSheetContent wide), for a photo or other content that needs room." }
   },
@@ -55,16 +32,7 @@
     "row-height": { "$type": "dimension", "$value": "2.5rem", "$description": "Skeleton variant=\"row\": the least height of one list row (two bars 20px apart over a hairline draw it about 76px tall). An app with a density setting re-maps it to its own row height." }
   },
   "code": {
-    "$description": "CodeDisplay (docs/specs/security/code-display.md): one-time codes grouped for reading, with a time-remaining ring.",
-    "size-detail": {"$type": "dimension", "$value": "2.25rem"},
-    "size-list": {"$type": "dimension", "$value": "1.25rem"},
-    "size-compact": {"$type": "dimension", "$value": "1rem"},
-    "group-gap": {"$type": "dimension", "$value": "0.75em"},
-    "letter-spacing": {"$type": "dimension", "$value": "0.08em"},
-    "ring-track": {"$type": "color", "$value": "{border}"},
-    "ring-progress": {"$type": "color", "$value": "{foreground}"},
-    "ring-expiring": {"$type": "color", "$value": "{warning}"},
-    "next-ink": {"$type": "color", "$value": "{muted-foreground}"},
+    "$description": "CodeDisplay (docs/specs/security/code-display.md): one-time codes grouped for reading, with a time-remaining bar. The 1.0 sizes are in component/security.json.",
     "expiring-at": {"$type": "duration", "$value": "5s", "$description": "Seconds left at which the code turns to the expiring state."},
     "next-at": {"$type": "duration", "$value": "10s", "$description": "Seconds left at which the next code appears beneath the current one."},
     "copy-next-at": {"$type": "duration", "$value": "3s", "$description": "Seconds left under which copy takes the next code instead."},
@@ -88,20 +56,12 @@
     "surface": {"$type": "color", "$value": "{protected}", "$description": "Assigned to --background and --card inside the surface."},
     "ink": {"$type": "color", "$value": "{protected-foreground}", "$description": "Assigned to --foreground inside."},
     "muted": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 12%, transparent)", "$description": "Assigned to --muted inside."},
-    "muted-ink": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 72%, transparent)", "$description": "Assigned to --muted-foreground inside (not in the spec's table; needed so hints keep contrast on the inverted surface)."},
     "border": {"$type": "color", "$value": "color-mix(in oklab, {protected-foreground} 24%, transparent)", "$description": "Assigned to --border inside."},
     "reveal-lifetime": {"$type": "duration", "$value": "20s", "$description": "Shorter than SecretField's default."},
     "gate-attempts": {"$type": "number", "$value": 3, "$description": "Default attemptsLeft."}
   },
   "risk-tier": {
     "$description": "RiskTierBadge (docs/specs/security/risk-tier-badge.md): one word, one icon, one colour per trust tier.",
-    "standard-ink": { "$type": "color", "$value": "{muted-foreground}", "$description": "Icon and text." },
-    "standard-bg": { "$type": "color", "$value": "{secondary}" },
-    "official-ink": { "$type": "color", "$value": "{info}" },
-    "official-bg": { "$type": "color", "$value": "color-mix(in oklab, {info} 14%, transparent)", "$description": "Text stays {foreground} for contrast; only the icon takes the ink." },
-    "tolerated-ink": { "$type": "color", "$value": "{warning}" },
-    "tolerated-bg": { "$type": "color", "$value": "color-mix(in oklab, {warning} 18%, transparent)" },
-    "unverified-ink": { "$type": "color", "$value": "{destructive}", "$description": "Outline, no fill." },
     "height-sm": { "$type": "dimension", "$value": "1.25rem" },
     "height-md": { "$type": "dimension", "$value": "1.5rem" }
   },
@@ -110,40 +70,17 @@
     "mask-count": { "$type": "number", "$value": 12, "$description": "Dots in read mode, never the true length." },
     "reveal-lifetime": { "$type": "duration", "$value": "30s" },
     "clipboard-timer": { "$type": "duration", "$value": "30s", "$description": "Default; a host may override within 10–90 s." },
-    "revealed-bg": { "$type": "color", "$value": "color-mix(in oklab, {warning} 10%, transparent)", "$description": "Exposure cue." },
-    "copy-track": { "$type": "color", "$value": "{border}" },
-    "copy-progress": { "$type": "color", "$value": "{foreground}" },
-    "meter-weak": { "$type": "color", "$value": "{destructive}" },
-    "meter-fair": { "$type": "color", "$value": "{warning}" },
-    "meter-strong": { "$type": "color", "$value": "{primary}" },
     "letter-spacing": { "$type": "dimension", "$value": "0.04em", "$description": "Revealed mono text." }
   },
   "status-orb": {
-    "$description": "StatusOrb: one glanceable state (idle, queued, thinking, working, paused, needs-you, done, stopped, failed, offline), told apart by shape and motion as well as these colours. Dots, halos and rings take the status fills; the glyphs (queued, paused, done, stopped, failed) take the text inks.",
+    "$description": "StatusOrb: one glanceable state (idle, queued, thinking, working, paused, needs-you, done, stopped, failed, offline), told apart by shape and motion as well as colour. The sizes are here; the colours are in component/chat.json.",
     "size-xs": { "$type": "dimension", "$value": "0.75rem", "$description": "A step in a run trace." },
     "size-sm": { "$type": "dimension", "$value": "1rem", "$description": "A row, a header." },
-    "size-md": { "$type": "dimension", "$value": "1.25rem", "$description": "A nav item, a hero. The icon's 20px optical size." },
-    "idle": { "$type": "color", "$value": "{muted-foreground}" },
-    "queued": { "$type": "color", "$value": "{muted-foreground}", "$description": "A clock glyph: waiting its turn." },
-    "paused": { "$type": "color", "$value": "{muted-foreground}", "$description": "A pause glyph: on hold, and it picks up again." },
-    "stopped": { "$type": "color", "$value": "{muted-foreground}", "$description": "A stop glyph: someone ended it. Not a failure, so not destructive." },
-    "thinking": { "$type": "color", "$value": "{running}" },
-    "working": { "$type": "color", "$value": "{running}" },
-    "needs-you": { "$type": "color", "$value": "{attention}" },
-    "done": { "$type": "color", "$value": "{success-foreground}" },
-    "failed": { "$type": "color", "$value": "{destructive}" },
-    "offline": { "$type": "color", "$value": "{muted-foreground}" }
+    "size-md": { "$type": "dimension", "$value": "1.25rem", "$description": "A nav item, a hero. The icon's 20px optical size." }
   },
   "indicator": {
-    "$description": "The attention or unread mark on an AppFrameNavItem or an Item: a dot, or a count badge on the bottom bar.",
-    "dot-size": { "$type": "dimension", "$value": "0.5rem" },
-    "badge-height": { "$type": "dimension", "$value": "1rem" },
-    "attention": { "$type": "color", "$value": "{attention}", "$description": "The dot, and the badge's edge." },
-    "unread": { "$type": "color", "$value": "{info}", "$description": "The dot, and the badge's fill." },
-    "attention-badge-bg": { "$type": "color", "$value": "{attention-surface}", "$description": "The count reads Lc 75 on it in --attention-foreground." },
-    "attention-badge-ink": { "$type": "color", "$value": "{attention-foreground}" },
-    "unread-badge-bg": { "$type": "color", "$value": "{info}" },
-    "unread-badge-ink": { "$type": "color", "$value": "{info-foreground}" }
+    "$description": "The attention or unread mark on an Item: a dot, or a count badge. The colours and the dot size are in component/chat.json.",
+    "badge-height": { "$type": "dimension", "$value": "1rem" }
   },
   "progress": {
     "$description": "Progress: a determinate bar, or one cell per step (segmented). The empty part is --line-rule; each fill is a solid held to Lc 30 against it (scripts/contrast.mjs).",
@@ -154,20 +91,10 @@
     "warning": { "$type": "color", "$value": "{warning}", "$description": "A budget past 70%." },
     "over": { "$type": "color", "$value": "{destructive}", "$description": "A budget past 90%." }
   },
-  "agent-prompt": {
-    "$description": "AgentPrompt (docs/specs/security/agent-prompt.md): an agent's question in the conversation, with an attention edge while it waits.",
-    "edge": { "$type": "dimension", "$value": "0.25rem", "$description": "The left edge's width." },
-    "edge-color": { "$type": "color", "$value": "{attention}", "$description": "While it waits on the person. Lc 44 on a card (light), 70 (dark)." },
-    "edge-answered": { "$type": "color", "$value": "{border}", "$description": "Once answered: quiet, so only open questions stand out." }
-  },
   "approval": {
     "$description": "ApprovalSheet (docs/specs/security/approval-sheet.md): approve or deny a request from another device, with number matching, an arming delay, and a timeout that denies.",
     "min-width": { "$type": "dimension", "$value": "20rem", "$description": "Never smaller than this at any breakpoint." },
-    "digit-size": { "$type": "dimension", "$value": "2rem", "$description": "Digit cell type size." },
     "digit-gap": { "$type": "dimension", "$value": "0.5rem" },
-    "timer-track": { "$type": "color", "$value": "{border}" },
-    "timer-progress": { "$type": "color", "$value": "{foreground}" },
-    "timer-urgent": { "$type": "color", "$value": "{warning}", "$description": "Under 10 s." },
     "arm-delay": { "$type": "duration", "$value": "500ms", "$description": "Inert window after open. The component reads it at runtime and falls back to 500ms without the stylesheet." },
     "lifetime": { "$type": "duration", "$value": "60s", "$description": "Default expiresAt offset." }
   }

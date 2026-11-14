@@ -1,9 +1,6 @@
 // MetaList and MetaItem: the Vale message head (From, Received, Attached), columns that wrap. View: ?view=meta-list
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import type { ReactNode } from "react"
-import { Button } from "@unicron/ui"
-import { MetaItem, MetaList } from "../../../../packages/ui/src/components/ui/meta-list"
+import { Button, MetaItem, MetaList } from "@unicron/ui"
 
 function Specimen({ label, children, width = "max-w-[648px]" }: { label: string; children: ReactNode; width?: string }) {
   return (

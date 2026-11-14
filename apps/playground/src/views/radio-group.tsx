@@ -1,7 +1,7 @@
 // RadioGroup and RadioRow (contract 5.1b #23). View: ?view=radio-group
-import { Field, FieldLabel } from "@unicron/ui"
+import { Field, FieldLabel, RadioGroup, RadioGroupItem, RadioRow } from "@unicron/ui"
 
-import { Column, Page, RadioGroup, RadioGroupItem, RadioRow, Specimen } from "./_primitives"
+import { Column, Page, Specimen } from "./_primitives"
 
 export default function RadioGroupView() {
   return (

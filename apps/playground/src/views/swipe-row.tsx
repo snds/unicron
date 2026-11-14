@@ -1,8 +1,6 @@
 // Swipe Action, as Figma draws it (25:2042), on rows that swipe (contract §6.4). View: ?view=swipe-row
 import { useState, type ReactNode } from "react"
-import { DropdownMenuItem } from "@unicron/ui"
-import { ListRow } from "../../../../packages/ui/src/components/ui/list-row"
-import { SwipeAction, SwipeRow } from "../../../../packages/ui/src/components/ui/swipe-row"
+import { DropdownMenuItem, ListRow, SwipeAction, SwipeRow } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

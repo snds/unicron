@@ -1,7 +1,6 @@
 // Composer, as Figma draws it (32:91), and the states Figma leaves out. View: ?view=composer
 import { useState, type ReactNode } from "react"
-import { Badge, Button, IconButton } from "@unicron/ui"
-import { Composer } from "./_chat-ui"
+import { Badge, Button, Composer, IconButton } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

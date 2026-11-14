@@ -1,7 +1,15 @@
 // Empty State (Figma 32:64): overline, title, body, one secondary action, left aligned; tone critical. View: ?view=empty-state
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@unicron/ui"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyOverline,
+  EmptyState,
+  EmptyTitle,
+} from "@unicron/ui"
 
-import { Column, EmptyOverline, EmptyState, Page, Specimen } from "./_primitives"
+import { Column, Page, Specimen } from "./_primitives"
 
 export default function EmptyStateView() {
   return (

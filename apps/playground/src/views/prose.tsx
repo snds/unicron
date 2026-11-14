@@ -1,7 +1,7 @@
 // Prose: rendered Markdown in the body role (a note) and the response role (a reply). Not drawn
 // in Figma; styled from the type roles alone. View: ?view=prose
 import type { ReactNode } from "react"
-import { CodeBlock, Prose } from "./_chat-ui"
+import { CodeBlock, Prose } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

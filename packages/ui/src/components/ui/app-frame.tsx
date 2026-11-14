@@ -834,7 +834,5 @@ export {
 export * from "./app-frame-phone"
 export * from "./app-frame-desktop"
 export * from "./app-frame-focus"
-export * from "./context-panel"
-export * from "./settings-frame"
 // Deprecated 0.x names (the capsule): kept compiling until the apps and the showcase move off them.
 export * from "./app-frame-deprecated"

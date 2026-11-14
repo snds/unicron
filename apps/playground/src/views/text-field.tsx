@@ -1,8 +1,8 @@
 // Text Field, as Figma draws it (32:48), and the states, slots and forms it leaves out. View: ?view=text-field
 import { useState } from "react"
-import { Button, Icon } from "@unicron/ui"
+import { Button, Icon, TextField } from "@unicron/ui"
 
-import { Column, Page, Specimen, TextField } from "./_primitives"
+import { Column, Page, Specimen } from "./_primitives"
 
 export default function TextFieldView() {
   const [length, setLength] = useState<number | null>(20)

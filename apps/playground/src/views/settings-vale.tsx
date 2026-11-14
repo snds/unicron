@@ -12,15 +12,16 @@ import {
   AppFrameSidebar,
   AppFrameStatusLine,
   AppFrameTopRow,
+  AppLockup,
   Input,
+  NavItem,
+  NavSection,
   SettingsFrame,
-  StatusItem,
-  useAppFrame,
   type SettingsSection,
+  StatusItem,
+  TopBar,
+  useAppFrame,
 } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
-import { NavItem, NavSection } from "@unicron/ui/nav-item"
-import { TopBar } from "@unicron/ui/top-bar"
 
 import { StandInField, StandInSection } from "./_shell-parts"
 

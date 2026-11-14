@@ -1,10 +1,6 @@
 // ToggleRow: Figma's Toggle Row (32:54), the whole row a target, and what the apps add (contract 5.1b #22, #37). View: ?view=toggle-row
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import { useState, type ReactNode } from "react"
-import { Badge, Kbd } from "@unicron/ui"
-import { FieldRowAction } from "../../../../packages/ui/src/components/ui/field-row"
-import { ToggleRow } from "../../../../packages/ui/src/components/ui/toggle-row"
+import { Badge, FieldRowAction, Kbd, ToggleRow } from "@unicron/ui"
 
 function Specimen({ label, children, width = "max-w-[390px]" }: { label: string; children: ReactNode; width?: string }) {
   return (

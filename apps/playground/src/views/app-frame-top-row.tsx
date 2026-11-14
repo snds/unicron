@@ -2,9 +2,15 @@
 // Lockdown Phone 01, Warpcore Mobile 06), its scrolled form (States 02: mark only, the small
 // centred title, a hairline), a pushed screen's TopBar, the switcher as the small title, and the
 // short screen, where its buttons move to the trailing column. View: ?view=app-frame-top-row
-import { AppFrameList, AppFrameMain, AppFramePageHead, AppFrameTopRow, FloatButton } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
-import { TopBar } from "@unicron/ui/top-bar"
+import {
+  AppFrameList,
+  AppFrameMain,
+  AppFramePageHead,
+  AppFrameTopRow,
+  AppLockup,
+  FloatButton,
+  TopBar,
+} from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
 

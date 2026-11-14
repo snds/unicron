@@ -13,8 +13,7 @@
 //   - a field's resting hairline: core `field-rest-*` (reported, contract 9.4)
 //   - a highlighted Select item (bg-accent): core `body-accent`, `label-accent`
 //   - a hover or pressed wash on the ground, a raised surface or a selected row (a tab, a toggle,
-//     a row, a radio row, a select trigger): core `*-hover`, `*-pressed`, `body-soft-hover`;
-//     legacy-fields `value-hover`, `placeholder-hover`
+//     a row, a radio row, a select trigger): core `*-hover`, `*-pressed`, `body-soft-hover`
 //   - a selected row's soft fill and 2px edge (Item): core `body-soft`, `label-soft`,
 //     `primary-edge-soft`
 //   - the Top Tab indicator, 2px of primary-fill on the ground: core `primary-fill-ground`

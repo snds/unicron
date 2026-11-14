@@ -1,6 +1,6 @@
 // Artifact Card, as Figma draws it (44:85), and the open (selected) state. View: ?view=artifact-card
 import { useState, type ReactNode } from "react"
-import { ArtifactCard } from "./_chat-ui"
+import { ArtifactCard } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

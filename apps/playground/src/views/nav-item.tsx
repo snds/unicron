@@ -1,8 +1,7 @@
 // Nav Item and Nav Section, as Figma draws them (15:487) and as the sidebars use them: counts,
 // marks, a tree, toggles, a trailing action, the rail. View: ?view=nav-item
 import { useState, type ReactNode } from "react"
-import { Button, Icon } from "@unicron/ui"
-import { NavItem, NavSection } from "@unicron/ui/nav-item"
+import { Button, Icon, NavItem, NavSection } from "@unicron/ui"
 
 function Column({ label, children }: { label: string; children: ReactNode }) {
   return (

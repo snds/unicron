@@ -6,7 +6,7 @@ _Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §2.9 risk tiers, §5.7;
 
 The pill is `Badge` (round 1): mono caps (`type-overline`), square on the 2px corner, 20 tall (`md`: 24, `--c-risk-tier-height-md`), a 16px glyph. The tone sorts the states and never carries them alone: **Built in** and **Checking** neutral (label ink in a hairline box; Checking pulses, not under reduced motion), **Verified** neutral in body ink, **Use with care** the warning tone, **Unverified** the critical tone. No tier takes the live colour or the identity colour: neither is about trust. Under high contrast and forced colours a real 1px border in the tier ink replaces the inset edges, which the browser drops. The explain control is a 16px `help` glyph with the explain content as its tooltip and, as before, its description.
 
-The `--c-risk-tier-*-ink` and `-bg` knobs are no longer read.
+The `--c-risk-tier-*-ink` and `-bg` knobs are removed in 1.0 (no longer read).
 
 ## Purpose and the user job
 
@@ -78,13 +78,6 @@ Tier 3 under `risk-tier`:
 
 | Token | Aliases | Purpose |
 |---|---|---|
-| `--c-risk-tier-standard-ink` | `{muted-foreground}` | Icon and text |
-| `--c-risk-tier-standard-bg` | `{secondary}` | |
-| `--c-risk-tier-official-ink` | `{info}` | Icon only |
-| `--c-risk-tier-official-bg` | `color-mix(in oklab, {info} 14%, transparent)` | |
-| `--c-risk-tier-tolerated-ink` | `{warning}` | Icon only |
-| `--c-risk-tier-tolerated-bg` | `color-mix(in oklab, {warning} 18%, transparent)` | |
-| `--c-risk-tier-unverified-ink` | `{destructive}` | Outline, no fill |
 | `--c-risk-tier-height-sm` | `1.25rem` | |
 | `--c-risk-tier-height-md` | `1.5rem` | |
 

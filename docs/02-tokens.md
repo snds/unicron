@@ -561,7 +561,7 @@ to spare: on the graphite ground `text-label` measures Lc 60.4 to 60.7. On any s
 text's own lightness (a raised surface, a selected row, a hover wash) it lands just under.
 
 <!-- contrast:exceptions start · written by `node scripts/contrast.mjs --write-docs` (packages/tokens); do not edit by hand -->
-The run lists 261 measures in 65 recipes. In short:
+The run lists 330 measures in 76 recipes. In short:
 
 | What | Where | Measures | Floor |
 |---|---|---|---|
@@ -575,7 +575,7 @@ The run lists 261 measures in 65 recipes. In short:
 | `primary-fill` and `critical-fill` as solids, progress cells included | graphite | Lc 16.7 to 26.8 | Lc 30 |
 | the same fills as a 2px focus or error edge (a field; an invalid button, switch or checkbox) | graphite | 2.59:1 to 2.97:1 | 3:1 |
 | `needs-you-fill` as a solid, and so `attention` as a mark | stone | Lc 0.0 to 11.9 | Lc 30 |
-| text on a hover or pressed wash, and on `accent` (rows, menu items, buttons, a float button, a select trigger) | both | up to Lc 11.6 under | Lc 90, 75, 60 |
+| text on a hover or pressed wash, and on `accent` (rows, menu items, buttons, a float button, a select trigger) | both | up to Lc 16.2 under | Lc 90, 75, 60, 45 |
 | `text-body` on `diff-added`, the neutral wash | stone | Lc 84.0 to 84.4 | Lc 90 |
 | the label on a pressed solid (80%): a primary button, the create float button | vale and lockdown stone | Lc 72.6 to 74.5 | Lc 75 |
 | the current (inverted) float button, pressed (80%) | graphite | Lc 68.2 to 68.4 | Lc 75 |
@@ -602,11 +602,8 @@ The core recipes (the roles on the surfaces they share, and the states) are in
 `packages/tokens/scripts/contrast.mjs`. Each component area adds its own file,
 `packages/tokens/scripts/recipes/<area>.mjs`, when its components land; the script loads every
 file in that folder. The format is in
-[`scripts/recipes/README.md`](../packages/tokens/scripts/recipes/README.md). One file is temporary:
-`legacy-fields.mjs` measures what the field classes from before 1.0 still paint (Input, Textarea,
-Select's trigger, NativeSelect, InputGroup, Toggle's invalid ring) until the primitives round
-restyles them as TextField. `foundation.mjs` measures the twelve swatches
-([Swatches](#swatches)).
+[`scripts/recipes/README.md`](../packages/tokens/scripts/recipes/README.md). `foundation.mjs`
+measures the twelve swatches ([Swatches](#swatches)).
 
 `pnpm --filter @unicron/tokens test` runs it (so CI does). It prints one line per recipe, with the
 measure in each of the 8 modes, then the exceptions and the must-differ rows, and fails on any

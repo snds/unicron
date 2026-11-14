@@ -1,7 +1,7 @@
 // SplitButton (contract 5.1b #36): a primary pair that counts as one primary. View: ?view=split-button
-import { DropdownMenuItem } from "@unicron/ui"
+import { DropdownMenuItem, SplitButton } from "@unicron/ui"
 
-import { Page, Specimen, SplitButton } from "./_primitives"
+import { Page, Specimen } from "./_primitives"
 
 const LATER = (
   <>

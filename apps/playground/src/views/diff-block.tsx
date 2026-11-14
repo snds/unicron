@@ -1,7 +1,6 @@
 // Diff Block: the diffs on Warpcore's Review diff and Synapse's harness review (contract 5.1a, 5.1b #43). View: ?view=diff-block
 import type { ReactNode } from "react"
-import { Badge } from "@unicron/ui"
-import { DiffBlock, parseUnifiedDiff, type DiffLine } from "../../../../packages/ui/src/components/ui/diff-block"
+import { Badge, DiffBlock, type DiffLine, parseUnifiedDiff } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

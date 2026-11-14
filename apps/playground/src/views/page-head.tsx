@@ -2,8 +2,7 @@
 // sizes, a count or side meta on the baseline, a status Badge, actions, the switcher and the
 // collapsed small title. View: ?view=page-head
 import { useState, type ReactNode } from "react"
-import { Badge, Button, Switch } from "@unicron/ui"
-import { PageHead } from "@unicron/ui/page-head"
+import { Badge, Button, PageHead, Switch } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

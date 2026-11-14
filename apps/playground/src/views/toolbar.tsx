@@ -1,5 +1,6 @@
 // Toolbar (contract 5.1b #35): ghost icon buttons and separators, one Tab stop. View: ?view=toolbar
-import { Page, Specimen, Toolbar, ToolbarButton, ToolbarGroup, ToolbarSeparator, ToolbarToggle } from "./_primitives"
+import { Toolbar, ToolbarButton, ToolbarGroup, ToolbarSeparator, ToolbarToggle } from "@unicron/ui"
+import { Page, Specimen } from "./_primitives"
 
 export default function ToolbarView() {
   return (

@@ -154,18 +154,16 @@ describe("Button focus and invalid edges", () => {
     expect(classesOf({})).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-critical-fill"]))
   })
 
-  it("any invalid ring left in the primitives is drawn at the alpha the contrast gate measures", () => {
-    // packages/tokens/scripts/recipes/legacy-fields.mjs gates aria-invalid:ring-destructive/80
-    // (stone) and dark:…/50 (graphite) at 3:1. Primitives restyled to the 2026-11 direction no
-    // longer draw one; the rest are held here.
+  it("no primitive draws the pre-1.0 invalid ring (nothing measures it any more)", () => {
+    // The pre-1.0 fields drew aria-invalid:ring-destructive/80 (stone) and dark:…/50 (graphite),
+    // gated by a temporary contrast file (recipes/legacy-fields.mjs). Round 2 restyled every field
+    // to the 2px critical inside edge, and that file is gone, so a ring that came back would be
+    // unmeasured.
     const dir = import.meta.dirname
     const found = readdirSync(dir)
       .filter((f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"))
       .flatMap((f) => readFileSync(resolve(dir, f), "utf8").match(/\S*ring-destructive\/\d+/g) ?? [])
-    for (const cls of found) {
-      expect(cls).toMatch(/aria-invalid/)
-      expect(cls).toMatch(cls.startsWith("dark:") ? /\/50$/ : /\/80$/)
-    }
+    expect(found).toEqual([])
   })
 })
 

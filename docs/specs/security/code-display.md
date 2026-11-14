@@ -20,7 +20,7 @@ The ring is gone. The time left is **30 cells** (the segmented `Progress`, 4px t
 - **The counter kind** (`variant="hotp"`): no cells, no seconds; `Counter 14` and the word `Next code`.
 - **Notices** are Badges in the warning tone, with `Fix clock` as a word.
 
-Unchanged: the copy reference contract, the thresholds, the rollover, the haptic, the spelled label, the live region, the crown-jewel gate, the HOTP wait. Tokens added: `--c-code-row-min-height`, `--c-code-tile-min-height`, `--c-code-tile-min-width`, `--c-code-tile-gap`; `--c-code-group-gap` re-declared (0.3em). No longer read: `--c-code-size-*`, `--c-code-letter-spacing`, `--c-code-ring-*`, `--c-code-next-ink`.
+Unchanged: the copy reference contract, the thresholds, the rollover, the haptic, the spelled label, the live region, the crown-jewel gate, the HOTP wait. Tokens added: `--c-code-row-min-height`, `--c-code-tile-min-height`, `--c-code-tile-min-width`, `--c-code-tile-gap`; `--c-code-group-gap` re-declared (0.3em). Removed in 1.0 (no longer read): `--c-code-size-*`, `--c-code-letter-spacing`, `--c-code-ring-*`, `--c-code-next-ink`.
 
 ## Purpose and the user job
 
@@ -38,7 +38,7 @@ code-display                       Item, role="group", tabIndex=0; data-variant,
 ├─ code-display-issuer             "GitHub · sean" (detail and list)
 ├─ code-display-code               aria-hidden; data-rolling during the crossfade
 │  └─ code-display-group × n       font-mono, tabular, 3+3 · 4+4 · 5; data-concealed when dots
-├─ code-display-next               "Next 330 558" in --c-code-next-ink
+├─ code-display-next               "Next 330 558" in the label ink (type-overline)
 ├─ code-display-notice             Badge outline: "Clock is off by 40 s · Fix clock" · "Same account you sign in with"
 ├─ code-display-timer              ring (TOTP, Steam), aria-hidden; text "N s" in high contrast
 ├─ code-display-counter            "#7" (HOTP) · "Next code" Button
@@ -80,7 +80,7 @@ Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`, `CodeD
 | `concealed` | Dots (`*` in high contrast); label "Code for GitHub, sean, hidden. Press Enter to show it." |
 | `loading` | Skeleton boxes, one per group |
 | `error` | "Can't make a code: reason" in `destructive`; no digits, no copy button |
-| next shown | From `--c-code-next-at` (10 s): next code beneath in `--c-code-next-ink` |
+| next shown | From `--c-code-next-at` (10 s): next code beside it in the label ink |
 | rollover | `--c-code-rollover-duration` (200 ms) fade-in; instant under reduced motion |
 | copied (`data-copied`) | Seconds on the copy button; tooltip "Copied · clears in 30 s" or "Copied the next code · …" |
 | cleared | Check plus sr-only "Cleared", tooltip "Cleared", for 2 s, as SecretField; only when the clear is known to have run (below). Otherwise the countdown ends silently and the button goes back to copy |
@@ -114,15 +114,7 @@ Tier 3 under `code`:
 
 | Token | Aliases | Purpose |
 |---|---|---|
-| `--c-code-size-detail` | `2.25rem` | |
-| `--c-code-size-list` | `1.25rem` | |
-| `--c-code-size-compact` | `1rem` | |
 | `--c-code-group-gap` | `0.75em` | |
-| `--c-code-letter-spacing` | `0.08em` | |
-| `--c-code-ring-track` | `{border}` | |
-| `--c-code-ring-progress` | `{foreground}` | |
-| `--c-code-ring-expiring` | `{warning}` | |
-| `--c-code-next-ink` | `{muted-foreground}` | |
 | `--c-code-expiring-at` | `5s` | |
 | `--c-code-next-at` | `10s` | |
 | `--c-code-copy-next-at` | `3s` | |

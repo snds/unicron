@@ -2,9 +2,16 @@
 // the primary and the float buttons, 64 high over a hairline. Narrower, it gives up room in
 // Warpcore's order (U-01): the status's short form, the wordmark, the primary's word, the tab
 // numbers, the tab words. The status never hides. View: ?view=app-frame-top-bar
-import { AppFrameColumn, AppFrameMain, AppFrameTopBar, FloatButton, StatusItem } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
-import { TopTab, TopTabs } from "@unicron/ui/top-tabs"
+import {
+  AppFrameColumn,
+  AppFrameMain,
+  AppFrameTopBar,
+  AppLockup,
+  FloatButton,
+  StatusItem,
+  TopTab,
+  TopTabs,
+} from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
 

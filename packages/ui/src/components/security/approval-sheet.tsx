@@ -20,10 +20,6 @@ import { DigitGroups } from "./digit-groups"
 import { ReviewCountdownRule, ReviewFrame, formatCountdown, rowClasses } from "./parts"
 import { RiskTierBadge, type RiskTier } from "./risk-tier-badge"
 
-// DigitGroups and QrCode are new in 1.0 and reach the package root through the files that use
-// them until index.ts names them (the integrator's line); then these re-exports go.
-export { DigitGroups, digitGroupSize, splitDigitGroups, spellDigitGroups, type DigitGroupsProps, type DigitGroupsSize } from "./digit-groups"
-
 export type ApprovalKind = "device" | "agent" | "device-code" | "contact-request" | "bridge"
 export type ApprovalOrigin = "scan" | "pairing" | "push"
 /** Why it was denied. `mismatch`: the person said the code on the other screen differs (compare matching). */

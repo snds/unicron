@@ -1,7 +1,6 @@
 // List Row, as Figma draws it (9:181), and the round-2 parts (contract 5.1b #21). View: ?view=list-row
 import { useState, type ReactNode } from "react"
-import { Badge, Button, Checkbox, DropdownMenuItem, Icon } from "@unicron/ui"
-import { ListRow } from "../../../../packages/ui/src/components/ui/list-row"
+import { Badge, Button, Checkbox, DropdownMenuItem, Icon, ListRow } from "@unicron/ui"
 
 function Specimen({ label, wide = true, children }: { label: string; wide?: boolean; children: ReactNode }) {
   return (

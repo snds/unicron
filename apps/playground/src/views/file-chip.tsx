@@ -1,7 +1,6 @@
 // File Chip: the attachment on Vale's message (contract 5.1a, 5.1b #30). View: ?view=file-chip
 import type { ReactNode } from "react"
-import { Button, Icon } from "@unicron/ui"
-import { FileChip } from "../../../../packages/ui/src/components/ui/file-chip"
+import { Button, FileChip, Icon } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

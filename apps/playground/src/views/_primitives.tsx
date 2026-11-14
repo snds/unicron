@@ -1,19 +1,6 @@
-// Shared parts for the primitives area's views (a file starting with "_" is not a view).
-//
-// The components new in round 2 (TextField, SearchField, ChipField, InitialTile, EmptyState,
-// RadioGroup, RadioRow, Toolbar, SplitButton) are not in @unicron/ui's index yet: the integrator
-// adds their export lines. Until then the views take them from the package's source, here, in one
-// place. Once index.ts exports them, this block becomes `export { … } from "@unicron/ui"` and no
-// view changes.
+// Shared layout for the primitives area's views (a file starting with "_" is not a view). The
+// components themselves come from "@unicron/ui".
 import type { ReactNode } from "react"
-
-export { TextField, SearchField } from "../../../../packages/ui/src/components/ui/text-field"
-export { ChipField } from "../../../../packages/ui/src/components/ui/chip-field"
-export { InitialTile } from "../../../../packages/ui/src/components/ui/initial-tile"
-export { EmptyState, EmptyOverline } from "../../../../packages/ui/src/components/ui/empty"
-export { RadioGroup, RadioGroupItem, RadioRow } from "../../../../packages/ui/src/components/ui/radio-group"
-export { Toolbar, ToolbarButton, ToolbarGroup, ToolbarSeparator, ToolbarToggle } from "../../../../packages/ui/src/components/ui/toolbar"
-export { SplitButton } from "../../../../packages/ui/src/components/ui/split-button"
 
 /** A labelled block of specimens: the overline names what it shows, as the other views do. */
 export function Specimen({ label, children, column = false }: { label: string; children: ReactNode; column?: boolean }) {

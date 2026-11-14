@@ -1,9 +1,6 @@
 // Metric: Figma's Metric (15:513), its delta tones, as a link, and the hero size (Lockdown Health, Warpcore Spend, Synapse Overview). View: ?view=metric
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import type { ReactNode } from "react"
-import { Badge, Progress, useViewport } from "@unicron/ui"
-import { Metric } from "../../../../packages/ui/src/components/ui/metric"
+import { Badge, Metric, Progress, useViewport } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

@@ -1,9 +1,7 @@
 // Top bar of a phone detail screen, as the apps draw it (no Figma component): back, a small centred
 // title once the head has scrolled away, up to two actions. View: ?view=top-bar
 import { useState, type ReactNode } from "react"
-import { FloatButton } from "@unicron/ui"
-import { PageHead } from "@unicron/ui/page-head"
-import { TopBar } from "@unicron/ui/top-bar"
+import { FloatButton, PageHead, TopBar } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

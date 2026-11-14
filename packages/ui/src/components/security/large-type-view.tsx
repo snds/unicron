@@ -17,10 +17,6 @@ import { readSecondsToken, useCopyCountdown, useHighContrast } from "./copy-coun
 import { useCrownJewel } from "./crown-jewel"
 import { ReviewFrame, formatCountdown } from "./parts"
 
-// QrCode is new in 1.0 and reaches the package root through this file (Lockdown pairs it with
-// large type on the Wi-Fi guest card) until index.ts names it (the integrator's line); then this goes.
-export { QrCode, encodeQrModules, qrPath, qrCodeTooLongText, type QrCodeProps, type QrErrorCorrection, type QrModules } from "./qr-code"
-
 export type LargeTypeCaptions = "auto" | "always" | "off"
 export type LargeTypeCharClass = "digit" | "letter" | "symbol"
 

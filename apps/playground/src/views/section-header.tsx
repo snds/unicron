@@ -1,9 +1,6 @@
 // Section Header, as Figma draws it (32:60), with the round-2 parts (contract 5.1b #26). View: ?view=section-header
 import type { ReactNode } from "react"
-import { Button } from "@unicron/ui"
-import { ListRow } from "../../../../packages/ui/src/components/ui/list-row"
-import { LogRow } from "../../../../packages/ui/src/components/ui/log-row"
-import { SectionHeader } from "../../../../packages/ui/src/components/ui/section-header"
+import { Button, ListRow, LogRow, SectionHeader } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

@@ -1,9 +1,7 @@
 // Accessory, the status strip, as Figma draws it (20:1713), with the tones and forms the apps add.
 // View: ?view=accessory
 import { useState, type ReactNode } from "react"
-import { FloatButton } from "@unicron/ui"
-import { Accessory } from "@unicron/ui/accessory"
-import { TabBar, TabBarItem } from "@unicron/ui/tab-bar"
+import { Accessory, FloatButton, TabBar, TabBarItem } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

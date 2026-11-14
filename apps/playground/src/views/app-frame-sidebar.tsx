@@ -4,9 +4,19 @@
 // choice it is the rail; at medium width it is always the rail, and expanding lays the drawer
 // over the content. View: ?view=app-frame-sidebar
 import { useState } from "react"
-import { AppFrameColumn, AppFrameMain, AppFrameSidebar, AppFrameStatusLine, AppFrameSwitcher, Button, Icon, StatusItem } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
-import { NavItem, NavSection } from "@unicron/ui/nav-item"
+import {
+  AppFrameColumn,
+  AppFrameMain,
+  AppFrameSidebar,
+  AppFrameStatusLine,
+  AppFrameSwitcher,
+  AppLockup,
+  Button,
+  Icon,
+  NavItem,
+  NavSection,
+  StatusItem,
+} from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
 

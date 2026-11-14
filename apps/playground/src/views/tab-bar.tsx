@@ -1,9 +1,7 @@
 // Tab Bar and Dock Tab, as Figma draws them (20:1657, 20:1656), in the phone's bottom row, scrolled,
 // on a short screen, and as links. View: ?view=tab-bar
 import { useState, type ReactNode } from "react"
-import { FloatButton, Switch } from "@unicron/ui"
-import { Accessory } from "@unicron/ui/accessory"
-import { TabBar, TabBarItem } from "@unicron/ui/tab-bar"
+import { Accessory, FloatButton, Switch, TabBar, TabBarItem } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

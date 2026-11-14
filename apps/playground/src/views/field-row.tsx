@@ -1,6 +1,4 @@
 // FieldRow: Figma's Field Row (15:512), its three sizes, and what the four apps add (contract 5.1b #22, #37). View: ?view=field-row
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import { useState, type ReactNode } from "react"
 import {
   Badge,
@@ -9,13 +7,15 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
+  FieldRow,
+  FieldRowAction,
+  FieldRowValue,
   Kbd,
   ToggleGroup,
   ToggleGroupItem,
+  ToggleRow,
   useViewport,
 } from "@unicron/ui"
-import { FieldRow, FieldRowAction, FieldRowValue } from "../../../../packages/ui/src/components/ui/field-row"
-import { ToggleRow } from "../../../../packages/ui/src/components/ui/toggle-row"
 
 function Specimen({ label, children, width = "max-w-[648px]" }: { label: string; children: ReactNode; width?: string }) {
   return (

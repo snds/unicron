@@ -1,9 +1,6 @@
 // NeedsYou: Figma's Needs You (15:517), one per screen, as each app fills it; the // +1 suffix and two text actions (contract 5.1b #40). View: ?view=needs-you
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import type { ReactNode } from "react"
-import { Button } from "@unicron/ui"
-import { NeedsYou } from "../../../../packages/ui/src/components/ui/needs-you"
+import { Button, NeedsYou } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

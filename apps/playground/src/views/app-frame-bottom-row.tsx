@@ -2,8 +2,15 @@
 // its tab bar (rules.md 6.3), the status strip above it (6.4) and inside it once the page has
 // scrolled (6.5), the detail form of a pushed screen (contract 5.1b #2), a strip alone, the fade
 // under the chrome (6.6), and the short screen's trailing column. View: ?view=app-frame-bottom-row
-import { AppFrameAccessory, AppFrameBottomRow, AppFrameList, AppFrameMain, FloatButton } from "@unicron/ui"
-import { TabBar, TabBarItem } from "@unicron/ui/tab-bar"
+import {
+  AppFrameAccessory,
+  AppFrameBottomRow,
+  AppFrameList,
+  AppFrameMain,
+  FloatButton,
+  TabBar,
+  TabBarItem,
+} from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
 import { StandInComposer, StandInMessageRow, StandInRows } from "./_shell-parts"

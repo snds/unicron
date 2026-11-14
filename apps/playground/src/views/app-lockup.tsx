@@ -1,7 +1,6 @@
 // App Lockup, as Figma draws it (28:2297), and in the phone top row, scrolled and not. View: ?view=app-lockup
 import type { ReactNode } from "react"
-import { FloatButton } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
+import { AppLockup, FloatButton } from "@unicron/ui"
 
 import { DEFAULT_APP_THEME, useAddress, type AppTheme } from "../address"
 

@@ -9,18 +9,19 @@ import {
   AppFrameMain,
   AppFramePageHead,
   AppFrameTopBar,
+  AppLockup,
   ContextPanel,
+  type ContextPanelState,
+  type ContextPanelTab,
   FloatButton,
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   StatusItem,
-  type ContextPanelState,
-  type ContextPanelTab,
+  TopTab,
+  TopTabs,
 } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
-import { TopTab, TopTabs } from "@unicron/ui/top-tabs"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
 import { StandInComposer, StandInInlineRow, StandInMessage, StandInRows, StandInSection } from "./_shell-parts"

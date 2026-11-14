@@ -18,7 +18,7 @@ _Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §5.7, `04-security.md` 
 
 `ApprovalDenyReason` gains `mismatch`. Exported: `approvalSheetOverline`, `approvalSheetWords`, `approvalSheetComparePrompt`, `ApprovalNumberMatching`, `ApprovalCompareMatching`, `ApprovalNoMatching`.
 
-Unchanged: the origin rule (a `device-code` from anything but `scan` renders no approve control in any mode), the arming delay on every action and on closing, the timeout that denies, two tries, Enter never approves, the DOM order Approve → Deny → This wasn't me, the announcements and the accessible description. The kind's icon is no longer drawn. Tokens added: `--c-approval-urgent-at`, `--c-review-*`. No longer read: `--c-approval-timer-*`.
+Unchanged: the origin rule (a `device-code` from anything but `scan` renders no approve control in any mode), the arming delay on every action and on closing, the timeout that denies, two tries, Enter never approves, the DOM order Approve → Deny → This wasn't me, the announcements and the accessible description. The kind's icon is no longer drawn. Tokens added: `--c-approval-urgent-at`, `--c-review-*`. Removed in 1.0 (no longer read): `--c-approval-timer-*`.
 
 ## Purpose and the user job
 
@@ -100,11 +100,7 @@ Tier 3 under `approval`:
 | Token | Aliases | Purpose |
 |---|---|---|
 | `--c-approval-min-width` | `20rem` | Never smaller at any breakpoint |
-| `--c-approval-digit-size` | `2rem` | Digit cell type size |
 | `--c-approval-digit-gap` | `0.5rem` | |
-| `--c-approval-timer-track` | `{border}` | |
-| `--c-approval-timer-progress` | `{foreground}` | |
-| `--c-approval-timer-urgent` | `{warning}` | Under 10 s |
 | `--c-approval-arm-delay` | `500ms` | Inert window after open; also read by `CrownJewelGate` |
 | `--c-approval-lifetime` | `60s` | Default `expiresAt` offset |
 

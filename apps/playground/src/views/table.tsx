@@ -1,7 +1,15 @@
 // Table: Synapse's lists and Warpcore's tables in replies (contract 5.1b #31). View: ?view=table
 import { useState, type ReactNode } from "react"
-import { Badge } from "@unicron/ui"
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../../../../packages/ui/src/components/ui/table"
+import {
+  Badge,
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

@@ -1,7 +1,7 @@
 // Code Block and the copy button: code or output to read and copy. Not drawn in Figma.
 // View: ?view=code-block
 import type { ReactNode } from "react"
-import { CodeBlock, CopyButton } from "./_chat-ui"
+import { CodeBlock, CopyButton } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

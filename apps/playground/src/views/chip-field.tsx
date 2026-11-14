@@ -1,5 +1,6 @@
 // ChipField (contract 5.1b #24): the Text Field box holding chips. View: ?view=chip-field
-import { ChipField, Column, Page, Specimen } from "./_primitives"
+import { ChipField } from "@unicron/ui"
+import { Column, Page, Specimen } from "./_primitives"
 
 const ADDRESS = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 

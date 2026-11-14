@@ -58,11 +58,13 @@
       "import": "./dist/lib/motion/index.js",
       "default": "./dist/lib/motion/index.js"
     },
+    "./security/parts": null,
     "./security/*": {
       "types": "./dist/components/security/*.d.ts",
       "import": "./dist/components/security/*.js",
       "default": "./dist/components/security/*.js"
     },
+    "./app-frame-context": null,
     "./*": {
       "types": "./dist/components/ui/*.d.ts",
       "import": "./dist/components/ui/*.js",

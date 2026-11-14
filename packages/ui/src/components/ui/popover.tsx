@@ -7,6 +7,7 @@
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 import { cn } from "../../lib/utils"
+import { TABBABLE } from "../../lib/focus"
 
 import { FloatButton } from "./float-button"
 
@@ -28,9 +29,6 @@ function PopoverClose({ ...props }: PopoverPrimitive.Close.Props) {
  * scrolls when it is taller than that space. `scrim` dims the page behind it with the menu scrim
  * (--c-scrim-menu, 32%): an environment picker, a quick create.
  */
-const TABBABLE =
-  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
-
 /**
  * Where focus starts when a popover opens: its first control that is not the header's close
  * button, else the popover itself. So a picker starts on what it picks, and opening a popover

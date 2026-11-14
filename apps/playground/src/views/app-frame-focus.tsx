@@ -1,8 +1,7 @@
 // AppFrameFocus: the whole app is closed until the person signs in, unlocks or finishes the first
 // run (decisions §4): no chrome, one centred column of 432 with the lockup at its top and one
 // primary. A flow of several steps shows a folio. View: ?view=app-frame-focus
-import { AppFrameFocus, Button } from "@unicron/ui"
-import { AppLockup } from "@unicron/ui/app-lockup"
+import { AppFrameFocus, AppLockup, Button } from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
 import { StandInSearch } from "./_shell-parts"

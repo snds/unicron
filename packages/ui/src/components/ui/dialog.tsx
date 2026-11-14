@@ -8,6 +8,7 @@
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "../../lib/utils"
+import { useFocusFirstControl } from "../../lib/focus"
 
 import { Button } from "./button"
 import { FloatButton } from "./float-button"
@@ -108,24 +109,6 @@ export function dialogSizeName(size: DialogSize): DialogSizeName {
   return size in LEGACY_SIZES ? LEGACY_SIZES[size as DialogLegacySize] : (size as DialogSizeName)
 }
 
-const TABBABLE =
-  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
-
-/**
- * Where focus starts when the layer opens from a keyboard or a pointer: its first control, else the
- * layer itself, never the close button (it is drawn at the top but read last, and focusing it
- * would also show its tooltip). Opened by touch, Base UI's own choice stands: the layer itself, so
- * no keyboard springs up.
- */
-function focusFirstControl(inner: React.RefObject<HTMLElement | null>, popupSlot: string) {
-  return (openType: string) => {
-    if (openType === "touch") return true
-    const el = inner.current
-    if (!el) return true
-    return el.querySelector<HTMLElement>(TABBABLE) ?? el.closest<HTMLElement>(`[data-slot="${popupSlot}"]`) ?? true
-  }
-}
-
 /** What DialogContent tells its parts: the header keeps clear of the close button only when there is one. */
 const DialogContentContext = React.createContext<{ showCloseButton: boolean }>({ showCloseButton: false })
 
@@ -159,6 +142,7 @@ function DialogContent({
   const name = dialogSizeName(size)
   const context = React.useMemo(() => ({ showCloseButton }), [showCloseButton])
   const scroll = React.useRef<HTMLDivElement>(null)
+  const focusFirst = useFocusFirstControl(scroll, "dialog-content")
   return (
     <DialogPortal container={container}>
       <DialogOverlay />
@@ -166,7 +150,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         data-size={name}
-        initialFocus={initialFocus ?? focusFirstControl(scroll, "dialog-content")}
+        initialFocus={initialFocus ?? focusFirst}
         className={cn(
           // Solid and square: the raised surface, no shadow, no blur. Centred in the area below
           // --c-dialog-titlebar-inset (0px by default), so an app's title bar strip never overlaps it.
@@ -352,25 +336,3 @@ export {
   DialogTitle,
   DialogTrigger,
 }
-
-// The adaptive layers and ConfirmDialog belong to the dialog family. Until packages/ui/src/index.ts
-// (the integrator's file) lists their modules, the package root reaches them through here. Both
-// paths name the same binding, so the two can stand together.
-export {
-  AdaptiveDialog,
-  AdaptiveMenu,
-  AdaptiveMenuCheckboxItem,
-  AdaptiveMenuGroup,
-  AdaptiveMenuItem,
-  AdaptiveMenuRadioGroup,
-  AdaptiveMenuRadioItem,
-  AdaptiveMenuSeparator,
-  AdaptivePopover,
-  useAdaptiveSheet,
-  type AdaptiveDialogProps,
-  type AdaptiveMenuItemProps,
-  type AdaptiveMenuProps,
-  type AdaptivePopoverProps,
-  type AdaptivePresentation,
-} from "./adaptive"
-export { ConfirmDialog, type ConfirmDialogProps } from "./confirm-dialog"

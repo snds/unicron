@@ -1,7 +1,6 @@
 // Filter Chip, as Figma draws it (15:503), and the group's round-2 parts (contract 5.1b #25). View: ?view=filter-chip
 import { useState, type ReactNode } from "react"
-import { Button, Icon } from "@unicron/ui"
-import { FilterChip, FilterChipGroup } from "../../../../packages/ui/src/components/ui/filter-chip"
+import { Button, FilterChip, FilterChipGroup, Icon } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

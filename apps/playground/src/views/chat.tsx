@@ -2,8 +2,7 @@
 // Figma 45:2087; on a phone, Mobile 01, 37:45): messages 20 apart, artifact cards in the stream,
 // the chips 20 above the composer. The page head, the inline task row and the chips themselves are
 // other areas' parts; plain stand-ins hold their places. View: ?view=chat
-import { Badge } from "@unicron/ui"
-import { ArtifactCard, ChatMessage, Composer, CopyButton } from "./_chat-ui"
+import { ArtifactCard, Badge, ChatMessage, Composer, CopyButton } from "@unicron/ui"
 
 export default function ChatView() {
   return (

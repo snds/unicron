@@ -1,8 +1,6 @@
 // Highlight: the words a search matched (contract 5.1b #45, decisions §6). View: ?view=highlight
 import { useState, type ReactNode } from "react"
-import { Input } from "@unicron/ui"
-import { Highlight } from "../../../../packages/ui/src/components/ui/highlight"
-import { ListRow } from "../../../../packages/ui/src/components/ui/list-row"
+import { Highlight, Input, ListRow } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (

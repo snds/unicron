@@ -1,9 +1,6 @@
 // Steps: a vertical list of a flow's steps (contract 5.1b #32): Synapse's import, Warpcore's task steps, Lockdown's checklist, and the phone folio. View: ?view=steps
-// The new data-b components are imported from the ui source until packages/ui/src/index.ts exports
-// them (the integrator's file); then these imports become "@unicron/ui".
 import { useState, type ReactNode } from "react"
-import { Badge, Checkbox, Button } from "@unicron/ui"
-import { Step, Steps, StepsFolio, type StepStatus } from "../../../../packages/ui/src/components/ui/steps"
+import { Badge, Button, Checkbox, Step, Steps, StepsFolio, type StepStatus } from "@unicron/ui"
 
 function Specimen({ label, children, width = "max-w-[534px]" }: { label: string; children: ReactNode; width?: string }) {
   return (

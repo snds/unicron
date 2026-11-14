@@ -269,7 +269,7 @@ surface, or the extension's top-layer frame, never in web content; every tier, s
   - *A11y:* static text "Risk tier: Use with care. Our own bridge, opt-in." (visible word + sr-only parts); the explain
     control is a button named "What does Use with care mean?".
   - *Tokens:* `secondary`, `muted-foreground`, `foreground`, `info`, `warning`, `destructive`;
-    `--c-risk-tier-{standard,official,tolerated}-{ink,bg}`, `--c-risk-tier-unverified-ink`, `--c-risk-tier-height-{sm,md}`.
+    `--c-risk-tier-height-{sm,md}` (the Badge tones paint the rest).
 - **SecretField** ([spec](specs/security/secret-field.md)). Use a hidden value without exposing it longer than the job
   takes.
   - *Anatomy:* `secret-field` (`data-mode="read|edit"`) → `Field` → `FieldLabel` · control (`InputGroup`: masked span
