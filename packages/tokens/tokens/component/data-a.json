@@ -1,0 +1,52 @@
+{
+  "$description": "Tier 3 · Component knobs for the data-a area (packages/ui: list-row.tsx, swipe-row.tsx, filter-chip.tsx, section-header.tsx, log-row.tsx, diff-block.tsx, file-chip.tsx, table.tsx, highlight.tsx). Only the fixed sizes Figma names without a variable, and the swipe thresholds of contract §6.4, are knobs; every other padding, gap and height is on the 4px spacing scale (List Row 20 / 16 / 24, Section Header 32, Filter Chip 24, Log Row 40, File Chip 44).",
+  "list-row": {
+    "$description": "ListRow (Figma 9:181 \"1. List Row\").",
+    "leading-width": {
+      "$type": "dimension",
+      "$value": "2.5rem",
+      "$description": "The fixed leading column that holds the index (folio) or a leading part. Figma: 40, typed in."
+    },
+    "progress-max-width": {
+      "$type": "dimension",
+      "$value": "22.5rem",
+      "$description": "The segmented progress bar fills the body up to this width. Figma: 360."
+    },
+    "unread-size": {
+      "$type": "dimension",
+      "$value": "0.375rem",
+      "$description": "The unread mark of the message layout: a square in text-body, its bottom on the baseline. Figma: 6 × 6."
+    }
+  },
+  "swipe-action": {
+    "$description": "SwipeAction (Figma 25:2042 \"13. Swipe Action\"): one action tile behind a swiped row.",
+    "width": {
+      "$type": "dimension",
+      "$value": "5rem",
+      "$description": "A tile's width. Figma draws 80 × 96; the height stretches to the row in code (96 fits no List Row height)."
+    }
+  },
+  "swipe-row": {
+    "$description": "SwipeRow thresholds (contract §6.4). Behaviour, not motion: the row reads them when a press starts and falls back to these same values without the stylesheet. The settle itself runs on --motion-spring-settle and stops under reduced motion.",
+    "reveal": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "How far the pointer travels sideways (and more sideways than down) before the row moves. Under it a press stays a tap."
+    },
+    "edge": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "A right swipe that starts this close to the screen's left edge is left to the system's back gesture: it never reaches the leading action."
+    },
+    "snap": {
+      "$type": "number",
+      "$value": 0.5,
+      "$description": "Released past this share of the actions' width, the row snaps open; under it, it closes."
+    },
+    "full": {
+      "$type": "number",
+      "$value": 0.6,
+      "$description": "Released past this share of the row's width, a full swipe runs the outermost action, and only when that action is reversible (a confirm action opens its review instead). Otherwise the row opens and stops."
+    }
+  }
+}
