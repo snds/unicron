@@ -165,11 +165,11 @@ function Items() {
                 />
               ) : null}
               <div className="flex flex-col">
-                <FieldRow label="Username" action={<FieldRowAction>Copy</FieldRowAction>}>
+                <FieldRow size={frame.split ? "default" : "stacked"} label="Username" action={<FieldRowAction>Copy</FieldRowAction>}>
                   kestrel.04
                 </FieldRow>
                 <SecretField label="Password" getSecret={getPassword} host={host} />
-                <FieldRow label="Passkey">Lockdown // 2026.10.02</FieldRow>
+                <FieldRow size={frame.split ? "default" : "stacked"} label="Passkey">Lockdown // 2026.10.02</FieldRow>
                 <CodeDisplay layout="field" label="Steam Guard" variant="steam" issuer="Steam" account="kestrel.04" code="R7K2N" period={30} expiresAt={AT} now={AT - 18} />
               </div>
               <div className="flex flex-col gap-1">

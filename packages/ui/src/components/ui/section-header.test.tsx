@@ -54,6 +54,16 @@ describe("SectionHeader (Figma 32:60)", () => {
     const header = slot(container, "section-header")
     expect(header).toHaveAttribute("data-variant", "index")
     expect(header.className.split(/\s+/)).toEqual(expect.arrayContaining(["sticky", "top-0", "bg-background"]))
+    // A letter is drawn as Lockdown's Desktop / 01 draws it: the index role, `// 04`, no rule beside it.
+    expect(slot(container, "section-header-title")).toHaveClass("type-number-index")
+    expect(header).toHaveTextContent("S // 04")
+    expect(container.querySelector('[data-slot="section-header-rule"]')).toBeNull()
+  })
+
+  it("index: a longer title (a group of letters, Favorites) keeps the overline and the rule", () => {
+    const { container } = render(<SectionHeader variant="index" title="A – P" count={146} />)
+    expect(slot(container, "section-header-title")).toHaveClass("type-overline")
+    expect(container.querySelector('[data-slot="section-header-rule"]')).not.toBeNull()
   })
 
   it("collapsible: the title is a disclosure button; shut, a summary line describes it; open, the panel shows", async () => {

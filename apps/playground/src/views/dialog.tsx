@@ -14,11 +14,14 @@ import {
   Icon,
   TextField,
   ToggleRow,
+  useViewport,
 } from "@unicron/ui"
 
 import { Specimen, Stage } from "./_stage"
 
 export default function DialogView() {
+  // A dialog on a phone-width page: its Field Rows stack, as they do in a sheet (Lockdown 11).
+  const rowSize = useViewport().widthClass === "compact" ? "stacked" : "default"
   return (
     <div className="flex flex-col gap-10 p-6 max-sm:p-4">
       <Stage label="Form // 640, the default (Lockdown D05)" width={1392} height={720} app="lockdown">
@@ -57,10 +60,10 @@ export default function DialogView() {
               </DialogHeader>
               <DialogBody>
                 <div className="flex flex-col">
-                  <FieldRow label="Account">kestrel.04</FieldRow>
-                  <FieldRow label="Device">Windows 11 // Edge 131</FieldRow>
-                  <FieldRow label="Near">Sacramento, CA</FieldRow>
-                  <FieldRow label="Time">14:31</FieldRow>
+                  <FieldRow size={rowSize} label="Account">kestrel.04</FieldRow>
+                  <FieldRow size={rowSize} label="Device">Windows 11 // Edge 131</FieldRow>
+                  <FieldRow size={rowSize} label="Near">Sacramento, CA</FieldRow>
+                  <FieldRow size={rowSize} label="Time">14:31</FieldRow>
                 </div>
                 <DialogDescription>Not you? Deny, and Lockdown locks this login until you change the password.</DialogDescription>
               </DialogBody>

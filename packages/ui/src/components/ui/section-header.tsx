@@ -98,17 +98,28 @@ function SectionHeader({
   const isOpen = open ?? openState
   const hasCount = count !== undefined && count !== null && count !== false
 
+  // A letter header (A to Z, #) draws its letter as Lockdown's Desktop / 01 does: the index role,
+  // then `// 04` in the meta role, and no rule beside it (the first row's rule is under it).
+  // A longer index title ("Favorites", "A – P") keeps the overline.
+  const letter = variant === "index" && typeof title === "string" && [...title.trim()].length <= 2
   const words = (
     <>
-      <span data-slot="section-header-title" className="type-overline text-muted-foreground">
+      <span data-slot="section-header-title" className={cn(letter ? "type-number-index" : "type-overline", "text-muted-foreground")}>
         {title}
       </span>
       {/* A space for the name ("Mail // folders 12"); the gap draws it. */}
       {hasCount ? " " : null}
+      {hasCount && letter ? (
+        <>
+          <span aria-hidden="true" className="type-meta text-muted-foreground -me-1.5">
+            {"//"}
+          </span>{" "}
+        </>
+      ) : null}
       {hasCount ? <Count count={count} /> : null}
     </>
   )
-  const rule = <span data-slot="section-header-rule" aria-hidden="true" className="h-(--stroke-rule) min-w-4 flex-1 bg-line-rule" />
+  const rule = letter ? null : <span data-slot="section-header-rule" aria-hidden="true" className="h-(--stroke-rule) min-w-4 flex-1 bg-line-rule" />
   const actionSlot = action ? (
     <span data-slot="section-header-action" className="inline-flex shrink-0 items-center">
       {action}
@@ -117,7 +128,7 @@ function SectionHeader({
 
   if (!collapsible) {
     return (
-      <div data-slot="section-header" data-variant={variant} className={cn(header({ variant, inset }), className)} {...props}>
+      <div data-slot="section-header" data-variant={variant} className={cn(header({ variant, inset }), letter && "h-12", className)} {...props}>
         <Heading className="flex min-w-0 shrink-0 items-baseline gap-3">{words}</Heading>
         {rule}
         {actionSlot}
