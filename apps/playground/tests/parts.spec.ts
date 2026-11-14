@@ -667,14 +667,15 @@ test("a DiffBlock's box that scrolls sideways is a named tab stop", async ({ pag
 })
 
 test("with focus on a layer's Close, one Escape closes the layer: no tooltip takes the first one", async ({ page }) => {
-  // The showcase holds the playground's live layers (a trigger, a modal dialog, a sheet).
-  await open(page, "showcase")
+  // The live-layers view holds the playground's live layers (a trigger, a modal dialog, a sheet).
+  await open(page, "live-layers")
   for (const [trigger, role] of [
     ["Open a long settings dialog", "dialog"],
     ["Open sheet", "dialog"],
   ] as const) {
     const opener = page.getByRole("button", { name: trigger, exact: true }).first()
-    if ((await opener.count()) === 0) continue
+    // Both must be there: a missing trigger would make this check pass without checking anything.
+    await expect(opener).toBeVisible()
     await opener.click()
     const layer = page.getByRole(role).last()
     await expect(layer).toBeVisible()

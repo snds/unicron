@@ -1,12 +1,16 @@
-// Empty State (Figma 32:64): overline, title, body, one secondary action, left aligned; tone critical. View: ?view=empty-state
+// Empty State (Figma 32:64): overline, title, body, one secondary action, left aligned; tone
+// critical; and the same built from its parts, with a glyph tile. View: ?view=empty-state
 import {
+  Button,
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyOverline,
   EmptyState,
   EmptyTitle,
+  Icon,
 } from "@unicron/ui"
 
 import { Column, Page, Specimen } from "./_primitives"
@@ -36,6 +40,22 @@ export default function EmptyStateView() {
               <EmptyDescription>Pick a message to see it here.</EmptyDescription>
             </EmptyHeader>
             <EmptyContent />
+          </Empty>
+        </Column>
+      </Specimen>
+      <Specimen label="Empty, composed // the parts by hand: a glyph tile, a title, a line, one action">
+        <Column>
+          <Empty size="sm">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Icon name="email" />
+              </EmptyMedia>
+              <EmptyTitle>No messages</EmptyTitle>
+              <EmptyDescription>When something arrives it shows up here.</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button variant="secondary">Compose</Button>
+            </EmptyContent>
           </Empty>
         </Column>
       </Specimen>

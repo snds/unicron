@@ -43,7 +43,7 @@ export default function IconsView() {
 
       <section className="flex flex-col gap-4" aria-labelledby="icons-sizes">
         <h2 id="icons-sizes" className="type-overline font-mono text-muted-foreground">
-          Sizes // 03
+          Sizes and tones // 06
         </h2>
         <div className="flex flex-wrap items-end gap-8">
           <figure data-specimen="icon-size" data-size="md" className="flex flex-col gap-2">
@@ -68,6 +68,10 @@ export default function IconsView() {
           <figure data-specimen="icon-label" className="flex flex-col gap-2">
             <Icon name="warning--alt" label="Warning" tone="destructive" />
             <figcaption className="type-meta font-mono text-muted-foreground">label="Warning" // role img</figcaption>
+          </figure>
+          <figure data-specimen="icon-tone" className="flex flex-col gap-2">
+            <Icon name="time" tone="muted" />
+            <figcaption className="type-meta font-mono text-muted-foreground">tone="muted" // standing alone, outside a control</figcaption>
           </figure>
         </div>
       </section>

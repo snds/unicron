@@ -24,11 +24,10 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const viewsDir = path.resolve(here, "../src/views")
 
 /**
- * Views that are not a component's specimens: the foundations and their probes, the icon sheet, the
- * motion cards (their own timed demos), and `showcase`, the 0.x page kept until the apps move off
- * the deprecated frame parts (it draws pre-1.0 type on purpose).
+ * Views that are not a component's specimens: the foundations and their probes, the icon sheet and
+ * the motion cards (their own timed demos).
  */
-const NOT_COMPONENT_VIEWS = new Set(["foundations", "plain-css", "icons", "swatches", "edges", "motion", "showcase"])
+const NOT_COMPONENT_VIEWS = new Set(["foundations", "plain-css", "icons", "swatches", "edges", "motion"])
 const VIEWS = fs
   .readdirSync(viewsDir)
   .filter((file) => /^[^_].*\.tsx$/.test(file) && !/\.test\.tsx$/.test(file))
