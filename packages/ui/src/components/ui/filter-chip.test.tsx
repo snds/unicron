@@ -127,3 +127,97 @@ describe("FilterChipGroup", () => {
     expect(list.className.split(/\s+/)).toEqual(expect.arrayContaining(["gap-2", "flex-wrap"]))
   })
 })
+
+describe("FilterChip kinds: a trigger and a plain button (contract 5.1c C13, Warpcore NA2)", () => {
+  it("trigger: a button with a trailing chevron--down and aria-haspopup, no pressed state, no on look", async () => {
+    const onClick = vi.fn()
+    render(
+      <FilterChip kind="trigger" onClick={onClick}>
+        Auto // Coding
+      </FilterChip>
+    )
+    const chip = screen.getByRole("button", { name: "Auto // Coding" })
+    expect(chip).toHaveAttribute("data-kind", "trigger")
+    expect(chip).toHaveAttribute("aria-haspopup", "dialog")
+    expect(chip).not.toHaveAttribute("aria-pressed")
+    expect(chip).not.toHaveAttribute("data-active")
+    expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("aria-hidden", "true")
+    expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("width", "16")
+    const cls = chip.className.split(/\s+/)
+    // The off look, with the chevron 4 after the words; open, it keeps the pressed wash.
+    expect(cls).toEqual(expect.arrayContaining(["text-muted-foreground", "gap-1", "aria-expanded:bg-state-pressed"]))
+    expect(cls).not.toContain("bg-foreground")
+    await userEvent.click(chip)
+    await userEvent.click(chip)
+    expect(onClick).toHaveBeenCalledTimes(2)
+    // Pressing it twice never turns it on.
+    expect(chip).not.toHaveAttribute("data-active")
+  })
+
+  it("button: a plain action, no chevron, no pressed state, no popup", async () => {
+    const onClick = vi.fn()
+    render(
+      <FilterChip kind="button" onClick={onClick}>
+        snds/lockdown // main
+      </FilterChip>
+    )
+    const chip = screen.getByRole("button", { name: "snds/lockdown // main" })
+    expect(chip).not.toHaveAttribute("aria-pressed")
+    expect(chip).not.toHaveAttribute("aria-haspopup")
+    expect(chip.querySelector('[data-icon-name="chevron--down"]')).toBeNull()
+    await userEvent.click(chip)
+    expect(onClick).toHaveBeenCalledOnce()
+    expect(chip).not.toHaveAttribute("data-active")
+  })
+
+  it("an `active` given to either kind never draws the on look", () => {
+    render(
+      <>
+        <FilterChip kind="trigger" active>
+          General
+        </FilterChip>
+        <FilterChip kind="button" defaultActive>
+          Envs
+        </FilterChip>
+      </>
+    )
+    for (const name of ["General", "Envs"]) {
+      const chip = screen.getByRole("button", { name })
+      expect(chip).not.toHaveAttribute("data-active")
+      expect(chip.className.split(/\s+/)).not.toContain("bg-foreground")
+    }
+  })
+
+  it("a group never counts them: they take no radio role, keep their own Tab stop, and leave the group's value alone", async () => {
+    const onValueChange = vi.fn()
+    render(
+      <FilterChipGroup label="Who answers" defaultValue="auto" onValueChange={onValueChange} action={<FilterChip kind="trigger">More</FilterChip>}>
+        <FilterChip value="auto">Auto</FilterChip>
+        <FilterChip value="general">General</FilterChip>
+        <FilterChip kind="button" value="envs">
+          Envs
+        </FilterChip>
+      </FilterChipGroup>
+    )
+    expect(screen.getAllByRole("radio")).toHaveLength(2)
+    const envs = screen.getByRole("button", { name: "Envs" })
+    expect(envs).not.toHaveAttribute("tabindex", "-1")
+    await userEvent.click(envs)
+    await userEvent.click(screen.getByRole("button", { name: "More" }))
+    expect(onValueChange).not.toHaveBeenCalled()
+    expect(screen.getByRole("radio", { name: "Auto" })).toHaveAttribute("aria-checked", "true")
+  })
+
+  it("works as a layer's trigger: the trigger's ref and its aria-expanded reach the chip", async () => {
+    const ref = { current: null as HTMLButtonElement | null }
+    render(
+      <FilterChip kind="trigger" ref={ref} aria-haspopup="menu" aria-expanded={true}>
+        General
+      </FilterChip>
+    )
+    const chip = screen.getByRole("button", { name: "General" })
+    expect(ref.current).toBe(chip)
+    expect(chip).toHaveAttribute("aria-haspopup", "menu")
+    expect(chip).toHaveAttribute("aria-expanded", "true")
+  })
+})

@@ -57,4 +57,45 @@ describe("ArtifactCard", () => {
     rerender(<ArtifactCard render={<a href="/docs/auth" data-router="" />} title="auth.md draft" />)
     expect(screen.getByRole("link", { name: /auth\.md draft/ })).toHaveAttribute("data-router")
   })
+
+  describe("state=\"writing\" (contract 5.1c C14, Warpcore NA3)", () => {
+    it("draws the meta in the live tone after a working StatusOrb, and says so in its name", () => {
+      const { container } = render(<ArtifactCard icon="code" title="Page" meta="HTML // writing" state="writing" />)
+      const card = screen.getByRole("button", { name: /Page/ })
+      expect(card).toHaveAttribute("data-state", "writing")
+      expect(card).toHaveAccessibleName("Page HTML // writing")
+      const status = container.querySelector('[data-slot="artifact-card-status"]')!
+      const orb = status.querySelector('[data-slot="status-orb"]')!
+      expect(orb).toHaveAttribute("data-state", "working")
+      expect(orb).toHaveAttribute("data-size", "xs")
+      // The meta's words say it; the orb is decoration beside them.
+      expect(orb).toHaveAttribute("aria-hidden", "true")
+      const meta = container.querySelector('[data-slot="artifact-card-meta"]')!
+      expect(meta.className).toContain("text-secondary-live")
+      expect(meta.className).not.toContain("text-text-label")
+      // The orb comes first, then the meta.
+      expect(orb.compareDocumentPosition(meta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it("still opens while it writes", () => {
+      const onClick = vi.fn()
+      render(<ArtifactCard title="Page" meta="HTML // writing" state="writing" onClick={onClick} />)
+      fireEvent.click(screen.getByRole("button", { name: /Page/ }))
+      expect(onClick).toHaveBeenCalledOnce()
+    })
+
+    it("with no meta, the orb's own name says it is working", () => {
+      render(<ArtifactCard title="Page" state="writing" />)
+      expect(screen.getByRole("button", { name: /Page/ })).toHaveAccessibleName("Page Working")
+    })
+
+    it("back to ready: label ink, no orb", () => {
+      const { container, rerender } = render(<ArtifactCard title="Page" meta="HTML // writing" state="writing" />)
+      rerender(<ArtifactCard title="Page" meta="HTML // 124 lines" />)
+      expect(screen.getByRole("button")).toHaveAttribute("data-state", "ready")
+      expect(container.querySelector('[data-slot="status-orb"]')).toBeNull()
+      expect(container.querySelector('[data-slot="artifact-card-meta"]')!.className).toContain("text-text-label")
+    })
+  })
 })
+

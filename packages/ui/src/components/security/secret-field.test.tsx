@@ -1,9 +1,11 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import type * as React from "react"
 
+import { AdaptiveMenuItem } from "../ui/adaptive"
 import { CrownJewelSurface } from "./crown-jewel"
 import {
   SecretField,
+  SecretFieldMenuItem,
   SecretFieldRemoteButton,
   secretFieldAnnouncements,
   secretFieldErrors,
@@ -848,3 +850,187 @@ describe("SecretField 1.0: edit mode in the Text Field box", () => {
     expect(document.getElementById(ids[1]!)).toHaveTextContent("Use at least 8 characters.")
   })
 })
+
+describe("SecretField menu: the trailing ⋯ (contract 5.1c C18, Lockdown LA5)", () => {
+  const more = (label = "Password") => screen.getByRole("button", { name: `More actions for ${label}` })
+  const openMenu = async (label = "Password") => {
+    fireEvent.click(more(label))
+    await settle()
+    return screen.getByRole("menu", { name: `More actions for ${label}` })
+  }
+  const item = (name: string | RegExp) => screen.getByRole("menuitem", { name })
+
+  function Field(props: Partial<React.ComponentProps<typeof SecretField>> & { onLarge?: () => void }) {
+    const { onLarge, ...rest } = props
+    return (
+      <SecretField
+        label="Password"
+        getSecret={() => Promise.resolve(bytes())}
+        host={fakeHost()}
+        menu={
+          <>
+            <AdaptiveMenuItem icon="text--scale" onSelect={onLarge}>
+              Show large type
+            </AdaptiveMenuItem>
+            <SecretFieldMenuItem action="reveal" />
+            <SecretFieldMenuItem action="copy" />
+          </>
+        }
+        {...(rest as object)}
+      />
+    )
+  }
+
+  it("is a real button after the text actions, always shown, named for the field", () => {
+    const { container } = render(<Field />)
+    const actions = container.querySelector('[data-slot="secret-field-actions"]') as HTMLElement
+    const buttons = Array.from(actions.querySelectorAll("button"))
+    expect(buttons.map((b) => b.getAttribute("aria-label"))).toEqual(["Hold to show Password", "Copy Password", "More actions for Password"])
+    expect(more().tagName).toBe("BUTTON")
+    expect(more()).toHaveAttribute("data-overflow-menu")
+  })
+
+  it("its copy row runs the field's own timed copy: the host's copy, the countdown, the conditional clear", async () => {
+    const clipboardHolds = vi.fn((_hash: string) => Promise.resolve(true))
+    const host = fakeHost({ clipboardHolds })
+    const onCopy = vi.fn()
+    const { container } = render(<Field host={host} onCopy={onCopy} />)
+    await openMenu()
+    fireEvent.click(item("Copy"))
+    await untilCalled(host.copy)
+    await settle()
+    expect(host.copy).toHaveBeenCalledTimes(1)
+    // The bytes are zeroed after the host took them, as on the row's own Copy.
+    const handed = (host.copy as unknown as { mock: { calls: [Uint8Array][] } }).mock.calls[0]![0]
+    expect(Array.from(handed).every((b) => b === 0)).toBe(true)
+    expect(onCopy).toHaveBeenCalledTimes(1)
+    expect(container.querySelector('[data-slot="secret-field-copy-countdown"]')).toHaveTextContent("Clears in 30 s")
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.copied(30))
+    await advance(30_000)
+    await settle()
+    expect(clipboardHolds).toHaveBeenCalledTimes(1)
+    expect(host.clear).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.cleared)
+  })
+
+  it("its copy row asks the gate first, and copies nothing when the gate says no", async () => {
+    const gate = vi.fn(() => Promise.resolve(false))
+    const host = fakeHost({ gate })
+    render(<Field host={host} gate="password" />)
+    await openMenu()
+    fireEvent.click(item("Copy"))
+    await settle()
+    expect(gate).toHaveBeenCalledWith("password")
+    expect(host.copy).not.toHaveBeenCalled()
+  })
+
+  it("held reveal: the menu has no Show row (Hold to show stays on the row)", async () => {
+    render(<Field />)
+    const menu = await openMenu()
+    expect(Array.from(menu.querySelectorAll('[role="menuitem"]')).map((i) => i.textContent)).toEqual(["Show large type", "Copy"])
+  })
+
+  it("tap reveal: its Show row runs the field's own reveal, shown in the row, for the lifetime; Hide masks", async () => {
+    const getSecret = vi.fn(() => Promise.resolve(bytes()))
+    const { container } = render(<Field revealMode="toggle" getSecret={getSecret} />)
+    await openMenu()
+    fireEvent.click(item("Show"))
+    await settle()
+    expect(getSecret).toHaveBeenCalledTimes(1)
+    expect(valueOf(container)).toHaveTextContent(SECRET)
+    expect(revealButton()).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByRole("status")).toHaveTextContent(secretFieldAnnouncements.shown("Password", 30))
+    await openMenu()
+    fireEvent.click(item("Hide"))
+    await settle()
+    expect(valueOf(container).textContent).toBe("")
+    // And the lifetime still runs for a reveal from the menu.
+    await openMenu()
+    fireEvent.click(item("Show"))
+    await settle()
+    await advance(30_000)
+    expect(valueOf(container).textContent).toBe("")
+  })
+
+  it("a gated field reveals by tap, so its Show row runs the gate before it fetches", async () => {
+    const calls: string[] = []
+    const gate = vi.fn(async () => {
+      calls.push("gate")
+      return true
+    })
+    const getSecret = vi.fn(async () => {
+      calls.push("secret")
+      return bytes()
+    })
+    render(<Field gate="password" host={fakeHost({ gate })} getSecret={getSecret} />)
+    await openMenu()
+    fireEvent.click(item("Show"))
+    await settle()
+    expect(calls).toEqual(["gate", "secret"])
+  })
+
+  it("the one-revealed rule holds: a reveal from B's menu masks A", async () => {
+    const { container } = render(
+      <>
+        <Field label="Password" revealMode="toggle" />
+        <Field label="PIN" revealMode="toggle" />
+      </>
+    )
+    fireEvent.click(revealButton("Password"))
+    await settle()
+    const [a, b] = Array.from(container.querySelectorAll('[data-slot="secret-field-revealed"]'))
+    expect(a).toHaveTextContent(SECRET)
+    await openMenu("PIN")
+    fireEvent.click(item("Show"))
+    await settle()
+    expect(a!.textContent).toBe("")
+    expect(b).toHaveTextContent(SECRET)
+  })
+
+  it("the app's own rows run as they are; none of them reaches the secret", async () => {
+    const onLarge = vi.fn()
+    const getSecret = vi.fn(() => Promise.resolve(bytes()))
+    render(<Field onLarge={onLarge} getSecret={getSecret} />)
+    await openMenu()
+    fireEvent.click(item("Show large type"))
+    await settle()
+    expect(onLarge).toHaveBeenCalledOnce()
+    expect(getSecret).not.toHaveBeenCalled()
+  })
+
+  it("a locked field keeps the ⋯ but its copy and show rows draw nothing", async () => {
+    render(<Field locked revealMode="toggle" />)
+    const menu = await openMenu()
+    expect(Array.from(menu.querySelectorAll('[role="menuitem"]')).map((i) => i.textContent)).toEqual(["Show large type"])
+  })
+
+  it("a fill-only field takes a ⋯ too, with no copy or show rows", async () => {
+    render(
+      <SecretField
+        label="Password"
+        fillOnly
+        menu={
+          <>
+            <AdaptiveMenuItem>History</AdaptiveMenuItem>
+            <SecretFieldMenuItem action="copy" />
+            <SecretFieldMenuItem action="reveal" />
+          </>
+        }
+      />
+    )
+    const menu = await openMenu()
+    expect(Array.from(menu.querySelectorAll('[role="menuitem"]')).map((i) => i.textContent)).toEqual(["History"])
+  })
+
+  it("a SecretFieldMenuItem outside a field's menu is a mistake, said at once", () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {})
+    expect(() => render(<SecretFieldMenuItem action="copy" />)).toThrow(/inside a SecretField/)
+    quiet.mockRestore()
+  })
+
+  it("without a menu the row is as before: no ⋯", () => {
+    render(<SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={fakeHost()} />)
+    expect(screen.queryByRole("button", { name: /More actions/ })).toBeNull()
+  })
+})
+

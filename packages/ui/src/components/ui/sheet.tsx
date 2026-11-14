@@ -82,18 +82,24 @@ export type SheetSize = keyof typeof SHEET_SIZES
  */
 export type SheetHeight = "content" | "full"
 
-/** What a sheet tells its parts: where it is anchored, and whether it has a close button. */
-const SheetContentContext = React.createContext<{ showCloseButton: boolean }>({ showCloseButton: false })
+/** What a sheet tells its parts: whether it has a close button, and a notice line over its top. */
+const SheetContentContext = React.createContext<{ showCloseButton: boolean; notice?: boolean }>({ showCloseButton: false })
+
+/**
+ * Where the top-right buttons sit: 16 from the top; 20 under a grabber (8 + 4 + 8); and a notice
+ * line's 48 lower when the sheet has one.
+ */
+function topRightClasses(notice: boolean | undefined) {
+  return notice
+    ? "top-[calc(var(--size-control)+var(--spacing)*4)] in-data-[side=bottom]:top-[calc(var(--size-control)+var(--spacing)*5)]"
+    : "top-4 in-data-[side=bottom]:top-5 in-data-[side=adaptive]:max-sm:top-5"
+}
 
 /** The close button: a neutral FloatButton L at the header's top right (Figma 25. Sheet Header). */
-function SheetCloseButton({ label }: { label: string }) {
+function SheetCloseButton({ label, notice }: { label: string; notice?: boolean }) {
   return (
-    // Last in the tab order, so focus starts in the content. 16 from the right; 20 from the top
-    // under a grabber (8 + 4 + 8), 16 without one.
-    <span
-      data-slot="sheet-close-anchor"
-      className="absolute top-4 right-4 z-10 flex in-data-[side=bottom]:top-5 in-data-[side=adaptive]:max-sm:top-5"
-    >
+    // Last in the tab order, so focus starts in the content. 16 from the right.
+    <span data-slot="sheet-close-anchor" className={cn("absolute right-4 z-10 flex", topRightClasses(notice))}>
       <SheetPrimitive.Close data-slot="sheet-close" render={<FloatButton label={label} icon="close" size="l" />} />
     </span>
   )
@@ -134,6 +140,7 @@ function SheetContent({
   beforeContent,
   container,
   initialFocus,
+  notice,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left"
@@ -163,9 +170,15 @@ function SheetContent({
   beforeContent?: React.ReactNode
   /** Where the portal goes: `<body>` by default. */
   container?: SheetPrimitive.Portal.Props["container"]
+  /**
+   * A line across the very top of the sheet, above its grabber and header: the compact needs-you
+   * line (`<NeedsYou size="compact" />`) when something with a time limit arrives while the sheet is
+   * open (Lockdown LA8, contract 5.1c C19). The close button moves down under it.
+   */
+  notice?: React.ReactNode
 }) {
   const full = height === "full" || fullscreen
-  const context = React.useMemo(() => ({ showCloseButton }), [showCloseButton])
+  const context = React.useMemo(() => ({ showCloseButton, notice: Boolean(notice) }), [showCloseButton, notice])
   const inner = React.useRef<HTMLDivElement>(null)
   const focusFirst = useFocusFirstControl(inner, "sheet-content")
   return (
@@ -199,13 +212,19 @@ function SheetContent({
         {...props}
       >
         <SheetContentContext.Provider value={context}>
+          {notice ? (
+            // Flush with the sheet's top edge: it reaches up through the popup's top padding.
+            <div data-slot="sheet-notice" className="-mt-4 flex shrink-0 flex-col in-data-[side=bottom]:-mt-2">
+              {notice}
+            </div>
+          ) : null}
           {side === "bottom" && <SheetGrabber />}
           {/* Takes no layout (contents): there so focus can find the first control. */}
           <div ref={inner} data-slot="sheet-inner" className="contents">
             {children}
           </div>
         </SheetContentContext.Provider>
-        {showCloseButton && <SheetCloseButton label={closeLabel} />}
+        {showCloseButton && <SheetCloseButton label={closeLabel} notice={Boolean(notice)} />}
       </SheetPrimitive.Popup>
     </SheetPortal>
   )
@@ -361,13 +380,11 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
  * (`showCloseButton={false}`), pass `className="right-4"` to take its place.
  */
 function SheetHeaderActions({ className, ...props }: React.ComponentProps<"div">) {
+  const { notice } = React.useContext(SheetContentContext)
   return (
     <div
       data-slot="sheet-header-actions"
-      className={cn(
-        "absolute top-4 right-18 z-10 flex items-center gap-2 in-data-[side=bottom]:top-5 in-data-[side=adaptive]:max-sm:top-5",
-        className
-      )}
+      className={cn("absolute right-18 z-10 flex items-center gap-2", topRightClasses(notice), className)}
       {...props}
     />
   )

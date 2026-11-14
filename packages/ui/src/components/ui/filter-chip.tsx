@@ -7,9 +7,17 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
+import { Icon } from "../icon"
 import { formatListCount } from "./list-row"
 
 export type FilterChipGroupType = "single" | "multiple"
+/**
+ * What a chip does. `toggle` (the default) filters: on or off, or one of a group. `trigger` opens
+ * something from the chip in place (a picker, a menu): a trailing `chevron--down` and
+ * `aria-haspopup`. `button` is a plain action (the repository chip opens Envs). Neither of the last
+ * two has an on look (contract 5.1c C13, Warpcore NA2).
+ */
+export type FilterChipKind = "toggle" | "trigger" | "button"
 
 const chip = cva(
   // Figma 15:503: 24 tall, 4 / 8 padding, square corners (the one control without the 2px radius,
@@ -47,6 +55,8 @@ const GroupContext = React.createContext<GroupValue | null>(null)
 
 export type FilterChipProps = Omit<ButtonPrimitive.Props, "value" | "children" | "className"> & {
   className?: string
+  /** `toggle` (default), `trigger` (opens a picker or a menu in place) or `button` (a plain action). */
+  kind?: FilterChipKind
   /** The words, in sentence case ("All"). The chip sets the capitals. */
   children: React.ReactNode
   /** In a group: what this chip stands for. */
@@ -63,8 +73,15 @@ export type FilterChipProps = Omit<ButtonPrimitive.Props, "value" | "children" |
  * FilterChip (Figma 5): a square chip in mono caps. Off is label ink with no fill; on is inverted
  * ink. In a `FilterChipGroup` of `type="single"` it is a radio (`aria-checked`, arrow keys); of
  * `type="multiple"`, or on its own, a toggle button (`aria-pressed`).
+ *
+ * `kind="trigger"` and `kind="button"` are plain buttons in the chip's look, never on: no
+ * `aria-pressed`, no radio role, and a group does not count them. Put them beside a group, or in
+ * its `action` slot. A trigger works as the `render` of a `PopoverTrigger` or `DropdownMenuTrigger`,
+ * which then sets its `aria-haspopup` and `aria-expanded`; while its layer is open it keeps the
+ * pressed wash.
  */
 function FilterChip({
+  kind = "toggle",
   children,
   value,
   count,
@@ -75,14 +92,25 @@ function FilterChip({
   className,
   onClick,
   onKeyDown,
+  ref: forwardedRef,
   ...props
 }: FilterChipProps) {
+  const toggle = kind === "toggle"
   const group = React.useContext(GroupContext)
   const [own, setOwn] = React.useState(defaultActive)
-  const inGroup = group !== null && value !== undefined
-  const active = inGroup ? group.isActive(value) : (activeProp ?? own)
-  const register = group?.register
+  const inGroup = toggle && group !== null && value !== undefined
+  const active = toggle && (inGroup ? group.isActive(value) : (activeProp ?? own))
+  const register = toggle ? group?.register : undefined
   const ref = React.useRef<HTMLButtonElement>(null)
+  // A trigger's own ref and the one a `PopoverTrigger` hands it, both.
+  const setRef = React.useCallback(
+    (node: HTMLButtonElement | null) => {
+      ref.current = node
+      if (typeof forwardedRef === "function") forwardedRef(node)
+      else if (forwardedRef) (forwardedRef as React.RefObject<HTMLButtonElement | null>).current = node
+    },
+    [forwardedRef]
+  )
   React.useEffect(
     () => (register && value !== undefined ? register(value, Boolean(disabled), ref.current) : undefined),
     [register, value, disabled]
@@ -93,19 +121,22 @@ function FilterChip({
 
   return (
     <ButtonPrimitive
-      ref={ref}
+      ref={setRef}
       data-slot="filter-chip"
+      data-kind={kind}
       data-value={value}
       data-active={active || undefined}
       role={radio ? "radio" : undefined}
       aria-checked={radio ? active : undefined}
-      aria-pressed={radio ? undefined : active}
+      aria-pressed={radio || !toggle ? undefined : active}
+      // A trigger says it opens something; the layer's own trigger overrides this with its kind.
+      aria-haspopup={kind === "trigger" ? "dialog" : undefined}
       tabIndex={radio ? (group.tabStop === value ? 0 : -1) : undefined}
       disabled={disabled}
-      className={filterChipVariants({ active, className })}
+      className={filterChipVariants({ active, className: cn(kind === "trigger" && "gap-1 pr-1 aria-expanded:bg-state-pressed", className) })}
       onClick={(event) => {
         onClick?.(event)
-        if (event.defaultPrevented) return
+        if (event.defaultPrevented || !toggle) return
         if (inGroup) group.toggle(value)
         else {
           const next = !active
@@ -126,6 +157,7 @@ function FilterChip({
           </>
         ) : null}
       </span>
+      {kind === "trigger" ? <Icon name="chevron--down" size="sm" /> : null}
     </ButtonPrimitive>
   )
 }

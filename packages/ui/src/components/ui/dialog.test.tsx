@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import type * as React from "react"
 import { compile } from "tailwindcss"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { Command, CommandDialog, CommandInput, CommandList } from "./command"
 import {
@@ -507,5 +507,136 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
     const dialog = screen.getByRole("dialog", { name: "Delete Steam for good?" })
     expect(dialog).toHaveAccessibleDescription("It can't be brought back from Recently deleted.")
     expect(screen.getByText(/brought back/).className.split(" ")).toEqual(expect.arrayContaining(["type-body", "text-text-secondary"]))
+  })
+})
+
+describe("DialogContent fits the window: below a size's own width it draws full (contract 5.1c C10, Synapse SNA5)", () => {
+  // The knobs as the stylesheet sets them; jsdom has no stylesheet, so the test sets them on :root.
+  const knobs: Record<string, string> = {
+    "--c-dialog-margin": "1.5rem",
+    "--c-dialog-question-min-width": "30rem",
+    "--c-dialog-form-min-width": "40rem",
+    "--c-dialog-viewer-min-width": "60rem",
+  }
+  const width = (px: number) => Object.defineProperty(window, "innerWidth", { configurable: true, value: px })
+  beforeEach(() => {
+    for (const [k, v] of Object.entries(knobs)) document.documentElement.style.setProperty(k, v)
+  })
+  afterEach(() => {
+    for (const k of Object.keys(knobs)) document.documentElement.style.removeProperty(k)
+    width(1024)
+    window.dispatchEvent(new Event("resize"))
+  })
+
+  it.each([
+    // The size's width plus 24 on each side is the least window that holds it.
+    [1440, "viewer", "viewer"],
+    [1008, "viewer", "viewer"],
+    [1007, "viewer", "full"],
+    [800, "viewer", "full"],
+    [800, "form", "form"],
+    [688, "form", "form"],
+    [687, "form", "full"],
+    [600, "question", "question"],
+    [528, "question", "question"],
+    [527, "question", "full"],
+  ] as const)("at %ipx, %s draws %s", (px, size, drawn) => {
+    width(px)
+    render(
+      <Dialog open>
+        <DialogContent size={size}>
+          <DialogTitle>Merge two notes</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(popup()).toHaveAttribute("data-size", drawn)
+    // The name it was asked for stays readable when it had to draw full.
+    if (drawn === "full") expect(popup()).toHaveAttribute("data-size-asked", size)
+    else expect(popup()).not.toHaveAttribute("data-size-asked")
+    // Full is the window less the margin both ways, so the cap holds at every width.
+    if (drawn === "full") expect(popup().className.split(" ")).toContain("h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]")
+  })
+
+  it("follows the window as it is resized, both ways", () => {
+    width(1440)
+    render(
+      <Dialog open>
+        <DialogContent size="viewer">
+          <DialogTitle>Review the diff</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(popup()).toHaveAttribute("data-size", "viewer")
+    act(() => {
+      width(900)
+      window.dispatchEvent(new Event("resize"))
+    })
+    expect(popup()).toHaveAttribute("data-size", "full")
+    act(() => {
+      width(1280)
+      window.dispatchEvent(new Event("resize"))
+    })
+    expect(popup()).toHaveAttribute("data-size", "viewer")
+  })
+
+  it("measures the container it opens in, when it is given one", () => {
+    width(1440)
+    const stage = document.createElement("div")
+    Object.defineProperty(stage, "clientWidth", { configurable: true, value: 700 })
+    document.body.appendChild(stage)
+    render(
+      <Dialog open>
+        <DialogContent size="form" container={stage}>
+          <DialogTitle>New login</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    // 700 − 48 = 652 ≥ 640: the form fits the stage, whatever the window.
+    expect(popup()).toHaveAttribute("data-size", "form")
+    stage.remove()
+  })
+
+  it("keeps the size it was given without the knobs (no stylesheet)", () => {
+    for (const k of Object.keys(knobs)) document.documentElement.style.removeProperty(k)
+    width(400)
+    render(
+      <Dialog open>
+        <DialogContent size="viewer">
+          <DialogTitle>Plain</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(popup()).toHaveAttribute("data-size", "viewer")
+  })
+
+  it("forwards a ref to the popup", () => {
+    const ref = { current: null as HTMLDivElement | null }
+    render(
+      <Dialog open>
+        <DialogContent ref={ref}>
+          <DialogTitle>Ref</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    expect(ref.current).toBe(popup())
+  })
+})
+
+describe("DialogContent notice (contract 5.1c C19)", () => {
+  it("draws a line across the top, outside the scroll, and moves the close button under it", () => {
+    render(
+      <Dialog open>
+        <DialogContent notice={<div data-testid="line">Sign-in request</div>}>
+          <DialogTitle>New login</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    )
+    const notice = document.querySelector('[data-slot="dialog-notice"]') as HTMLElement
+    expect(notice).toContainElement(screen.getByTestId("line"))
+    // Before the scroll area, so it never scrolls away.
+    expect(notice.compareDocumentPosition(document.querySelector('[data-slot="dialog-scroll"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const anchor = document.querySelector('[data-slot="dialog-close-anchor"]') as HTMLElement
+    expect(anchor.className).toContain("top-[calc(var(--size-control)+var(--spacing)*5)]")
+    expect(anchor.className.split(" ")).not.toContain("top-5")
   })
 })

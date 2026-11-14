@@ -13,6 +13,9 @@ import {
   AdaptiveMenuRadioItem,
   AdaptiveMenuSeparator,
   AdaptivePopover,
+  OverflowMenu,
+  overflowMenuLabel,
+  textOfNode,
   type AdaptivePresentation,
 } from "./adaptive"
 import { Button } from "./button"
@@ -262,6 +265,55 @@ describe("AdaptivePopover", () => {
     expect(sheet).toHaveAttribute("data-slot", "sheet-content")
     expect(screen.getByText("Graph // 04 kinds")).toHaveAttribute("data-slot", "sheet-overline")
     expect(screen.getByRole("button", { name: "Close" })).toHaveAttribute("data-size", "l")
+  })
+})
+
+describe("OverflowMenu (contract 5.1c C18)", () => {
+  it("a ghost icon button S named by its label, always shown, that opens an AdaptiveMenu titled the same", async () => {
+    const onPick = vi.fn()
+    render(
+      <OverflowMenu label="More actions for Steam">
+        <AdaptiveMenuItem onSelect={onPick}>Open item</AdaptiveMenuItem>
+      </OverflowMenu>
+    )
+    const button = screen.getByRole("button", { name: "More actions for Steam" })
+    expect(button).toHaveAttribute("data-variant", "ghost")
+    expect(button).toHaveAttribute("data-size", "icon-sm")
+    expect(button.querySelector('[data-icon-name="overflow-menu--horizontal"]')).toBeInTheDocument()
+    await userEvent.click(button)
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Open item" }))
+    expect(onPick).toHaveBeenCalledOnce()
+  })
+
+  it("is a sheet on a phone, titled by its label", async () => {
+    restore = screenWidth(390)
+    render(
+      <OverflowMenu label="More actions for Steam">
+        <AdaptiveMenuItem>Open item</AdaptiveMenuItem>
+      </OverflowMenu>
+    )
+    await userEvent.click(screen.getByRole("button", { name: "More actions for Steam" }))
+    expect(await screen.findByRole("dialog", { name: "More actions for Steam" })).toHaveAttribute("data-slot", "sheet-content")
+  })
+
+  it("names: More actions for {subject}, from a label's words", () => {
+    expect(overflowMenuLabel("Password")).toBe("More actions for Password")
+    expect(overflowMenuLabel()).toBe("More actions")
+    expect(textOfNode(<>Find a setting</>)).toBe("Find a setting")
+    expect(textOfNode(["One-time ", <span key="a">code</span>])).toBe("One-time code")
+    expect(textOfNode(null)).toBe("")
+  })
+})
+
+describe("AdaptiveDialog notice (contract 5.1c C19)", () => {
+  it("passes its notice line to the dialog and to the phone's sheet", () => {
+    const { unmount } = render(
+      <AdaptiveDialog defaultOpen presentation="desktop" title="Edit Steam" notice={<p data-testid="line">Sign-in request</p>} />
+    )
+    expect(document.querySelector('[data-slot="dialog-notice"]')).toContainElement(screen.getByTestId("line"))
+    unmount()
+    render(<AdaptiveDialog defaultOpen presentation="sheet" title="Edit Steam" notice={<p data-testid="line">Sign-in request</p>} />)
+    expect(document.querySelector('[data-slot="sheet-notice"]')).toContainElement(screen.getByTestId("line"))
   })
 })
 

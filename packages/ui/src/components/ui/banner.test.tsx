@@ -80,6 +80,28 @@ describe("Banner (Figma 32:89)", () => {
     expect(part("banner-icon").querySelector("svg")).toHaveAttribute("width", "16")
   })
 
+  it("compact: a long server message wraps and is never cut, a long unbroken token included (contract 5.1c C12)", () => {
+    const message =
+      "imap.fastmail.com refused the sign-in: AUTHENTICATIONFAILED_INVALID_CREDENTIALS_FOR_sean@fastmail.com. Check the app password in Settings, then try again."
+    render(<Banner size="compact" tone="critical" title="Couldn't add the account." body={message} action={<Button variant="secondary" size="sm">Try again</Button>} />)
+    const text = part("banner-text")
+    expect(text).toHaveTextContent(message)
+    const cls = classesOf(text)
+    // Wraps between words, and inside a token only when it would run out of the box.
+    expect(cls).toContain("wrap-break-word")
+    expect(cls).toEqual(expect.arrayContaining(["min-w-0", "flex-1"]))
+    // Nothing cuts it: no clamp, no ellipsis, no single line, no hidden overflow.
+    expect(cls.some((c) => c === "truncate" || c.startsWith("line-clamp") || c === "whitespace-nowrap" || c.startsWith("overflow-"))).toBe(false)
+    expect(classesOf(screen.getByRole("alert")).some((c) => c.startsWith("overflow-") || c.startsWith("h-") || c.startsWith("max-h"))).toBe(false)
+    // The action keeps its own width beside the text.
+    expect(classesOf(part("banner-action"))).toContain("shrink-0")
+  })
+
+  it("the default size's body breaks a long token too", () => {
+    render(<Banner title="Sync failed" body="ERR_CONNECTION_REFUSED_BY_GATEWAY_AT_relay.vale.example" />)
+    expect(classesOf(part("banner-body"))).toContain("wrap-break-word")
+  })
+
   it("children are the body", () => {
     render(<Banner tone="info">Caps Lock is on.</Banner>)
     expect(screen.getByRole("status")).toHaveTextContent("Caps Lock is on.")

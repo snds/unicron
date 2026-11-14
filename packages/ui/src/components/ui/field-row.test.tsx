@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
+import { AdaptiveMenuItem } from "./adaptive"
 import { Badge } from "./badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu"
 import { FieldRow, FieldRowAction, FieldRowValue, fieldRowVariants, useFieldRow } from "./field-row"
@@ -253,3 +254,86 @@ describe("FieldRow disabledReason (contract 5.1b #37)", () => {
     expect(screen.getByRole("group")).toHaveAttribute("data-disabled")
   })
 })
+
+describe("FieldRow menu: the trailing overflow button (contract 5.1c C18, Lockdown LA5)", () => {
+  function Wifi({ onLarge, onHistory }: { onLarge?: () => void; onHistory?: () => void }) {
+    return (
+      <FieldRow
+        label="Network"
+        action={<FieldRowAction>Copy</FieldRowAction>}
+        menu={
+          <>
+            <AdaptiveMenuItem icon="text--scale" onSelect={onLarge}>
+              Show large type
+            </AdaptiveMenuItem>
+            <AdaptiveMenuItem icon="time" onSelect={onHistory}>
+              History
+            </AdaptiveMenuItem>
+          </>
+        }
+      >
+        PineHollow-Guest
+      </FieldRow>
+    )
+  }
+
+  it("is a real button, always shown, named for the row, after the text actions", () => {
+    render(<Wifi />)
+    const more = screen.getByRole("button", { name: "More actions for Network" })
+    expect(more.tagName).toBe("BUTTON")
+    expect(more).toHaveAttribute("data-overflow-menu")
+    expect(more).toHaveAttribute("data-size", "icon-sm")
+    expect(more.querySelector('[data-icon-name="overflow-menu--horizontal"]')).toBeInTheDocument()
+    // Not a hover-only control: nothing hides it.
+    expect(classesOf(more).filter((c) => ["hidden", "invisible", "opacity-0"].includes(c))).toEqual([])
+    const actions = slot(screen.getByRole("group"), "field-row-actions")
+    const buttons = within(actions).getAllByRole("button")
+    expect(buttons.map((b) => b.getAttribute("aria-label") ?? b.textContent)).toEqual(["Copy", "More actions for Network"])
+    // A row's icon action: it keeps the row's height and sits flush with its end.
+    expect(classesOf(more.parentElement!)).toEqual(expect.arrayContaining(["-my-2", "self-center", "last:-mr-2"]))
+  })
+
+  it("opens a menu named for the row on a desktop; picking a row runs the app's item and closes", async () => {
+    const onLarge = vi.fn()
+    render(<Wifi onLarge={onLarge} />)
+    await userEvent.click(screen.getByRole("button", { name: "More actions for Network" }))
+    const menu = await screen.findByRole("menu", { name: "More actions for Network" })
+    expect(within(menu).getAllByRole("menuitem").map((i) => i.textContent)).toEqual(["Show large type", "History"])
+    await userEvent.click(within(menu).getByRole("menuitem", { name: "Show large type" }))
+    expect(onLarge).toHaveBeenCalledOnce()
+    await vi.waitFor(() => expect(screen.queryByRole("menu")).toBeNull())
+  })
+
+  it("opens a sheet of rows on a phone", async () => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 })
+    window.dispatchEvent(new Event("resize"))
+    try {
+      render(<Wifi />)
+      await userEvent.click(screen.getByRole("button", { name: "More actions for Network" }))
+      const sheet = await screen.findByRole("dialog", { name: "More actions for Network" })
+      expect(sheet).toHaveAttribute("data-slot", "sheet-content")
+      expect(within(sheet).getByRole("button", { name: "History" })).toHaveAttribute("data-slot", "adaptive-menu-item")
+    } finally {
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 })
+      window.dispatchEvent(new Event("resize"))
+    }
+  })
+
+  it("takes its own name, and stays usable in a row disabled with a reason", () => {
+    render(
+      <FieldRow label="Password" menuLabel="More for Steam's password" disabledReason="Unlock the vault to copy." action={<FieldRowAction>Copy</FieldRowAction>} menu={<AdaptiveMenuItem>History</AdaptiveMenuItem>}>
+        ••••••••••••
+      </FieldRow>
+    )
+    expect(screen.getByRole("button", { name: "Copy" })).toHaveAttribute("aria-disabled", "true")
+    const more = screen.getByRole("button", { name: "More for Steam's password" })
+    expect(more).not.toBeDisabled()
+    expect(more.getAttribute("aria-disabled")).not.toBe("true")
+  })
+
+  it("draws nothing without a menu", () => {
+    render(<FieldRow label="Username" action={<FieldRowAction>Copy</FieldRowAction>}>kestrel.04</FieldRow>)
+    expect(screen.queryByRole("button", { name: /More actions/ })).toBeNull()
+  })
+})
+

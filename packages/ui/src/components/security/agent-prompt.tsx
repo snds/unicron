@@ -37,9 +37,10 @@ export interface AgentPromptOption {
    */
   safe?: boolean
   /**
-   * The letter that answers this option, by meaning, not by place: `"y"`, `"n"`, `"a"`. Digits 1
-   * to 9 always answer by place. Without one, in a yes-or-no kind, N is the safe option and Y the
-   * first other one.
+   * The key that answers this option, by meaning, not by place: `"y"`, `"n"`, `"3"` (Warpcore: Y
+   * allows once, N denies, 3 allows always). Without one, in a yes-or-no kind, N is the safe option
+   * and Y the first other one; an option left with no key answers to its place, 1 to 9, unless
+   * another option claims that digit.
    */
   key?: string
 }
@@ -103,24 +104,29 @@ export function agentPromptLayout(options: readonly AgentPromptOption[]): "butto
 }
 
 /**
- * The letter each option answers to, by meaning. An option's own `key` wins. In a yes-or-no kind
- * an option without one takes N if it is the safe one and Y if it is the first other one; with no
- * safe option at all, the first is Y and the second N, as before 1.0.
+ * The key each option answers to, by meaning, not by place (contract 5.1c C15, Warpcore NA4). An
+ * option's own `key` wins, a digit too ("3" allows always, wherever Always sits). In a yes-or-no
+ * kind an option without one takes N if it is the safe one and Y if it is the first other one;
+ * with no safe option at all, the first is Y and the second N, as before 1.0. Only an option left
+ * with no key at all (a choice's numbered rows) answers to its place, 1 to 9, and never to a digit
+ * another option claims. So one key never means two things, and moving an option never moves its
+ * key.
  */
-function keysOf(options: readonly AgentPromptOption[], yesNo: boolean, safeId: string | undefined): (string | undefined)[] {
+export function agentPromptKeys(options: readonly AgentPromptOption[], kind: AgentPromptKind, safeId?: string): (string | undefined)[] {
   const keys = options.map((o) => o.key?.toLowerCase())
-  if (!yesNo) return keys
+  const yesNo = kind === "permission" || kind === "continue"
   const taken = new Set(keys.filter(Boolean))
-  if (safeId === undefined) {
+  if (yesNo && safeId === undefined) {
     if (options[0] && !keys[0] && !taken.has("y")) keys[0] = "y"
     if (options[1] && !keys[1] && !taken.has("n")) keys[1] = "n"
-    return keys
+  } else if (yesNo) {
+    const safeAt = options.findIndex((o) => o.id === safeId)
+    if (safeAt >= 0 && !keys[safeAt] && !taken.has("n")) keys[safeAt] = "n"
+    const yesAt = options.findIndex((_, i) => i !== safeAt && !keys[i])
+    if (yesAt >= 0 && !taken.has("y")) keys[yesAt] = "y"
   }
-  const safeAt = options.findIndex((o) => o.id === safeId)
-  if (safeAt >= 0 && !keys[safeAt] && !taken.has("n")) keys[safeAt] = "n"
-  const yesAt = options.findIndex((_, i) => i !== safeAt && !keys[i])
-  if (yesAt >= 0 && !taken.has("y")) keys[yesAt] = "y"
-  return keys
+  const claimed = new Set(keys.filter(Boolean))
+  return keys.map((k, i) => k ?? (i < 9 && !claimed.has(String(i + 1)) ? String(i + 1) : undefined))
 }
 
 // Only the newest prompt that's waiting hears keys, and only it opens its sheet on a phone.
@@ -194,7 +200,17 @@ export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, 
   autoFocus?: boolean
   /** The word on a reply's send button. Default "Send"; Warpcore says "Reply". */
   sendLabel?: string
+  /**
+   * Where the options go at compact width (a phone). `adaptive` (the default): in place on a wider
+   * screen; on a phone an Answer button opens them in a bottom sheet. `inline`: in place at every
+   * width, with no Answer button and no sheet (Warpcore's task screen, where the prompt is the first
+   * thing under the title; contract 5.1c C15).
+   */
+  layout?: AgentPromptPlacement
 }
+
+/** See `AgentPromptProps.layout`. */
+export type AgentPromptPlacement = "adaptive" | "inline"
 
 /**
  * An agent's question, in the needs-you look (Figma "8. Needs You": the yellow field, 24 padding,
@@ -204,9 +220,11 @@ export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, 
  * rest are text buttons (cross-app decisions §2). An open question keeps its send button solid.
  * Long or detailed options are numbered rows that wrap.
  *
- * Keys answer by meaning: Y the yes, N the safe answer, 1 to 9 by place, when focus isn't in a text
- * field, and only the newest prompt listens. Once answered it turns quiet (the raised surface with
- * a hairline) and marks the answer. On a phone the options open in a bottom sheet.
+ * Keys answer by meaning (`agentPromptKeys`): an option's own `key`, else Y the yes and N the safe
+ * answer; only options with no key answer to their place, 1 to 9. They work when focus isn't in a
+ * text field, and only the newest prompt listens. Once answered it turns quiet (the raised surface
+ * with a hairline) and marks the answer. On a phone the options open in a bottom sheet, or stay in
+ * place with `layout="inline"`.
  */
 export function AgentPrompt({
   kind,
@@ -226,6 +244,7 @@ export function AgentPrompt({
   listen = true,
   autoFocus = true,
   sendLabel = agentPromptStateCopy.send,
+  layout = "adaptive",
   className,
   ...props
 }: AgentPromptProps) {
@@ -243,19 +262,20 @@ export function AgentPrompt({
   const titleId = React.useId()
   const { widthClass } = useViewport()
   const compact = widthClass === "compact"
+  // On a phone the options go in a sheet, unless the host keeps them in place.
+  const inSheet = compact && layout !== "inline"
   const isNewest = useNewest(waiting && listen)
   // On a phone the newest prompt's sheet opens by itself; closing it leaves an Answer button.
   const [dismissed, setDismissed] = React.useState(false)
   const [reopened, setReopened] = React.useState(false)
-  const sheetOpen = waiting && (reopened || (isNewest && !dismissed))
+  const sheetOpen = inSheet && waiting && (reopened || (isNewest && !dismissed))
   const setSheetOpen = (open: boolean) => {
     setReopened(open)
     if (!open) setDismissed(true)
   }
 
-  const yesNo = kind === "permission" || kind === "continue"
   const safeId = safeAnswer ?? options.find((o) => o.safe)?.id
-  const keys = keysOf(options, yesNo, safeId)
+  const keys = agentPromptKeys(options, kind, safeId)
   // The one solid option: the safe one; with none marked, the first. A reply's solid is its send.
   const solidId = kind === "reply" ? undefined : (safeId ?? options[0]?.id)
 
@@ -284,7 +304,7 @@ export function AgentPrompt({
     expire.current()
   }, [expired, answerProp])
 
-  // Keys: an option's letter (by meaning), or 1-9 by place. The handler reads the latest options
+  // Keys: each option's key, by meaning (`agentPromptKeys`). The handler reads the latest options
   // through a ref, so a host re-rendering never re-orders the prompts.
   const latest = React.useRef({ options, keys, answerWith })
   React.useLayoutEffect(() => {
@@ -295,13 +315,8 @@ export function AgentPrompt({
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return
       const { options, keys, answerWith } = latest.current
-      const key = e.key.toLowerCase()
-      let option: AgentPromptOption | undefined
-      if (/^[1-9]$/.test(key)) option = options[Number(key) - 1]
-      else {
-        const at = keys.indexOf(key)
-        option = at >= 0 ? options[at] : undefined
-      }
+      const at = keys.indexOf(e.key.toLowerCase())
+      const option = at >= 0 ? options[at] : undefined
       if (!option) return
       e.preventDefault()
       answerWith(option.id)
@@ -311,14 +326,16 @@ export function AgentPrompt({
   }, [isNewest])
 
   // On arrival, focus goes to the safe answer (or the reply field), unless something else holds it.
+  // On a phone only a safe answer in place takes it: the sheet takes its own, and a field there
+  // would raise the keyboard by itself.
   const solidRef = React.useRef<HTMLButtonElement>(null)
   const replyRef = React.useRef<HTMLTextAreaElement>(null)
   React.useEffect(() => {
-    if (!autoFocus || !isNewest || compact) return
+    if (!autoFocus || !isNewest || inSheet || (compact && kind === "reply")) return
     const active = document.activeElement
     if (active && active !== document.body) return
     ;(kind === "reply" ? replyRef.current : solidRef.current)?.focus()
-  }, [autoFocus, isNewest, compact, kind])
+  }, [autoFocus, isNewest, inSheet, compact, kind])
 
   // "Waiting for you", once: the live region is filled after it mounts, so it's heard.
   const [announce, setAnnounce] = React.useState("")
@@ -384,6 +401,7 @@ export function AgentPrompt({
     <section
       data-slot="agent-prompt"
       data-kind={kind}
+      data-layout={inSheet ? "sheet" : "inline"}
       data-answered={waiting || sending ? undefined : ""}
       data-pending={sending ? "" : undefined}
       data-expired={expired ? "" : undefined}
@@ -412,7 +430,7 @@ export function AgentPrompt({
           {children}
         </div>
       ) : null}
-      {compact && waiting ? (
+      {inSheet && waiting ? (
         <>
           <Button variant="needs-you" className="self-start" onClick={() => setSheetOpen(true)}>
             {agentPromptAnswerLabel}
@@ -544,7 +562,7 @@ function AgentPromptOptions({
   const mark = (id: string, check: React.ReactNode) =>
     answer !== id ? null : sending ? <Spinner label={agentPromptStateCopy.sending} data-icon="inline-start" /> : check
   // The key that answers each option, shown only with a fine pointer (a keyboard is likely).
-  const keyFor = (i: number) => keys[i]?.toUpperCase() ?? (i < 9 ? String(i + 1) : undefined)
+  const keyFor = (i: number) => keys[i]?.toUpperCase()
   const hint = (i: number) => {
     const k = keyFor(i)
     return k && !done ? (

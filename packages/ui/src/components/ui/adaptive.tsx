@@ -8,6 +8,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { useViewport } from "../use-viewport"
+import { Button } from "./button"
 import {
   Dialog,
   DialogBody,
@@ -114,6 +115,12 @@ export interface AdaptiveDialogProps {
   container?: React.ComponentProps<typeof DialogContent>["container"]
   /** On the dialog popup, or the sheet. */
   className?: string
+  /**
+   * A line across the top of the layer that does not scroll: the compact needs-you line
+   * (`<NeedsYou size="compact" />`) when something with a time limit arrives while it is open
+   * (Lockdown LA8, contract 5.1c C19).
+   */
+  notice?: React.ReactNode
 }
 
 /**
@@ -141,6 +148,7 @@ function AdaptiveDialog({
   finalFocus,
   container,
   className,
+  notice,
 }: AdaptiveDialogProps) {
   const sheet = useAdaptiveSheet(presentation)
   const root = {
@@ -149,7 +157,7 @@ function AdaptiveDialog({
     onOpenChange: onOpenChange ? (next: boolean) => onOpenChange(next) : undefined,
     closeOnOutsideClick,
   }
-  const shared = { showCloseButton, closeLabel, initialFocus, finalFocus, container, className }
+  const shared = { showCloseButton, closeLabel, initialFocus, finalFocus, container, className, notice }
 
   if (sheet) {
     return (
@@ -575,6 +583,60 @@ function AdaptiveMenuCheckboxItem({
   )
 }
 
+// ── OverflowMenu ───────────────────────────────────────────────────────────────────────────────
+
+/** "More actions for Password": the overflow button's name and its menu's title. */
+export function overflowMenuLabel(subject?: string): string {
+  return subject ? `More actions for ${subject}` : "More actions"
+}
+
+/** The words of a label for a name: a string, a number, or the text inside a few elements. */
+export function textOfNode(node: React.ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean") return ""
+  if (typeof node === "string" || typeof node === "number") return String(node)
+  if (Array.isArray(node)) return node.map(textOfNode).join("")
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) return textOfNode(node.props.children)
+  return ""
+}
+
+export interface OverflowMenuProps extends Omit<AdaptiveMenuProps, "trigger" | "title" | "children"> {
+  /** The button's accessible name, and the menu's title (the sheet's title on a phone): "More actions for Password". */
+  label: string
+  /** The rows, from the app: AdaptiveMenu parts, and a security part's own copy and reveal items. */
+  children: React.ReactNode
+  /** The button is off (a locked field). */
+  disabled?: boolean
+  /**
+   * Another button to draw (a row's own action look, `FieldRowOverflow`). It must carry the name
+   * and the ⋯ glyph itself. Default: a ghost icon Button S with `overflow-menu--horizontal`.
+   */
+  trigger?: React.ReactElement<Record<string, unknown>>
+}
+
+/**
+ * OverflowMenu: a ⋯ button that opens more actions (contract 5.1c C18, Lockdown LA5, decisions
+ * §10): a real button named "More actions for {label}", always shown (not only on hover), that
+ * opens an `AdaptiveMenu`: a menu on a desktop, a sheet of rows on a phone. 32 square, 44 on a
+ * coarse pointer. A row draws it as `FieldRowOverflow`.
+ */
+function OverflowMenu({ label, children, disabled, trigger, ...menu }: OverflowMenuProps) {
+  return (
+    <AdaptiveMenu
+      {...menu}
+      title={label}
+      trigger={
+        trigger ?? (
+          <Button data-overflow-menu="" variant="ghost" size="icon-sm" aria-label={label} disabled={disabled}>
+            <Icon name="overflow-menu--horizontal" />
+          </Button>
+        )
+      }
+    >
+      {children}
+    </AdaptiveMenu>
+  )
+}
+
 export {
   AdaptiveDialog,
   AdaptiveMenu,
@@ -585,4 +647,5 @@ export {
   AdaptiveMenuRadioItem,
   AdaptiveMenuSeparator,
   AdaptivePopover,
+  OverflowMenu,
 }

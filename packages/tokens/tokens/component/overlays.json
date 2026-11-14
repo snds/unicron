@@ -65,7 +65,19 @@
     "max-width": {
       "$type": "dimension",
       "$value": "20rem",
-      "$description": "The widest a tooltip gets before its text wraps. TruncatedText's full text wraps at it too (Synapse SNA3: between a least and a most width)."
+      "$description": "The widest a tooltip gets before its text wraps."
+    }
+  },
+  "truncated-text": {
+    "min-width": {
+      "$type": "dimension",
+      "$value": "12rem",
+      "$description": "The least width of TruncatedText's full text (Synapse f-hovercard, SNA3; contract 5.1c C17), so a short text still opens as a readable card, not a sliver. Synapse's own hovercard holds 12rem."
+    },
+    "max-width": {
+      "$type": "dimension",
+      "$value": "22rem",
+      "$description": "The most width of TruncatedText's full text before it wraps (Synapse f-hovercard, SNA3; contract 5.1c C17), and never wider than the room the screen leaves. Synapse's own hovercard holds 22rem."
     }
   },
   "toaster": {
