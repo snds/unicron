@@ -134,3 +134,18 @@ describe("ResizablePanes", () => {
     expect(handle()).toHaveAttribute("aria-valuenow", "20")
   })
 })
+
+describe("ResizableHandle in the 2026-11 look", () => {
+  beforeEach(fakeLayout)
+  afterEach(() => vi.restoreAllMocks())
+
+  it("is the 1px rule, ink under the pointer, dragged or focused; its grip is a square bar", () => {
+    render(<Subject withGrip />)
+    const cls = handle().className
+    for (const name of ["bg-line-rule", "data-[separator=hover]:bg-(--c-resizable-active)", "data-[separator=active]:bg-(--c-resizable-active)", "focus-visible:bg-(--c-resizable-active)"]) expect(cls).toContain(name)
+    expect(cls).not.toContain("outline-none")
+    const grip = document.querySelector('[data-slot="resizable-handle-grip"]')!
+    expect(grip.className).toContain("bg-(--c-resizable-grip)")
+    expect(grip.className).not.toContain("rounded")
+  })
+})

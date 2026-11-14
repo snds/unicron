@@ -96,6 +96,15 @@ export default function ButtonView() {
         </Button>
       </Specimen>
 
+      <Specimen label="State // disabled with a reason: it stays in the tab order and says why (5.1b #37)">
+        <Button disabled disabledReason="Fix or remove the address in red.">
+          Send
+        </Button>
+        <Button variant="secondary" disabled disabledReason="Offline. Sharing needs the server.">
+          Share
+        </Button>
+      </Specimen>
+
       <Specimen label="State // loading: busy, label kept, spinner in the icon slot">
         <Button loading>Review diff</Button>
         <Button variant="secondary" loading>

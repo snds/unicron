@@ -298,3 +298,42 @@ describe("Button", () => {
     expect(classes).toEqual(expect.arrayContaining(["w-full", "mt-2"]))
   })
 })
+
+describe("Button disabledReason (contract 5.1b #37)", () => {
+  it("disabled with a reason stays in the tab order, shows the line and is described by it", async () => {
+    const onClick = vi.fn()
+    render(
+      <Button disabled disabledReason="Fix or remove the address in red." onClick={onClick}>
+        Send
+      </Button>
+    )
+    const send = screen.getByRole("button", { name: "Send" })
+    expect(send).toHaveAttribute("aria-disabled", "true")
+    expect(send).not.toHaveAttribute("disabled")
+    expect(send).toHaveAccessibleDescription("Fix or remove the address in red.")
+    expect(screen.getByText("Fix or remove the address in red.")).toHaveAttribute("data-slot", "disabled-reason")
+    await userEvent.tab()
+    expect(send).toHaveFocus()
+    await userEvent.keyboard("{Enter}")
+    fireEvent.click(send)
+    expect(onClick).not.toHaveBeenCalled()
+  })
+
+  it("the reason shows only while the button is disabled", () => {
+    render(<Button disabledReason="Offline.">Share</Button>)
+    expect(screen.getByRole("button", { name: "Share" })).not.toHaveAttribute("aria-disabled")
+    expect(screen.queryByText("Offline.")).toBeNull()
+  })
+
+  it("keeps its own description beside the reason", () => {
+    render(
+      <>
+        <span id="cost">Costs about $0.40.</span>
+        <Button disabled disabledReason="Over today's budget." aria-describedby="cost">
+          Start
+        </Button>
+      </>
+    )
+    expect(screen.getByRole("button", { name: "Start" })).toHaveAccessibleDescription("Costs about $0.40. Over today's budget.")
+  })
+})

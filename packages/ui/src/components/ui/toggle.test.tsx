@@ -4,19 +4,21 @@ import userEvent from "@testing-library/user-event"
 import { Toggle } from "./toggle"
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 
-// The pressed state is the primary fill (snds/unicron#6). These pin the classes the contrast
-// check was run against, so a regen or a style edit that drops back to bg-muted fails here.
-const PRESSED = ["aria-pressed:bg-primary", "aria-pressed:text-primary-foreground", "data-[state=on]:bg-primary", "data-[state=on]:text-primary-foreground"]
+// The pressed state was the primary fill (snds/unicron#6: bg-muted measured about 1.1:1). In 1.0 it
+// is inverted ink, as the active Filter Chip (Figma 15:503), never the identity colour. These pin
+// the classes the contrast check runs against (controls float-current*, primitives segment-active),
+// so a regen or a style edit that drops back to bg-muted, or to the primary fill, fails here.
+const PRESSED = ["aria-pressed:bg-foreground", "aria-pressed:text-background"]
 
 describe("Toggle pressed state", () => {
-  it("keeps aria-pressed and draws pressed as the primary fill", async () => {
+  it("keeps aria-pressed and draws pressed as inverted ink", async () => {
     const user = userEvent.setup()
     render(<Toggle aria-label="Bold">B</Toggle>)
     const button = screen.getByRole("button", { name: "Bold" })
     expect(button).toHaveAttribute("aria-pressed", "false")
     for (const cls of PRESSED) expect(button.className).toContain(cls)
     expect(button.className).not.toContain("aria-pressed:bg-muted")
-    expect(button.className).not.toContain("data-[state=on]:bg-muted")
+    expect(button.className).not.toContain("aria-pressed:bg-primary")
 
     await user.click(button)
     expect(button).toHaveAttribute("aria-pressed", "true")

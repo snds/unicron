@@ -50,6 +50,21 @@ export default function ProgressView() {
         </Progress>
       </Specimen>
 
+      <Specimen label="Tones // neutral (strength in 3), warning; a tick at 80% (5.1b #29)">
+        <Progress variant="segmented" tone="neutral" segments={3} value={2} max={3}>
+          <ProgressLabel>Fair</ProgressLabel>
+        </Progress>
+        <Progress variant="segmented" tone="neutral" segments={10} value={7} max={10}>
+          <ProgressLabel>Locks in 07:00</ProgressLabel>
+        </Progress>
+        <Progress variant="segmented" tone="warning" segments={32} value={27} max={32}>
+          <ProgressLabel>27 of 32 GB</ProgressLabel>
+        </Progress>
+        <Progress variant="segmented" tone="primary" segments={64} value={6.4} max={10} tick={8}>
+          <ProgressLabel>$6.40 of $10.00 today // warns at $8.00</ProgressLabel>
+        </Progress>
+      </Specimen>
+
       <Specimen label="Bar // default, complete, budget, live, critical, indeterminate">
         <Progress value={40} aria-label="Sync" />
         <Progress value={100} aria-label="Sync" />

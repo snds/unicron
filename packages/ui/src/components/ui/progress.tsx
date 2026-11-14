@@ -14,7 +14,7 @@ export const progressBudgetThresholds = { warning: 0.7, over: 0.9 } as const
 export const progressDefaultSegments = 32
 
 export type ProgressVariant = "bar" | "segmented"
-export type ProgressTone = "default" | "primary" | "live" | "budget" | "critical"
+export type ProgressTone = "default" | "neutral" | "primary" | "live" | "warning" | "critical" | "budget"
 
 type ProgressProps = ProgressPrimitive.Root.Props & {
   /**
@@ -26,17 +26,26 @@ type ProgressProps = ProgressPrimitive.Root.Props & {
    * `default`: a bar takes the bar's own fill (`--c-progress-fill`) and turns `success` once
    * complete; a segmented bar is the live colour, because that is what it shows in a row (an
    * agent's run), and never turns.
+   * `neutral`: ink, for a count that is neither live nor the app's own (a password's strength in
+   * 3 cells, an idle lock in 10).
    * `live`: the live colour on either variant.
    * `primary`: the identity colour on either, for a quantity that is not live (a spend, a score).
    * `budget`: a spend against a cap: `primary`, then `warning` past 70% and `destructive` past 90%.
+   * `warning`: the warning colour, for a quantity close to its limit.
    * `critical`: the critical fill, for a countdown that is about to run out.
    */
   tone?: ProgressTone
   /**
    * Segmented only: how many cells. Default 32. For one cell per step of a checklist, pass the
-   * step count (`segments={7} max={7}`).
+   * step count (`segments={7} max={7}`). The direction uses 3 to 64.
    */
   segments?: number
+  /**
+   * A mark across the bar at this value (between `min` and `max`, like `value`): a 2px ink tick,
+   * taller than the bar, for a limit that matters (Warpcore's spend bar warns at 80%). It is
+   * decoration; say what it means in the label.
+   */
+  tick?: number
 }
 
 function budgetLevel(value: number | null, min: number, max: number) {
@@ -45,7 +54,7 @@ function budgetLevel(value: number | null, min: number, max: number) {
   return share > progressBudgetThresholds.over ? "over" : share > progressBudgetThresholds.warning ? "warning" : "ok"
 }
 
-type Fill = "primary" | "complete" | "live" | "budget" | "critical"
+type Fill = "primary" | "complete" | "neutral" | "live" | "warning" | "budget" | "critical"
 
 /** The fill a tone asks for on a variant. Only a default bar turns `success` once complete. */
 function fillOf(variant: ProgressVariant, tone: ProgressTone): Fill {
@@ -56,7 +65,7 @@ function fillOf(variant: ProgressVariant, tone: ProgressTone): Fill {
 // The fill's colour, by the root's `data-fill` (and `data-level` for a budget). Each is a knob, so
 // an app re-maps a colour once for every bar. With no `data-fill` it is the primary knob.
 const fill =
-  "bg-(--c-progress-primary) group-data-[fill=complete]/progress:bg-(--c-progress-fill) group-data-[fill=complete]/progress:group-data-complete/progress:bg-(--c-progress-complete) group-data-[fill=live]/progress:bg-(--c-progress-live) group-data-[fill=critical]/progress:bg-(--c-progress-critical) group-data-[level=warning]/progress:bg-(--c-progress-warning) group-data-[level=over]/progress:bg-(--c-progress-over)"
+  "bg-(--c-progress-primary) group-data-[fill=complete]/progress:bg-(--c-progress-fill) group-data-[fill=complete]/progress:group-data-complete/progress:bg-(--c-progress-complete) group-data-[fill=neutral]/progress:bg-(--c-progress-neutral) group-data-[fill=live]/progress:bg-(--c-progress-live) group-data-[fill=warning]/progress:bg-(--c-progress-warning) group-data-[fill=critical]/progress:bg-(--c-progress-critical) group-data-[level=warning]/progress:bg-(--c-progress-warning) group-data-[level=over]/progress:bg-(--c-progress-over)"
 
 /**
  * Progress: how far along a task is, or how much of something is left. Base UI's Progress gives
@@ -73,9 +82,19 @@ function Progress({
   variant = "bar",
   tone = "default",
   segments = progressDefaultSegments,
+  tick,
   ...props
 }: ProgressProps) {
   const level = tone === "budget" ? budgetLevel(value, min, max) : undefined
+  const track = (
+    <ProgressTrack>
+      {variant === "segmented" ? (
+        <ProgressSegments value={value} min={min} max={max} segments={segments} />
+      ) : (
+        <ProgressIndicator />
+      )}
+    </ProgressTrack>
+  )
   return (
     <ProgressPrimitive.Root
       value={value}
@@ -90,13 +109,20 @@ function Progress({
       {...props}
     >
       {children}
-      <ProgressTrack>
-        {variant === "segmented" ? (
-          <ProgressSegments value={value} min={min} max={max} segments={segments} />
-        ) : (
-          <ProgressIndicator />
-        )}
-      </ProgressTrack>
+      {tick === undefined || max <= min ? (
+        track
+      ) : (
+        <div data-slot="progress-bar" className="relative w-full">
+          {track}
+          <span
+            aria-hidden
+            data-slot="progress-tick"
+            className="pointer-events-none absolute top-1/2 h-(--c-progress-tick-height) w-(--stroke-emphasis) -translate-x-1/2 -translate-y-1/2 bg-(--c-progress-tick)"
+            // Where the tick stands is data, not a design value: a share of the bar.
+            style={{ left: `${Math.min(1, Math.max(0, (tick - min) / (max - min))) * 100}%` }}
+          />
+        </div>
+      )}
     </ProgressPrimitive.Root>
   )
 }

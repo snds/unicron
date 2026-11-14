@@ -14,7 +14,18 @@ describe("Spinner", () => {
     const spinner = screen.getByRole("status", { name: "Loading" })
     expect(spinner).toHaveAttribute("data-slot", "spinner")
     expect(spinner).not.toHaveAttribute("aria-hidden")
-    expect(spinner.getAttribute("class")).toContain("animate-spin")
+  })
+
+  // Generic loading never borrows the agent's "working" motion (rules 1.6, contract 3): the working
+  // ring turns evenly on --motion-spin; the spinner turns once per --c-spinner-turn-duration and
+  // eases in and out of each turn.
+  it("turns on its own motion, not the agent's working ring", () => {
+    render(<Spinner />)
+    const cls = screen.getByRole("status").getAttribute("class") ?? ""
+    expect(cls).toContain("animate-[spin_var(--c-spinner-turn-duration)_var(--motion-ease-move)_infinite]")
+    expect(cls).not.toMatch(/(^|\s)animate-spin(\s|$)/)
+    expect(cls).not.toContain("--motion-spin")
+    expect(cls).not.toContain("linear")
   })
 
   // A spinner is not an icon: it is an arc of its own, so it needs no icon set and no font.
