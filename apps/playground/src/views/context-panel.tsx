@@ -10,11 +10,16 @@ import {
   AppFramePageHead,
   AppFrameTopBar,
   AppLockup,
+  ChatMessage,
+  Composer,
   ContextPanel,
   type ContextPanelState,
   type ContextPanelTab,
   FloatButton,
+  ListRow,
+  SectionHeader,
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -24,7 +29,6 @@ import {
 } from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
-import { StandInComposer, StandInInlineRow, StandInMessage, StandInRows, StandInSection } from "./_shell-parts"
 
 const TABS: ContextPanelTab[] = [
   { value: "tasks", label: "Tasks", icon: "task", count: 3, live: true, liveLabel: "2 running" },
@@ -36,20 +40,20 @@ const TABS: ContextPanelTab[] = [
 function Panel({ value }: { value: string }) {
   if (value === "tasks") {
     return (
-      <>
-        <StandInSection title="Running" count="02" />
-        <StandInRows label="Running">
-          <StandInInlineRow title="Full test suite" meta="SEA-51 // Cloud sandbox // 41 of 128" status="+ 02:14" statusTone="live" progress={32} />
-          <StandInInlineRow title="Add baseline drift check" meta="SEA-48 // Codex // Step 3 of 4" status="+ 04:12" statusTone="live" progress={75} />
-        </StandInRows>
-        <StandInSection title="Queued" count="01" />
-        <StandInRows label="Queued">
-          <StandInInlineRow title="Index Vale decisions" meta="SEA-46 // Local model" status="Next" />
-        </StandInRows>
-      </>
+      <div className="flex flex-col gap-2">
+        <SectionHeader title="Running" count={2} level={3} />
+        <ul aria-label="Running" className="flex flex-col">
+          <ListRow render={<li />} size="compact" title="Full test suite" meta="SEA-51 // Cloud sandbox // 41 of 128" status="+ 02:14" tone="live" progress={41 / 128} href="#full-test-suite" />
+          <ListRow render={<li />} size="compact" title="Add baseline drift check" meta="SEA-48 // Codex // Step 3 of 4" status="+ 04:12" tone="live" progress={3 / 4} href="#sea-48" />
+        </ul>
+        <SectionHeader title="Queued" count={1} level={3} />
+        <ul aria-label="Queued" className="flex flex-col">
+          <ListRow render={<li />} size="compact" title="Index Vale decisions" meta="SEA-46 // Local model" status="Next" href="#sea-46" />
+        </ul>
+      </div>
     )
   }
-  return <StandInSection title={value} count="04" />
+  return <SectionHeader title={value} count={4} level={3} />
 }
 
 function Workspace({ initial, artifact = false, chats = true }: { initial: ContextPanelState; artifact?: boolean; chats?: boolean }) {
@@ -74,24 +78,22 @@ function Workspace({ initial, artifact = false, chats = true }: { initial: Conte
       <AppFrameMain>
         {chats ? (
           <AppFrameList size="narrow" aria-label="Chats">
-            <StandInRows label="Chats">
-              <StandInInlineRow title="OPAQUE login" meta="Claude Code // 14:06" status="SEA-51" selected />
-              <StandInInlineRow title="Drift check scope" meta="Codex // 13:12" status="SEA-48" />
-            </StandInRows>
+            <ul aria-label="Chats" className="flex flex-col">
+              <ListRow render={<li />} size="compact" title="OPAQUE login" meta="Claude Code // 14:06" status="SEA-51" selected href="#opaque-login" />
+              <ListRow render={<li />} size="compact" title="Drift check scope" meta="Codex // 13:12" status="SEA-48" href="#drift-check" />
+            </ul>
           </AppFrameList>
         ) : null}
         <AppFrameColumn reading={state !== "open" && !artifact} aria-label="Chat">
           <AppFramePageHead size="sm" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
           <div className="flex flex-col gap-8">
-            <StandInMessage from="You" time="14:02" mine>
+            <ChatMessage role="user" meta="You // 14:02">
               Split the OPAQUE migration into a diff I can review, and run the full test suite in the background.
-            </StandInMessage>
-            <StandInMessage from="Claude Code" time="14:03">
-              Done. The diff is ready, and the tests are running in the cloud sandbox. I'll post here when they finish.
-            </StandInMessage>
-            <div className="flex">
-              <StandInComposer placeholder="Ask about SEA-51, or @ a file" />
-            </div>
+            </ChatMessage>
+            <ChatMessage role="agent" meta="Claude Code // 14:03">
+              Done. The diff is ready, and the tests are running in the cloud sandbox. I&apos;ll post here when they finish.
+            </ChatMessage>
+            <Composer placeholder="Ask about SEA-51, or @ a file" />
           </div>
         </AppFrameColumn>
         <ContextPanel
@@ -114,7 +116,9 @@ function Workspace({ initial, artifact = false, chats = true }: { initial: Conte
                 <SheetHeader>
                   <SheetTitle>Context</SheetTitle>
                 </SheetHeader>
-                <Panel value={value} />
+                <SheetBody>
+                  <Panel value={value} />
+                </SheetBody>
               </SheetContent>
             </Sheet>
           }

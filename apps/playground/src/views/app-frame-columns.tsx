@@ -16,11 +16,13 @@ import {
   AppFrameStatusLine,
   Button,
   Icon,
+  ListRow,
+  Prose,
+  SectionHeader,
   StatusItem,
 } from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
-import { StandInInlineRow, StandInMessageRow, StandInRows, StandInSection, StandInText } from "./_shell-parts"
 
 function Line({ crumbs }: { crumbs: string[] }) {
   return (
@@ -33,13 +35,13 @@ function Line({ crumbs }: { crumbs: string[] }) {
 function Message() {
   return (
     <AppFrameInset>
-              <div className="flex flex-col gap-6">
-      <AppFramePageHead size="sm" overline="From // Mira Chen // 09:14" title="Cabin for the 20th, confirmed" />
-      <StandInText>
-        <p>Booked the two-bedroom for the 20th through the 22nd. Check-in is after 3, and the road up is fine without chains this time of year.</p>
-      </StandInText>
-    </div>
-            </AppFrameInset>
+      <div className="flex flex-col gap-6">
+        <AppFramePageHead size="sm" overline="From // Mira Chen // 09:14" title="Cabin for the 20th, confirmed" />
+        <Prose>
+          <p>Booked the two-bedroom for the 20th through the 22nd. Check-in is after 3, and the road up is fine without chains this time of year.</p>
+        </Prose>
+      </div>
+    </AppFrameInset>
   )
 }
 
@@ -47,10 +49,10 @@ function Inbox() {
   return (
     <AppFrameList aria-label="Inbox">
       <AppFramePageHead overline="Inbox // 012 unread" title="Today" meta="THU 11.12" />
-      <StandInRows label="Messages">
-        <StandInMessageRow sender="Mira Chen" time="09:14" subject="Cabin for the 20th, confirmed" preview="Booked the two-bedroom." unread selected />
-        <StandInMessageRow sender="Ledger Bank" time="08:02" subject="Your November statement is ready" preview="The statement is ready to view." />
-      </StandInRows>
+      <ul aria-label="Messages" className="flex flex-col">
+        <ListRow render={<li />} layout="message" sender="Mira Chen" time="09:14" subject="Cabin for the 20th, confirmed" preview="Booked the two-bedroom." unread selected href="#mira" />
+        <ListRow render={<li />} layout="message" sender="Ledger Bank" time="08:02" subject="Your November statement is ready" preview="The statement is ready to view." href="#ledger" />
+      </ul>
     </AppFrameList>
   )
 }
@@ -75,10 +77,10 @@ export default function AppFrameColumnsView() {
           <Line crumbs={["Tasks", "All"]} />
           <AppFrameMain>
             <AppFrameList size="fill" aria-label="Tasks">
-              <StandInRows label="Tasks">
-                <StandInInlineRow index="01" title="Migrate vault login to OPAQUE" meta="SEA-51 // Lockdown // Claude Code" status="Needs you" selected />
-                <StandInInlineRow index="02" title="Add baseline drift check" meta="SEA-48 // Workspace // Codex" status="+ Running 04:12" statusTone="live" progress={62} />
-              </StandInRows>
+              <ul aria-label="Tasks" className="flex flex-col">
+                <ListRow render={<li />} index="01" title="Migrate vault login to OPAQUE" meta="SEA-51 // Lockdown // Claude Code" status="Needs you" selected href="#sea-51" />
+                <ListRow render={<li />} index="02" title="Add baseline drift check" meta="SEA-48 // Workspace // Codex" status="+ Running 04:12" tone="live" progress={20 / 32} href="#sea-48" />
+              </ul>
             </AppFrameList>
             <AppFrameDetail size="narrow" aria-label="Task">
               <AppFrameInset>
@@ -117,9 +119,9 @@ export default function AppFrameColumnsView() {
           <AppFrameMain>
             <AppFrameColumn reading aria-label="Chat">
               <AppFramePageHead size="sm" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
-              <StandInText>
-                <p>Done. The diff is ready, and the tests are running in the cloud sandbox. I'll post here when they finish.</p>
-              </StandInText>
+              <Prose variant="response">
+                <p>Done. The diff is ready, and the tests are running in the cloud sandbox. I&apos;ll post here when they finish.</p>
+              </Prose>
             </AppFrameColumn>
           </AppFrameMain>
         </FrameBox>
@@ -129,10 +131,10 @@ export default function AppFrameColumnsView() {
           <Line crumbs={["Personal", "Overview"]} />
           <AppFrameMain>
             <AppFrameColumn aria-label="Overview">
-              <StandInSection title="Failing checks" count="03 of 06" />
+              <SectionHeader title="Failing checks" count="03 of 06" />
             </AppFrameColumn>
             <AppFrameSidePanel open onOpenChange={() => {}} title="Activity" minContent="detail">
-              <StandInSection title="Activity // Today" count="04" />
+              <SectionHeader title="Activity // Today" count={4} />
               <p className="type-ui text-text-body">Imported 12 notes from Obsidian</p>
             </AppFrameSidePanel>
           </AppFrameMain>
@@ -143,7 +145,7 @@ export default function AppFrameColumnsView() {
           <Line crumbs={["Personal", "Overview"]} />
           <AppFrameMain>
             <AppFrameColumn aria-label="Overview">
-              <StandInSection title="Failing checks" count="03 of 06" />
+              <SectionHeader title="Failing checks" count="03 of 06" />
               <Button variant="secondary" size="sm" onClick={() => setPeek(true)}>
                 Peek K-14
               </Button>
@@ -160,9 +162,9 @@ export default function AppFrameColumnsView() {
                 </Button>
               }
             >
-              <StandInText>
+              <Prose>
                 <p>knowledge/legion links to a file that was renamed on 11.12.</p>
-              </StandInText>
+              </Prose>
             </AppFramePeek>
           </AppFrameMain>
         </FrameBox>

@@ -1,10 +1,9 @@
 // AppFrameFocus: the whole app is closed until the person signs in, unlocks or finishes the first
 // run (decisions §4): no chrome, one centred column of 432 with the lockup at its top and one
 // primary. A flow of several steps shows a folio. View: ?view=app-frame-focus
-import { AppFrameFocus, AppLockup, Button } from "@unicron/ui"
+import { AppFrameFocus, AppLockup, Button, TextField } from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
-import { StandInSearch } from "./_shell-parts"
 
 function Unlock() {
   return (
@@ -13,7 +12,7 @@ function Unlock() {
         <p className="type-overline text-text-label">Personal vault // locked</p>
         <h1 className="type-title text-text-body">Unlock Personal</h1>
       </div>
-      <StandInSearch placeholder="Master password" />
+      <TextField label="Master password" type="password" autoComplete="current-password" />
       <Button block size="lg">
         Unlock
       </Button>

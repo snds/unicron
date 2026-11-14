@@ -16,7 +16,7 @@ const GROUPS: Array<{ id: "figma" | "ui" | "apps" | "extras"; title: string; not
 const total = GROUPS.reduce((sum, group) => sum + names[group.id].length, 0)
 const count = (n: number) => String(n).padStart(3, "0")
 
-function Tile({ name }: { name: IconName }) {
+function IconTile({ name }: { name: IconName }) {
   return (
     <li data-specimen="icon" data-icon={name} className="flex min-w-0 items-center gap-3 py-2">
       <span className="flex w-12 shrink-0 items-center justify-between">
@@ -82,7 +82,7 @@ export default function IconsView() {
           </div>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-x-6" aria-label={`${group.title} icons`}>
             {names[group.id].map((name) => (
-              <Tile key={name} name={name as IconName} />
+              <IconTile key={name} name={name as IconName} />
             ))}
           </ul>
         </section>

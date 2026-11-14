@@ -7,13 +7,14 @@ import {
   AppFrameBottomRow,
   AppFrameList,
   AppFrameMain,
+  Composer,
   FloatButton,
+  ListRow,
   TabBar,
   TabBarItem,
 } from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
-import { StandInComposer, StandInMessageRow, StandInRows } from "./_shell-parts"
 
 const ROWS = [
   { sender: "Mira Chen", time: "09:14", subject: "Cabin for the 20th, confirmed", preview: "Booked the two-bedroom. Check-in is after 3." },
@@ -26,17 +27,17 @@ function Rows() {
   return (
     <AppFrameMain>
       <AppFrameList aria-label="Inbox">
-        <StandInRows label="Messages">
+        <ul aria-label="Messages" className="flex flex-col">
           {ROWS.map((r) => (
-            <StandInMessageRow key={r.subject} {...r} />
+            <ListRow key={r.subject} render={<li />} layout="message" sender={r.sender} time={r.time} subject={r.subject} preview={r.preview} href="#message" />
           ))}
-        </StandInRows>
+        </ul>
       </AppFrameList>
     </AppFrameMain>
   )
 }
 
-function Tabs() {
+function ValeSections() {
   return (
     <TabBar label="Sections" value="mail">
       <TabBarItem value="mail" icon="email" label="Mail" />
@@ -57,17 +58,17 @@ export default function AppFrameBottomRowView() {
         <div className="flex flex-wrap gap-6">
           <FrameBox width={390} height={420} layout="phone" label="Vale // no strip">
             <Rows />
-            <AppFrameBottomRow start={search} tabs={<Tabs />} end={create} />
+            <AppFrameBottomRow start={search} tabs={<ValeSections />} end={create} />
           </FrameBox>
           <FrameBox width={390} height={420} layout="phone" label="Vale // a live strip above the row">
             <Rows />
             <AppFrameAccessory tone="live" meta="Syncing // Personal + Work" title="Checking 2 accounts" />
-            <AppFrameBottomRow start={search} tabs={<Tabs />} end={create} />
+            <AppFrameBottomRow start={search} tabs={<ValeSections />} end={create} />
           </FrameBox>
           <FrameBox width={390} height={420} layout="phone" label="Lockdown // the needs-you strip">
             <Rows />
             <AppFrameAccessory tone="needs-you" meta="Sign-in request // 00:40 ago" title="Steam on a Windows PC" action={{ label: "Review" }} />
-            <AppFrameBottomRow start={search} tabs={<Tabs />} end={create} />
+            <AppFrameBottomRow start={search} tabs={<ValeSections />} end={create} />
           </FrameBox>
         </div>
       </Specimen>
@@ -76,17 +77,17 @@ export default function AppFrameBottomRowView() {
           <FrameBox width={390} height={300} layout="phone" minimized label="Vale // the place strip (only once scrolled)">
             <Rows />
             <AppFrameAccessory scrolledOnly meta="Inbox // 012 unread" title="Cabin for the 20th" />
-            <AppFrameBottomRow start={search} tabs={<Tabs />} end={create} />
+            <AppFrameBottomRow start={search} tabs={<ValeSections />} end={create} />
           </FrameBox>
           <FrameBox width={390} height={300} layout="phone" minimized label="Warpcore // a live strip, compact">
             <Rows />
             <AppFrameAccessory tone="live" meta="Tasks // 03 running" title="SEA-48 running 04:12" />
-            <AppFrameBottomRow start={search} tabs={<Tabs />} end={create} />
+            <AppFrameBottomRow start={search} tabs={<ValeSections />} end={create} />
           </FrameBox>
           <FrameBox width={390} height={300} layout="phone" minimized label="Synapse // needs-you keeps its yellow">
             <Rows />
             <AppFrameAccessory tone="needs-you" meta="Awaiting your review // 02" title="Harness changes from agents" />
-            <AppFrameBottomRow start={search} tabs={<Tabs />} end={create} />
+            <AppFrameBottomRow start={search} tabs={<ValeSections />} end={create} />
           </FrameBox>
         </div>
       </Specimen>
@@ -94,7 +95,7 @@ export default function AppFrameBottomRowView() {
         <div className="flex flex-wrap gap-6">
           <FrameBox width={390} height={300} layout="phone" label="Vale // the reply field fills">
             <Rows />
-            <AppFrameBottomRow variant="detail" fill={<StandInComposer placeholder="Reply to Mira" />} />
+            <AppFrameBottomRow variant="detail" fill={<Composer size="line" placeholder="Reply to Mira" />} />
           </FrameBox>
           <FrameBox width={390} height={300} layout="phone" label="Lockdown // two ends, the primary says its word">
             <Rows />
@@ -107,7 +108,7 @@ export default function AppFrameBottomRowView() {
           <FrameBox width={390} height={300} layout="phone" label="Vale // undo send above a detail row">
             <Rows />
             <AppFrameAccessory tone="live" meta="Sending // 08 S" title="Board games for the cabin" action={{ label: "Undo" }} progress={{ value: 2, max: 10 }} />
-            <AppFrameBottomRow variant="detail" fill={<StandInComposer placeholder="Reply to Mira" />} />
+            <AppFrameBottomRow variant="detail" fill={<Composer size="line" placeholder="Reply to Mira" />} />
           </FrameBox>
         </div>
       </Specimen>
@@ -121,7 +122,7 @@ export default function AppFrameBottomRowView() {
         <FrameBox width={844} height={390} layout="rail" label="Vale // 844 × 390">
           <Rows />
           <AppFrameAccessory tone="live" meta="Syncing" title="Checking 2 accounts" />
-          <AppFrameBottomRow start={search} tabs={<Tabs />} end={create} />
+          <AppFrameBottomRow start={search} tabs={<ValeSections />} end={create} />
         </FrameBox>
       </Specimen>
     </div>

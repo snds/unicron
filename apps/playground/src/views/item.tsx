@@ -18,10 +18,10 @@ import { Column, Page, Specimen } from "./_primitives"
 export default function ItemView() {
   return (
     <Page>
-      <Specimen label="Rows // at rest, selected, as buttons (hover and press wash)">
+      <Specimen label="Rows // at rest, selected, as links (hover and press wash)">
         <Column wide>
           <ItemGroup>
-            <Item render={<button type="button" />}>
+            <Item render={<a href="#mira-chen" />}>
               <ItemMedia>
                 <InitialTile initials="MC" />
               </ItemMedia>
@@ -30,7 +30,7 @@ export default function ItemView() {
                 <ItemDescription>Cabin for the 20th, confirmed</ItemDescription>
               </ItemContent>
             </Item>
-            <Item render={<button type="button" />} data-selected="true">
+            <Item render={<a href="#ledger-bank" />} data-selected="true">
               <ItemMedia>
                 <InitialTile initials="LB" />
               </ItemMedia>
@@ -39,7 +39,7 @@ export default function ItemView() {
                 <ItemDescription>Your November statement is ready</ItemDescription>
               </ItemContent>
             </Item>
-            <Item render={<button type="button" />}>
+            <Item render={<a href="#theo-park" />}>
               <ItemMedia>
                 <InitialTile initials="TP" />
               </ItemMedia>
@@ -103,7 +103,7 @@ export default function ItemView() {
               <ItemDescription>mira@studio.dev</ItemDescription>
             </ItemContent>
           </Item>
-          <Item size="sm" render={<button type="button" />}>
+          <Item size="sm" render={<a href="#drafts" />}>
             <ItemContent>
               <ItemTitle>Drafts</ItemTitle>
             </ItemContent>

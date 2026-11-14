@@ -13,9 +13,9 @@ function Specimen({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** Vale's four sections, as the phone frames draw them. */
-function ValeTabs({ value, onValueChange, ...rest }: { value: string; onValueChange: (v: string) => void; minimized?: boolean; onReselect?: (v: string) => void }) {
+function ValeTabs({ value, onValueChange, minimized, onReselect }: { value: string; onValueChange: (v: string) => void; minimized?: boolean; onReselect?: (v: string) => void }) {
   return (
-    <TabBar label="Sections" value={value} onValueChange={onValueChange} {...rest}>
+    <TabBar label="Sections" value={value} onValueChange={onValueChange} minimized={minimized} onReselect={onReselect}>
       <TabBarItem value="mail" icon="email" label="Mail" />
       <TabBarItem value="calendar" icon="calendar" label="Calendar" />
       <TabBarItem value="contacts" icon="user--multiple" label="Contacts" />

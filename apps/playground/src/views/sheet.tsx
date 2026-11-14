@@ -4,6 +4,7 @@
 import {
   AdaptiveSheetContent,
   Button,
+  FieldRow,
   Icon,
   Sheet,
   SheetBody,
@@ -16,16 +17,6 @@ import {
 } from "@unicron/ui"
 
 import { Stage } from "./_stage"
-
-/** A Field Row in the stacked size: a label over a value, a rule above (Lockdown 11). */
-function Stacked({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rule-t flex flex-col gap-1 py-3">
-      <span className="type-overline">{label}</span>
-      <span className="type-code-inline">{value}</span>
-    </div>
-  )
-}
 
 export default function SheetView() {
   return (
@@ -41,10 +32,10 @@ export default function SheetView() {
                 </SheetHeader>
                 <SheetBody>
                   <div className="flex flex-col">
-                    <Stacked label="Account" value="kestrel.04" />
-                    <Stacked label="Device" value="Windows 11 // Edge 131" />
-                    <Stacked label="Near" value="Sacramento, CA" />
-                    <Stacked label="Time" value="14:31" />
+                    <FieldRow size="stacked" label="Account">kestrel.04</FieldRow>
+                    <FieldRow size="stacked" label="Device">Windows 11 // Edge 131</FieldRow>
+                    <FieldRow size="stacked" label="Near">Sacramento, CA</FieldRow>
+                    <FieldRow size="stacked" label="Time">14:31</FieldRow>
                   </div>
                   <SheetDescription>Not you? Deny, and Lockdown locks this login until you change the password.</SheetDescription>
                 </SheetBody>

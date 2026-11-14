@@ -3,10 +3,9 @@
 // setting" from ten; on a phone the drawn rows first, then every section, each pushed.
 // View: ?view=settings-frame
 import { useState } from "react"
-import { Input, SettingsFrame, type SettingsSection } from "@unicron/ui"
+import { FieldRow, FieldRowAction, SearchField, SettingsFrame, type SettingsSection } from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
-import { StandInField } from "./_shell-parts"
 
 const SYNAPSE: SettingsSection[] = [
   { value: "profile", label: "Profile", icon: "user--avatar", group: "You", description: "The persona in focus and how agents address you." },
@@ -24,9 +23,13 @@ const SYNAPSE: SettingsSection[] = [
 function Many({ phone = false }: { phone?: boolean }) {
   const [value, setValue] = useState<string | null>(phone ? null : "profile")
   return (
-    <SettingsFrame sections={SYNAPSE} value={value} onValueChange={setValue} search={<Input aria-label="Find a setting" placeholder="Find a setting" />}>
-      <StandInField label="Persona" value="Sean // personal" action="Change" />
-      <StandInField label="Address me as" value="Sean" action="Edit" />
+    <SettingsFrame sections={SYNAPSE} value={value} onValueChange={setValue} search={<SearchField aria-label="Find a setting" placeholder="Find a setting" />}>
+      <FieldRow label="Persona" action={<FieldRowAction>Change</FieldRowAction>}>
+        Sean // personal
+      </FieldRow>
+      <FieldRow label="Address me as" action={<FieldRowAction>Edit</FieldRowAction>}>
+        Sean
+      </FieldRow>
     </SettingsFrame>
   )
 }

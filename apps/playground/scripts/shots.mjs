@@ -15,6 +15,8 @@
 //                        --modes vale-stone,warpcore-graphite
 //   --sizes <WxH,WxH>    screen sizes in CSS pixels                          default: 1440x900,390x844
 //   --viewport           capture the screen only, not the whole page         default: whole page
+//                        (a phone size takes the whole page by making the screen as tall as it,
+//                        so its touch-only parts stay in the picture)
 //   --element <selector> capture only the first element that matches, e.g. '[data-slot="button"]'
 //   --chrome             keep the playground's own bar in the picture        default: hidden
 //   --scale <n>          device pixel ratio                                  default: 1
@@ -250,7 +252,17 @@ async function main() {
         await settle(page, { view, theme, ground, wait: options.wait, timeout })
         const picture = { path: path.join(out, name), animations: "disabled", caret: "hide", timeout }
         if (options.element) await page.locator(options.element).first().screenshot(picture)
-        else await page.screenshot({ ...picture, fullPage: !options.viewport })
+        else if (phone && !options.viewport) {
+          // A full-page capture under phone emulation drops the touch media queries (Chromium resets
+          // the device metrics for it, so `pointer: coarse` parts vanish from the picture). Make the
+          // screen as tall as the page instead, settle again, and take a plain screenshot.
+          const height = await page.evaluate(() => Math.ceil(document.documentElement.scrollHeight))
+          if (height > size.height) {
+            await page.setViewportSize({ width: size.width, height })
+            await settle(page, { view, theme, ground, wait: options.wait, timeout })
+          }
+          await page.screenshot(picture)
+        } else await page.screenshot({ ...picture, fullPage: !options.viewport })
         console.log(`  ✓ ${name}${problems.length ? `  (page errors: ${problems.join(" | ")})` : ""}`)
       } catch (error) {
         const reason = String(error?.message ?? error).split("\n")[0]

@@ -1,8 +1,8 @@
 // Synapse's first screen, the workspace overview, as one composition of the frame's parts: the
 // sidebar with its workspace switcher, the status line, one column with the activity beside it at
 // 1440 (Desktop 01, 43:735); the floating rows, the needs-you strip and the scrolled chrome at 390
-// (Mobile 01, 42:45; States 02, 51:11134). It switches by width. The score, the needs-you block and
-// the check rows are stand-ins (./_shell-parts) until data-a, data-b and chat land.
+// (Mobile 01, 42:45; States 02, 51:11134). It switches by width. The score, the counts, the
+// needs-you block, the check rows and the activity are the system's own parts.
 // View: ?view=shell-synapse
 import { useState } from "react"
 import {
@@ -20,15 +20,19 @@ import {
   AppLockup,
   Button,
   FloatButton,
+  ListRow,
+  LogRow,
+  Metric,
   NavItem,
   NavSection,
+  NeedsYou,
+  Progress,
+  SectionHeader,
   StatusItem,
   TabBar,
   TabBarItem,
   useAppFrame,
 } from "@unicron/ui"
-
-import { StandInInlineRow, StandInNeedsYou, StandInRows, StandInSection } from "./_shell-parts"
 
 const CHECKS = [
   { index: "K-14", title: "A knowledge note links to a missing file", meta: "knowledge/legion", status: "Since 13:40" },
@@ -42,6 +46,13 @@ const ACTIVITY = [
   ["13:40", "Check K-14 started failing"],
   ["11:15", "Skill ux-copy updated"],
   ["09:02", "Codex connected"],
+]
+
+const COUNTS = [
+  { href: "#skills", label: "Skills", value: "145", delta: "+3 this week" },
+  { href: "#knowledge", label: "Knowledge", value: "1,204", delta: "+12 today" },
+  { href: "#harnesses", label: "Harnesses", value: "9", delta: "2 proposed" },
+  { href: "#personas", label: "Personas", value: "3", delta: "11 accounts" },
 ]
 
 function Overview() {
@@ -79,51 +90,59 @@ function Overview() {
 
       <AppFrameMain>
         <AppFrameColumn aria-label="Overview">
-          {/* The score is the head here (Metric size="hero" is data-b's; a stand-in until it lands). */}
+          {/* The score is the head here: the hero Metric, its sentence and bar beside it on a desktop. */}
           <AppFrameInset>
-              <div className="flex flex-col gap-2 pb-8">
-            <p className="type-overline text-text-label">{frame.split ? "Workspace health // Score" : "Personal // Workspace health"}</p>
-            <p className="flex items-baseline gap-4">
-              <span className="type-number-hero text-primary-display">94</span>
-              <span className="type-code-display text-text-label">/100</span>
-            </p>
-            <p className="type-title text-text-body">212 of 218 checks pass.</p>
-            <p className="type-body text-text-secondary">6 need attention. 2 changes wait for your review.</p>
-          </div>
-            </AppFrameInset>
-          {frame.split ? (
-            <div className="pb-8">
-              <StandInNeedsYou
-                overline="Awaiting your review // 02 harness changes"
-                body="Claude Code and Codex proposed changes to visual-qa and the UI harness."
-                actions={
-                  <>
-                    <Button variant="needs-you">Review H-09</Button>
-                    <Button variant="needs-you-text">See both</Button>
-                  </>
-                }
-              />
+            <div className="flex flex-col gap-8 pb-8">
+              <div className="flex flex-wrap items-end gap-x-12 gap-y-4">
+                <Metric
+                  href="#checks"
+                  size="hero"
+                  valueTone="primary"
+                  label={frame.split ? "Workspace health // Score" : "Personal // Workspace health"}
+                  value="94"
+                  unit="/100"
+                />
+                <div className="flex min-w-60 flex-1 flex-col gap-2 pb-4">
+                  <p className="type-lead text-text-body">212 of 218 checks pass.</p>
+                  {frame.split ? <Progress variant="segmented" tone="primary" segments={48} value={212} max={218} aria-label="212 of 218 checks pass" /> : null}
+                  <p className="type-body text-text-secondary">6 need attention. 2 changes wait for your review.</p>
+                </div>
+              </div>
+              {frame.split ? (
+                <div className="grid grid-cols-4 gap-6">
+                  {COUNTS.map((count) => (
+                    <Metric key={count.label} href={count.href} label={count.label} value={count.value} delta={count.delta} />
+                  ))}
+                </div>
+              ) : null}
+              {frame.split ? (
+                <NeedsYou
+                  title="Awaiting your review // 02 harness changes"
+                  body="Claude Code and Codex proposed changes to visual-qa and the UI harness."
+                  action={<Button variant="needs-you">Review H-09</Button>}
+                  secondaryAction={<Button variant="needs-you-text">See both</Button>}
+                />
+              ) : null}
+              <SectionHeader title="Failing checks" count="03 of 06" level={2} />
             </div>
-          ) : null}
-          <AppFrameInset>
-            <StandInSection title="Failing checks" count="03 of 06" />
           </AppFrameInset>
-          <StandInRows label="Failing checks">
+          <ul aria-label="Failing checks" className="flex flex-col">
             {CHECKS.map((c) => (
-              <StandInInlineRow key={c.index} index={c.index} title={c.title} meta={c.meta} status={c.status} />
+              <ListRow key={c.index} render={<li />} index={c.index} title={c.title} meta={c.meta} metaStyle="plain" status={c.status} href={`#check-${c.index}`} />
             ))}
-          </StandInRows>
+          </ul>
         </AppFrameColumn>
         {/* The activity stands beside the overview on a desktop; on a phone it is not part of the page, so the sheet starts closed. */}
         <AppFrameSidePanel open={frame.split && activity} onOpenChange={setActivity} title="Activity" minContent="detail">
-          <div className="flex flex-col gap-6">
-            <StandInSection title="Activity // Today" count="04" />
-            {ACTIVITY.map(([time, text]) => (
-              <p key={time} className="flex items-baseline gap-4">
-                <span className="type-meta text-text-label">{time}</span>
-                <span className="type-ui text-text-body">{text}</span>
-              </p>
-            ))}
+          <div className="flex flex-col gap-2">
+            <SectionHeader title="Activity // Today" count={ACTIVITY.length} level={2} />
+            <ul aria-label="Activity today" className="flex flex-col">
+              {ACTIVITY.map(([time, text]) => (
+                <LogRow key={time} render={<li />} time={time} dateTime={`2026-11-12T${time}`}>
+                  {text}
+                </LogRow>
+              ))}
+            </ul>
           </div>
         </AppFrameSidePanel>
       </AppFrameMain>

@@ -1,8 +1,8 @@
 // Lockdown's first screen, the items with a sign-in request, as one composition of the frame's
 // parts: the sidebar, the status line, list + detail at 1440 (Desktop 01, 41:720); the floating
 // rows, the needs-you strip and the scrolled chrome at 390 (Phone 01, 40:45; States 02, 51:8443).
-// It switches by width. Rows, fields and the needs-you block are stand-ins (./_shell-parts) until
-// data-a, data-b and security land. View: ?view=shell-lockdown
+// It switches by width. The search, letters, rows, field rows, secret, code and the needs-you block
+// are the system's own parts. View: ?view=shell-lockdown
 import { Fragment, useState } from "react"
 import {
   AppFrame,
@@ -18,17 +18,26 @@ import {
   AppFrameTopRow,
   AppLockup,
   Button,
+  CodeDisplay,
+  FieldRow,
+  FieldRowAction,
+  FilterChip,
+  FilterChipGroup,
   FloatButton,
+  ListRow,
   NavItem,
   NavSection,
+  NeedsYou,
+  SearchField,
+  SecretField,
+  SectionHeader,
   StatusItem,
   TabBar,
   TabBarItem,
   TopBar,
   useAppFrame,
+  type SecretFieldHost,
 } from "@unicron/ui"
-
-import { StandInChips, StandInField, StandInInlineRow, StandInLetter, StandInNeedsYou, StandInRows, StandInSearch } from "./_shell-parts"
 
 const ITEMS = [
   { letter: "S", id: "spotify", title: "Spotify", meta: "spotify.com", status: "Passkey" },
@@ -39,10 +48,23 @@ const ITEMS = [
   { letter: "T", id: "ticketmaster", title: "Ticketmaster", meta: "ticketmaster.com", status: "Login // Weak" },
 ]
 
+// The demo's vault: a password that is never fetched from anywhere real, a clipboard that only
+// pretends, and a code clock held still at 18 seconds left (as the frame draws it).
+const host: SecretFieldHost = {
+  copy: () => Promise.resolve(),
+  clear: () => Promise.resolve(),
+  clipboardHolds: () => Promise.resolve(true),
+  gate: () => Promise.resolve(true),
+}
+const getPassword = () => Promise.resolve(new TextEncoder().encode("larch-ember-quartz-17"))
+const AT = 1_800_000_000
+const LETTER_COUNTS: Record<string, number> = { S: 4, T: 2 }
+
 function Items() {
   const frame = useAppFrame()
   const [section, setSection] = useState("items")
   const [picked, setPicked] = useState<string | null>(null)
+  const [show, setShow] = useState("all")
   const open = picked ?? (frame.split ? "steam" : null)
   const pushed = open !== null && !frame.split
   // The phone draws Steam first (the item with the request); the desktop list is A to Z under letters.
@@ -88,29 +110,46 @@ function Items() {
       <AppFrameMain>
         <AppFrameList aria-label="Items">
           {frame.split ? (
-            <StandInSearch placeholder="Search 248 items" />
+            <AppFrameInset>
+              <SearchField aria-label="Search items" placeholder="Search 248 items" />
+            </AppFrameInset>
           ) : (
             <>
               <AppFramePageHead overline="Personal vault // 6 types" title="Items" count={248} />
               <AppFrameInset>
-              <div className="pb-4">
-                <StandInChips label="Show" chips={["All 248", "Logins", "Passkeys", "Cards"]} active="All 248" />
-              </div>
-            </AppFrameInset>
+                <div className="pb-4">
+                  <FilterChipGroup label="Show" scroll value={show} onValueChange={setShow}>
+                    <FilterChip value="all" count={248}>All</FilterChip>
+                    <FilterChip value="logins">Logins</FilterChip>
+                    <FilterChip value="passkeys">Passkeys</FilterChip>
+                    <FilterChip value="cards">Cards</FilterChip>
+                  </FilterChipGroup>
+                </div>
+              </AppFrameInset>
             </>
           )}
-          <StandInRows label="Items">
-            {rows.map((item, i) => (
-              <Fragment key={item.id}>
-                {frame.split && (i === 0 || rows[i - 1].letter !== item.letter) ? (
-                  <li className="flex flex-col">
-                    <StandInLetter letter={item.letter} count={item.letter === "S" ? "04" : "02"} />
-                  </li>
-                ) : null}
-                <StandInInlineRow title={item.title} meta={item.meta} status={item.status} selected={frame.split && item.id === open} onOpen={() => setPicked(item.id)} />
+          {(frame.split ? ["S", "T"] : [null]).map((letter) => {
+            const group = rows.filter((item) => letter === null || item.letter === letter)
+            return (
+              <Fragment key={letter ?? "all"}>
+                {letter ? <SectionHeader variant="index" title={letter} count={LETTER_COUNTS[letter]} level={3} /> : null}
+                <ul aria-label={letter ? `Items, ${letter}` : "Items"} className="flex flex-col">
+                  {group.map((item) => (
+                    <ListRow
+                      key={item.id}
+                      render={<li />}
+                      title={item.title}
+                      meta={item.meta}
+                      metaStyle="plain"
+                      status={item.status}
+                      selected={frame.split && item.id === open}
+                      onClick={() => setPicked(item.id)}
+                    />
+                  ))}
+                </ul>
               </Fragment>
-            ))}
-          </StandInRows>
+            )
+          })}
         </AppFrameList>
         <AppFrameDetail open={picked !== null} onBack={() => setPicked(null)} aria-label="Steam">
           {open ? (
@@ -118,21 +157,24 @@ function Items() {
               <div className="flex flex-col gap-6">
               <AppFramePageHead size={frame.split ? "lg" : "md"} overline="Login // Passkey + Code // Steam Guard" title="Steam" meta="store.steampowered.com // added 2024.03.11" metaPosition="below" />
               {frame.split ? (
-                <StandInNeedsYou
-                  overline="Sign-in request // 00:40 ago"
+                <NeedsYou
+                  title="Sign-in request // 00:40 ago"
                   body="Steam on a Windows PC is asking to sign in as kestrel.04."
-                  actions={
-                    <>
-                      <Button variant="needs-you">Review sign-in</Button>
-                      <Button variant="needs-you-text">Deny</Button>
-                    </>
-                  }
+                  action={<Button variant="needs-you">Review sign-in</Button>}
+                  secondaryAction={<Button variant="needs-you-text">Deny</Button>}
                 />
               ) : null}
               <div className="flex flex-col">
-                <StandInField label="Username" value="kestrel.04" action="Copy" />
-                <StandInField label="Password" value="••••••••••••••" action="Reveal" />
-                <StandInField label="Passkey" value="Lockdown // 2026.10.02" />
+                <FieldRow label="Username" action={<FieldRowAction>Copy</FieldRowAction>}>
+                  kestrel.04
+                </FieldRow>
+                <SecretField label="Password" getSecret={getPassword} host={host} />
+                <FieldRow label="Passkey">Lockdown // 2026.10.02</FieldRow>
+                <CodeDisplay layout="field" label="Steam Guard" variant="steam" issuer="Steam" account="kestrel.04" code="R7K2N" period={30} expiresAt={AT} now={AT - 18} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <p className="type-overline text-text-label">Protected</p>
+                <p className="type-caption text-text-secondary">The recovery secret has its own key. It never autofills and never reaches an agent.</p>
               </div>
             </div>
             </AppFrameInset>

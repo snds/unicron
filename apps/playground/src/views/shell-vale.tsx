@@ -1,8 +1,8 @@
 // Vale's first screen, the inbox, as one composition of the frame's parts: the sidebar, the status
 // line, list + detail at 1440 (Desktop / 01, 36:699); the floating rows, the strip and the scrolled
 // chrome at 390 (Mobile / 01, 34:45; States / 02, 51:1914). It switches by width; nothing here is
-// a media query. Rows, the message and the composer are stand-ins (./_shell-parts) until data-a,
-// data-b and chat land. View: ?view=shell-vale
+// a media query. The rows, the message head, the summary, the attachment and the composer are the
+// system's own parts. View: ?view=shell-vale
 import { useState } from "react"
 import {
   AppFrame,
@@ -17,17 +17,23 @@ import {
   AppFrameStatusLine,
   AppFrameTopRow,
   AppLockup,
+  Composer,
+  EmptyState,
+  FileChip,
   FloatButton,
+  ListRow,
+  MetaItem,
+  MetaList,
   NavItem,
   NavSection,
+  Prose,
   StatusItem,
+  SummaryBlock,
   TabBar,
   TabBarItem,
   TopBar,
   useAppFrame,
 } from "@unicron/ui"
-
-import { StandInComposer, StandInMessageRow, StandInRows, StandInText } from "./_shell-parts"
 
 const MESSAGES = [
   { id: "mira", sender: "Mira Chen", time: "09:14", subject: "Cabin for the 20th, confirmed", preview: "Booked the two-bedroom. Check-in is after 3, and the road up is fine without chains.", unread: true },
@@ -97,49 +103,56 @@ export function ValeInbox() {
       <AppFrameMain>
         <AppFrameList aria-label="Inbox">
           <AppFramePageHead overline="Inbox // 012 unread" title="Today" meta="THU 11.12" />
-          <StandInRows label="Messages">
+          <ul aria-label="Messages" className="flex flex-col">
             {MESSAGES.map((m) => (
-              <StandInMessageRow key={m.id} {...m} selected={frame.split && m.id === open} onOpen={() => setPicked(m.id)} />
+              <ListRow
+                key={m.id}
+                render={<li />}
+                layout="message"
+                sender={m.sender}
+                time={m.time}
+                subject={m.subject}
+                preview={m.preview}
+                unread={m.unread}
+                selected={frame.split && m.id === open}
+                onClick={() => setPicked(m.id)}
+              />
             ))}
-          </StandInRows>
+          </ul>
         </AppFrameList>
         <AppFrameDetail open={picked !== null} onBack={() => setPicked(null)} aria-label={message?.subject ?? "Message"}>
           {message ? (
             <AppFrameInset fill>
               <div className="flex flex-1 flex-col gap-8">
-              <div className="flex gap-8">
-                {[
-                  ["From", message.sender],
-                  ["Received", message.time],
-                  ["Attached", "01"],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-1">
-                    <span className="type-overline text-text-label">{label}</span>
-                    <span className="type-meta text-text-body">{value}</span>
-                  </div>
-                ))}
-              </div>
-              <AppFramePageHead size="sm" title={message.subject} />
-              <StandInText>
-                <p>Hi,</p>
-                <p>Booked the two-bedroom for the 20th through the 22nd. Check-in is after 3, and the road up is fine without chains this time of year.</p>
-                <p>Could you bring the board games? I'll handle groceries for the first night.</p>
-                <p>Mira</p>
-              </StandInText>
-              {frame.split ? (
-                <div className="mt-auto flex">
-                  <StandInComposer placeholder="Reply to Mira" />
+                <MetaList>
+                  <MetaItem label="From">{message.sender}</MetaItem>
+                  <MetaItem label="Received">{message.time}</MetaItem>
+                  <MetaItem label="Attached">01</MetaItem>
+                </MetaList>
+                <AppFramePageHead size="sm" title={message.subject} />
+                <SummaryBlock
+                  overline="Summary // 03 points"
+                  lines={["Two-bedroom cabin is booked for Nov 20 to 22.", "Check-in is after 3 PM. No chains needed.", "Mira asks you to bring the board games."]}
+                />
+                <Prose>
+                  <p>Hi,</p>
+                  <p>Booked the two-bedroom for the 20th through the 22nd. Check-in is after 3, and the road up is fine without chains this time of year.</p>
+                  <p>Could you bring the board games? I&apos;ll handle groceries for the first night.</p>
+                  <p>Mira</p>
+                </Prose>
+                <div className="flex">
+                  <FileChip name="Pine Hollow booking.pdf" type="PDF" size="84 KB" href="#pine-hollow-booking" />
                 </div>
-              ) : null}
+                {frame.split ? (
+                  <div className="mt-auto">
+                    <Composer placeholder="Reply to Mira" />
+                  </div>
+                ) : null}
               </div>
             </AppFrameInset>
           ) : (
             <AppFrameInset>
-              <div className="flex flex-col gap-1 pt-2">
-              <p className="type-overline text-text-label">Inbox</p>
-              <p className="type-title text-text-body">Nothing open.</p>
-              <p className="type-body text-text-secondary">Pick a message to see it here.</p>
-            </div>
+              <EmptyState size="sm" overline="Inbox" title="Nothing open." body="Pick a message to see it here." />
             </AppFrameInset>
           )}
         </AppFrameDetail>
@@ -149,7 +162,7 @@ export function ValeInbox() {
       <AppFrameAccessory scrolledOnly meta="Inbox // 012 unread" title="Cabin for the 20th" />
 
       {message && !frame.split ? (
-        <AppFrameBottomRow variant="detail" fill={<StandInComposer placeholder="Reply to Mira" />} />
+        <AppFrameBottomRow variant="detail" fill={<Composer size="line" placeholder="Reply to Mira" />} />
       ) : (
         <AppFrameBottomRow
           start={<FloatButton label="Search" icon="search" size="l" />}

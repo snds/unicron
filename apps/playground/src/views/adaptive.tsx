@@ -8,12 +8,10 @@ import {
   AdaptiveMenuSeparator,
   AdaptivePopover,
   Button,
-  Field,
-  FieldLabel,
   FloatButton,
   Icon,
-  Input,
   type AdaptivePresentation,
+  TextField,
 } from "@unicron/ui"
 
 import { Stage } from "./_stage"
@@ -36,14 +34,8 @@ function NewEvent({ presentation, container }: { presentation: AdaptivePresentat
         </>
       }
     >
-      <Field>
-        <FieldLabel htmlFor={`a-title-${presentation}`}>Title</FieldLabel>
-        <Input id={`a-title-${presentation}`} defaultValue="Cabin trip" />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor={`a-location-${presentation}`}>Location</FieldLabel>
-        <Input id={`a-location-${presentation}`} defaultValue="Pine Hollow Lodge, Truckee" />
-      </Field>
+      <TextField label="Title" defaultValue="Cabin trip" />
+      <TextField label="Location" defaultValue="Pine Hollow Lodge, Truckee" />
     </AdaptiveDialog>
   )
 }

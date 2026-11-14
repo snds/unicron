@@ -1,8 +1,8 @@
 // Vale's Settings (T0 in app-vale-undrawn.md; Desktop / 12, 36:2839; Mobile / 16, 34:1400) in the
 // SettingsFrame: the sidebar with Settings current, the status line, the page head, the section
 // list (eleven sections in four groups, "Find a setting") beside one column up to 720; on a phone
-// the drawn Accounts rows first, then every section, each pushed with a TopBar back. Field and
-// toggle rows are stand-ins (./_shell-parts) until data-b lands. View: ?view=settings-vale
+// the drawn Accounts rows first, then every section, each pushed with a TopBar back. The rows are
+// Field Rows and Toggle Rows. View: ?view=settings-vale
 import { useState } from "react"
 import {
   AppFrame,
@@ -13,17 +13,19 @@ import {
   AppFrameStatusLine,
   AppFrameTopRow,
   AppLockup,
-  Input,
+  FieldRow,
+  FieldRowAction,
   NavItem,
   NavSection,
+  SearchField,
+  SectionHeader,
   SettingsFrame,
   type SettingsSection,
   StatusItem,
+  ToggleRow,
   TopBar,
   useAppFrame,
 } from "@unicron/ui"
-
-import { StandInField, StandInSection } from "./_shell-parts"
 
 const SECTIONS: SettingsSection[] = [
   { value: "accounts", label: "Accounts", icon: "user--avatar", group: "Accounts", description: "Where your mail, calendars and contacts come from." },
@@ -43,17 +45,23 @@ function Rows({ section }: { section: string | null }) {
   if (section === "mail" || section === null) {
     return (
       <>
-        <StandInField label="Summaries" value="Short summary above long messages" action="On" />
-        <StandInField label="Undo send" value="10 seconds to take a message back" action="On" />
-        <StandInField label="Notify for" value="People I know" action="Change" />
+        <ToggleRow label="Summaries" description="Short summary above long messages" defaultChecked />
+        <ToggleRow label="Undo send" description="10 seconds to take a message back" defaultChecked />
+        <FieldRow label="Notify for" action={<FieldRowAction>Change</FieldRowAction>}>
+          People I know
+        </FieldRow>
       </>
     )
   }
   return (
     <>
-      <StandInSection title="Accounts" count="02" />
-      <StandInField label="Personal" value="Fastmail" action="Manage" />
-      <StandInField label="Work" value="Google // sign-in needed" action="Sign in" />
+      <SectionHeader title="Accounts" count={2} level={3} />
+      <FieldRow label="Personal" action={<FieldRowAction>Manage</FieldRowAction>}>
+        Fastmail
+      </FieldRow>
+      <FieldRow label="Work" description="Google // sign-in needed" action={<FieldRowAction>Sign in</FieldRowAction>}>
+        Google
+      </FieldRow>
     </>
   )
 }
@@ -94,11 +102,11 @@ function Settings() {
           value={section ?? (frame.split ? "accounts" : null)}
           onValueChange={setSection}
           head={frame.split ? <AppFramePageHead overline="Settings // Personal + Work" title="Settings" /> : undefined}
-          search={<Input aria-label="Find a setting" placeholder="Find a setting" />}
+          search={<SearchField aria-label="Find a setting" placeholder="Find a setting" />}
           overview={
             <AppFrameInset>
               <Rows section="accounts" />
-              <StandInSection title="All settings" count="11" />
+              <SectionHeader title="All settings" count={11} level={2} />
             </AppFrameInset>
           }
         >

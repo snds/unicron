@@ -38,7 +38,7 @@ export default function SwipeRowView() {
         <p className="type-caption pb-3" aria-live="polite">
           {last}
         </p>
-        <SwipeRow {...vale} defaultOpen="trailing">
+        <SwipeRow leading={vale.leading} trailing={vale.trailing} defaultOpen="trailing">
           <ListRow
             layout="message"
             unread
@@ -49,7 +49,7 @@ export default function SwipeRowView() {
             preview="Booked the two-bedroom. Check-in is after 3."
           />
         </SwipeRow>
-        <SwipeRow {...vale}>
+        <SwipeRow leading={vale.leading} trailing={vale.trailing}>
           <ListRow
             layout="message"
             onClick={say("Opened: Your November statement is ready")}
@@ -59,7 +59,7 @@ export default function SwipeRowView() {
             preview="The statement for your checking account is ready."
           />
         </SwipeRow>
-        <SwipeRow {...vale} defaultOpen="leading">
+        <SwipeRow leading={vale.leading} trailing={vale.trailing} defaultOpen="leading">
           <ListRow
             layout="message"
             unread
@@ -70,7 +70,7 @@ export default function SwipeRowView() {
             preview="I can take both kids this week."
           />
         </SwipeRow>
-        <SwipeRow {...vale}>
+        <SwipeRow leading={vale.leading} trailing={vale.trailing}>
           <ListRow
             layout="message"
             onClick={say("Opened: 3 comments on Theme Studies")}

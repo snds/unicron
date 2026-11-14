@@ -384,7 +384,7 @@ const SPACE = [0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 96
 /** 2, 6, 10 and 14: for inside a component only. */
 const HALF_STEPS = new Set([2, 6, 10, 14])
 
-function Step({ value }: { value: number }) {
+function SpacingStep({ value }: { value: number }) {
   const [ref, width] = useRead((element) => px(getComputedStyle(element).width))
   return (
     <div data-space={value} className="grid grid-cols-[5.5rem_3.5rem_1fr] items-center gap-x-4 py-1">
@@ -409,7 +409,7 @@ function Space() {
     <Block id="space" overline={`Space // ${count(SPACE.length)} steps`} title="Spacing">
       <p className="type-caption text-text-secondary type-measure mb-4">The step in Figma, its size here, and the number Tailwind takes (p-4, gap-4).</p>
       {SPACE.map((value) => (
-        <Step key={value} value={value} />
+        <SpacingStep key={value} value={value} />
       ))}
     </Block>
   )

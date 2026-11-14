@@ -1,6 +1,6 @@
 // Composer, as Figma draws it (32:91), and the states Figma leaves out. View: ?view=composer
 import { useState, type ReactNode } from "react"
-import { Badge, Button, Composer, IconButton } from "@unicron/ui"
+import { Accessory, Badge, Button, Composer, IconButton } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -8,16 +8,6 @@ function Specimen({ label, children }: { label: string; children: ReactNode }) {
       <h3 className="type-overline">{label}</h3>
       {children}
     </section>
-  )
-}
-
-/** A stand-in for the status strip (an Accessory, shell-chrome's part) in the composer's status slot. */
-function StatusStandIn({ meta, title }: { meta: string; title: string }) {
-  return (
-    <div className="bg-surface-raised rule-box flex min-h-12 flex-col justify-center rounded-lg px-4 py-1">
-      <p className="type-overline text-secondary-live">{meta}</p>
-      <p className="type-ui">{title}</p>
-    </div>
   )
 }
 
@@ -94,7 +84,7 @@ export default function ComposerView() {
           placeholder="Ask anything"
           defaultValue="Draw the new login flow so I can share it with the team."
           waiting
-          status={<StatusStandIn meta="Offline // waiting to send" title="Sends when you're back online." />}
+          status={<Accessory meta="Offline // waiting to send" title="Sends when you're back online." />}
         />
       </Specimen>
 
@@ -120,7 +110,7 @@ export default function ComposerView() {
       <Specimen label="Slots // status strip, chips, then the box; attach and expand lead the field">
         <Composer
           placeholder="Ask about SEA-51, or @ a file"
-          status={<StatusStandIn meta="Background // finished 14:26 // $0.61" title="Full test suite passed: 128 of 128" />}
+          status={<Accessory tone="live" meta="Background // finished 14:26 // $0.61" title="Full test suite passed: 128 of 128" />}
           chips={
             <>
               <Badge>snds/lockdown</Badge>
