@@ -4,6 +4,9 @@
  *
  *   motion-press, motion-press-sm   a control going down under a press
  *   motion-pop                      a small surface arriving from its anchor and leaving faster
+ *   motion-pop-fast                 with motion-pop: short both ways (a tooltip, a menu)
+ *   motion-pop-pointer              with motion-pop: no motion when opened or closed from the keyboard
+ *   motion-fade                     a backdrop behind a surface
  *   motion-slide (+ -from-*)        a surface arriving from an edge on the firm spring
  *   motion-collapse                 a panel opening by height
  *   motion-stagger                  children entering in turn
@@ -55,6 +58,41 @@
     scale: var(--motion-pop-from);
   }
   .motion-pop[data-ending-style] {
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-exit);
+  }
+
+  /* Small and met often (a tooltip, a menu, the command palette): the same pop, short both ways. */
+  .motion-pop-fast {
+    transition-duration: var(--motion-fast);
+  }
+  /* Base UI marks a popup that should not animate (a tooltip moving between neighbours). */
+  .motion-pop[data-instant] {
+    transition-property: none;
+  }
+  /*
+   * A list of items (a menu, a select): opened or closed from the keyboard it does not animate,
+   * because the highlight is already on an item and the next key is on its way.
+   */
+  .motion-pop-pointer:has(:focus-visible) {
+    transition-property: none;
+  }
+
+  /* ── fade ──────────────────────────────────────────────────────────────────────────────────── */
+  /* A backdrop behind a surface: opacity only, in step with the surface it sits behind. */
+  .motion-fade {
+    transition-property: opacity;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-enter);
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  .motion-fade[data-starting-style],
+  .motion-fade[data-ending-style] {
+    opacity: 0;
+  }
+  .motion-fade[data-ending-style] {
     transition-duration: var(--motion-fast);
     transition-timing-function: var(--motion-ease-exit);
   }

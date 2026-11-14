@@ -12,7 +12,18 @@ async function open(page: Page, name: string, theme = "warpcore", ground: "graph
   await expect(view(page)).toHaveAttribute("data-view", name)
   await expect(view(page)).toHaveAttribute("data-view-state", "ready")
   await page.evaluate(() => document.fonts.ready)
+  await settled(page)
 }
+
+/**
+ * Wait until nothing that ends is still running. A popup scales as it arrives (motion-pop), so a
+ * box read mid-way would be a few percent small; loops (a spinner) never end and are left alone.
+ */
+const settled = (page: Page) =>
+  page.evaluate(async () => {
+    const ending = document.getAnimations().filter((a) => Number.isFinite(Number(a.effect?.getComputedTiming().endTime)))
+    await Promise.all(ending.map((a) => a.finished.catch(() => undefined)))
+  })
 
 /** "#RRGGBB" for an opaque computed colour. */
 async function colorOf(el: Locator, property = "color") {
@@ -42,7 +53,10 @@ const ringOf = (el: Locator) =>
     return { visible: node.matches(":focus-visible"), style: s.outlineStyle, width: s.outlineWidth, offset: s.outlineOffset, color: s.outlineColor, shadow: s.boxShadow }
   })
 
-const heightOf = (el: Locator) => el.evaluate((node) => Math.round(node.getBoundingClientRect().height * 100) / 100)
+const heightOf = async (el: Locator) => {
+  await settled(el.page())
+  return el.evaluate((node) => Math.round(node.getBoundingClientRect().height * 100) / 100)
+}
 
 // ── focus rings ────────────────────────────────────────────────────────────────────────────────
 
@@ -854,6 +868,10 @@ test.describe("on a phone (second pass)", () => {
     const full = page.locator('[data-slot="truncated-text-full"]')
     await expect(full).toBeVisible()
     expect((await full.textContent())!.length).toBeGreaterThan(10)
+    // It stays: the press that opened it must not also put it away (it was only ever seen leaving).
+    await page.waitForTimeout(400)
+    await expect(full).toBeVisible()
+    await expect(full).toHaveCSS("opacity", "1")
     await page.touchscreen.tap(380, 800)
     await expect(full).toHaveCount(0)
   })

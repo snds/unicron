@@ -62,8 +62,8 @@ function TooltipContent({
           data-slot="tooltip-content"
           className={cn(
             "bg-text-body text-surface-ground type-caption z-50 inline-flex w-fit max-w-(--c-tooltip-max-width) origin-(--transform-origin) items-center gap-1.5 rounded px-2 py-1 break-words has-data-[slot=kbd]:pr-1",
-            // Fades in place: no zoom, no slide.
-            "data-open:animate-in data-open:fade-in-0 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-closed:animate-out data-closed:fade-out-0 duration-(--motion-fast) ease-(--motion-ease)",
+            // The short pop, 120ms both ways. Moving between neighbours, Base UI marks it instant.
+            "motion-pop motion-pop-fast",
             className
           )}
           {...props}

@@ -205,6 +205,26 @@ describe("TruncatedText: the full text at the pointer's spot (contract 5.1c C17,
     await vi.waitFor(() => expect(tip()).toBeNull())
   })
 
+  // In a browser a tap also focuses the text, and that focus opens the tooltip a moment before
+  // the press lands. The press must not then read as "open already, so put it away": the full
+  // text was only ever seen leaving (found when the popup lost its 120ms exit keyframes).
+  it("a tap whose own focus opened it first still leaves it open, and the next tap puts it away", async () => {
+    restore = layout({ clientWidth: 120, scrollWidth: 300 })
+    render(<TruncatedText>Your November statement is ready to download</TruncatedText>)
+    await act(async () => {
+      root().focus()
+    })
+    await vi.waitFor(() => expect(tip()).not.toBeNull())
+    await tapOn(root())
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    expect(tip()).not.toBeNull()
+    expect(tip()).toHaveTextContent("Your November statement is ready to download")
+    await tapOn(root())
+    await vi.waitFor(() => expect(tip()).toBeNull())
+  })
+
   it("opened by a tap, it closes on a tap anywhere else and when the page scrolls", async () => {
     restore = layout({ clientWidth: 120, scrollWidth: 300 })
     render(

@@ -111,6 +111,8 @@ function CommandDialog({
           // A third of the way down the area below --c-dialog-titlebar-inset (0px by default). The
           // palette pads itself, so the dialog does not.
           "top-[calc(var(--c-dialog-titlebar-inset)+(100%-var(--c-dialog-titlebar-inset))/3)] translate-y-0 [--c-dialog-padding:0px] [--c-dialog-padding-top:0px]",
+          // Opened from the keyboard, many times a day: the short pop, both ways.
+          "motion-pop-fast",
           // A fixed width (the size's min), so the palette doesn't resize as results change.
           "w-[min(var(--dialog-min-width),calc(100%-2*var(--c-dialog-margin)))]",
           className

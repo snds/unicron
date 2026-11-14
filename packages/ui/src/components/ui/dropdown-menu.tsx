@@ -34,9 +34,12 @@ export type DropdownMenuWidth = MenuWidth
 const PANEL =
   "bg-surface-raised text-text-body rule-box relative flex flex-col gap-1 rounded p-2 outline-none max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto data-closed:overflow-hidden"
 
-/** It fades and moves 8px off its anchor: no zoom. */
-const PANEL_MOTION =
-  "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 duration-(--motion-fast) ease-(--motion-ease)"
+/**
+ * The short pop, 120ms both ways, from the trigger edge. A solid surface fades whole: there is no
+ * blur layer to keep alive. Opened or closed from the keyboard it does not animate, since the
+ * highlight is already on an item.
+ */
+const PANEL_MOTION = "motion-pop motion-pop-fast motion-pop-pointer"
 
 function DropdownMenuContent({
   align = "start",

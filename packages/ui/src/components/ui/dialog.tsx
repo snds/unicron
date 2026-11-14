@@ -57,7 +57,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
-      className={cn("data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 scrim-dialog duration-(--motion-fast) ease-(--motion-ease) fixed inset-0 isolate z-50", className)}
+      className={cn("motion-fade scrim-dialog fixed inset-0 isolate z-50", className)}
       {...props}
     />
   )
@@ -139,8 +139,8 @@ function DialogContent({
           "max-h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
           // As wide as its content, between the size's min and max, never wider than the screen less the margin.
           "w-max min-w-[min(var(--dialog-min-width),calc(100%-2*var(--c-dialog-margin)))] max-w-[min(var(--dialog-max-width),calc(100%-2*var(--c-dialog-margin)))]",
-          // Fades in place: no zoom, no slide.
-          "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 duration-(--motion-fast) ease-(--motion-ease)",
+          // The pop recipe: 200ms in, 120ms out, as a transition, so dismissed mid-open it turns round.
+          "motion-pop",
           DIALOG_SIZES[name],
           className
         )}
