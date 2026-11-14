@@ -8,7 +8,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cn } from "../../lib/utils"
 import { formatCountdown } from "../../lib/format"
 import { Icon, type IconName } from "../icon"
-import { AppFrameRailContext, useAppFrame, type AppFrameBack } from "./app-frame-context"
+import { AppFrameRailContext, useAppFrame, useFrameAnnouncement, type AppFrameBack } from "./app-frame-context"
 import { Button } from "./button"
 import { DropdownMenu, DropdownMenuTrigger } from "./dropdown-menu"
 import { FloatButton } from "./float-button"
@@ -114,8 +114,16 @@ function AppFrameSidebar({
     },
     [drawerOpenProp, onDrawerOpenChange]
   )
-  const medium = frame.layout === "medium"
+  // At medium width, and when a list + detail needs the room at the expanded width (C8), the
+  // sidebar is its rail and expanding it lays the full sidebar over the content as a drawer.
+  const medium = frame.layout === "medium" || frame.sidebarRail
   const rail = medium || collapsed
+  const { setSidebar } = frame
+  React.useLayoutEffect(() => {
+    if (frame.phone) return
+    setSidebar({ collapsed })
+    return () => setSidebar(null)
+  }, [frame.phone, collapsed, setSidebar])
   const drawerShows = medium && drawerOpen
   const expandButton = React.useRef<HTMLButtonElement>(null)
   const drawerRef = React.useRef<HTMLDivElement>(null)
@@ -386,7 +394,9 @@ export type StatusItemProps = Omit<React.ComponentProps<"div">, "children"> & {
   label?: string
   /**
    * What a screen reader is told when the item changes, said once in a polite region: a stable
-   * sentence ("Sending. 10 seconds to undo."), not each tick. Default: the words.
+   * sentence ("Sending. 10 seconds to undo."), not each tick. Default: the words. Inside an
+   * AppFrame it goes to the frame's one region (contract 5.1c C7); a live, warning or critical item,
+   * or one with its own `announce`, is also said when it first shows.
    */
   announce?: string
 }
@@ -400,6 +410,8 @@ export type StatusItemProps = Omit<React.ComponentProps<"div">, "children"> & {
 function StatusItem({ tone = "neutral", mark, text, short, countdown, progress, action, onClick, href, label, announce, className, ...props }: StatusItemProps) {
   const descriptionId = React.useId()
   const ink = STATUS_INK[tone]
+  // One polite region per frame (C7): the frame says the sentence; outside a frame the item does.
+  const framed = useFrameAnnouncement(announce ?? text, tone !== "neutral" || announce !== undefined)
 
   const body = (
     <>
@@ -456,9 +468,11 @@ function StatusItem({ tone = "neutral", mark, text, short, countdown, progress, 
           {action.label}
         </Button>
       ) : null}
-      <span data-slot="status-item-status" role="status" className="sr-only">
-        {announce ?? text}
-      </span>
+      {framed ? null : (
+        <span data-slot="status-item-status" role="status" className="sr-only">
+          {announce ?? text}
+        </span>
+      )}
     </div>
   )
 }

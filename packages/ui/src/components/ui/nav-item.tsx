@@ -11,7 +11,17 @@ import { useRender } from "@base-ui/react/use-render"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { AppFrameRailContext } from "./app-frame-context"
-import { NavMark, formatNavCount, nameWithMark, railItemVariants, resolveNavMark, rovingTarget, type NavMarkProp } from "./rail"
+import {
+  NavMark,
+  NavMarkTooltipKeys,
+  formatNavCount,
+  markKeyShortcuts,
+  nameWithMark,
+  railItemVariants,
+  resolveNavMark,
+  rovingTarget,
+  type NavMarkProp,
+} from "./rail"
 import { swatchFillClasses, type SwatchId } from "./tile"
 import { Tooltip, TooltipContent } from "./tooltip"
 
@@ -23,6 +33,10 @@ export type NavSectionCheckable = "multiple" | "single"
 interface NavSectionContextValue {
   collapsed: boolean
   checkable: NavSectionCheckable | undefined
+  /** The section is a tree (`tree`): its items are tree items, opened and closed by the arrow keys. */
+  tree: boolean
+  /** A tree item hands the section the way to open and close it, by its id. */
+  registerExpander: (id: string, expand: ((open: boolean) => void) | null) => void
 }
 
 const NavSectionContext = React.createContext<NavSectionContextValue | null>(null)
@@ -41,10 +55,22 @@ export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
    */
   collapsed?: boolean
   /**
-   * Items that turn on and off (`multiple`: calendars to show) or pick one (`single`): the list is
-   * a menu, each `NavItem checked` a menu item checkbox or radio, and the arrow keys move along it.
+   * Items that turn on and off, or pick one (contract 5.1c C3: real roles inside a `nav`, never a
+   * menu's). `multiple`: each `NavItem checked` is a `checkbox` (calendars shown), each its own
+   * stop in the tab order, Space toggles it. `single`: the list is a `radiogroup` named by the
+   * heading, each item a `radio` (accounts, a filter and not a place); one tab stop, and the arrow
+   * keys move the choice, as every radio group does.
    */
   checkable?: NavSectionCheckable
+  /**
+   * Opt-in tree keys (contract 5.1c C4, Synapse SNA6): the list is a `tree` named by the heading,
+   * each item a `treeitem` at its `level`. One tab stop. ↑ ↓ move, → opens a closed item or goes to
+   * the first child of an open one, ← closes an open item or goes to the parent, Home and End jump,
+   * Enter opens the item's place. Items show their children by `expanded` and `onExpandedChange`;
+   * the app renders the children after their parent, one `level` deeper, while it is open. Without
+   * `tree` a section is a list of links, whatever the items' levels.
+   */
+  tree?: boolean
 }
 
 /**
@@ -52,30 +78,119 @@ export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
  * ("Apps // 04", "Mail // folders"): the heading, then the items, each 4px apart. The space
  * between two sections is the sidebar's (Vale draws 28). The group is named by its heading.
  */
-function NavSection({ title, count, action, collapsed: collapsedProp, checkable, className, children, ...props }: NavSectionProps) {
+function NavSection({ title, count, action, collapsed: collapsedProp, checkable, tree: treeProp = false, className, children, ...props }: NavSectionProps) {
   const rail = React.useContext(AppFrameRailContext)
   const collapsed = collapsedProp ?? rail
+  // The rail is a column of rail items: no radio group and no tree there.
+  const tree = treeProp && !collapsed
+  const radios = checkable === "single" && !collapsed
   const headingId = React.useId()
   const listRef = React.useRef<HTMLUListElement>(null)
-  const context = React.useMemo(() => ({ collapsed, checkable }), [collapsed, checkable])
+  const expanders = React.useRef(new Map<string, (open: boolean) => void>())
+  const registerExpander = React.useCallback((id: string, expand: ((open: boolean) => void) | null) => {
+    if (expand) expanders.current.set(id, expand)
+    else expanders.current.delete(id)
+  }, [])
+  const context = React.useMemo(() => ({ collapsed, checkable, tree, registerExpander }), [collapsed, checkable, tree, registerExpander])
 
-  // A checkable list is one stop in the tab order (the first checked item, or the first).
+  // A radio group and a tree are one stop in the tab order: the item with focus, else the checked
+  // radio or the current place, else the first. Kept true after every render.
   React.useLayoutEffect(() => {
-    if (!checkable) return
-    const items = checkableItems(listRef.current)
+    if (!radios && !tree) return
+    const items = radios ? radioItems(listRef.current) : treeItems(listRef.current)
     if (items.length === 0) return
     const focused = items.find((el) => el === document.activeElement)
-    const stop = focused ?? items.find((el) => el.getAttribute("aria-checked") === "true") ?? items[0]
+    const chosen = radios
+      ? items.find((el) => el.getAttribute("aria-checked") === "true")
+      : items.find((el) => el.hasAttribute("aria-current"))
+    const stop = focused ?? chosen ?? items[0]
     for (const el of items) el.tabIndex = el === stop ? 0 : -1
   })
 
+  const moveTo = (items: HTMLElement[], target: HTMLElement) => {
+    for (const el of items) el.tabIndex = el === target ? 0 : -1
+    target.focus()
+  }
+
+  const onRadioKey = (event: React.KeyboardEvent<HTMLUListElement>) => {
+    const items = radioItems(listRef.current)
+    const current = document.activeElement as HTMLElement | null
+    if (!current || !items.includes(current)) return
+    // Both arrow pairs, as a radio group takes them; wrapping; Home and End.
+    const key = event.key === "ArrowRight" ? "ArrowDown" : event.key === "ArrowLeft" ? "ArrowUp" : event.key
+    const target = rovingTarget(items, current, key, "vertical")
+    if (!target) return
+    event.preventDefault()
+    moveTo(items, target)
+    // A radio is chosen as it gets focus.
+    if (target.getAttribute("aria-checked") !== "true") target.click()
+  }
+
+  const onTreeKey = (event: React.KeyboardEvent<HTMLUListElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return
+    const items = treeItems(listRef.current)
+    const current = document.activeElement as HTMLElement | null
+    const at = current ? items.indexOf(current) : -1
+    if (!current || at < 0) return
+    const level = treeLevel(current)
+    const open = current.getAttribute("aria-expanded")
+    const expand = (to: boolean) => {
+      const id = current.dataset.treeId
+      const run = id ? expanders.current.get(id) : undefined
+      run?.(to)
+    }
+    let target: HTMLElement | undefined
+    switch (event.key) {
+      case "ArrowDown":
+        target = items[at + 1]
+        break
+      case "ArrowUp":
+        target = items[at - 1]
+        break
+      case "Home":
+        target = items[0]
+        break
+      case "End":
+        target = items[items.length - 1]
+        break
+      case "ArrowRight":
+        if (open === "false") {
+          event.preventDefault()
+          expand(true)
+          return
+        }
+        if (open === "true" && items[at + 1] && treeLevel(items[at + 1]) > level) target = items[at + 1]
+        break
+      case "ArrowLeft":
+        if (open === "true") {
+          event.preventDefault()
+          expand(false)
+          return
+        }
+        for (let i = at - 1; i >= 0; i--) {
+          if (treeLevel(items[i]) < level) {
+            target = items[i]
+            break
+          }
+        }
+        break
+      default:
+        return
+    }
+    // The arrows belong to the tree, also at its ends: the page does not scroll under them.
+    event.preventDefault()
+    if (target) moveTo(items, target)
+  }
+
+  // A tree and a radio group carry the heading's name themselves; a list sits in a named group.
+  const ownName = tree || radios
   return (
     <NavSectionContext.Provider value={context}>
       <div
         data-slot="nav-section"
         data-collapsed={collapsed ? "" : undefined}
-        role="group"
-        aria-labelledby={headingId}
+        role={ownName ? undefined : "group"}
+        aria-labelledby={ownName ? undefined : headingId}
         className={cn("flex min-w-0 flex-col gap-1", collapsed && "items-center gap-2", className)}
         {...props}
       >
@@ -99,21 +214,10 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
         <ul
           ref={listRef}
           data-slot="nav-section-list"
-          role={checkable ? "menu" : "list"}
-          aria-labelledby={checkable ? headingId : undefined}
+          role={tree ? "tree" : radios ? "radiogroup" : "list"}
+          aria-labelledby={ownName ? headingId : undefined}
           className={cn("flex min-w-0 flex-col gap-1", collapsed && "items-center gap-2")}
-          onKeyDown={
-            checkable
-              ? (event) => {
-                  const items = checkableItems(listRef.current)
-                  const target = rovingTarget(items, document.activeElement as HTMLElement | null, event.key, "vertical")
-                  if (!target) return
-                  event.preventDefault()
-                  for (const el of items) el.tabIndex = el === target ? 0 : -1
-                  target.focus()
-                }
-              : undefined
-          }
+          onKeyDown={tree ? onTreeKey : radios ? onRadioKey : undefined}
         >
           {children}
         </ul>
@@ -122,9 +226,20 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
   )
 }
 
-function checkableItems(root: HTMLElement | null): HTMLElement[] {
+/** The radios of a one-of-many section, in order, leaving out any that are off. */
+function radioItems(root: HTMLElement | null): HTMLElement[] {
   if (!root) return []
-  return Array.from(root.querySelectorAll<HTMLElement>('[role="menuitemcheckbox"], [role="menuitemradio"]'))
+  return Array.from(root.querySelectorAll<HTMLElement>('[role="radio"]:not([aria-disabled="true"])'))
+}
+
+/** The tree items that show (an app may keep a closed branch mounted but hidden), in order. */
+function treeItems(root: HTMLElement | null): HTMLElement[] {
+  if (!root) return []
+  return Array.from(root.querySelectorAll<HTMLElement>('[role="treeitem"]')).filter((el) => !el.closest("[hidden]"))
+}
+
+function treeLevel(el: HTMLElement): number {
+  return Number(el.getAttribute("aria-level")) || 1
 }
 
 /* ── Item ────────────────────────────────────────────────────────────────────────────────────── */
@@ -153,17 +268,21 @@ export type NavItemProps = Omit<useRender.ComponentProps<"a">, "children" | "ari
   /** The place showing now: the soft primary tile, body ink, and `aria-current="page"`. */
   current?: boolean
   /**
-   * An item that turns on and off (a calendar shown in the grid). It becomes a checkbox: a menu
-   * item checkbox (or radio, for `NavSection checkable="single"`) inside a checkable NavSection,
-   * a plain checkbox elsewhere. A square box before the icon shows it.
+   * An item that turns on and off (a calendar shown in the grid): a `checkbox`; or, in a
+   * `NavSection checkable="single"`, one of many (an account): a `radio`. A square box before the
+   * icon shows it (a square in the square for a radio). Never a menu's role (contract 5.1c C3).
    */
   checked?: boolean
   onCheckedChange?: (checked: boolean) => void
-  /** How deep in a tree (folders, nested tags): 0 at the top. Each level steps in by `--c-nav-item-indent`. */
+  /**
+   * How deep in a tree (folders, nested tags): 0 at the top. Each level steps in by
+   * `--c-nav-item-indent`. In a `NavSection tree` it is also the item's `aria-level` (level + 1).
+   */
   level?: number
   /**
    * Its children are showing. With `href`, `render` or `onClick` the item still goes to its place,
    * and a chevron button after it opens and closes; without them the whole item opens and closes.
+   * In a `NavSection tree`, → and ← open and close it and the chevron is for the pointer only.
    */
   expanded?: boolean
   onExpandedChange?: (expanded: boolean) => void
@@ -221,6 +340,8 @@ function NavItem({
   const rail = React.useContext(AppFrameRailContext)
   const collapsed = section?.collapsed ?? rail
   const descriptionId = React.useId()
+  const treeId = React.useId()
+  const inTree = Boolean(section?.tree) && !collapsed
   const resolved = resolveNavMark(mark ?? count)
   const critical = tone === "critical"
   const name = nameWithMark(label, resolved, critical && toneLabel)
@@ -229,13 +350,22 @@ function NavItem({
   const isLink = Boolean(props.href) || Boolean(render)
   // An item with nowhere to go and children to show is its own disclosure.
   const selfDisclosure = expanded !== undefined && !checkable && !isLink && !onClick
-  const role = checkable
-    ? section?.checkable === "single"
-      ? "menuitemradio"
-      : section?.checkable === "multiple"
-        ? "menuitemcheckbox"
-        : "checkbox"
-    : undefined
+  const radio = checkable && section?.checkable === "single"
+  // Real roles inside a nav (contract 5.1c C3): a checkbox, or a radio of a radio group; a tree item in a tree.
+  const role = checkable ? (radio ? "radio" : "checkbox") : inTree ? "treeitem" : undefined
+
+  // The section opens and closes a tree item from the arrow keys, through the latest handler.
+  const latestExpand = React.useRef(onExpandedChange)
+  React.useLayoutEffect(() => {
+    latestExpand.current = onExpandedChange
+  })
+  const registerExpander = section?.registerExpander
+  const expandable = inTree && expanded !== undefined
+  React.useLayoutEffect(() => {
+    if (!expandable || !registerExpander) return
+    registerExpander(treeId, (open) => latestExpand.current?.(open))
+    return () => registerExpander(treeId, null)
+  }, [expandable, registerExpander, treeId])
 
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (disabled) {
@@ -244,7 +374,7 @@ function NavItem({
     }
     onClick?.(event)
     if (event.defaultPrevented) return
-    if (checkable) onCheckedChange?.(section?.checkable === "single" ? true : !checked)
+    if (checkable) onCheckedChange?.(radio ? true : !checked)
     if (selfDisclosure) onExpandedChange?.(!expanded)
   }
 
@@ -252,17 +382,20 @@ function NavItem({
     "aria-label": name,
     "aria-current": current ? ("page" as const) : undefined,
     "aria-checked": checkable ? checked : undefined,
-    "aria-expanded": selfDisclosure ? expanded : undefined,
+    "aria-expanded": selfDisclosure || expandable ? expanded : undefined,
+    "aria-level": inTree ? level + 1 : undefined,
+    "data-tree-id": inTree ? treeId : undefined,
     "aria-disabled": disabled || undefined,
     "aria-describedby": description && !collapsed ? descriptionId : undefined,
-    "aria-keyshortcuts": resolved?.kind === "keys" ? resolved.keys : undefined,
+    "aria-keyshortcuts": markKeyShortcuts(resolved),
     role,
     type: isLink ? undefined : ("button" as const),
     onClick: handleClick,
   }
 
   const Wrapper = section ? "li" : "div"
-  const wrapperRole = section?.checkable ? "none" : undefined
+  // In a radio group or a tree the item itself is the child the group owns: the list item steps back.
+  const wrapperRole = section && !collapsed && (section.tree || section.checkable === "single") ? "none" : undefined
 
   // Ink per part, as Figma binds it (Default, then Active).
   // On the current tile everything is body ink, a critical item too: critical text on the soft
@@ -282,7 +415,7 @@ function NavItem({
           {index}
         </span>
       ) : null}
-      {checkable ? <CheckMark checked={Boolean(checked)} radio={section?.checkable === "single"} /> : null}
+      {checkable ? <CheckMark checked={Boolean(checked)} radio={Boolean(radio)} /> : null}
       {icon ? <Icon name={icon} /> : null}
       {swatch ? (
         <span data-slot="nav-item-swatch" aria-hidden="true" className="inline-flex size-5 shrink-0 items-center justify-center">
@@ -355,14 +488,33 @@ function NavItem({
             {icon ? <Icon name={icon} /> : null}
             <NavMark mark={resolved} placement="below" className="text-text-label" />
           </TooltipPrimitive.Trigger>
-          <TooltipContent side="right">{label}</TooltipContent>
+          <TooltipContent side="right">
+            {label}
+            <NavMarkTooltipKeys mark={resolved} />
+          </TooltipContent>
         </Tooltip>
       </Wrapper>
     )
   }
 
+  const chevron = (
+    <span className={cn("inline-flex transition-[rotate] duration-(--motion-fast) ease-(--motion-ease)", !expanded && "-rotate-90")}>
+      <Icon name="chevron--down" size="sm" />
+    </span>
+  )
   const disclosure =
-    expanded !== undefined && !selfDisclosure ? (
+    expanded !== undefined && !selfDisclosure && inTree ? (
+      // In a tree the arrow keys open and close the item, and a tree item holds no button of its
+      // own: the chevron is the pointer's way, out of the tab order and hidden from assistive tech.
+      <span
+        data-slot="nav-item-disclosure"
+        aria-hidden="true"
+        onClick={() => onExpandedChange?.(!expanded)}
+        className="hit-area me-1 inline-flex size-6 shrink-0 cursor-default items-center justify-center rounded-sm text-text-label transition-[color,background-color] duration-(--motion-fast) ease-(--motion-ease) hover:bg-state-hover hover:text-text-body active:bg-state-pressed"
+      >
+        {chevron}
+      </span>
+    ) : expanded !== undefined && !selfDisclosure ? (
       <ButtonPrimitive
         data-slot="nav-item-disclosure"
         aria-expanded={expanded}
@@ -370,9 +522,7 @@ function NavItem({
         onClick={() => onExpandedChange?.(!expanded)}
         className="hit-area me-1 inline-flex size-6 shrink-0 items-center justify-center rounded-sm text-text-label transition-[color,background-color] duration-(--motion-fast) ease-(--motion-ease) hover:bg-state-hover hover:text-text-body active:bg-state-pressed"
       >
-        <span className={cn("inline-flex transition-[rotate] duration-(--motion-fast) ease-(--motion-ease)", !expanded && "-rotate-90")}>
-          <Icon name="chevron--down" size="sm" />
-        </span>
+        {chevron}
       </ButtonPrimitive>
     ) : null
 

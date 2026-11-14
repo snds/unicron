@@ -6,8 +6,10 @@ import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva } from "class-variance-authority"
 
+import { formatCountdown } from "../../lib/format"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
+import { useFrameAnnouncement } from "./app-frame-context"
 import { Button } from "./button"
 import { Progress, type ProgressTone } from "./progress"
 
@@ -123,6 +125,11 @@ export type AccessoryProps = Omit<React.ComponentProps<"div">, "title"> & {
   tone?: AccessoryTone
   /** The mono caps line above the title, with `//` between its parts ("SEA-48 // Running 04:12"). One line, cut with an ellipsis. */
   meta?: React.ReactNode
+  /**
+   * Seconds left, after the meta as decisions §13 writes them (`// 08 S`, `// 04:12`): the undo
+   * window, a code's life. Hidden from assistive tech (contract 5.1c C7): say it once in `announce`.
+   */
+  countdown?: number
   /** What it is about ("Add baseline drift check"). One line, cut with an ellipsis. */
   title: React.ReactNode
   /** One action at the end: a secondary Button, or the solid dark one on the yellow. */
@@ -148,9 +155,9 @@ export type AccessoryProps = Omit<React.ComponentProps<"div">, "title"> & {
   /** A segmented bar along the bottom edge (the undo-send window, a run, the idle lock). Hidden from assistive tech: use `announce`. */
   progress?: AccessoryProgress
   /**
-   * What a screen reader is told when the strip changes, in a polite status region. Default: the
-   * title. A ticking countdown in `meta` is not announced on every tick; put a stable sentence
-   * here instead ("Sending. 10 seconds to undo.").
+   * What a screen reader is told when the strip shows and when it changes: a stable sentence
+   * ("Sending. 10 seconds to undo."), never the ticks of a countdown. Default: the title. Inside an
+   * AppFrame it goes to the frame's one polite region (contract 5.1c C7); alone, to the strip's own.
    */
   announce?: string
 }
@@ -163,6 +170,7 @@ export type AccessoryProps = Omit<React.ComponentProps<"div">, "title"> & {
 function Accessory({
   tone = "neutral",
   meta,
+  countdown,
   title,
   action,
   compact = false,
@@ -180,6 +188,8 @@ function Accessory({
 }: AccessoryProps) {
   const descriptionId = React.useId()
   const swallowClick = React.useRef(false)
+  // A strip that shows is news: said when it arrives and when it changes, once (C7).
+  const framed = useFrameAnnouncement(announce ?? (typeof title === "string" ? title : null), true)
   const swipe = onSwipeUp ?? onOpen
   const watchLift = useLift((dx, dy, el) => {
     const threshold = readLength(el, "--c-accessory-swipe-threshold", SWIPE_FALLBACK)
@@ -206,9 +216,14 @@ function Accessory({
         </span>
       ) : null}
       <span className="flex min-w-0 flex-1 flex-col">
-        {meta ? (
+        {meta || countdown !== undefined ? (
           <span data-slot="accessory-meta" className={cn("type-overline truncate", ink.meta)}>
             {meta}
+            {countdown !== undefined ? (
+              <span data-slot="accessory-countdown" aria-hidden="true" className="tabular-nums">
+                {`${meta ? " // " : ""}${formatCountdown(countdown)}`}
+              </span>
+            ) : null}
           </span>
         ) : null}
         <span data-slot="accessory-title" className={cn("type-ui truncate", ink.title)}>
@@ -314,10 +329,12 @@ function Accessory({
           />
         </div>
       ) : null}
-      {/* One polite region: the strip's news, said once, not each tick of a countdown. */}
-      <span data-slot="accessory-status" role="status" className="sr-only">
-        {announce ?? (typeof title === "string" ? title : null)}
-      </span>
+      {/* Alone, the strip's own polite region: its news, said once, not each tick. In a frame, the frame's. */}
+      {framed ? null : (
+        <span data-slot="accessory-status" role="status" className="sr-only">
+          {announce ?? (typeof title === "string" ? title : null)}
+        </span>
+      )}
     </div>
   )
 }

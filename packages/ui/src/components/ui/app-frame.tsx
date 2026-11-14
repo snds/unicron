@@ -6,12 +6,14 @@ import * as React from "react"
 import { cn } from "../../lib/utils"
 import { DETAIL_MIN_WIDTH, useViewport } from "../use-viewport"
 import {
+  AppFrameAnnounceContext,
   AppFrameContext,
   frameLayoutFor,
   isBookFold,
   isExpandedWidth,
   isPhoneLayout,
   readLength,
+  shrinkFor,
   useAppFrame,
   useBoxViewport,
   useScrollMinimize,
@@ -20,7 +22,9 @@ import {
   type AppFrameContextValue,
   type AppFrameHead,
   type AppFrameLayout,
+  type AppFrameStripState,
 } from "./app-frame-context"
+import { AppFramePullMark, usePullToRefresh } from "./app-frame-pull"
 import { FloatButton } from "./float-button"
 import { PageHead, type PageHeadProps } from "./page-head"
 import { ResizableHandle, ResizablePane, ResizablePanes, useResizablePanesLayout } from "./resizable-panes"
@@ -73,7 +77,43 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
   const layout = pinnedLayout ?? frameLayoutFor(viewport)
   const phone = isPhoneLayout(layout)
   const foldBook = isBookFold(viewport)
-  const split = layout === "expanded" || (foldBook && !phone)
+  const wide = viewport.widthClass === "wide" || viewport.widthClass === "ultrawide"
+
+  // The list + detail shrink order (C8): the sidebar's rail first, then the detail pushed.
+  const [sidebar, setSidebarState] = React.useState<{ collapsed: boolean } | null>(null)
+  const setSidebar = React.useCallback((next: { collapsed: boolean } | null) => {
+    setSidebarState((prev) => (prev?.collapsed === next?.collapsed && (prev === null) === (next === null) ? prev : next))
+  }, [])
+  const [parts, setParts] = React.useState({ list: 0, detail: 0 })
+  const registerSplitPart = React.useCallback((part: "list" | "detail") => {
+    setParts((p) => ({ ...p, [part]: p[part] + 1 }))
+    return () => setParts((p) => ({ ...p, [part]: p[part] - 1 }))
+  }, [])
+  // The knobs, read once the frame's box is on the page (the stylesheet is there by then).
+  const knobs = React.useMemo(
+    () =>
+      box
+        ? {
+            sidebarWidth: readLength(box, "--c-app-frame-sidebar-width", SHRINK_FALLBACK.sidebarWidth),
+            railWidth: readLength(box, "--c-app-frame-sidebar-rail", SHRINK_FALLBACK.railWidth),
+            listMin: readLength(box, "--c-app-frame-list-compact", SHRINK_FALLBACK.listMin),
+            gap: readLength(box, "--c-app-frame-split-gap", SHRINK_FALLBACK.gap),
+            detailMin: readLength(box, "--c-app-frame-detail-min", SHRINK_FALLBACK.detailMin),
+          }
+        : SHRINK_FALLBACK,
+    [box]
+  )
+  const shrink =
+    layout === "expanded" && parts.list > 0 && parts.detail > 0
+      ? shrinkFor({
+          width: viewport.width,
+          gutter: wide ? GUTTER_WIDE : GUTTER,
+          sidebar: sidebar ? (sidebar.collapsed ? "rail" : "full") : "none",
+          sidebarGap: GUTTER,
+          ...knobs,
+        })
+      : "none"
+  const split = (layout === "expanded" && shrink !== "push") || (foldBook && !phone)
 
   const [scroller, setScroller] = React.useState<HTMLElement | null>(null)
   const scrolled = useScrollMinimize(scroller, { enabled: phone && pinnedMinimized === undefined })
@@ -88,6 +128,40 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
   const [clearance, setClearanceState] = React.useState({ top: 0, bottom: 0 })
   const setClearance = React.useCallback((edge: "top" | "bottom", px: number) => {
     setClearanceState((c) => (c[edge] === px ? c : { ...c, [edge]: px }))
+  }, [])
+
+  // The status strip and the toasts (C6): the first strip that shows is the one that counts.
+  const [strips, setStrips] = React.useState<readonly (readonly [string, AppFrameStripState])[]>([])
+  const setStrip = React.useCallback((id: string, state: AppFrameStripState | null) => {
+    setStrips((list) => {
+      const at = list.findIndex(([key]) => key === id)
+      if (state === null) return at < 0 ? list : list.filter(([key]) => key !== id)
+      if (at >= 0 && list[at][1] === state) return list
+      if (at >= 0) return list.map((entry, i) => (i === at ? ([id, state] as const) : entry))
+      return [...list, [id, state] as const]
+    })
+  }, [])
+  const strip: AppFrameStripState = strips[0]?.[1] ?? "none"
+  const [toastShowing, setToastShowing] = React.useState(false)
+  const [bottomBar, setBottomBar] = React.useState<HTMLElement | null>(null)
+  const [mainArea, setMainArea] = React.useState<HTMLElement | null>(null)
+  const [toastBox, setToastBox] = React.useState<ToastBox | null>(null)
+
+  // The one polite region (C7): sentences from the status parts, said once.
+  const [said, setSaid] = React.useState("")
+  const pending = React.useRef<string[]>([])
+  const flush = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  React.useEffect(() => () => clearTimeout(flush.current), [])
+  const announce = React.useCallback((message: string) => {
+    pending.current.push(message)
+    if (flush.current !== undefined) return
+    // Sentences that arrive together are said together, in order, once each.
+    flush.current = setTimeout(() => {
+      flush.current = undefined
+      const words = Array.from(new Set(pending.current)).join(" ")
+      pending.current = []
+      setSaid((prev) => (prev === words ? `${words}\u00a0` : words))
+    }, 0)
   }, [])
 
   const keyboardOpen = !contained && viewport.keyboardOpen
@@ -123,11 +197,90 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       setBack,
       focus,
       setClearance,
+      shrink,
+      sidebarRail: shrink !== "none",
+      setSidebar,
+      registerSplitPart,
+      strip,
+      setStrip,
+      toastShowing,
+      setToastShowing,
+      setBottomBar,
+      setMainArea,
     }),
-    [layout, phone, viewport.widthClass, split, foldBook, keyboardOpen, tight, minimized, head, bottom, railTop, railBottom, detailOpen, back, focus, setClearance]
+    [
+      layout,
+      phone,
+      viewport.widthClass,
+      split,
+      foldBook,
+      keyboardOpen,
+      tight,
+      minimized,
+      head,
+      bottom,
+      railTop,
+      railBottom,
+      detailOpen,
+      back,
+      focus,
+      setClearance,
+      shrink,
+      setSidebar,
+      registerSplitPart,
+      strip,
+      setStrip,
+      toastShowing,
+      setBottomBar,
+      setMainArea,
+    ]
   )
 
-  const wide = viewport.widthClass === "wide" || viewport.widthClass === "ultrawide"
+  // Where a toast goes (C6), measured off the frame's own box, so a contained frame (which is the
+  // containing block of its fixed descendants) places its toasts inside itself:
+  // - phone: 16 from the sides, as wide as the strip, the bottom just above the bottom row's bar
+  //   (the strip's slot), or 16 from the foot with no row; the top just under the top row;
+  // - desktop: the bottom left of the content, 24 above the screen's foot.
+  React.useLayoutEffect(() => {
+    if (!box) return
+    const measure = () => {
+      const frameBox = box.getBoundingClientRect()
+      const inset = readLength(box, "--c-toaster-offset-compact", 16)
+      let next: ToastBox
+      if (phone) {
+        const top = box.querySelector('[data-slot="app-frame-top-row"]')?.getBoundingClientRect()
+        const bar = bottomBar?.isConnected ? bottomBar.getBoundingClientRect() : null
+        const gap = readLength(box, "--c-toaster-gap", 8)
+        next = {
+          left: inset,
+          width: Math.max(0, frameBox.width - 2 * inset),
+          bottom: bar && bar.height > 0 ? frameBox.bottom - bar.top + gap : inset,
+          top: top && top.height > 0 ? top.bottom - frameBox.top : inset,
+        }
+      } else {
+        const area = mainArea?.isConnected ? mainArea.getBoundingClientRect() : null
+        next = {
+          left: area ? area.left - frameBox.left : readLength(box, "--c-toaster-offset", 24),
+          width: null,
+          bottom: area ? Math.max(0, frameBox.bottom - area.bottom) + readLength(box, "--c-toaster-offset", 24) : readLength(box, "--c-toaster-offset", 24),
+          top: readLength(box, "--c-toaster-offset", 24),
+        }
+      }
+      const round = (n: number | null) => (n === null ? null : Math.round(n))
+      setToastBox((prev) =>
+        prev && prev.left === round(next.left) && prev.width === round(next.width) && prev.bottom === round(next.bottom) && prev.top === round(next.top)
+          ? prev
+          : { left: round(next.left)!, width: round(next.width), bottom: round(next.bottom)!, top: round(next.top)! }
+      )
+    }
+    measure()
+    if (typeof ResizeObserver !== "function") return
+    const observer = new ResizeObserver(measure)
+    observer.observe(box)
+    if (bottomBar) observer.observe(bottomBar)
+    if (mainArea) observer.observe(mainArea)
+    return () => observer.disconnect()
+  }, [box, phone, bottomBar, mainArea, clearance, minimized, layout])
 
   return (
     <div
@@ -140,9 +293,12 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       data-keyboard={keyboardOpen ? "open" : undefined}
       data-room={contained ? "full" : viewport.room}
       data-nav={viewport.navPlacement}
+      data-shrink={shrink === "none" ? undefined : shrink}
+      data-strip={phone && strip !== "none" ? strip : undefined}
       className={cn(
         "group/frame text-foreground",
-        contained && "relative isolate grid h-full w-full overflow-hidden bg-surface-ground",
+        // A contained frame holds its own fixed layers (its toasts): `contain: paint` makes it their box.
+        contained && "relative isolate grid h-full w-full overflow-hidden bg-surface-ground [contain:paint]",
         className
       )}
       style={
@@ -154,12 +310,20 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
           }),
           "--app-frame-top-clear": `${clearance.top}px`,
           "--app-frame-bottom-clear": `${clearance.bottom}px`,
+          // Read by the Toaster inside the frame (C6).
+          ...(toastBox && {
+            "--frame-toast-left": `${toastBox.left}px`,
+            "--frame-toast-bottom": `${toastBox.bottom}px`,
+            "--frame-toast-top": `${toastBox.top}px`,
+            ...(toastBox.width !== null && { "--frame-toast-width": `${toastBox.width}px` }),
+          }),
           ...style,
         } as React.CSSProperties
       }
       {...props}
     >
       <AppFrameContext.Provider value={context}>
+        <AppFrameAnnounceContext.Provider value={announce}>
         <div
           data-slot="app-frame-body"
           className={cn(
@@ -191,10 +355,29 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
             </div>
           ) : null}
         </div>
+        {/* The frame's one polite region (C7): status parts say their sentence here, once. */}
+        <div data-slot="app-frame-announcer" role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {said}
+        </div>
+        </AppFrameAnnounceContext.Provider>
       </AppFrameContext.Provider>
     </div>
   )
 }
+
+/** Where the frame puts its toasts, in px from its own box (C6). `width` only on a phone. */
+interface ToastBox {
+  left: number
+  width: number | null
+  bottom: number
+  top: number
+}
+
+/** The page gutters (24, 48 from the wide width) and the sidebar's space to the content: the spacing scale. */
+const GUTTER = 24
+const GUTTER_WIDE = 48
+/** The shrink knobs' values without the stylesheet (C8): sidebar 204, rail 48, list 320, gap 24, detail 480. */
+const SHRINK_FALLBACK = { sidebarWidth: 204, railWidth: 48, listMin: 320, gap: 24, detailMin: 480 }
 
 /* ── Content ─────────────────────────────────────────────────────────────────────────────────── */
 
@@ -208,8 +391,16 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
  */
 function AppFrameMain({ className, children, ...props }: React.ComponentProps<"main">) {
   const frame = useAppFrame()
+  const { setMainArea } = frame
+  const [el, setEl] = React.useState<HTMLElement | null>(null)
+  React.useLayoutEffect(() => {
+    if (!el) return
+    setMainArea(el)
+    return () => setMainArea(null)
+  }, [el, setMainArea])
   return (
     <main
+      ref={setEl}
       data-slot="app-frame-main"
       data-layout={frame.layout}
       className={cn("min-h-0 min-w-0", frame.phone ? "absolute inset-0" : "flex [grid-area:main]", className)}
@@ -249,11 +440,13 @@ export function useAppFrameColumnShown(): boolean {
  * draws the rule at its start; the padding to the rule is 12 on a side column (a list, a panel)
  * and 24 on a content column, as the frames draw (Vale: list to x 708, rule at 720, detail at 744).
  */
-function useColumn(kind: ColumnKind, shown: boolean) {
+function useColumn(kind: ColumnKind, shown: boolean, onRefresh?: () => unknown) {
   const frame = useAppFrame()
   const [el, setEl] = React.useState<HTMLElement | null>(null)
   const { setScroller } = frame
   const drives = frame.phone && shown
+  // Pull to refresh (C9): on the phone's shown column only, the frame's main scroller there.
+  const pull = usePullToRefresh(el, { onRefresh, enabled: drives })
 
   React.useLayoutEffect(() => {
     if (!drives || !el) return
@@ -269,7 +462,11 @@ function useColumn(kind: ColumnKind, shown: boolean) {
           // Clear of the floating chrome; a focused field scrolls clear of it too.
           "pt-(--app-frame-top-clear) pb-(--app-frame-bottom-clear) scroll-pt-(--app-frame-top-clear) scroll-pb-(--app-frame-bottom-clear)",
           // The short screen's trailing column: 16 + 48 + 16.
-          frame.layout === "rail" && "pe-20"
+          frame.layout === "rail" && "pe-20",
+          // At the top a finger pulling down is the pull's, not the browser's bounce; zoom stays (C9).
+          pull.active && "data-pull-ready:touch-pan-x data-pull-ready:touch-pan-down data-pull-ready:touch-pinch-zoom",
+          // Let go: the content goes back on the state role (snaps under reduced motion).
+          pull.active && "data-pull-release:transition-transform data-pull-release:duration-(--motion-state) data-pull-release:ease-(--motion-ease-move)"
         )
       : cn(
           "h-full pt-2",
@@ -289,14 +486,34 @@ function useColumn(kind: ColumnKind, shown: boolean) {
       "data-shown": shown ? "" : undefined,
       inert: !shown || undefined,
       "aria-hidden": shown ? undefined : true,
+      "aria-busy": pull.state === "busy" || undefined,
     },
     context: { shown },
+    /** The mark a pull shows in its gap; render it first in the column. */
+    pullMark: pull.active ? <AppFramePullMark state={pull.state} reduced={pull.reduced} /> : null,
   }
+}
+
+/** A list or a detail says it is there while mounted, so the frame's shrink order applies (C8). */
+function useSplitPart(part: "list" | "detail") {
+  const { registerSplitPart } = useAppFrame()
+  React.useLayoutEffect(() => registerSplitPart(part), [part, registerSplitPart])
+}
+
+/** What every column takes for pull to refresh (C9). */
+export interface AppFrameRefreshProps {
+  /**
+   * On a phone, a pull down from the top of this column past 64 runs it (contract 5.1c C9). Return
+   * a promise to keep the column `aria-busy` until it settles, and show the app's live status in the
+   * status strip meanwhile. It is a gesture: keep a plain "Check again" action too (decisions §8).
+   */
+  onRefresh?: () => unknown
 }
 
 export type AppFrameListSize = "default" | "narrow" | "fill"
 
-export type AppFrameListProps = React.ComponentProps<"section"> & {
+export type AppFrameListProps = React.ComponentProps<"section"> &
+  AppFrameRefreshProps & {
   /**
    * `default`: 432 beside the detail (the sidebar apps; 320 in an expanded window under 1280).
    * `narrow`: 270 (Warpcore's chat list). `fill`: the list takes the room and the detail is narrow
@@ -310,10 +527,11 @@ export type AppFrameListProps = React.ComponentProps<"section"> & {
  * until a detail is pushed over it (`AppFrameDetail open`), and it comes back with its scroll place.
  * Name it (`aria-label`) when the page has more than one list.
  */
-function AppFrameList({ size = "default", className, children, ...props }: AppFrameListProps) {
+function AppFrameList({ size = "default", onRefresh, className, children, ...props }: AppFrameListProps) {
   const frame = useAppFrame()
+  useSplitPart("list")
   const shown = frame.split ? !frame.focus : !frame.detailOpen
-  const { attach, className: columnClass, attrs, context } = useColumn("side", shown)
+  const { attach, className: columnClass, attrs, context, pullMark } = useColumn("side", shown, onRefresh)
   const wide = frame.width === "wide" || frame.width === "ultrawide"
   return (
     <ColumnContext.Provider value={context}>
@@ -332,13 +550,15 @@ function AppFrameList({ size = "default", className, children, ...props }: AppFr
         )}
         {...props}
       >
+        {pullMark}
         {children}
       </section>
     </ColumnContext.Provider>
   )
 }
 
-export type AppFrameDetailProps = React.ComponentProps<"section"> & {
+export type AppFrameDetailProps = React.ComponentProps<"section"> &
+  AppFrameRefreshProps & {
   /**
    * Something is open. Narrower than expanded the detail is then pushed over the list; at the
    * expanded width it always stands beside it (show "Nothing open." when nothing is, decisions §9).
@@ -356,10 +576,11 @@ export type AppFrameDetailProps = React.ComponentProps<"section"> & {
 }
 
 /** The detail column: what is open, beside the list or pushed over it. */
-function AppFrameDetail({ open = false, onBack, backLabel = "Back", size = "fill", className, children, ...props }: AppFrameDetailProps) {
+function AppFrameDetail({ open = false, onBack, backLabel = "Back", size = "fill", onRefresh, className, children, ...props }: AppFrameDetailProps) {
   const frame = useAppFrame()
+  useSplitPart("detail")
   const shown = frame.split || open
-  const { attach, className: columnClass, attrs, context } = useColumn("content", shown)
+  const { attach, className: columnClass, attrs, context, pullMark } = useColumn("content", shown, onRefresh)
   const { setDetailOpen, setBack } = frame
   const pushed = !frame.split && open
 
@@ -394,13 +615,15 @@ function AppFrameDetail({ open = false, onBack, backLabel = "Back", size = "fill
         )}
         {...props}
       >
+        {pullMark}
         {children}
       </section>
     </ColumnContext.Provider>
   )
 }
 
-export type AppFrameColumnProps = React.ComponentProps<"section"> & {
+export type AppFrameColumnProps = React.ComponentProps<"section"> &
+  AppFrameRefreshProps & {
   /** Center the content in the reading column (720 at most). */
   reading?: boolean
 }
@@ -409,9 +632,9 @@ export type AppFrameColumnProps = React.ComponentProps<"section"> & {
  * A content column that is always the screen: a page with one column (Search, Spend, Overview), or
  * the conversation between a chat list and a context panel. It fills the room.
  */
-function AppFrameColumn({ reading = false, className, children, ...props }: AppFrameColumnProps) {
+function AppFrameColumn({ reading = false, onRefresh, className, children, ...props }: AppFrameColumnProps) {
   const frame = useAppFrame()
-  const { attach, className: columnClass, attrs, context } = useColumn("content", true)
+  const { attach, className: columnClass, attrs, context, pullMark } = useColumn("content", true, onRefresh)
   return (
     <ColumnContext.Provider value={context}>
       <section
@@ -421,6 +644,7 @@ function AppFrameColumn({ reading = false, className, children, ...props }: AppF
         className={cn(columnClass, !frame.phone && "flex-1", className)}
         {...props}
       >
+        {pullMark}
         {reading ? <AppFrameReading>{children}</AppFrameReading> : children}
       </section>
     </ColumnContext.Provider>
@@ -823,14 +1047,22 @@ export {
   isExpandedWidth,
   isPhoneLayout,
   nextMinimized,
+  shrinkFor,
+  stripStateFor,
+  toastPlacementFor,
   useAppFrame,
   useScrollMinimize,
   type AppFrameBack,
   type AppFrameContextValue,
   type AppFrameHead,
   type AppFrameLayout,
+  type AppFrameShrink,
+  type AppFrameStripState,
+  type AppFrameToastPlacement,
   type ScrollMinimizeOptions,
+  type ShrinkInput,
 } from "./app-frame-context"
+export { pullOffsetFor, usePullToRefresh, type PullState, type PullToRefreshOptions } from "./app-frame-pull"
 export * from "./app-frame-phone"
 export * from "./app-frame-desktop"
 export * from "./app-frame-focus"

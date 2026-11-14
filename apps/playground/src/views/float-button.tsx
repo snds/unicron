@@ -43,10 +43,19 @@ export default function FloatButtonView() {
         <FloatButton label="Stop" icon="stop" size="m" extended />
       </Specimen>
 
-      <Specimen label="Mark // the update square on Settings; a count on the comments button">
+      <Specimen label="Mark // the nav items' mark: the update square on Settings, open comments, a filter on">
         <FloatButton label="Settings" icon="settings" size="l" mark={{ square: true, label: "Update ready" }} />
         <FloatButton label="Comments" icon="chat" size="l" mark={{ count: 3, label: "3 open" }} />
-        <FloatButton label="View options" icon="filter" size="l" mark={{ square: true, tone: "needs-you", label: "A filter is on" }} />
+        <FloatButton label="View options" icon="filter" size="l" mark={{ square: true, label: "A filter is on" }} />
+        <FloatButton label="Requests" icon="notification" size="l" mark={{ count: 2, tone: "needs-you" }} />
+        <FloatButton label="Inbox" icon="email" size="l" mark={128} />
+        <FloatButton label="Search" icon="search" size="m" mark={{ keys: "/" }} />
+      </Specimen>
+
+      <Specimen label="Mark on the phone's top row // Settings with the update mark, M 44 and L 48">
+        <FloatButton label="Settings" icon="settings" size="m" mark={{ square: true, label: "Update ready" }} />
+        <FloatButton label="Settings" icon="settings" size="l" current="page" mark={{ square: true, label: "Update ready" }} />
+        <FloatButton label="Comments" icon="chat" size="m" kind="primary" mark={12} />
       </Specimen>
 
       <Specimen label="Close // the close button of a sheet or a dialog">

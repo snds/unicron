@@ -10,7 +10,7 @@ import { mergeProps } from "@base-ui/react/merge-props"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { Accessory, type AccessoryProps } from "./accessory"
-import { AppFrameTabBarContext, readLength, useAppFrame } from "./app-frame-context"
+import { AppFrameTabBarContext, readLength, stripStateFor, useAppFrame } from "./app-frame-context"
 import type { PageHeadSwitcher } from "./page-head"
 import { TopBar } from "./top-bar"
 
@@ -238,7 +238,8 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
   const [dock, setDock] = React.useState<HTMLDivElement | null>(null)
   const [above, setAbove] = React.useState<HTMLDivElement | null>(null)
   const [inside, setInside] = React.useState<HTMLDivElement | null>(null)
-  const { setBottom } = frame
+  const [bar, setBar] = React.useState<HTMLDivElement | null>(null)
+  const { setBottom, setBottomBar } = frame
 
   React.useLayoutEffect(() => {
     if (!shows) return
@@ -248,6 +249,13 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
 
   // The content scrolls clear of the dock and its fade, with 16 of air.
   useClearance(dock, "bottom", shows, "--c-app-frame-scroll-edge", 16)
+
+  // A toast takes the strip's slot just above this bar (C6): the frame measures it.
+  React.useLayoutEffect(() => {
+    if (!shows || rail || !bar) return
+    setBottomBar(bar)
+    return () => setBottomBar(null)
+  }, [shows, rail, bar, setBottomBar])
 
   if (!shows) return null
 
@@ -300,7 +308,7 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
       <AppFrameScrollEdge edge="bottom" />
       {/* The status strip's slot, above the row (rules.md 6.4). One strip at a time. */}
       <div ref={setAbove} data-slot="app-frame-strip" className="pointer-events-auto flex flex-col empty:hidden [&>*:not(:first-child)]:hidden" />
-      <div data-slot="app-frame-bottom-row-bar" className="pointer-events-auto flex min-h-control min-w-0 items-end gap-2">
+      <div ref={setBar} data-slot="app-frame-bottom-row-bar" className="pointer-events-auto flex min-h-control min-w-0 items-end gap-2">
         {start}
         {tabBar}
         {/* Scrolled: the strip, compact, takes the room the tab bar gave up. */}
@@ -329,17 +337,45 @@ export type AppFrameAccessoryProps = AccessoryProps & {
  * 16 from each side. On a short screen it is compact at the foot of the content. It steps aside
  * while a keyboard is up, and on a desktop it draws nothing: live status there is the status
  * line's `StatusItem`. One strip at a time: the app picks it by its priority.
+ *
+ * Toasts (contract 5.1c C6) take this slot too, and the strip says what it means for them: one
+ * with an action (undo send) is never covered, so toasts wait; one without gives way for the
+ * toast's time; a needs-you (or critical) strip never gives way, so the toast sits under the top row.
  */
-function AppFrameAccessory({ scrolledOnly = false, compact, ...props }: AppFrameAccessoryProps) {
+function AppFrameAccessory({ scrolledOnly = false, compact, className, ...props }: AppFrameAccessoryProps) {
   const frame = useAppFrame()
   const [alone, setAlone] = React.useState<HTMLDivElement | null>(null)
   const slots = frame.bottom
   const shows = frame.phone && !frame.keyboardOpen && (!scrolledOnly || frame.minimized)
   const inRow = Boolean(slots) && (frame.layout === "rail" || (frame.minimized && slots?.variant === "tabs"))
   useClearance(alone, "bottom", shows && !slots, "--c-app-frame-scroll-edge", 16)
+
+  // The frame tells the Toaster what this strip means for a toast (C6).
+  const id = React.useId()
+  const hasAction = props.action !== undefined && props.action !== null && props.action !== false
+  const state = stripStateFor(props.tone, hasAction)
+  const { setStrip } = frame
+  React.useLayoutEffect(() => {
+    if (!shows) return
+    setStrip(id, state)
+    return () => setStrip(id, null)
+  }, [shows, id, state, setStrip])
+
   if (!shows) return null
 
-  const strip = <Accessory compact={compact ?? inRow} {...props} />
+  // A strip with no action gives way while a toast takes its slot, then comes back (C6). In the
+  // row it is out of the slot's way, so it stays.
+  const yields = state === "live" && frame.toastShowing && !inRow
+  const strip = (
+    <Accessory
+      compact={compact ?? inRow}
+      className={cn(className, yields && "invisible")}
+      data-yield={yields ? "" : undefined}
+      aria-hidden={yields || undefined}
+      inert={yields || undefined}
+      {...props}
+    />
+  )
   if (slots) {
     const target = inRow ? slots.inside : slots.above
     return target ? createPortal(strip, target) : null

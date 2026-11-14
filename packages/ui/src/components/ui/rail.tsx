@@ -25,7 +25,10 @@ export type NavMarkTone = "neutral" | "needs-you"
  * - a number, or `{ count }`: how many (unread, items, waiting). Drawn as cross-app decisions §13
  *   writes counts: `07`, `12`, `248`, `1,204`; at an icon's corner it stops at `99+`.
  * - `{ square: true, label }`: something with no number (an update is ready). `label` says what.
- * - `{ keys }`: the key that reaches the place ("/" on Search), drawn as a `Kbd`.
+ * - `{ keys }`: the key that reaches the place ("/" on Search, contract 5.1c C2), drawn as a `Kbd`
+ *   after a label, or in the host's tooltip where the mark would sit on an icon. It is said through
+ *   `aria-keyshortcuts` (`shortcut`, when the drawn keys are not the ARIA form: "⌘K" is "Meta+K"),
+ *   not in the name, so the name stays the visible label a voice user says.
  *
  * The words join the item's accessible name ("Inbox, 12 unread"): `label` when given, otherwise
  * the number, or "{n} waiting on you" in the needs-you tone. A count of 0 draws nothing.
@@ -34,7 +37,7 @@ export type NavMarkProp =
   | number
   | { count: number; tone?: NavMarkTone; label?: string }
   | { square: true; tone?: NavMarkTone; label: string }
-  | { keys: string; label?: string }
+  | { keys: string; shortcut?: string; label?: string }
 
 /** A mark, read once: what to draw and what to say. */
 export interface NavMarkResolved {
@@ -42,8 +45,10 @@ export interface NavMarkResolved {
   tone: NavMarkTone
   /** The number, for a count. */
   count?: number
-  /** The keys, for a key hint. */
+  /** The keys, for a key hint, as drawn. */
   keys?: string
+  /** The same keys in `aria-keyshortcuts` form. */
+  shortcut?: string
   /** What joins the item's name; empty for a key hint, which rides in `aria-keyshortcuts`. */
   words: string
 }
@@ -62,7 +67,7 @@ export function resolveNavMark(mark: NavMarkProp | undefined | null): NavMarkRes
   if (typeof mark === "number") return resolveNavMark({ count: mark })
   if ("keys" in mark) {
     if (!mark.keys) return null
-    return { kind: "keys", tone: "neutral", keys: mark.keys, words: mark.label ?? "" }
+    return { kind: "keys", tone: "neutral", keys: mark.keys, shortcut: mark.shortcut ?? mark.keys, words: mark.label ?? "" }
   }
   if ("square" in mark) {
     return { kind: "square", tone: mark.tone ?? "neutral", words: mark.label }
@@ -77,6 +82,24 @@ export function resolveNavMark(mark: NavMarkProp | undefined | null): NavMarkRes
 /** "Inbox, 12 unread": an item's name with its mark's words, and any words of its own after. */
 export function nameWithMark(label: string, mark: NavMarkResolved | null, ...more: (string | false | null | undefined)[]): string {
   return [label, mark?.words, ...more].filter(Boolean).join(", ")
+}
+
+/**
+ * What a host puts in `aria-keyshortcuts`: the mark's keys (a key hint), then any of the host's own
+ * (a float button's long press). Undefined when there are none.
+ */
+export function markKeyShortcuts(mark: NavMarkResolved | null, ...more: (string | false | null | undefined)[]): string | undefined {
+  const keys = [mark?.kind === "keys" ? mark.shortcut : undefined, ...more].filter(Boolean).join(" ")
+  return keys || undefined
+}
+
+/**
+ * A key hint in a host's tooltip: where the mark would sit on an icon (a float button, a rail item,
+ * a tab), the keys show beside the name in the tooltip instead. Nothing for any other mark.
+ */
+export function NavMarkTooltipKeys({ mark }: { mark: NavMarkResolved | null }) {
+  if (mark?.kind !== "keys") return null
+  return <Kbd data-slot="nav-mark-keys">{mark.keys}</Kbd>
 }
 
 /** Where a host draws its mark. */
@@ -113,6 +136,8 @@ export function NavMark({
 }) {
   if (!mark) return null
   if (mark.kind === "keys") {
+    // On an icon there is no room for a key: the host's tooltip shows it (NavMarkTooltipKeys).
+    if (placement !== "inline") return null
     return (
       <Kbd data-kind="keys" aria-hidden="true">
         {mark.keys}
@@ -334,6 +359,7 @@ function RailItem({
         data-slot="rail-item"
         data-state={state}
         aria-label={name}
+        aria-keyshortcuts={markKeyShortcuts(resolved)}
         aria-current={ariaCurrent ?? (state === "active" ? "true" : undefined)}
         className={railItemVariants({ state, className })}
         {...props}
@@ -341,7 +367,10 @@ function RailItem({
         <Icon name={icon} />
         <NavMark mark={resolved} placement="below" className={RAIL_COUNT_INK[state]} />
       </TooltipPrimitive.Trigger>
-      <TooltipContent side={tooltipSide}>{label}</TooltipContent>
+      <TooltipContent side={tooltipSide}>
+        {label}
+        <NavMarkTooltipKeys mark={resolved} />
+      </TooltipContent>
     </Tooltip>
   )
 }

@@ -8,7 +8,7 @@ import { useRender } from "@base-ui/react/use-render"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
-import { NavMark, nameWithMark, resolveNavMark, type NavMarkProp } from "./rail"
+import { NavMark, markKeyShortcuts, nameWithMark, resolveNavMark, type NavMarkProp } from "./rail"
 
 export type TopTabsProps = React.ComponentProps<"nav"> & {
   /** What the tabs are, for assistive tech ("Sections"). */
@@ -33,7 +33,7 @@ export type TopTabProps = Omit<useRender.ComponentProps<"a">, "children" | "aria
   icon?: IconName
   /** The section showing: body ink, the 2px primary indicator, and `aria-current="page"`. */
   current?: boolean
-  /** A count or a square after the label (the mark every navigation item shares): Warpcore's Tasks count in the needs-you tone. */
+  /** A count, a square or a key after the label (the mark every navigation item shares): Warpcore's Tasks count in the needs-you tone. */
   mark?: NavMarkProp
 }
 
@@ -59,6 +59,7 @@ function TopTab({ label, index, icon, current = false, mark, render, className, 
         "aria-current": current ? "page" : undefined,
         // The name is the label and the mark's words; the index is a folio, not part of the name.
         "aria-label": nameWithMark(label, resolved),
+        "aria-keyshortcuts": markKeyShortcuts(resolved),
         children: (
           <span className="flex flex-col gap-1.5">
             <span className={cn("flex items-center gap-1.5 transition-[color] duration-(--motion-fast) ease-(--motion-ease)", ink)}>
