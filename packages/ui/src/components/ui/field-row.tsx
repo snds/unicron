@@ -323,8 +323,9 @@ function FieldRow({
       id={labelId}
       data-slot="field-row-label"
       className={cn(
-        // A Kbd in the label keeps its case and sits on the label's line.
-        "type-overline text-muted-foreground inline-flex flex-wrap items-baseline gap-x-2 [&_[data-slot=kbd]]:normal-case",
+        // A Kbd in the label keeps its case and sits on the label's line. It is 20 tall on a 16px
+        // line: its negative margins keep it from making the line, and so the row, taller.
+        "type-overline text-muted-foreground inline-flex flex-wrap items-baseline gap-x-2 [&_[data-slot=kbd]]:-my-1 [&_[data-slot=kbd]]:normal-case",
         stacked ? "min-w-0" : "w-(--c-field-row-label-width) shrink-0"
       )}
     >
@@ -336,7 +337,11 @@ function FieldRow({
       <span data-slot="field-row-value-line" className={cn("flex min-w-0 items-baseline gap-2 text-foreground", VALUE_TYPE[size])}>
         {value}
         {badge ? (
-          <span data-slot="field-row-badge" className="inline-flex shrink-0">
+          // A Badge is a 20px box on a 20px line. On the shared baseline its own text sits a pixel
+          // off the value's, and the two boxes stacked into a 21px line: the row was 53, not 52.
+          // The negative margins leave the Badge on the baseline and stop it sizing the line, as
+          // they do for the row's action.
+          <span data-slot="field-row-badge" className="-my-1 inline-flex shrink-0">
             {badge}
           </span>
         ) : null}

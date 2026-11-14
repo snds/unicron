@@ -61,6 +61,9 @@ describe("Toaster", () => {
     expect(el).toHaveAttribute("data-styled", "false")
     expect(el.className.split(" ")).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box", "rounded", "text-text-body"]))
     expect(el.className).not.toMatch(/shadow|blur|rounded-2xl/)
+    // A toast is a tab stop: it must keep the stylesheet's focus ring (the browser check
+    // "a focused toast" in tests/foundations.spec.ts holds the drawn ring).
+    expect(el.className.split(" ")).not.toContain("outline-none")
     expect(screen.getByText("Copied the password for Steam").className.split(" ")).toContain("type-ui-emphasis")
     expect(screen.getByText("Clears in 30 s").className.split(" ")).toEqual(expect.arrayContaining(["type-caption", "text-text-secondary"]))
   })

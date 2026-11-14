@@ -5,6 +5,7 @@
 import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
+import { formatCount } from "../../lib/format"
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { useViewport } from "../use-viewport"
@@ -379,9 +380,25 @@ function AdaptiveMenu({
   )
 }
 
-/** A sheet row: the menu row's look, at 44 on a touch screen, a button. */
+/**
+ * A sheet row: the menu row's look, as Vale 05's folder sheet draws its Nav Items. The label role
+ * in secondary ink, glyph and words; body ink under the pointer; the current or picked row on the
+ * `primary-soft` tile in body ink. 36 tall as drawn, and 44 on a touch screen. A button.
+ */
 const SHEET_ROW =
-  "type-ui text-text-body relative flex min-h-9 w-full cursor-default items-center gap-2.5 rounded px-2.5 py-2 text-left select-none pointer-coarse:min-h-touch-min hover:bg-accent active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-checked:bg-primary-soft [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
+  "type-label text-text-secondary relative flex min-h-9 w-full cursor-default items-center gap-2.5 rounded px-2.5 py-2 text-left select-none pointer-coarse:min-h-touch-min hover:bg-accent hover:text-text-body active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-checked:bg-primary-soft aria-checked:text-text-body data-current:bg-primary-soft data-current:text-text-body data-current:hover:bg-primary-soft [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
+
+/** A row's count, at its end, as a Nav Item draws it: the folio role, label ink, body ink on the current row. Said after the words. */
+function MenuCount({ count, current }: { count: number; current: boolean }) {
+  return (
+    <>
+      <span data-slot="adaptive-menu-item-count" aria-hidden="true" className={cn("type-folio ms-auto shrink-0 ps-4", current ? "text-text-body" : "text-text-label")}>
+        {formatCount(count)}
+      </span>
+      <span className="sr-only">{`, ${count.toLocaleString("en-US")}`}</span>
+    </>
+  )
+}
 
 export interface AdaptiveMenuItemProps {
   /** A 20px glyph before the words. */
@@ -396,18 +413,28 @@ export interface AdaptiveMenuItemProps {
   shortcut?: string
   /** Keep the menu open after picking it. */
   keepOpen?: boolean
+  /** A count at the row's end, as a Nav Item shows one (Vale 05: `Inbox 12`). Zero shows nothing. It is said after the words. */
+  count?: number
+  /**
+   * The row for where the person already is (the open folder, the account in use): the
+   * `primary-soft` tile and body ink, as a current Nav Item, and `aria-current`.
+   */
+  current?: boolean
 }
 
-function AdaptiveMenuItem({ icon, children, onSelect, variant = "default", disabled, shortcut, keepOpen = false }: AdaptiveMenuItemProps) {
+function AdaptiveMenuItem({ icon, children, onSelect, variant = "default", disabled, shortcut, keepOpen = false, count, current = false }: AdaptiveMenuItemProps) {
   const form = useMenuForm("AdaptiveMenuItem")
+  const counted = count !== undefined && count > 0 ? <MenuCount count={count} current={current} /> : null
   if (form.sheet) {
     return (
       <ButtonPrimitive
         type="button"
         data-slot="adaptive-menu-item"
         data-variant={variant}
+        data-current={current ? "" : undefined}
+        aria-current={current ? "true" : undefined}
         disabled={disabled}
-        className={cn(SHEET_ROW, variant === "destructive" && "text-critical-text")}
+        className={cn(SHEET_ROW, variant === "destructive" && "text-critical-text hover:text-critical-text")}
         onClick={() => {
           onSelect?.()
           if (!keepOpen) form.close()
@@ -415,13 +442,15 @@ function AdaptiveMenuItem({ icon, children, onSelect, variant = "default", disab
       >
         {icon ? <Icon name={icon} /> : null}
         {children}
+        {counted}
       </ButtonPrimitive>
     )
   }
   return (
-    <DropdownMenuItem variant={variant} disabled={disabled} closeOnClick={!keepOpen} onClick={() => onSelect?.()}>
+    <DropdownMenuItem variant={variant} current={current} disabled={disabled} closeOnClick={!keepOpen} onClick={() => onSelect?.()}>
       {icon ? <Icon name={icon} /> : null}
       {children}
+      {counted}
       {shortcut ? <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut> : null}
     </DropdownMenuItem>
   )
@@ -453,7 +482,8 @@ function AdaptiveMenuGroup({ label, children }: { label?: React.ReactNode; child
 
 function AdaptiveMenuSeparator() {
   const form = useMenuForm("AdaptiveMenuSeparator")
-  if (form.sheet) return <div role="separator" data-slot="adaptive-menu-separator" className="bg-line-rule my-1 h-px shrink-0" />
+  // As DropdownMenuSeparator: its 1px comes out of the space under it, so it adds no height.
+  if (form.sheet) return <div role="separator" data-slot="adaptive-menu-separator" className="bg-line-rule mt-1 mb-0.75 h-px shrink-0" />
   return <DropdownMenuSeparator />
 }
 

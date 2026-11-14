@@ -208,7 +208,8 @@ function SelectSeparator({
   return (
     <SelectPrimitive.Separator
       data-slot="select-separator"
-      className={cn("pointer-events-none -mx-1 my-1 h-px bg-line-rule", className)}
+      // The 1px it draws comes out of the space under it (4 above, 3 below): strokes add no height.
+      className={cn("pointer-events-none -mx-1 mt-1 mb-0.75 h-px bg-line-rule", className)}
       {...props}
     />
   )

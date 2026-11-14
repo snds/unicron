@@ -198,10 +198,20 @@ export function Composer({
   }
 
   const focusable = Boolean(disabledReason)
+  // Stop, the waiting clock and Send are one DOM node (the ref and focus stay on it). A host
+  // usually ends streaming or waiting inside the press, and React then re-renders this node as the
+  // submit button before the browser runs the click's own action, which reads the button's type
+  // at that moment and submits the form: Stop sent the draft, and cancelling a wait sent the
+  // message it was holding. Cancelling the click's default action keeps a press on Stop or on the
+  // clock to what it says. By mouse and by keyboard: Enter and Space arrive as the same click.
+  const press = (handler: (() => void) | undefined) => (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    handler?.()
+  }
   let action: React.ReactNode
   if (waiting) {
     action = (
-      <Button ref={button} type="button" size="icon" aria-label={composerCopy.waiting} data-slot="composer-send" data-action="waiting" onClick={onCancelWaiting} disabled={disabled}>
+      <Button ref={button} type="button" size="icon" aria-label={composerCopy.waiting} data-slot="composer-send" data-action="waiting" onClick={press(onCancelWaiting)} disabled={disabled}>
         <Icon name="time" className="size-5" />
       </Button>
     )
@@ -216,7 +226,7 @@ export function Composer({
         data-action="stop"
         loading={stopping}
         disabled={disabled}
-        onClick={onStop}
+        onClick={press(onStop)}
       >
         <Icon name="stop--filled--alt" className="size-5" />
       </Button>

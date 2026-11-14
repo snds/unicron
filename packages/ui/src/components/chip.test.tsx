@@ -48,5 +48,19 @@ describe("Chip", () => {
     const action = screen.getByRole("button", { name: "Design crit" })
     expect(action.className).toContain("focus-visible:-outline-offset-2")
     expect(action.className).toContain("hover:bg-state-hover")
+    // `outline-none` beside `outline-2` draws no ring in Tailwind 4 (it sets the style the width
+    // reads): the stylesheet's own :focus-visible rule must be left to draw it.
+    expect(action.className.split(/\s+/)).not.toContain("outline-none")
+  })
+
+  it("the remove button keeps the stylesheet's focus ring, drawn inside the chip", () => {
+    render(
+      <Chip variant="secondary">
+        #trip <ChipRemove label="Remove tag trip" />
+      </Chip>
+    )
+    const remove = screen.getByRole("button", { name: "Remove tag trip" })
+    expect(remove.className).toContain("focus-visible:-outline-offset-2")
+    expect(remove.className.split(/\s+/)).not.toContain("outline-none")
   })
 })

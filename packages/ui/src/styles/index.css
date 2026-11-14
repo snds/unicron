@@ -10,6 +10,13 @@
 @import "@fontsource-variable/geist-mono";
 @import "@unicron/tokens/dist/tokens.css";
 @import "./motion.css";
+/*
+ * sonner's own rules, as a file: where a toast sits, how toasts stack and move. sonner adds this
+ * same sheet in a <style> tag as its script loads, which `style-src 'self'` blocks. Carried here,
+ * the Toaster works under that policy; where the tag is allowed the rules are only there twice.
+ * See "Toasts" below for the two rules this file takes back.
+ */
+@import "sonner/dist/styles.css";
 
 /* The primitives' classes live in this package, not the consuming app, so Tailwind must scan them. */
 @source "../components";
@@ -819,7 +826,8 @@ html:has([data-slot="app-frame"]) body {
 
 /*
  * Scrims: the dim behind a sheet, a dialog or a menu. One colour role (--surface-scrim) painted
- * at an opacity knob, the same number on both grounds (stone's own alpha is already in the role).
+ * at an opacity knob. The knob follows the ground, as Figma draws it: 50%, 60% and 32% of black on
+ * graphite; 1 on stone, where the role's own 64% is the whole dim behind every layer.
  * The alpha goes into the colour, so `opacity` stays free for the fade in and out. A scrim is
  * never opaque and never blurred.
  */
@@ -1020,6 +1028,25 @@ html:has([data-slot="app-frame"]) body {
 [data-sonner-toaster] [data-sonner-toast] > * {
   transition-duration: var(--motion-base);
   transition-timing-function: var(--motion-ease);
+}
+
+/*
+ * Toasts (components/ui/sonner.tsx). The Toaster draws each toast with the system's own classes
+ * (sonner's `unstyled`), but two of sonner's rules are not held back by that switch: keyboard
+ * focus swaps the toast's shadow for a soft drop shadow with a faint ring and removes its outline,
+ * and on a dark theme the description takes sonner's own grey. sonner's rules are unlayered, so
+ * they beat every utility. These selectors are more specific than sonner's, in this file and in
+ * the tag sonner injects, and hand the properties back to the layers below: the rule utilities
+ * (the toast keeps its 1px rule), the one :focus-visible ring of the base layer (2px, ink, 2px
+ * clear), and the description's own ink class.
+ */
+[data-sonner-toaster] [data-sonner-toast][data-styled="false"]:focus-visible {
+  box-shadow: revert-layer;
+  outline: revert-layer;
+  outline-offset: revert-layer;
+}
+[data-sonner-toaster][data-sonner-theme] [data-sonner-toast][data-styled="false"] [data-description] {
+  color: revert-layer;
 }
 
 /*

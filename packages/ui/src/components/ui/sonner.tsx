@@ -215,9 +215,15 @@ const TOAST_GAP_FALLBACK = 8
  * critical ink only for an error. Three show at most, in a column. Use this module's `toast()`:
  * it sets the default times and the one action.
  *
- * sonner still injects its own small stylesheet as it loads, as before 1.0; an app under a strict
- * `style-src` strips it at build and loads `sonner/dist/styles.css` as a file instead. The toasts'
- * look comes from these classes either way (`unstyled`), so only placement and motion are sonner's.
+ * Placement, stacking and motion are sonner's own rules. sonner adds them to the page in a
+ * `<style>` tag as its script loads, which a strict `style-src 'self'` blocks (Lockdown's web
+ * vault): the toasts then fall into the page flow. So the @unicron/ui stylesheet carries the same
+ * rules as a file (`@import "sonner/dist/styles.css"` in styles/index.css), and the blocked tag
+ * does no harm. The toasts' look comes from these classes (`unstyled`). Two of sonner's rules
+ * still reached an unstyled toast, its focus shadow and its dark description grey; the stylesheet
+ * hands both back to the system (styles/index.css → Toasts), so a focused toast keeps its 1px rule
+ * and shows the one 2px ink ring (contract 6.2), and the description is `text-secondary` on every
+ * ground. That is why the toast's class has no `outline-none`.
  */
 const Toaster = ({ className, style, toastOptions, id, ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
@@ -285,7 +291,7 @@ const Toaster = ({ className, style, toastOptions, id, ...props }: ToasterProps)
         unstyled: true,
         classNames: {
           toast: cn(
-            "group/toast bg-surface-raised text-text-body rule-box flex w-(--width) items-center gap-3 rounded px-4 py-3 outline-none",
+            "group/toast bg-surface-raised text-text-body rule-box flex w-(--width) items-center gap-3 rounded px-4 py-3",
             // A desktop frame in a window under 600 (a pinned preview): sonner's phone rule would size
             // the toast from the content's left offset; the frame's width is the one that holds.
             frame && !frame.phone && "w-(--width)!"

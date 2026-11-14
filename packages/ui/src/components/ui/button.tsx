@@ -86,12 +86,26 @@ const variants = cva(
         true: "flex w-full",
         false: "",
       },
+      // A long label takes a second line instead of spilling out of the box (a block button in a
+      // narrow column: "Approve with Face ID" on a 320px phone). The height then follows the text;
+      // with one line it is the size's own (the size's padding and the label's 16px line).
+      wrap: {
+        true: "h-auto text-center whitespace-normal",
+        false: "",
+      },
     },
+    compoundVariants: [
+      // One line is never shorter than the size.
+      { wrap: true, size: "default", class: "min-h-10" },
+      { wrap: true, size: ["sm", "xs"], class: "min-h-8" },
+      { wrap: true, size: "lg", class: "min-h-control" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
       shape: "default",
       block: false,
+      wrap: false,
     },
   }
 )
@@ -127,7 +141,8 @@ type ButtonProps = ButtonPrimitive.Props &
  * `secondary` (and `outline`) the ink outline; `ghost` text only; `destructive` the critical fill;
  * the `needs-you*` kinds belong on the yellow and nowhere else. Sizes `default` (40), `sm` (32,
  * rows and toolbars) and `lg` (48); `icon*` are squares of those heights and need an `aria-label`.
- * An icon is a child (`<Icon name="add" />`) and draws at 16px.
+ * An icon is a child (`<Icon name="add" />`) and draws at 16px. `block` stretches it to its
+ * container; `wrap` lets a long label take a second line there instead of leaving the box.
  */
 function Button({
   className,
@@ -135,6 +150,7 @@ function Button({
   size = "default",
   shape = "default",
   block = false,
+  wrap = false,
   loading = false,
   disabled,
   focusableWhenDisabled,
@@ -159,7 +175,7 @@ function Button({
       // A button that goes busy under the keyboard keeps focus: it is aria-disabled, not removed.
       // So does one disabled with a reason: the reason must be reachable.
       focusableWhenDisabled={focusableWhenDisabled ?? ((loading && !disabled) || reason.active)}
-      className={cn(buttonVariants({ variant, size, shape, block, className: cn(on && "relative", className) }))}
+      className={cn(buttonVariants({ variant, size, shape, block, wrap, className: cn(on && "relative", className) }))}
       {...props}
     >
       {loading ? (

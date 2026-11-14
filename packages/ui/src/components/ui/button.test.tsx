@@ -132,6 +132,18 @@ describe("Button sizes", () => {
     expect(classesOf({ block: true })).toEqual(expect.arrayContaining(["flex", "w-full"]))
     expect(classesOf({})).not.toContain("w-full")
   })
+
+  it("wrap lets a long label take a second line: the height follows the text, never under the size's", () => {
+    const wrapped = classesOf({ block: true, wrap: true })
+    expect(wrapped).toEqual(expect.arrayContaining(["h-auto", "min-h-10", "whitespace-normal", "text-center"]))
+    expect(wrapped).not.toContain("h-10")
+    expect(wrapped).not.toContain("whitespace-nowrap")
+    expect(classesOf({ wrap: true, size: "sm" })).toEqual(expect.arrayContaining(["h-auto", "min-h-8"]))
+    expect(classesOf({ wrap: true, size: "lg" })).toEqual(expect.arrayContaining(["h-auto", "min-h-control"]))
+    // Off by default: a label stays on one line at the size's height.
+    expect(classesOf({})).toEqual(expect.arrayContaining(["h-10", "whitespace-nowrap"]))
+    expect(classesOf({})).not.toContain("h-auto")
+  })
 })
 
 describe("Button focus and invalid edges", () => {

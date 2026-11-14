@@ -108,7 +108,9 @@ function ToggleRow({
             {label}
           </label>
           {badge ? (
-            <span data-slot="toggle-row-badge" className="inline-flex shrink-0">
+            // On the label's baseline, and out of the line's height: a 20px Badge a pixel off the
+            // label's baseline made the line 21 and the row 65 (see FieldRow's badge).
+            <span data-slot="toggle-row-badge" className="-my-1 inline-flex shrink-0">
               {badge}
             </span>
           ) : null}

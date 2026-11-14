@@ -12,6 +12,11 @@ describe("Separator", () => {
     expect(rule.className.split(/\s+/)).toEqual(expect.arrayContaining(["bg-border", "shrink-0", "data-horizontal:h-px", "data-horizontal:w-full"]))
   })
 
+  it("adds no height: its 1px is drawn over the last row of what comes before it (strokes never add height)", () => {
+    render(<Separator />)
+    expect(screen.getByRole("separator").className.split(/\s+/)).toContain("data-horizontal:-mt-px")
+  })
+
   it("vertical says so, and stretches to the row it divides", () => {
     render(<Separator orientation="vertical" />)
     const rule = screen.getByRole("separator")

@@ -179,11 +179,11 @@ describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown Stat
     expect(screen.getByText("Create // long press").className.split(" ")).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
   })
 
-  it("rows: the ui role, 36 tall (44 on touch), a 20px glyph 10 from the words, the highlight on bg-accent", () => {
+  it("rows are Nav Items, as Figma draws them: the label role in secondary ink, 36 tall (44 on touch), a 20px glyph 10 from the words; the highlight on bg-accent in body ink", () => {
     render(<QuickCreate />)
     const row = screen.getByRole("menuitem", { name: /New message/ })
     expect(row.className.split(" ")).toEqual(
-      expect.arrayContaining(["type-ui", "min-h-9", "pointer-coarse:min-h-touch-min", "gap-2.5", "px-2.5", "data-highlighted:bg-accent", "[&_svg:not([class*='size-'])]:size-5"])
+      expect.arrayContaining(["type-label", "text-text-secondary", "min-h-9", "pointer-coarse:min-h-touch-min", "gap-2.5", "px-2.5", "data-highlighted:bg-accent", "data-highlighted:text-text-body", "[&_svg:not([class*='size-'])]:size-5"])
     )
   })
 
@@ -193,9 +193,30 @@ describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown Stat
     expect(row.querySelector('[data-slot="dropdown-menu-shortcut"] [data-slot="kbd"]')).toHaveTextContent("⌘N")
   })
 
-  it("a destructive row reads in the critical ink", () => {
+  it("a destructive row reads in the critical ink, highlighted too", () => {
     render(<QuickCreate />)
-    expect(screen.getByRole("menuitem", { name: /Delete draft/ }).className).toContain("data-[variant=destructive]:text-critical-text")
+    const row = screen.getByRole("menuitem", { name: /Delete draft/ })
+    expect(row.className).toContain("data-[variant=destructive]:text-critical-text")
+    expect(row.className).toContain("data-[variant=destructive]:data-highlighted:text-critical-text")
+  })
+
+  it("the current row takes the primary-soft tile and body ink, and says so", () => {
+    render(
+      <DropdownMenu open>
+        <DropdownMenuTrigger>Folders</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem current>Inbox</DropdownMenuItem>
+          <DropdownMenuItem>Starred</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+    const inbox = screen.getByRole("menuitem", { name: "Inbox" })
+    expect(inbox).toHaveAttribute("aria-current", "true")
+    expect(inbox).toHaveAttribute("data-current", "")
+    expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["data-current:bg-primary-soft", "data-current:text-text-body"]))
+    const starred = screen.getByRole("menuitem", { name: "Starred" })
+    expect(starred).not.toHaveAttribute("aria-current")
+    expect(starred).not.toHaveAttribute("data-current")
   })
 
   it("a checkbox row says it is checked", () => {

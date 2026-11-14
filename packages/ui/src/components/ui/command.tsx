@@ -243,7 +243,8 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
-      className={cn("bg-line-rule -mx-2 my-1 h-px", className)}
+      // The 1px it draws comes out of the space under it (4 above, 3 below): strokes add no height.
+      className={cn("bg-line-rule -mx-2 mt-1 mb-0.75 h-px", className)}
       {...props}
     />
   )

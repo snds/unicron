@@ -32,6 +32,19 @@ describe("NavItem (Figma 15:487)", () => {
     expect(classesOf(link)).toContain("text-text-secondary")
   })
 
+  // 36 tall as drawn; contract 6.6: a control under 44 extends its touch target on a coarse
+  // pointer. A phone's settings list is made of these rows (the browser check measures the 44).
+  it("takes a 44px touch on a coarse pointer, as a link and as a button", () => {
+    render(
+      <>
+        <NavItem href="/mail" label="Mail" />
+        <NavItem label="Accounts" onClick={() => {}} />
+      </>
+    )
+    expect(classesOf(screen.getByRole("link", { name: "Mail" }))).toContain("hit-area")
+    expect(classesOf(screen.getByRole("button", { name: "Accounts" }))).toContain("hit-area")
+  })
+
   it("current is the soft primary tile with every part in body ink, and aria-current=page", () => {
     render(<NavItem href="/inbox" label="Inbox" icon="email" count={12} current />)
     const link = screen.getByRole("link", { name: "Inbox, 12" })

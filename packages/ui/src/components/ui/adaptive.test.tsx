@@ -151,9 +151,44 @@ describe("AdaptiveMenu", () => {
     const inbox = screen.getByRole("button", { name: "Inbox" })
     expect(inbox).toHaveAttribute("data-slot", "adaptive-menu-item")
     expect(inbox.querySelector('[data-slot="kbd"]')).toBeNull()
-    expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:min-h-touch-min", "hover:bg-accent"]))
+    expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["type-label", "text-text-secondary", "pointer-coarse:min-h-touch-min", "hover:bg-accent", "hover:text-text-body"]))
     expect(screen.getByRole("group", { name: "Accounts // 02" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Empty trash" }).className).toContain("text-critical-text")
+  })
+
+  it("a row takes a count and a current state, as Vale 05's folder sheet draws its Nav Items", () => {
+    for (const presentation of ["desktop", "sheet"] as const) {
+      const { unmount } = render(
+        <AdaptiveMenu defaultOpen presentation={presentation} title="Folders" trigger={<Button>Folders</Button>}>
+          <AdaptiveMenuItem icon="email" count={12} current>
+            Inbox
+          </AdaptiveMenuItem>
+          <AdaptiveMenuItem icon="star" count={4}>
+            Starred
+          </AdaptiveMenuItem>
+          <AdaptiveMenuItem icon="send--alt" count={0}>
+            Sent
+          </AdaptiveMenuItem>
+        </AdaptiveMenu>
+      )
+      const role = presentation === "sheet" ? "button" : "menuitem"
+      // The count is said after the words, once, in plain digits.
+      const inbox = screen.getByRole(role, { name: "Inbox, 12" })
+      expect(inbox).toHaveAttribute("aria-current", "true")
+      expect(inbox).toHaveAttribute("data-current", "")
+      expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["data-current:bg-primary-soft", "data-current:text-text-body"]))
+      const count = inbox.querySelector('[data-slot="adaptive-menu-item-count"]') as HTMLElement
+      expect(count).toHaveTextContent("12")
+      expect(count).toHaveAttribute("aria-hidden", "true")
+      expect(count.className.split(" ")).toEqual(expect.arrayContaining(["type-folio", "text-text-body", "ms-auto"]))
+      const starred = screen.getByRole(role, { name: "Starred, 4" })
+      expect(starred).not.toHaveAttribute("aria-current")
+      expect(starred.querySelector('[data-slot="adaptive-menu-item-count"]')).toHaveTextContent("04")
+      expect(starred.querySelector('[data-slot="adaptive-menu-item-count"]')!.className).toContain("text-text-label")
+      // Zero shows nothing and says nothing.
+      expect(screen.getByRole(role, { name: "Sent" }).querySelector('[data-slot="adaptive-menu-item-count"]')).toBeNull()
+      unmount()
+    }
   })
 
   it("picking a row runs it and closes, in either form", async () => {

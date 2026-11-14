@@ -56,7 +56,7 @@ function DropdownMenuContent({
     /** How wide the list is (MENU_WIDTHS): `trigger` by default, as before. */
     width?: DropdownMenuWidth
     /**
-     * Dim the page behind with the menu scrim (--c-scrim-menu, 32%; about 20% on stone): quick
+     * Dim the page behind with the menu scrim (--c-scrim-menu: 32% on graphite, the role's 64% on stone): quick
      * create, the environment menu. Off by default. Only the root menu draws it, never a submenu.
      */
     scrim?: boolean
@@ -145,29 +145,43 @@ function DropdownMenuLabel({
 }
 
 /**
- * One row, as the quick-create menu draws its Nav Items: 36 tall (44 on a touch screen), 10 in from
- * the panel's padding, a 20px glyph 10 from the words, words in the ui role. The highlighted row
- * (pointer or keys) takes the opaque highlight fill (`bg-accent`).
+ * One row, as Figma draws the rows of its two menus (the quick-create menu, Vale and Lockdown
+ * States 03, and Vale 05's folder sheet): a Nav Item. 36 tall (44 on a touch screen), 10 in from
+ * the panel's padding, a 20px glyph 10 from the words; the words in the label role (14/20 Medium)
+ * and, with the glyph, in secondary ink. The highlighted row (pointer or keys) takes the opaque
+ * highlight fill (`bg-accent`) and body ink. The row that is current, or checked, is body ink too;
+ * a current row also takes the `primary-soft` tile, as a current Nav Item does.
  */
 const ITEM =
-  "type-ui text-text-body group/dropdown-menu-item relative flex min-h-9 cursor-default items-center gap-2.5 rounded px-2.5 py-2 outline-hidden select-none pointer-coarse:min-h-touch-min data-highlighted:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
+  "type-label text-text-secondary group/dropdown-menu-item relative flex min-h-9 cursor-default items-center gap-2.5 rounded px-2.5 py-2 outline-hidden select-none pointer-coarse:min-h-touch-min data-highlighted:bg-accent data-highlighted:text-text-body data-checked:text-text-body data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
 
 function DropdownMenuItem({
   className,
   inset,
   variant = "default",
+  current = false,
   ...props
 }: MenuPrimitive.Item.Props & {
   inset?: boolean
   /** `destructive`: the words and glyph in the critical ink. */
   variant?: "default" | "destructive"
+  /** The row for where the person already is (the open folder): the `primary-soft` tile and body ink, `aria-current`. */
+  current?: boolean
 }) {
   return (
     <MenuPrimitive.Item
       data-slot="dropdown-menu-item"
       data-inset={inset}
       data-variant={variant}
-      className={cn(ITEM, "data-[variant=destructive]:text-critical-text", className)}
+      data-current={current ? "" : undefined}
+      aria-current={current ? "true" : undefined}
+      className={cn(
+        ITEM,
+        "data-current:bg-primary-soft data-current:text-text-body",
+        // Critical ink holds through the highlight: the highlight's body ink must not replace it.
+        "data-[variant=destructive]:text-critical-text data-[variant=destructive]:data-highlighted:text-critical-text",
+        className
+      )}
       {...props}
     />
   )
@@ -189,11 +203,11 @@ function DropdownMenuSubTrigger({
     <MenuPrimitive.SubmenuTrigger
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
-      className={cn(ITEM, "data-popup-open:bg-accent", className)}
+      className={cn(ITEM, "data-popup-open:bg-accent data-popup-open:text-text-body", className)}
       {...props}
     >
       {children}
-      <span className="ml-auto flex text-text-secondary">
+      <span className="ml-auto flex">
         <Icon name="chevron--right" size="sm" />
       </span>
     </MenuPrimitive.SubmenuTrigger>
@@ -223,7 +237,7 @@ function DropdownMenuSubContent({
   )
 }
 
-/** The mark at the end of a checked row: a 16px check, in the row's ink. */
+/** The mark at the end of a checked row: a 16px check, in the row's ink (body ink: a checked row is the current one). */
 function Indicator({ children, slot }: { children: React.ReactNode; slot: string }) {
   return (
     <span className="pointer-events-none absolute right-2.5 flex items-center justify-center" data-slot={slot}>
@@ -296,7 +310,11 @@ function DropdownMenuRadioItem({
   )
 }
 
-/** A hairline across the panel, edge to edge. */
+/**
+ * A hairline across the panel, edge to edge. Strokes never add height (contract §1.6): the 1px it
+ * draws is taken back from the space under it (4 above, 3 below), so a menu with separators is as
+ * tall as its rows and gaps, and what follows stays on the 4px grid.
+ */
 function DropdownMenuSeparator({
   className,
   ...props
@@ -304,7 +322,7 @@ function DropdownMenuSeparator({
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn("bg-line-rule -mx-2 my-1 h-px shrink-0", className)}
+      className={cn("bg-line-rule -mx-2 mt-1 mb-0.75 h-px shrink-0", className)}
       {...props}
     />
   )

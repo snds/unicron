@@ -459,7 +459,10 @@ function NavItem({
       {
         className: cn(
           // Padding 8 / 10, gap 10. The start padding grows by one indent per level.
-          "flex min-w-0 flex-1 items-center gap-2.5 rounded-sm py-2 ps-[calc(--spacing(2.5)+var(--nav-item-level,0)*var(--c-nav-item-indent))] pe-2.5 text-start select-none",
+          // 36 tall, as Figma draws it; on a coarse pointer it takes a touch across 44 (contract
+          // 6.6): a phone's settings list and a sheet of places are made of these rows. Rows sit
+          // 40 apart, so two neighbours' targets share 4px, which is harmless.
+          "hit-area flex min-w-0 flex-1 items-center gap-2.5 rounded-sm py-2 ps-[calc(--spacing(2.5)+var(--nav-item-level,0)*var(--c-nav-item-indent))] pe-2.5 text-start select-none",
           // The glyphs take this ink; the index, label and count set their own.
           ink.icon,
           disabled && "pointer-events-none"

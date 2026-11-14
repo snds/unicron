@@ -62,8 +62,11 @@ function Chip({
 
 // The chip's own controls: the hover and pressed washes, the stylesheet's focus ring drawn just
 // inside the chip (a ring outside would be clipped by the chip's edge), 44px to a finger.
+// No `outline-none` here: in Tailwind 4 it sets --tw-outline-style to none, and `outline-2` reads
+// that variable, so the two together draw no ring at all. The stylesheet's one :focus-visible rule
+// draws the 2px ink ring; this only moves it inside the chip.
 const CHIP_CONTROL =
-  "outline-none hit-area transition-colors hover:bg-state-hover active:bg-state-pressed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+  "hit-area transition-colors hover:bg-state-hover active:bg-state-pressed focus-visible:-outline-offset-2 disabled:pointer-events-none disabled:opacity-50"
 
 /**
  * The chip's main action (open what it stands for), filling it edge to edge so the whole label

@@ -64,14 +64,18 @@ function ToolbarGroup({ className, ...props }: ToolbarPrimitive.Group.Props) {
   )
 }
 
-/** A hairline between groups: 20px of the 1px rule, 4px clear of the buttons either side. */
+/**
+ * A hairline between groups: 20px of the 1px rule, 4px clear of the buttons either side. In a
+ * vertical toolbar the 1px it draws comes out of the space under it (4 above, 3 below), so the
+ * toolbar's height stays its buttons and gaps (strokes never add height, contract §1.6).
+ */
 function ToolbarSeparator({ className, ...props }: ToolbarPrimitive.Separator.Props) {
   // No `orientation` unless given: Base UI then draws it across the toolbar's own direction.
   return (
     <ToolbarPrimitive.Separator
       data-slot="toolbar-separator"
       className={cn(
-        "shrink-0 bg-line-rule data-[orientation=vertical]:mx-1 data-[orientation=vertical]:h-5 data-[orientation=vertical]:w-px data-[orientation=horizontal]:my-1 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-5",
+        "shrink-0 bg-line-rule data-[orientation=vertical]:mx-1 data-[orientation=vertical]:h-5 data-[orientation=vertical]:w-px data-[orientation=horizontal]:mt-1 data-[orientation=horizontal]:mb-0.75 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-5",
         className
       )}
       {...props}

@@ -44,8 +44,9 @@ const BLOCKS = [
   "[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:border-separate [&_table]:border-spacing-0",
   "[&_th]:type-overline [&_th]:text-text-label [&_th]:text-left [&_th]:align-bottom [&_th]:rule-b [&_th]:py-2 [&_th]:pr-4",
   "[&_td]:type-body [&_td]:align-top [&_td]:rule-b [&_td]:py-2 [&_td]:pr-4",
-  // A thematic break is one hairline.
-  "[&_hr]:h-(--stroke-rule) [&_hr]:border-0 [&_hr]:bg-line-rule",
+  // A thematic break is one hairline. Its 1px comes out of the space under it, so it adds no
+  // height and every line after it stays on the 4px grid (contract §1.6).
+  "[&_hr]:h-(--stroke-rule) [&_hr]:-mb-(--stroke-rule) [&_hr]:border-0 [&_hr]:bg-line-rule",
 ].join(" ")
 
 const proseVariants = cva(cn("min-w-0 text-text-body break-words", FLOW, HEADINGS, LISTS, INLINE, BLOCKS), {

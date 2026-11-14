@@ -134,6 +134,61 @@ describe("Composer", () => {
     expect(screen.getByRole("button", { name: "Stop" })).toHaveAttribute("aria-busy", "true")
   })
 
+  // Stop, the waiting clock and Send are one DOM node. A host that ends the state inside the press
+  // (the usual way) re-renders that node as the submit button before the browser runs the click's
+  // own action, so the same press went on to submit the form: Stop sent the draft, and cancelling
+  // a wait sent the message it was meant to hold back.
+  it("pressing Stop does not send the draft when the host ends streaming in the handler", () => {
+    const onSend = vi.fn()
+    const onStop = vi.fn()
+    function Host() {
+      const [streaming, setStreaming] = React.useState(true)
+      return (
+        <Composer
+          defaultValue="a draft typed while the reply streams"
+          streaming={streaming}
+          onStop={() => {
+            onStop()
+            setStreaming(false)
+          }}
+          onSend={onSend}
+        />
+      )
+    }
+    render(<Host />)
+    fireEvent.click(screen.getByRole("button", { name: "Stop" }))
+    expect(onStop).toHaveBeenCalledTimes(1)
+    expect(onSend).not.toHaveBeenCalled()
+    // The draft is still in the field, and the button is Send again, ready for a press of its own.
+    expect(field()).toHaveValue("a draft typed while the reply streams")
+    fireEvent.click(screen.getByRole("button", { name: "Send" }))
+    expect(onSend).toHaveBeenCalledTimes(1)
+  })
+
+  it("cancelling a wait does not send the message when the host ends waiting in the handler", () => {
+    const onSend = vi.fn()
+    const onCancelWaiting = vi.fn()
+    function Host() {
+      const [waiting, setWaiting] = React.useState(true)
+      return (
+        <Composer
+          defaultValue="Draw the new login flow."
+          waiting={waiting}
+          onCancelWaiting={() => {
+            onCancelWaiting()
+            setWaiting(false)
+          }}
+          onSend={onSend}
+        />
+      )
+    }
+    render(<Host />)
+    fireEvent.click(screen.getByRole("button", { name: composerCopy.waiting }))
+    expect(onCancelWaiting).toHaveBeenCalledTimes(1)
+    expect(onSend).not.toHaveBeenCalled()
+    expect(field()).toHaveValue("Draw the new login flow.")
+  })
+
   it("moves focus to the field when Send turns into Stop under it", () => {
     const { rerender } = render(<Composer defaultValue="Hi" />)
     const send = screen.getByRole("button", { name: "Send" })
