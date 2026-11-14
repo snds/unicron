@@ -12,6 +12,7 @@ import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
 import { AppFrameRailContext } from "./app-frame-context"
 import { NavMark, formatNavCount, nameWithMark, railItemVariants, resolveNavMark, rovingTarget, type NavMarkProp } from "./rail"
+import { swatchFillClasses, type SwatchId } from "./tile"
 import { Tooltip, TooltipContent } from "./tooltip"
 
 /* ── Section ─────────────────────────────────────────────────────────────────────────────────── */
@@ -131,21 +132,9 @@ function checkableItems(root: HTMLElement | null): HTMLElement[] {
 /** A calendar's, a note's or a persona's colour: one of the twelve swatch roles (contract 5.1b #55). */
 export type NavItemSwatch = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
-// Static, so Tailwind sees every class. The roles are the foundation's `--swatch-01` … `--swatch-12`
-// (contract 5.1b #55); until a theme defines them the square falls back to label ink.
-const SWATCH: Record<NavItemSwatch, string> = {
-  1: "bg-[color:var(--swatch-01,var(--text-label))]",
-  2: "bg-[color:var(--swatch-02,var(--text-label))]",
-  3: "bg-[color:var(--swatch-03,var(--text-label))]",
-  4: "bg-[color:var(--swatch-04,var(--text-label))]",
-  5: "bg-[color:var(--swatch-05,var(--text-label))]",
-  6: "bg-[color:var(--swatch-06,var(--text-label))]",
-  7: "bg-[color:var(--swatch-07,var(--text-label))]",
-  8: "bg-[color:var(--swatch-08,var(--text-label))]",
-  9: "bg-[color:var(--swatch-09,var(--text-label))]",
-  10: "bg-[color:var(--swatch-10,var(--text-label))]",
-  11: "bg-[color:var(--swatch-11,var(--text-label))]",
-  12: "bg-[color:var(--swatch-12,var(--text-label))]",
+/** The swatch's fill: the one shared class map (Tile's), so a NavItem square and a CalendarEvent bar read the same role. */
+function swatchFill(swatch: NavItemSwatch): string {
+  return swatchFillClasses[String(swatch).padStart(2, "0") as SwatchId]
 }
 
 export type NavItemTone = "neutral" | "critical"
@@ -297,7 +286,7 @@ function NavItem({
       {icon ? <Icon name={icon} /> : null}
       {swatch ? (
         <span data-slot="nav-item-swatch" aria-hidden="true" className="inline-flex size-5 shrink-0 items-center justify-center">
-          <span className={cn("size-2", SWATCH[swatch])} />
+          <span className={cn("size-2", swatchFill(swatch))} />
         </span>
       ) : null}
       <span className="flex min-w-0 flex-1 flex-col">

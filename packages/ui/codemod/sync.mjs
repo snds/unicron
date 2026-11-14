@@ -137,7 +137,10 @@ ${sorted.map((n) => `| ${code(n)} | ${map[n] === null ? "none" : code(map[n])} |
 
 function SAME_WORD_NOTE(name) {
   const drawn = {
+    badge: "an award ribbon",
+    category: "a tree of boxes",
     error: "a slashed circle (reads as blocked)",
+    history: "a dotted circle round clock hands",
     pin: "a pushpin",
     rule: "a shield with lines",
     send: "a paper plane pointing right (kept for a Sent folder)",

@@ -55,10 +55,10 @@ These Material names are also names in the curated Carbon set, but the right Car
 
 | Material | Becomes | Carbon's icon of the old name is |
 |---|---|---|
-| `badge` | `user--identification` | a variant of the same idea |
-| `category` | `categories` | a variant of the same idea |
+| `badge` | `user--identification` | an award ribbon |
+| `category` | `categories` | a tree of boxes |
 | `error` | `warning` | a slashed circle (reads as blocked) |
-| `history` | `recently-viewed` | a variant of the same idea |
+| `history` | `recently-viewed` | a dotted circle round clock hands |
 | `pin` | `string-integer` | a pushpin |
 | `rule` | `test-tool` | a shield with lines |
 | `send` | `send--alt` | a paper plane pointing right (kept for a Sent folder) |

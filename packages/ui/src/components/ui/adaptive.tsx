@@ -3,6 +3,7 @@
 "use client"
 
 import * as React from "react"
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
@@ -393,7 +394,7 @@ function AdaptiveMenuItem({ icon, children, onSelect, variant = "default", disab
   const form = useMenuForm("AdaptiveMenuItem")
   if (form.sheet) {
     return (
-      <button
+      <ButtonPrimitive
         type="button"
         data-slot="adaptive-menu-item"
         data-variant={variant}
@@ -406,7 +407,7 @@ function AdaptiveMenuItem({ icon, children, onSelect, variant = "default", disab
       >
         {icon ? <Icon name={icon} /> : null}
         {children}
-      </button>
+      </ButtonPrimitive>
     )
   }
   return (
@@ -503,7 +504,7 @@ function AdaptiveMenuRadioItem({ value, icon, children, disabled }: { value: str
   if (form.sheet) {
     const checked = radio.value === value
     return (
-      <button
+      <ButtonPrimitive
         type="button"
         role="radio"
         aria-checked={checked}
@@ -519,7 +520,7 @@ function AdaptiveMenuRadioItem({ value, icon, children, disabled }: { value: str
             <Icon name="checkmark" size="sm" />
           </span>
         ) : null}
-      </button>
+      </ButtonPrimitive>
     )
   }
   return (
@@ -547,7 +548,7 @@ function AdaptiveMenuCheckboxItem({
   const form = useMenuForm("AdaptiveMenuCheckboxItem")
   if (form.sheet) {
     return (
-      <button
+      <ButtonPrimitive
         type="button"
         role="checkbox"
         aria-checked={checked}
@@ -563,7 +564,7 @@ function AdaptiveMenuCheckboxItem({
             <Icon name="checkmark" size="sm" />
           </span>
         ) : null}
-      </button>
+      </ButtonPrimitive>
     )
   }
   return (

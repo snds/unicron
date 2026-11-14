@@ -8,7 +8,7 @@ import * as React from "react"
 
 import { cn } from "../../lib/utils"
 import { TextAction, rowClasses } from "../security/parts"
-import { Switch } from "./switch"
+import { ToggleRow } from "./toggle-row"
 
 /** Where an update stands, as the update kit's shell reports it. */
 export type UpdateState = "idle" | "checking" | "up_to_date" | "downloading" | "ready" | "available" | "failed"
@@ -256,34 +256,20 @@ export interface AutoCheckSwitchProps extends Omit<React.ComponentProps<"div">, 
 }
 
 /**
- * The "Check automatically" row: a label, when the check runs, and a switch. Nothing renders when
- * the build has no updates, since there is nothing to check.
+ * The "Check automatically" row: a Toggle Row with a label, when the check runs, and a switch.
+ * Nothing renders when the build has no updates, since there is nothing to check.
  */
 function AutoCheckSwitch({ status, onCheckedChange, disabled, words, className, ...props }: AutoCheckSwitchProps) {
   const w = { ...updateWords, ...words }
-  const id = React.useId()
   if (!status.enabled) return null
-  // The Toggle Row look (Figma 32:54): the label in `ui`, one line of description in `caption`, the
-  // switch at the end, the rule on top (contract §9.9). The label is the switch's, so a tap on the
-  // words turns it too; the switch alone is 24 tall.
+  // The shared Toggle Row (Figma 32:54): the label in `ui` names the switch, the one caption line
+  // describes it, the rule on top (contract §9.9), no side padding so it lines up with the Field
+  // Rows above it in About. The whole row is the target.
   return (
-    <div
-      data-slot="auto-check-switch"
-      data-disabled={disabled ? "true" : undefined}
-      className={cn("rule-t flex items-center gap-4 py-3", disabled && "opacity-50", className)}
-      {...props}
-    >
-      <div className="flex min-w-0 flex-1 flex-col">
-        <label htmlFor={`${id}-switch`} className="type-ui text-text-body">
-          {w.autoCheck}
-        </label>
-        <p id={`${id}-description`} className="type-caption text-text-secondary">
-          {w.autoCheckWhen(status.channel)}
-        </p>
-      </div>
-      <Switch
-        id={`${id}-switch`}
-        aria-describedby={`${id}-description`}
+    <div data-slot="auto-check-switch" data-disabled={disabled ? "true" : undefined} className={className} {...props}>
+      <ToggleRow
+        label={w.autoCheck}
+        description={w.autoCheckWhen(status.channel)}
         checked={status.auto_check}
         disabled={disabled}
         onCheckedChange={(on) => onCheckedChange(on)}

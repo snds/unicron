@@ -215,7 +215,7 @@ describe("the update rows in the Field Row and Toggle Row looks", () => {
   it("AutoCheckSwitch: the words are the switch's label, so a tap on them turns it", () => {
     const onCheckedChange = vi.fn()
     const { container } = render(<AutoCheckSwitch status={status1} onCheckedChange={onCheckedChange} />)
-    expect(container.querySelector('[data-slot="auto-check-switch"]')!.className).toContain("rule-t")
+    expect(container.querySelector('[data-slot="auto-check-switch"] [data-slot="toggle-row"]')!.className).toContain("rule-t")
     fireEvent.click(screen.getByText("Check for updates automatically"))
     expect(onCheckedChange).toHaveBeenCalledWith(false)
   })

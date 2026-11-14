@@ -3,6 +3,7 @@
 "use client"
 
 import * as React from "react"
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
 import { StatusOrb, type StatusOrbState } from "./status-orb"
@@ -187,7 +188,7 @@ export function ChatMessage({
  */
 export function ChatMessageMetaButton({ className, type = "button", ...props }: React.ComponentProps<"button">) {
   return (
-    <button
+    <ButtonPrimitive
       data-slot="chat-message-meta-button"
       type={type}
       className={cn("type-overline hit-area cursor-pointer rounded-sm text-inherit underline-offset-3 hover:underline", className)}

@@ -172,7 +172,7 @@ describe("NavItem (Figma 15:487)", () => {
   it("a swatch is an 8px square of the swatch role in the icon's place", () => {
     render(<NavItem label="Personal" swatch={3} onClick={() => {}} />)
     const swatch = screen.getByRole("button", { name: "Personal" }).querySelector('[data-slot="nav-item-swatch"] > span')!
-    expect(classesOf(swatch)).toEqual(expect.arrayContaining(["size-2", "bg-[color:var(--swatch-03,var(--text-label))]"]))
+    expect(classesOf(swatch)).toEqual(expect.arrayContaining(["size-2", "bg-(--swatch-03)"]))
   })
 
   it("checked outside a checkable section is a checkbox", async () => {

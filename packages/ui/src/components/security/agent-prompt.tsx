@@ -9,15 +9,17 @@
 "use client"
 
 import * as React from "react"
+import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
+import { formatCountdown } from "../../lib/format"
 import { Icon, type IconName } from "../icon"
 import { useViewport } from "../use-viewport"
 import { Button } from "../ui/button"
 import { Kbd } from "../ui/kbd"
 import { AdaptiveSheetContent, Sheet, SheetHeader, SheetTitle } from "../ui/sheet"
 import { Spinner } from "../ui/spinner"
-import { Textarea } from "../ui/textarea"
+import { TextField } from "../ui/text-field"
 import { RiskTierBadge, type RiskTier } from "./risk-tier-badge"
 
 /** `reply`: an open question, answered in words; its options (Deny, say) are the other ways out. */
@@ -83,9 +85,7 @@ export const agentPromptStateCopy = {
  * with a leading zero ("28:14", "01:05"), then `NN S` under a minute ("45 S", "05 S").
  */
 export function formatPromptCountdown(ms: number): string {
-  const s = Math.max(0, Math.ceil(ms / 1000))
-  if (s < 60) return `${String(s).padStart(2, "0")} S`
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
+  return formatCountdown(ms / 1000)
 }
 
 export const agentPromptAnnouncements = { waiting: "Waiting for you" } as const
@@ -481,14 +481,14 @@ function AgentPromptReply({
   }
   return (
     <div data-slot="agent-prompt-reply" className="flex flex-col gap-3">
-      <Textarea
+      <TextField
+        multiline
+        minRows={2}
         ref={ref}
         aria-label={agentPromptStateCopy.replyLabel}
         placeholder={agentPromptStateCopy.replyLabel}
-        rows={2}
         value={text}
         readOnly={done}
-        className="min-w-0"
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -590,7 +590,7 @@ function AgentPromptOptions({
         const solid = !done && o.id === solidId
         return (
           <li key={o.id}>
-            <button
+            <ButtonPrimitive
               ref={o.id === solidId ? solidRef : undefined}
               type="button"
               data-slot="agent-prompt-option"
@@ -623,7 +623,7 @@ function AgentPromptOptions({
                   </span>
                 ) : null}
               </span>
-            </button>
+            </ButtonPrimitive>
           </li>
         )
       })}

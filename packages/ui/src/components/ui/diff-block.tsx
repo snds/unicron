@@ -9,6 +9,7 @@ import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { Badge } from "./badge"
 import { Button } from "./button"
+import { COPIED_FOR_MS } from "./code-block"
 
 export type DiffLineKind = "context" | "added" | "removed" | "hunk"
 
@@ -110,8 +111,8 @@ function diffText(lines: readonly DiffLine[]) {
   return lines.map((l) => (l.kind === "hunk" ? l.text : `${l.kind === "added" ? "+" : l.kind === "removed" ? "-" : " "}${l.text}`)).join("\n")
 }
 
-/** How long "Copied" stays (decisions §1: "Copied" for 2 s, no toast). */
-const COPIED_MS = 2000
+/** How long "Copied" stays (decisions §1: "Copied" for 2 s, no toast): CopyButton's one constant. */
+const COPIED_MS = COPIED_FOR_MS
 
 export type DiffBlockProps = Omit<React.ComponentProps<"section">, "children"> & {
   /** The file, as it is named in the repository ("server/auth/login.ts"). Shown as typed, never in capitals. */
