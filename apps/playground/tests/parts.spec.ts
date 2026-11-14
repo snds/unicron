@@ -594,11 +594,32 @@ test("CodeDisplay: a tile is 172, a row 100 with the account 4 under the issuer,
   for (const height of await page.locator('[data-slot="code-display"][data-layout="field"]').evaluateAll((all) => all.map((el) => el.getBoundingClientRect().height))) expect(height % 4).toBe(0)
 })
 
-test("the file chip's name is the label role: Vale's chip is 276 wide", async ({ page }) => {
+test("the file chip's name is the label role, with 48 of layout around its three parts", async ({ page }) => {
   await open(page, "file-chip", "vale")
   const chip = page.locator('[data-slot="file-chip"]').first()
-  expect(Math.round((await chip.boundingBox())!.width)).toBe(276)
-  expect(await chip.locator('[data-slot="file-chip-name"]').evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("14px/20px")
+  const name = chip.locator('[data-slot="file-chip-name"]')
+  // The fix: the name was the ui role (15/20), which made Vale's chip 286.86 wide where Figma
+  // draws 276. The role is pinned exactly.
+  expect(await name.evaluate((el) => `${getComputedStyle(el).fontWeight} ${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("500 14px/20px")
+  const widths = await chip.evaluate((el) => {
+    const of = (slot: string) => el.querySelector(`[data-slot="${slot}"]`)!.getBoundingClientRect().width
+    // The same text in the plain label role, drawn by this machine.
+    const probe = document.createElement("span")
+    probe.className = "type-label"
+    probe.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap"
+    probe.textContent = el.querySelector('[data-slot="file-chip-name"]')!.textContent
+    document.body.append(probe)
+    const label = probe.getBoundingClientRect().width
+    probe.remove()
+    return { chip: el.getBoundingClientRect().width, name: of("file-chip-name"), type: of("file-chip-type"), size: of("file-chip-size"), label }
+  })
+  // Nothing on the name changes what the role draws, and the name is not cut.
+  expect(widths.name).toBeCloseTo(widths.label, 0)
+  // What the layout sets: 12 at each end and 12 between the three parts.
+  expect(widths.chip - widths.name - widths.type - widths.size).toBeCloseTo(48, 1)
+  // The chip's whole width is not pinned: it adds glyph widths, which differ by a few px between
+  // machines (the top tabs test in shell-frame.spec.ts has the numbers). This container draws the
+  // name 158.41 wide and the chip 275.55; Figma draws 158 and 276.
 })
 
 test("an empty Composer draws Send at full strength, and it sends nothing", async ({ page }) => {
