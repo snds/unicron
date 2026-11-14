@@ -20,6 +20,7 @@ import { Kbd } from "../ui/kbd"
 import { AdaptiveSheetContent, Sheet, SheetHeader, SheetTitle } from "../ui/sheet"
 import { Spinner } from "../ui/spinner"
 import { TextField } from "../ui/text-field"
+import { readSecondsToken } from "./copy-countdown"
 import { RiskTierBadge, type RiskTier } from "./risk-tier-badge"
 
 /** `reply`: an open question, answered in words; its options (Deny, say) are the other ways out. */
@@ -43,6 +44,12 @@ export interface AgentPromptOption {
    * another option claims that digit.
    */
   key?: string
+  /**
+   * A standing grant: an answer that keeps applying after this prompt ("Always for Lockdown").
+   * Its key answers only while focus is inside the prompt, so a stray key elsewhere on the page
+   * can never grant it. A click or a tap always works. Mark every "always" answer with it.
+   */
+  standing?: boolean
 }
 
 /** The words the prompt owns, per kind. Hosts pass the kind and the options; the overline is optional. */
@@ -154,11 +161,20 @@ function useNewest(on: boolean) {
   return React.useSyncExternalStore(subscribe, () => newest() === me, () => false)
 }
 
+/**
+ * The key went to something that takes text: a native field, an editable region, or a part with a
+ * text role (`role="textbox"` is how SecretField draws a value; a combobox and a search box type
+ * too). A letter typed there is never an answer.
+ */
 function isTyping(target: EventTarget | null) {
   const el = target as HTMLElement | null
   if (!el || !el.tagName) return false
-  return el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)
+  if (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)) return true
+  return typeof el.closest === "function" && el.closest('[contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"], [role="spinbutton"]') !== null
 }
+
+/** The inert window after a prompt starts listening, in ms, without the stylesheet. */
+const ARM_DELAY_FALLBACK = 0.5
 
 export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, "children" | "title"> {
   kind: AgentPromptKind
@@ -191,7 +207,11 @@ export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, 
   safeAnswer?: string
   /** Time ran out. Default: `onAnswer(safeAnswer)`. A host whose server answers on its own passes a no-op. */
   onExpire?: () => void
-  /** False for an older prompt still on screen; only listening prompts take keys. Default true. */
+  /**
+   * False for an older prompt still on screen; only listening prompts take keys. Default true.
+   * It is also the off switch for the single-key answers (WCAG 2.1.4): with `listen={false}` no
+   * key answers, and every option is still a button.
+   */
   listen?: boolean
   /**
    * Move focus to the safe answer (the reply field, for a reply) when the prompt arrives, but only
@@ -221,8 +241,12 @@ export type AgentPromptPlacement = "adaptive" | "inline"
  * Long or detailed options are numbered rows that wrap.
  *
  * Keys answer by meaning (`agentPromptKeys`): an option's own `key`, else Y the yes and N the safe
- * answer; only options with no key answer to their place, 1 to 9. They work when focus isn't in a
- * text field, and only the newest prompt listens. Once answered it turns quiet (the raised surface
+ * answer; only options with no key answer to their place, 1 to 9. They work when focus isn't in
+ * something that takes text, and only the newest prompt listens. Three guards keep a stray key from
+ * answering: the keys are inert for `--c-agent-prompt-arm-delay` (500ms) after a prompt starts
+ * listening, as the approval frame is; a `standing` answer ("Always") takes its key only while
+ * focus is inside the prompt; and `listen={false}` turns the keys off. Each option says its key
+ * through `aria-keyshortcuts`. Once answered it turns quiet (the raised surface
  * with a hairline) and marks the answer. On a phone the options open in a bottom sheet, or stay in
  * place with `layout="inline"`.
  */
@@ -310,20 +334,32 @@ export function AgentPrompt({
   React.useLayoutEffect(() => {
     latest.current = { options, keys, answerWith }
   })
+  const rootRef = React.useRef<HTMLElement>(null)
+  const scope = React.useId()
   React.useEffect(() => {
     if (!isNewest) return
+    // Inert at first, each time this prompt starts listening: a key already on its way down when
+    // the prompt arrives (or when the one after it is answered) answers nothing.
+    const armedAt = Date.now() + readSecondsToken(rootRef.current, "--c-agent-prompt-arm-delay", ARM_DELAY_FALLBACK) * 1000
     const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat || isTyping(e.target)) return
       const { options, keys, answerWith } = latest.current
       const at = keys.indexOf(e.key.toLowerCase())
       const option = at >= 0 ? options[at] : undefined
       if (!option) return
+      if (Date.now() < armedAt) return
+      // A standing grant takes its key only from inside the prompt (its block, or its sheet).
+      if (option.standing) {
+        const active = document.activeElement
+        const inside = active instanceof Element && active.closest("[data-agent-prompt-scope]")?.getAttribute("data-agent-prompt-scope") === scope
+        if (!inside) return
+      }
       e.preventDefault()
       answerWith(option.id)
     }
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)
-  }, [isNewest])
+  }, [isNewest, scope])
 
   // On arrival, focus goes to the safe answer (or the reply field), unless something else holds it.
   // On a phone only a safe answer in place takes it: the sheet takes its own, and a field there
@@ -399,7 +435,9 @@ export function AgentPrompt({
 
   return (
     <section
+      ref={rootRef}
       data-slot="agent-prompt"
+      data-agent-prompt-scope={scope}
       data-kind={kind}
       data-layout={inSheet ? "sheet" : "inline"}
       data-answered={waiting || sending ? undefined : ""}
@@ -437,7 +475,7 @@ export function AgentPrompt({
             {agentPromptAnswerLabel}
           </Button>
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <AdaptiveSheetContent data-slot="agent-prompt-sheet">
+            <AdaptiveSheetContent data-slot="agent-prompt-sheet" data-agent-prompt-scope={scope}>
               <SheetHeader>
                 <SheetTitle>{overline ?? copy.title}</SheetTitle>
               </SheetHeader>
@@ -591,6 +629,7 @@ function AgentPromptOptions({
             data-safe={o.id === solidId ? "" : undefined}
             disabled={done}
             aria-pressed={done ? answer === o.id : undefined}
+            aria-keyshortcuts={done ? undefined : keyFor(i)}
             onClick={() => onAnswer(o.id)}
           >
             {mark(o.id, <Icon name="checkmark" data-icon="inline-start" />)}
@@ -617,6 +656,7 @@ function AgentPromptOptions({
               data-selected={answer === o.id ? "true" : undefined}
               disabled={done}
               aria-pressed={done ? answer === o.id : undefined}
+              aria-keyshortcuts={done ? undefined : keyFor(i)}
               onClick={() => onAnswer(o.id)}
               className={cn(
                 "hit-area flex w-full min-w-0 cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-(--motion-fast) ease-(--motion-ease) disabled:pointer-events-none disabled:opacity-50 aria-pressed:opacity-100",

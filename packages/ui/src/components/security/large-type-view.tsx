@@ -102,6 +102,8 @@ const SHOULDER_NOTICE_S = 3
 const WARN_AT_S = 30
 const SIZE_STEP = 1.15
 const SIZE_STEPS = 4
+/** The fitted character size is a multiple of this many px (two steps of the 4px grid). */
+const SIZE_GRID = 8
 const SIZE_KEY = "unicron:large-type:size-step"
 const CHAR_EM = 0.62
 
@@ -207,7 +209,9 @@ function Canvas({ value, groupSize, captionsOn, captionMode, caseSensitive, show
                   <span
                     aria-hidden
                     className={cn(
-                      "font-mono leading-none [font-feature-settings:'zero']",
+                      // Not a type role: the one fitted size in the system (--c-large-type-min-size
+                      // to -max-size, a multiple of 8px), on a line as tall as itself.
+                      "font-mono leading-(--c-large-type-leading) [font-feature-settings:'zero']",
                       kind === "digit" && "text-(--c-large-type-digit-ink)",
                       kind === "letter" && "text-(--c-large-type-letter-ink)",
                       kind === "symbol" && "text-(--c-large-type-symbol-ink)",
@@ -220,7 +224,9 @@ function Canvas({ value, groupSize, captionsOn, captionMode, caseSensitive, show
                     <span
                       data-slot="large-type-view-caption"
                       aria-hidden
-                      className="text-(--c-large-type-caption-ink) mt-[0.15em] text-center font-sans text-(length:--c-large-type-caption-size) leading-tight whitespace-nowrap"
+                      // The caption role (13/20), 4 under its character: a role and a spacing step, so
+                      // a row of characters with captions stays on the 4px grid (it was 12/15, 2px under).
+                      className="type-caption text-(--c-large-type-caption-ink) mt-1 text-center whitespace-nowrap"
                     >
                       {caption}
                     </span>
@@ -461,7 +467,10 @@ export function LargeTypeView({
     const em = n * CHAR_EM + Math.max(0, n - g) * 0.1 + Math.max(0, g - 1) * 1.5
     const fit = width > 0 && em > 0 ? width / em : max
     const stepped = fit * Math.pow(SIZE_STEP, sizeStep)
-    return Math.round(Math.max(min, Math.min(max, stepped)))
+    // Held to a multiple of 8px: the character's line (as tall as its size) and the half-em between
+    // wrapped rows then sit on the 4px grid. Rounded down, so the fitted line never overflows.
+    const snapped = Math.floor(Math.min(max, stepped) / SIZE_GRID) * SIZE_GRID
+    return Math.max(min, snapped)
   }, [value, width, groupSize, sizeStep])
 
   const resize = (delta: number) => {

@@ -1,10 +1,26 @@
+import * as React from "react"
 import { act, fireEvent, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AGENT_PROMPT_REPLY, AgentPrompt, agentPromptKeys, agentPromptLayout, formatPromptCountdown } from "./agent-prompt"
 
-const key = (k: string, target: Element = document.body) =>
-  fireEvent.keyDown(target, { key: k })
+// The keys are inert for 500ms after a prompt starts listening (--c-agent-prompt-arm-delay; no
+// stylesheet here, so the fallback). The clock is faked so a test can step past that window.
+const ARM_MS = 500
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] })
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
+const pastArming = () => vi.setSystemTime(Date.now() + ARM_MS + 1)
+
+/** A key pressed once the arming window has passed. `raw` presses it right now. */
+const key = (k: string, target: Element = document.body) => {
+  pastArming()
+  return fireEvent.keyDown(target, { key: k })
+}
+const raw = (k: string, target: Element = document.body) => fireEvent.keyDown(target, { key: k })
 
 describe("AgentPrompt", () => {
   it("owns its title words, and is a region named by them", () => {
@@ -126,6 +142,7 @@ describe("AgentPrompt", () => {
   it("ignores keys with a modifier, and when told not to listen", () => {
     const onAnswer = vi.fn()
     const { rerender } = render(<AgentPrompt kind="permission" onAnswer={onAnswer} />)
+    pastArming()
     fireEvent.keyDown(document.body, { key: "y", metaKey: true })
     expect(onAnswer).not.toHaveBeenCalled()
     rerender(<AgentPrompt kind="permission" onAnswer={onAnswer} listen={false} />)
@@ -387,6 +404,142 @@ describe("formatPromptCountdown", () => {
     expect(formatPromptCountdown(45_000)).toBe("45 S")
     expect(formatPromptCountdown(4_200)).toBe("05 S")
     expect(formatPromptCountdown(0)).toBe("00 S")
+  })
+})
+
+describe("AgentPrompt: a stray key never answers", () => {
+  it("the keys are inert for 500ms after the prompt arrives, then answer", () => {
+    const onAnswer = vi.fn()
+    render(<AgentPrompt kind="permission" onAnswer={onAnswer} />)
+    // A key already on its way down as the prompt arrives.
+    raw("y")
+    raw("n")
+    expect(onAnswer).not.toHaveBeenCalled()
+    vi.setSystemTime(Date.now() + ARM_MS - 1)
+    raw("y")
+    expect(onAnswer).not.toHaveBeenCalled()
+    vi.setSystemTime(Date.now() + 2)
+    raw("y")
+    expect(onAnswer).toHaveBeenCalledTimes(1)
+    expect(onAnswer).toHaveBeenCalledWith("allow")
+  })
+
+  it("a prompt that starts listening when the one after it is answered is inert again", () => {
+    const older = vi.fn()
+    function Two() {
+      const [answer, setAnswer] = React.useState<string>()
+      return (
+        <>
+          <AgentPrompt kind="permission" onAnswer={older} />
+          <AgentPrompt kind="permission" answer={answer} onAnswer={setAnswer} />
+        </>
+      )
+    }
+    render(<Two />)
+    key("y")
+    // The second Y of a double press lands on the older prompt, which has only just started listening.
+    raw("y")
+    expect(older).not.toHaveBeenCalled()
+    key("y")
+    expect(older).toHaveBeenCalledWith("allow")
+  })
+
+  it("a held key (auto-repeat) answers nothing", () => {
+    const onAnswer = vi.fn()
+    render(<AgentPrompt kind="permission" onAnswer={onAnswer} />)
+    pastArming()
+    fireEvent.keyDown(document.body, { key: "y", repeat: true })
+    expect(onAnswer).not.toHaveBeenCalled()
+  })
+
+  it("a key typed into a part with a text role is typing: role textbox (SecretField's value), combobox, searchbox, an editable region", () => {
+    const onAnswer = vi.fn()
+    render(
+      <>
+        <span role="textbox" tabIndex={0} aria-label="Password">
+          hunter2
+        </span>
+        <div role="combobox" tabIndex={0} aria-label="Vault" aria-expanded="false" aria-controls="x" />
+        <div role="searchbox" tabIndex={0} aria-label="Search" />
+        <div role="textbox" aria-label="Note">
+          <span data-testid="inside">words</span>
+        </div>
+        <AgentPrompt kind="permission" onAnswer={onAnswer} />
+      </>
+    )
+    for (const target of [screen.getByRole("textbox", { name: "Password" }), screen.getByRole("combobox"), screen.getByRole("searchbox"), screen.getByTestId("inside")]) {
+      key("y", target)
+      key("n", target)
+    }
+    expect(onAnswer).not.toHaveBeenCalled()
+    // Outside those parts the keys still answer: on a plain button, say.
+    key("n")
+    expect(onAnswer).toHaveBeenCalledWith("deny")
+  })
+
+  const options = [
+    { id: "deny", label: "Deny", safe: true },
+    { id: "once", label: "Allow once" },
+    { id: "always", label: "Always for Lockdown", key: "3", standing: true },
+  ]
+
+  it("a standing grant takes its key only while focus is inside the prompt; the safe answer and the plain yes keep theirs", () => {
+    const onAnswer = vi.fn()
+    render(
+      <>
+        <button type="button">Ask again</button>
+        <AgentPrompt kind="permission" autoFocus={false} onAnswer={onAnswer} options={options} />
+      </>
+    )
+    // Focus on the page's body, then on an unrelated button: 3 grants nothing.
+    key("3")
+    act(() => screen.getByRole("button", { name: "Ask again" }).focus())
+    key("3", screen.getByRole("button", { name: "Ask again" }))
+    expect(onAnswer).not.toHaveBeenCalled()
+    // The safe answer needs no focus.
+    key("n", screen.getByRole("button", { name: "Ask again" }))
+    expect(onAnswer).toHaveBeenLastCalledWith("deny")
+    // With focus on one of the prompt's own buttons, 3 is the standing grant.
+    act(() => screen.getByRole("button", { name: /^Deny/ }).focus())
+    key("3", screen.getByRole("button", { name: /^Deny/ }))
+    expect(onAnswer).toHaveBeenLastCalledWith("always")
+    // A click on it always works.
+    fireEvent.click(screen.getByRole("button", { name: /Always for Lockdown/ }))
+    expect(onAnswer).toHaveBeenCalledTimes(3)
+  })
+
+  it("each option says its key through aria-keyshortcuts, until the prompt is answered", () => {
+    const { rerender } = render(<AgentPrompt kind="permission" onAnswer={() => {}} options={options} />)
+    expect(screen.getByRole("button", { name: /^Deny/ })).toHaveAttribute("aria-keyshortcuts", "N")
+    expect(screen.getByRole("button", { name: /Allow once/ })).toHaveAttribute("aria-keyshortcuts", "Y")
+    expect(screen.getByRole("button", { name: /Always for Lockdown/ })).toHaveAttribute("aria-keyshortcuts", "3")
+    rerender(<AgentPrompt kind="permission" answer="deny" onAnswer={() => {}} options={options} />)
+    expect(screen.getByRole("button", { name: /^Deny/ })).not.toHaveAttribute("aria-keyshortcuts")
+  })
+
+  it("numbered rows say their key too", () => {
+    render(
+      <AgentPrompt
+        kind="choice"
+        onAnswer={() => {}}
+        options={[
+          { id: "a", label: "Rebase onto main", detail: "Keeps one line of history." },
+          { id: "b", label: "Merge main in", detail: "Keeps both lines." },
+        ]}
+      />
+    )
+    expect(screen.getByRole("button", { name: /Rebase onto main/ })).toHaveAttribute("aria-keyshortcuts", "1")
+    expect(screen.getByRole("button", { name: /Merge main in/ })).toHaveAttribute("aria-keyshortcuts", "2")
+  })
+
+  it("listen={false} is the off switch: no key answers, every option is still a button", () => {
+    const onAnswer = vi.fn()
+    render(<AgentPrompt kind="permission" listen={false} onAnswer={onAnswer} />)
+    key("y")
+    key("n")
+    expect(onAnswer).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole("button", { name: /^Deny/ }))
+    expect(onAnswer).toHaveBeenCalledWith("deny")
   })
 })
 

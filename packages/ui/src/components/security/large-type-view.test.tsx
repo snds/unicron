@@ -65,6 +65,21 @@ describe("groups (test 1)", () => {
     expect(captionOf("e")).toBeNull()
     expect(captionOf("r")).toBeNull()
   })
+
+  it("sits on the 4px grid: a character's line is as tall as its fitted size, a multiple of 8px, and a caption is the caption role 4 under it", async () => {
+    await open({}, "Tr4-9lO0_bZ2e")
+    const glyph = charOf("4").firstElementChild as HTMLElement
+    expect(glyph.className.split(" ")).toContain("leading-(--c-large-type-leading)")
+    expect(glyph.className).not.toMatch(/leading-(none|tight|\d)/)
+    const caption = charOf("0").querySelector('[data-slot="large-type-view-caption"]') as HTMLElement
+    expect(caption.className.split(" ")).toEqual(expect.arrayContaining(["type-caption", "mt-1"]))
+    expect(caption.className).not.toMatch(/leading-|text-\(length/)
+    // The fitted size: 40 to 96, in steps of 8 (no stylesheet here, so the 40 and 96 fallbacks).
+    const size = Number.parseFloat((document.querySelector('[data-slot="large-type-view-canvas"]') as HTMLElement).style.fontSize)
+    expect(size).toBeGreaterThanOrEqual(40)
+    expect(size).toBeLessThanOrEqual(96)
+    expect(size % 8).toBe(0)
+  })
 })
 
 describe("accessible name (test 3)", () => {

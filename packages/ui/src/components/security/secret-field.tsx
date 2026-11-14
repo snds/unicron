@@ -14,6 +14,7 @@ import { Icon } from "../icon"
 import { AdaptiveMenuItem, overflowMenuLabel } from "../ui/adaptive"
 import { FieldRowOverflow } from "../ui/field-row"
 import { FloatButton, type FloatButtonKind, type FloatButtonSize } from "../ui/float-button"
+import { fieldTextOnTouch } from "../ui/input"
 import { Skeleton } from "../ui/skeleton"
 import { readSecondsToken, useCopyCountdown, type CopyCountdownState } from "./copy-countdown"
 import { useCrownJewel } from "./crown-jewel"
@@ -1178,7 +1179,9 @@ function SecretFieldEdit({
   }
   const control = cn(
     "text-text-body placeholder:text-text-label min-w-0 flex-1 bg-transparent outline-none disabled:cursor-not-allowed",
-    mono ? "type-code-inline" : "type-ui"
+    mono ? "type-code-inline" : "type-ui",
+    // 16px on a touch screen, as every field: iOS zooms the page into a field set under 16px.
+    fieldTextOnTouch
   )
 
   return (

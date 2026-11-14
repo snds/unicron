@@ -506,6 +506,36 @@ describe("CodeDisplay 1.0: layouts and the segmented countdown", () => {
     expect(root()).toHaveClass("bg-surface-raised", "rule-box")
   })
 
+  it("the issuer sits over the account 10 apart in a tile and 4 in a row, as the Lockdown codes screens draw them; the compact row keeps them touching", () => {
+    const who = () => document.querySelector('[data-slot="code-display-issuer"]')!.parentElement!
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="tile" issuer="GitHub" account="mira@studio.dev" />)
+    expect(who()).toHaveClass("flex-col", "gap-2.5")
+    rerender(<CodeDisplay {...at(18)} layout="row" issuer="GitHub" account="mira@studio.dev" />)
+    expect(who()).toHaveClass("flex-col", "gap-1")
+    rerender(<CodeDisplay {...at(18)} layout="compact" issuer="GitHub" account="mira@studio.dev" />)
+    expect(who().className).not.toMatch(/(^|\s)gap-/)
+  })
+
+  it("the field layout is the code on an item (Lockdown Desktop / 01): no hairline above, the code centred after a label that hugs its words, the bar 10 under it", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="field" label="Steam Guard" />)
+    expect(root()).toHaveAttribute("data-rule", "none")
+    expect(root().className.split(" ")).not.toContain("rule-t")
+    const label = document.querySelector('[data-slot="code-display-label"]') as HTMLElement
+    // The label hugs its words: no fixed column, so the code is centred between it and the seconds.
+    expect(label.className).not.toContain("w-(--c-field-row-label-width)")
+    expect(label).toHaveClass("type-overline", "shrink-0")
+    const codeArea = document.querySelector('[data-slot="code-display-copy"]')!.parentElement!
+    expect(codeArea).toHaveClass("flex-1", "justify-center", "@max-lg/row:justify-start")
+    // 10 under the code's line and 14 above the row's end: the stack's 8 and 12, and 2 on each
+    // side of the bar from its own row, so the forms without a bar stay on the 4px grid.
+    const stack = root().firstElementChild as HTMLElement
+    expect(stack).toHaveClass("gap-2", "pb-3")
+    expect(document.querySelector('[data-slot="code-display-bar-row"]')).toHaveClass("my-0.5")
+    // A field that stands alone can ask for the hairline.
+    rerender(<CodeDisplay {...at(18)} layout="field" label="Steam Guard" rule="top" />)
+    expect(root().className.split(" ")).toContain("rule-t")
+  })
+
   it("a row or a tile is one target: the copy button's hit area covers it, except while concealed", () => {
     const { rerender } = render(<CodeDisplay {...at(18)} layout="tile" />)
     expect(screen.getByRole("button", { name: "Copy code" }).className).toContain("after:inset-0")

@@ -73,6 +73,11 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   density?: CodeDisplayDensity
   /** The field layout's label ("Steam Guard"). Default: `issuer`, else "One-time code". */
   label?: string
+  /**
+   * The field layout's hairline above it. `none` (the default) as Lockdown Desktop / 01 draws the
+   * code under an item's Field Rows; `top` for a field that stands alone or opens a group.
+   */
+  rule?: "top" | "none"
   /** Tap or Enter reveals for one period. Forced inside a CrownJewelSurface. */
   concealed?: boolean
   /** Shows the clock notice past ±15 s. */
@@ -279,6 +284,7 @@ export function CodeDisplay({
   layout: layoutProp,
   density,
   label: labelProp,
+  rule = "none",
   concealed: concealedProp = false,
   skewSeconds = 0,
   warnings = [],
@@ -657,8 +663,11 @@ export function CodeDisplay({
       </span>
     ) : null
 
+  // The issuer over the account: 10 apart in a tile and 4 in a row, as the two Lockdown codes
+  // screens draw them (Desktop / 06: account ink 35 under the tile's top; Mobile / 08: 29 under
+  // the row's). The compact row keeps them touching, in its 56.
   const who2 = (issuer || account) && (
-    <span className="flex min-w-0 flex-col">
+    <span className={cn("flex min-w-0 flex-col", layout === "tile" && "gap-2.5", layout === "row" && "gap-1")}>
       {issuer && (
         <span data-slot="code-display-issuer" className="type-ui-emphasis text-text-body truncate">
           {issuer}
@@ -727,14 +736,21 @@ export function CodeDisplay({
   if (layout === "field") {
     const row = rowClasses("display-auto")
     return (
-      <div {...rootProps} className={cn(row.root, "select-none", className)} {...props}>
+      // As Lockdown Desktop / 01 draws the code on an item, under its Field Rows: no hairline above
+      // it (the rows before it each draw their own; `rule="top"` adds one), the label hugging its
+      // words, the code centred between the label and the seconds, the bar 10 under the code's
+      // line and 14 above the row's end: 12 + 40 + 10 + 4 + 14 = 80. The bar's row carries the odd
+      // 2px on each side of it, so every other form of the field (no bar, a notice under it, an
+      // error) keeps the stack's 8 and 12 and stays on the 4px grid.
+      <div {...rootProps} data-rule={rule} className={cn("@container/row", rule === "top" && "rule-t", "select-none", className)} {...props}>
         <div className="flex flex-col gap-2 pb-3">
           <div className={cn(row.inner, "pb-0")}>
             <div className={row.body}>
-              <span data-slot="code-display-label" className={row.label}>
+              <span data-slot="code-display-label" className="type-overline text-text-label min-w-0 shrink-0">
                 {labelProp ?? issuer ?? "One-time code"}
               </span>
-              <span className="flex min-w-0 flex-1 items-baseline gap-4">{codeEl}</span>
+              {/* Stacked under its label in a narrow column, it starts at the column's edge. */}
+              <span className="flex min-w-0 flex-1 items-baseline justify-center gap-4 @max-lg/row:justify-start">{codeEl}</span>
             </div>
             <span className={row.actions}>
               {secondsEl}
@@ -744,7 +760,7 @@ export function CodeDisplay({
             </span>
           </div>
           {(barEl || nextEl) && (
-            <div className="flex items-center gap-3">
+            <div data-slot="code-display-bar-row" className="my-0.5 flex items-center gap-3">
               {nextEl}
               {barEl}
             </div>

@@ -272,7 +272,7 @@ export function ReviewFrame({
               {showClose && (
                 <DialogPrimitive.Close
                   data-slot="review-close"
-                  render={<FloatButton ref={closeRef} label={closeLabel} icon="close" size={sheet ? "l" : "m"} />}
+                  render={<FloatButton ref={closeRef} label={closeLabel} icon="close" size={sheet ? "l" : "m"} tooltip={false} />}
                 />
               )}
             </div>

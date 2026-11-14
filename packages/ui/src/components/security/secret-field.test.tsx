@@ -381,6 +381,8 @@ describe("SecretField states: reduced motion, high contrast, edit mode", () => {
     const { container, rerender } = render(<SecretField mode="edit" label="New password" value="abc" onChange={onChange} strength="weak" />)
     const input = screen.getByLabelText("New password") as HTMLInputElement
     expect(input).toHaveAttribute("type", "password")
+    // 16px on a touch screen, as every field: iOS zooms the page into a field set under 16px.
+    expect(input.className.split(" ")).toContain("pointer-coarse:text-(length:--type-body-size)")
     expect(input).toHaveAttribute("autocomplete", "new-password")
     expect(input).toHaveAttribute("spellcheck", "false")
     expect(container.querySelector('[data-slot="secret-field-meter"]')).toHaveTextContent("Weak")
