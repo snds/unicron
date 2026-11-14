@@ -816,7 +816,21 @@ export {
 }
 
 // The frame's parts live beside it; they are one family, and one import.
-export * from "./app-frame-context"
+// The frame's state for apps; the context objects and the helpers the parts share stay inside.
+export {
+  MINIMIZE_RESTORE_AT,
+  frameLayoutFor,
+  isExpandedWidth,
+  isPhoneLayout,
+  nextMinimized,
+  useAppFrame,
+  useScrollMinimize,
+  type AppFrameBack,
+  type AppFrameContextValue,
+  type AppFrameHead,
+  type AppFrameLayout,
+  type ScrollMinimizeOptions,
+} from "./app-frame-context"
 export * from "./app-frame-phone"
 export * from "./app-frame-desktop"
 export * from "./app-frame-focus"
