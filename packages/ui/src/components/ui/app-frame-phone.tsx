@@ -10,7 +10,7 @@ import { mergeProps } from "@base-ui/react/merge-props"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { Accessory, type AccessoryProps } from "./accessory"
-import { readLength, useAppFrame } from "./app-frame-context"
+import { AppFrameTabBarContext, readLength, useAppFrame } from "./app-frame-context"
 import type { PageHeadSwitcher } from "./page-head"
 import { TopBar } from "./top-bar"
 
@@ -162,7 +162,8 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
         // The ends size to what they hold and share what is left; the middle takes at most its text.
         className="grid h-control min-w-0 grid-cols-[minmax(max-content,1fr)_minmax(0,max-content)_minmax(max-content,1fr)] items-center gap-2"
       >
-        <div className="flex min-w-0 items-center justify-start">{mark}</div>
+        {/* A lockup inside the app's own component hides its wordmark by this rule instead. */}
+        <div className={cn("flex min-w-0 items-center justify-start", minimized && "[&_[data-slot=app-lockup-name]]:sr-only")}>{mark}</div>
         {minimized && smallTitle ? <SmallTitle title={smallTitle} switcher={smallSwitcher} /> : <span aria-hidden="true" />}
         <div data-slot="app-frame-top-row-actions" className="flex items-center justify-end gap-2">
           {actions}
@@ -178,7 +179,9 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
         data-slot="app-frame-top-row"
         data-minimized={minimized ? "" : undefined}
         className={cn(
-          "absolute inset-x-0 top-0 z-20 px-4",
+          // The solid ground the content scrolls under (the top scroll edge): on the row itself, so
+          // its hairline, an inset shadow, is not covered by a child's fill.
+          "absolute inset-x-0 top-0 z-20 bg-surface-ground px-4",
           !bare && "pb-3",
           // 16 from the top of the screen, or 4 below the status bar where there is one (Figma: y 52).
           "pt-[max(--spacing(1),calc(--spacing(4)-env(safe-area-inset-top)))]",
@@ -190,7 +193,6 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
         )}
         {...props}
       >
-        <AppFrameScrollEdge edge="top" />
         {content}
       </div>
       {rail && actions && frame.rail.top ? createPortal(actions, frame.rail.top) : null}
@@ -209,7 +211,7 @@ export type AppFrameBottomRowProps = Omit<React.ComponentProps<"div">, "children
   variant?: "tabs" | "detail"
   /** `tabs`: the search `FloatButton` (size `l`). `detail`: up to two neutral float buttons. */
   start?: React.ReactNode
-  /** The `TabBar`. The row drives its `minimized` (scrolled) and `orientation` (short screen) unless you set them. */
+  /** The `TabBar` (or the app's component holding it). The row drives its `minimized` (scrolled) and `orientation` (short screen) unless you set them. */
   tabs?: React.ReactNode
   /** `detail`: what fills the row between the ends: a `Composer`, or nothing. */
   fill?: React.ReactNode
@@ -250,13 +252,9 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
   if (!shows) return null
 
   const minimized = frame.minimized && kind === "tabs"
-  const tabBar =
-    React.isValidElement<{ minimized?: boolean; orientation?: "horizontal" | "vertical" }>(tabs)
-      ? React.cloneElement(tabs, {
-          minimized: tabs.props.minimized ?? (rail ? false : minimized),
-          orientation: tabs.props.orientation ?? (rail ? "vertical" : "horizontal"),
-        })
-      : tabs
+  // The tab bar reads these as its defaults, wherever it sits in the app's own components.
+  const placement = { minimized: rail ? false : minimized, orientation: rail ? ("vertical" as const) : ("horizontal" as const) }
+  const tabBar = <AppFrameTabBarContext.Provider value={placement}>{tabs}</AppFrameTabBarContext.Provider>
 
   const inset = "pb-[max(--spacing(0.5),calc(--spacing(4)-env(safe-area-inset-bottom)))] group-data-[keyboard=open]/frame:pb-2"
 
@@ -273,7 +271,7 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
         >
           <AppFrameScrollEdge edge="bottom" />
           {/* The strip at the start of the content's foot, compact (Warpcore U-03: 190 wide). */}
-          <div ref={setInside} data-slot="app-frame-strip" className="pointer-events-auto flex w-48 shrink-0 empty:hidden [&>*:not(:first-child)]:hidden" />
+          <div ref={setInside} data-slot="app-frame-strip" className="pointer-events-auto flex w-48 shrink-0 flex-col empty:hidden [&>*:not(:first-child)]:hidden" />
           {fill ? <div className="pointer-events-auto flex min-w-0 flex-1">{fill}</div> : null}
         </div>
         {frame.rail.bottom
@@ -301,7 +299,7 @@ function AppFrameBottomRow({ variant, start, tabs, fill, end, className, ...prop
     >
       <AppFrameScrollEdge edge="bottom" />
       {/* The status strip's slot, above the row (rules.md 6.4). One strip at a time. */}
-      <div ref={setAbove} data-slot="app-frame-strip" className="pointer-events-auto flex empty:hidden [&>*:not(:first-child)]:hidden" />
+      <div ref={setAbove} data-slot="app-frame-strip" className="pointer-events-auto flex flex-col empty:hidden [&>*:not(:first-child)]:hidden" />
       <div data-slot="app-frame-bottom-row-bar" className="pointer-events-auto flex min-h-control min-w-0 items-end gap-2">
         {start}
         {tabBar}
@@ -351,7 +349,7 @@ function AppFrameAccessory({ scrolledOnly = false, compact, ...props }: AppFrame
       ref={setAlone}
       data-slot="app-frame-strip"
       className={cn(
-        "absolute inset-x-0 bottom-0 z-20 flex px-4 pb-[max(--spacing(0.5),calc(--spacing(4)-env(safe-area-inset-bottom)))]",
+        "absolute inset-x-0 bottom-0 z-20 flex flex-col px-4 pb-[max(--spacing(0.5),calc(--spacing(4)-env(safe-area-inset-bottom)))]",
         frame.layout === "rail" && "end-20"
       )}
     >

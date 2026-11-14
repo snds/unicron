@@ -164,3 +164,39 @@ export function StandInMessage({ from, time, children, mine = false }: { from: s
     </div>
   )
 }
+
+/** Stand-in for FilterChipGroup: square chips in the overline role, the active one inverted ink. */
+export function StandInChips({ label, chips, active }: { label: string; chips: string[]; active: string }) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap items-center gap-1">
+      {chips.map((chip) => (
+        <span
+          key={chip}
+          aria-current={chip === active ? "true" : undefined}
+          className={cx("type-overline inline-flex h-6 items-center px-2", chip === active ? "bg-text-body text-surface-ground" : "text-text-label")}
+        >
+          {chip}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/** Stand-in for a search field: the raised box, a hairline, its placeholder. */
+export function StandInSearch({ placeholder }: { placeholder: string }) {
+  return (
+    <div className="flex h-control items-center bg-surface-raised px-4 rule-box">
+      <span className="type-body text-text-body">{placeholder}</span>
+    </div>
+  )
+}
+
+/** Stand-in for SectionHeader variant="index": a big letter, `// count`, a rule under. */
+export function StandInLetter({ letter, count }: { letter: string; count: string }) {
+  return (
+    <div className="flex items-baseline gap-3 px-0 pt-8 pb-2">
+      <span className="type-title text-text-label">{letter}</span>
+      <span className="type-meta text-text-label">{`// ${count}`}</span>
+    </div>
+  )
+}

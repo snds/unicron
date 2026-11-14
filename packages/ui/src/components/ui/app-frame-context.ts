@@ -212,6 +212,13 @@ export function useAppFrame(): AppFrameContextValue {
 }
 
 /**
+ * What the bottom row tells its tab bar: shrink to the active tab (the page has scrolled), and
+ * stand vertical (the short screen's trailing column). Read by TabBar as the default for its
+ * `minimized` and `orientation`, so a tab bar inside the app's own component follows the frame too.
+ */
+export const AppFrameTabBarContext = React.createContext<{ minimized: boolean; orientation: "horizontal" | "vertical" } | null>(null)
+
+/**
  * The sidebar's collapsed state, read by NavSection and NavItem: inside a sidebar drawn as its
  * rail, every section draws its items as rail items, and a lone item (the pinned Settings) does too.
  */

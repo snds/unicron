@@ -8,6 +8,7 @@ import { useRender } from "@base-ui/react/use-render"
 
 import { cn } from "../../lib/utils"
 import { Icon, type IconName } from "../icon"
+import { AppFrameTabBarContext } from "./app-frame-context"
 import { NavMark, nameWithMark, resolveNavMark, rovingTarget, type NavMarkProp } from "./rail"
 
 /**
@@ -70,7 +71,7 @@ export type TabBarProps = Omit<React.ComponentProps<"div">, "onChange"> & {
    * `vertical` (short screens: a 48px column at the trailing edge, contract 5.1b #11).
    */
   orientation?: TabBarOrientation
-  /** The scrolled form: only the active tab, 48 wide (48 high when vertical). The frame drives it. */
+  /** The scrolled form: only the active tab, 48 wide (48 high when vertical). The frame's bottom row drives it unless this is set. */
   minimized?: boolean
 }
 
@@ -91,8 +92,8 @@ function TabBar({
   onValueChange,
   onReselect,
   navigation = "tabs",
-  orientation = "horizontal",
-  minimized = false,
+  orientation: orientationProp,
+  minimized: minimizedProp,
   className,
   children,
   onPointerDown,
@@ -103,6 +104,10 @@ function TabBar({
   onKeyDown,
   ...props
 }: TabBarProps) {
+  // In the frame's bottom row the row says (scrolled, short screen); a prop set here wins.
+  const placed = React.useContext(AppFrameTabBarContext)
+  const orientation = orientationProp ?? placed?.orientation ?? "horizontal"
+  const minimized = minimizedProp ?? placed?.minimized ?? false
   const ref = React.useRef<HTMLDivElement>(null)
   const [scrub, setScrub] = React.useState<string | null>(null)
   const scrubRef = React.useRef<string | null>(null)

@@ -213,7 +213,7 @@ function AppFrameSidebar({
       >
         <AppFrameRailContext.Provider value={true}>
           <div data-slot="app-frame-sidebar-head" className="flex flex-col items-center gap-4">
-            <div className="flex h-control items-center">
+            <div className="flex h-control items-center [&_[data-slot=app-lockup-name]]:sr-only">
               {React.isValidElement<{ showName?: boolean }>(lockup) ? React.cloneElement(lockup, { showName: false }) : lockup}
             </div>
             {isAction(action) ? (
@@ -310,7 +310,7 @@ export type AppFrameSwitcherProps = Omit<React.ComponentProps<"div">, "title"> &
 
 /**
  * AppFrameSwitcher: the sidebar's account, vault or workspace switcher (Synapse Desktop / 01): the
- * overline, the open one's name in the title role, and a chevron float button that opens the menu.
+ * overline, the open one's name in the lead role (24/32, as drawn), and a chevron float button that opens the menu.
  */
 function AppFrameSwitcher({ overline, title, label, menu, onOpen, className, ...props }: AppFrameSwitcherProps) {
   const chevron = <FloatButton label={label} icon="chevron--down" onClick={onOpen} aria-haspopup={menu ? "menu" : undefined} />
@@ -318,7 +318,7 @@ function AppFrameSwitcher({ overline, title, label, menu, onOpen, className, ...
     <div data-slot="app-frame-switcher" className={cn("flex min-w-0 flex-col", className)} {...props}>
       <p className="type-overline truncate text-text-label">{overline}</p>
       <div className="flex min-w-0 items-center gap-2">
-        <p data-slot="app-frame-switcher-title" className="type-title min-w-0 truncate text-text-body">
+        <p data-slot="app-frame-switcher-title" className="type-lead min-w-0 truncate text-text-body">
           {title}
         </p>
         {menu ? (

@@ -37,7 +37,8 @@ const MESSAGES = [
   { id: "ben", sender: "Ben Ortiz", time: "MON", subject: "Lunch Thursday?", preview: "The new place on 5th has a patio. Noon works for me." },
 ]
 
-function Inbox() {
+/** The inbox inside a frame; the app-frame view reuses it in boxes of each shell. */
+export function ValeInbox() {
   const frame = useAppFrame()
   const [section, setSection] = useState("mail")
   const [picked, setPicked] = useState<string | null>(null)
@@ -88,7 +89,7 @@ function Inbox() {
           />
         </AppFrameTopRow>
       ) : (
-        <AppFrameTopRow lockup={<AppLockup name="Vale" />} actions={<FloatButton label="Settings" icon="user--avatar" size="l" />} />
+        <AppFrameTopRow lockup={<AppLockup name="Vale" />} title="Inbox" actions={<FloatButton label="Settings" icon="user--avatar" size="l" />} />
       )}
 
       <AppFrameMain>
@@ -102,7 +103,8 @@ function Inbox() {
         </AppFrameList>
         <AppFrameDetail open={picked !== null} onBack={() => setPicked(null)} aria-label={message?.subject ?? "Message"}>
           {message ? (
-            <AppFrameInset className="flex min-h-full flex-col gap-8">
+            <AppFrameInset fill>
+              <div className="flex flex-1 flex-col gap-8">
               <div className="flex gap-8">
                 {[
                   ["From", message.sender],
@@ -127,12 +129,15 @@ function Inbox() {
                   <StandInComposer placeholder="Reply to Mira" />
                 </div>
               ) : null}
+              </div>
             </AppFrameInset>
           ) : (
-            <AppFrameInset className="flex flex-col gap-1 pt-2">
+            <AppFrameInset>
+              <div className="flex flex-col gap-1 pt-2">
               <p className="type-overline text-text-label">Inbox</p>
               <p className="type-title text-text-body">Nothing open.</p>
               <p className="type-body text-text-secondary">Pick a message to see it here.</p>
+            </div>
             </AppFrameInset>
           )}
         </AppFrameDetail>
@@ -164,7 +169,7 @@ function Inbox() {
 export default function ShellVale() {
   return (
     <AppFrame>
-      <Inbox />
+      <ValeInbox />
     </AppFrame>
   )
 }

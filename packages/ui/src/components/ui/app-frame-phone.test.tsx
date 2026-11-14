@@ -63,7 +63,8 @@ describe("AppFrameTopRow", () => {
     const row = document.querySelector('[data-slot="app-frame-top-row"]')!
     expect(row).toHaveClass("absolute", "top-0", "z-20", "px-4")
     expect(row.querySelector('[data-slot="app-frame-top-row-bar"]')).toHaveClass("h-control")
-    expect(row.querySelector('[data-slot="app-frame-scroll-edge"][data-edge="top"]')).toHaveClass("bg-surface-ground")
+    // The solid ground under it is the row's own, so the scrolled hairline (an inset shadow) shows.
+    expect(row).toHaveClass("bg-surface-ground")
     expect(screen.getByRole("button", { name: "Settings" })).toBeInTheDocument()
   })
 
@@ -189,6 +190,47 @@ describe("AppFrameBottomRow", () => {
     // The content keeps clear of the column; the strip is compact at the foot of the content.
     expect(screen.getByRole("region", { name: "Items" })).toHaveClass("pe-20")
     expect(document.querySelector('[data-slot="accessory"]')).toHaveAttribute("data-compact")
+  })
+})
+
+describe("a tab bar in the app's own component", () => {
+  // Apps wrap their tab bar (ValeTabs); the row's state reaches it through context, not props.
+  function Sections() {
+    return tabs
+  }
+
+  it("still shrinks when the page has scrolled, and turns vertical on a short screen", () => {
+    setViewport(390, 844)
+    const { rerender } = render(
+      <AppFrame minimized>
+        <AppFrameBottomRow tabs={<Sections />} />
+      </AppFrame>
+    )
+    expect(screen.getByRole("tablist", { name: "Sections" })).toHaveAttribute("data-minimized")
+    setViewport(844, 390)
+    rerender(
+      <AppFrame>
+        <AppFrameBottomRow tabs={<Sections />} />
+      </AppFrame>
+    )
+    expect(screen.getByRole("tablist", { name: "Sections" })).toHaveAttribute("aria-orientation", "vertical")
+  })
+
+  it("keeps a value the app sets itself", () => {
+    setViewport(390, 844)
+    render(
+      <AppFrame minimized>
+        <AppFrameBottomRow
+          tabs={
+            <TabBar label="Sections" value="items" minimized={false}>
+              <TabBarItem value="items" icon="password" label="Items" />
+              <TabBarItem value="codes" icon="time" label="Codes" />
+            </TabBar>
+          }
+        />
+      </AppFrame>
+    )
+    expect(screen.getByRole("tablist", { name: "Sections" })).not.toHaveAttribute("data-minimized")
   })
 })
 

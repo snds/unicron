@@ -431,21 +431,40 @@ function AppFrameColumn({ reading = false, className, children, ...props }: AppF
 function AppFrameReading({ className, ...props }: React.ComponentProps<"div">) {
   const frame = useAppFrame()
   return (
-    <div
-      data-slot="app-frame-reading"
-      className={cn("mx-auto w-full max-w-(--c-app-frame-reading)", frame.phone && "px-4", className)}
-      {...props}
-    />
+    <InsetContext.Provider value={true}>
+      <div
+        data-slot="app-frame-reading"
+        className={cn("mx-auto w-full max-w-(--c-app-frame-reading)", frame.phone && "px-4", className)}
+        {...props}
+      />
+    </InsetContext.Provider>
   )
+}
+
+/** Inside an inset (or the reading column) the phone's 16 is already kept. */
+const InsetContext = React.createContext(false)
+
+export type AppFrameInsetProps = React.ComponentProps<"div"> & {
+  /**
+   * Fill the column's height as a column of its own, so the last thing in it can sit at the
+   * column's foot (Vale's reply field, Warpcore's needs-you block): give that thing `mt-auto`, or
+   * let a child grow.
+   */
+  fill?: boolean
 }
 
 /**
  * Content that is not a full-bleed row: on a phone it keeps the 16 from the screen's edges the
  * frames draw (the page head, a chip row, a form); on a desktop the column's own edge is the line.
  */
-function AppFrameInset({ className, ...props }: React.ComponentProps<"div">) {
+function AppFrameInset({ fill = false, className, ...props }: AppFrameInsetProps) {
   const frame = useAppFrame()
-  return <div data-slot="app-frame-inset" className={cn(frame.phone && "px-4", className)} {...props} />
+  const nested = React.useContext(InsetContext)
+  return (
+    <InsetContext.Provider value={true}>
+      <div data-slot="app-frame-inset" className={cn(frame.phone && !nested && "px-4", fill && "flex min-h-full flex-col", className)} {...props} />
+    </InsetContext.Provider>
+  )
 }
 
 /**
@@ -485,8 +504,9 @@ function AppFramePageHead({ title, switcher, collapsed, className, ...props }: P
     return () => setHead(null)
   }, [registers, title, switcherLabel, swipes, popup, setHead])
 
+  const inset = React.useContext(InsetContext)
   return (
-    <div data-slot="app-frame-page-head" className={cn(frame.phone ? "px-4 pb-4" : "pb-8", className)}>
+    <div data-slot="app-frame-page-head" className={cn(frame.phone ? cn("pb-4", !inset && "px-4") : "pb-8", className)}>
       <PageHead title={title} switcher={switcher} collapsed={collapsed ?? frame.layout === "rail"} {...props} />
     </div>
   )
@@ -499,14 +519,20 @@ export type AppFrameSidePanelProps = Omit<React.ComponentProps<"aside">, "title"
   onOpenChange: (open: boolean) => void
   /** Its name: the panel's label, and the sheet's title when it is one. */
   title: string
+  /**
+   * What the content column must keep beside it for the panel to stand as a column: `room`, 960
+   * (Vale 3.2: a panel beside a message), or `detail`, the least a detail gets, 480 (Synapse's
+   * activity beside the overview).
+   */
+  minContent?: "room" | "detail"
 }
 
 /**
  * A third column beside the detail (Vale's sender panel, Synapse's activity), 312 wide, with a
- * rule at its start. It stands as a column only when the detail keeps 960 beside it (Vale 3.2);
+ * rule at its start. It stands as a column only when the content keeps `minContent` beside it;
  * with less room, and on a phone, it is a sheet from the side.
  */
-function AppFrameSidePanel({ open, onOpenChange, title, className, children, ...props }: AppFrameSidePanelProps) {
+function AppFrameSidePanel({ open, onOpenChange, title, minContent = "room", className, children, ...props }: AppFrameSidePanelProps) {
   const frame = useAppFrame()
   const [el, setEl] = React.useState<HTMLElement | null>(null)
   const [anchor, setAnchor] = React.useState<HTMLSpanElement | null>(null)
@@ -519,7 +545,7 @@ function AppFrameSidePanel({ open, onOpenChange, title, className, children, ...
     if (!columns || frame.phone || !frame.split) return
     const measure = () => {
       const panel = readLength(columns, "--c-app-frame-side-panel", 312) + 36
-      const need = readLength(columns, "--c-app-frame-side-panel-room", 960)
+      const need = minContent === "detail" ? readLength(columns, "--c-app-frame-detail-min", 480) : readLength(columns, "--c-app-frame-side-panel-room", 960)
       let content = 0
       for (const child of Array.from(columns.children)) {
         if (child === el || child === anchor) continue
@@ -533,7 +559,7 @@ function AppFrameSidePanel({ open, onOpenChange, title, className, children, ...
     const observer = new ResizeObserver(measure)
     observer.observe(columns)
     return () => observer.disconnect()
-  }, [el, anchor, frame.phone, frame.split])
+  }, [el, anchor, frame.phone, frame.split, minContent])
 
   const asColumn = !frame.phone && frame.split && room
   if (asColumn) {

@@ -41,6 +41,8 @@ export type SettingsFrameProps = Omit<React.ComponentProps<"div">, "title"> & {
   search?: React.ReactNode
   /** On a phone, the rows the frame draws first (the drawn Settings rows), above the full section list. */
   overview?: React.ReactNode
+  /** The page's head above the section list (Vale T0: `AppFramePageHead` "Settings // Personal + Work", "Settings"). */
+  head?: React.ReactNode
   /** The open section's rows: `FieldRow`, `ToggleRow`, `SectionHeader`. */
   children?: React.ReactNode
 }
@@ -71,7 +73,7 @@ function grouped(sections: SettingsSection[]): { title?: string; items: Settings
  *
  * Place it in `AppFrameMain`.
  */
-function SettingsFrame({ label = "Settings sections", sections, value, onValueChange, search, overview, className, children, ...props }: SettingsFrameProps) {
+function SettingsFrame({ label = "Settings sections", sections, value, onValueChange, search, overview, head, className, children, ...props }: SettingsFrameProps) {
   const frame = useAppFrame()
   const shownValue = value ?? (frame.split ? (sections[0]?.value ?? null) : null)
   const current = sections.find((s) => s.value === shownValue)
@@ -109,6 +111,7 @@ function SettingsFrame({ label = "Settings sections", sections, value, onValueCh
   return (
     <div data-slot="settings-frame" className={cn("contents", className)} {...props}>
       <AppFrameList size="narrow" aria-label={label} className={cn(frame.split && "w-[calc(var(--c-app-frame-settings-list)+--spacing(3))]")}>
+        {head}
         {!frame.split && overview ? <div data-slot="settings-frame-overview" className="pb-8">{overview}</div> : null}
         <AppFrameInset className="flex flex-col gap-6">
           {findable ? <div data-slot="settings-frame-search">{search}</div> : null}

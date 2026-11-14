@@ -11,6 +11,7 @@ import {
   AppFrameInset,
   AppFrameList,
   AppFrameMain,
+  AppFramePageHead,
   AppFramePeek,
   AppFrameReading,
   AppFrameSidePanel,
@@ -275,6 +276,21 @@ describe("columns that are always the screen", () => {
     )
     expect(screen.getByTestId("inset")).toHaveClass("px-4")
     expect(screen.getByTestId("reading")).toHaveClass("px-4")
+  })
+
+  it("keeps the inset once: a page head or an inset inside one adds none", () => {
+    setViewport(390, 844)
+    render(
+      <AppFrame>
+        <AppFrameInset fill data-testid="outer">
+          <AppFrameInset data-testid="inner" />
+          <AppFramePageHead title="Steam" />
+        </AppFrameInset>
+      </AppFrame>
+    )
+    expect(screen.getByTestId("outer")).toHaveClass("px-4", "flex", "min-h-full", "flex-col")
+    expect(screen.getByTestId("inner")).not.toHaveClass("px-4")
+    expect(document.querySelector('[data-slot="app-frame-page-head"]')).not.toHaveClass("px-4")
   })
 })
 
