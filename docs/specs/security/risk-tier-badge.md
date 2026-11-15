@@ -1,6 +1,14 @@
 # RiskTierBadge
 
-_Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §2.9 risk tiers, §5.7; `03-architecture.md` §9) · Status: built in `@unicron/ui` 0.4.0 (PR #16); this spec describes the build_
+_Spec v0.2 · 2026-10-17 · Proposed by Lockdown (brief §2.9 risk tiers, §5.7; `03-architecture.md` §9) · Status: built in `@unicron/ui` 0.4.0 (PR #16); this spec describes the build. v1.0 (2026-11-13) draws it as a Badge; the 1.0 section says what changed and wins where an older section disagrees_
+
+## 1.0: the 2026-11 look (contract 5.1a)
+
+The pill is `Badge` (round 1): mono caps (`type-overline`), square on the 2px corner, 20 tall (`md`: 24, `--c-risk-tier-height-md`), a 16px glyph. The tone sorts the states and never carries them alone: **Built in** and **Checking** neutral (label ink in a hairline box; Checking pulses, not under reduced motion), **Verified** neutral in body ink, **Use with care** the warning tone, **Unverified** the critical tone. No tier takes the live colour or the identity colour: neither is about trust. Under high contrast and forced colours a real 1px border in the tier ink replaces the inset edges, which the browser drops. The explain control is a 16px `help` glyph with the explain content as its tooltip and, as before, its description.
+
+**On the needs-you yellow** (`surface="needs-you"`, 2026-11-14): an asking `AgentPrompt` draws the badge in its header, on the yellow. The page's inks are near-white on graphite and read 1.15:1 there, so on that surface the word, the glyph and the 1px edge take `needs-you-on-fill`; the word and the glyph still tell the tiers apart. **Unverified** keeps its critical tile, which brings its own ground. The contrast gate holds the pair (`security:tier-on-needs-you`).
+
+The `--c-risk-tier-*-ink` and `-bg` knobs are removed in 1.0 (no longer read).
 
 ## Purpose and the user job
 
@@ -25,7 +33,7 @@ Composes `badgeVariants` (the pill classes, not the `Badge` element), `Icon`, an
 ```
 risk-tier-badge                 span, data-tier (the resolved state), data-size
 ├─ risk-tier-badge-pill         badgeVariants secondary + tier classes; sr-only "Risk tier: " … ". <hint>"
-│  ├─ (icon)                    Icon, aria-hidden, filled except while loading
+│  ├─ (icon)                    Icon (Carbon), aria-hidden
 │  └─ risk-tier-badge-label     "Built in" · "Verified" · "Use with care" · "Unverified" · "Checking" (never omitted)
 ├─ risk-tier-badge-explain      optional IconButton help → Tooltip with risk-tier-badge-explain-content
 └─ (sr-only)                    the same explain content, always in the tree, for aria-describedby; role="status" on a transition to unverified
@@ -53,10 +61,10 @@ Other `span` props pass through. Exports: `RiskTier`, `RiskTierState`, `riskTier
 | default | Tier tint and ink, icon, word. `standard`: icon and text in the standard ink. `official` and `tolerated`: text stays `foreground`, only the icon takes the ink |
 | explain open | Tooltip in the top layer; `aria-describedby` already points at the sr-only copy |
 | loading | `verified` omitted: muted pill, pulse (none under reduced motion), hourglass, "Checking" |
-| unverified | `verified={false}` or an unknown tier: `destructive` outline, no fill, `gpp_bad`, "Unverified"; hosts block the action |
+| unverified | `verified={false}` or an unknown tier: `destructive` outline, no fill, `rule--cancelled`, "Unverified"; hosts block the action |
 | disabled | n/a for the badge; `explainDisabled` for the help button |
-| reduced motion | Icon fill does not animate |
-| high contrast and forced colors | 1 px border in the current ink, tint dropped, icon weight 600 |
+| reduced motion | The loading pulse stops; nothing else in the badge moves |
+| high contrast and forced colors | 1 px border in the current ink, tint dropped |
 
 ## Behavior and timing
 
@@ -72,13 +80,6 @@ Tier 3 under `risk-tier`:
 
 | Token | Aliases | Purpose |
 |---|---|---|
-| `--c-risk-tier-standard-ink` | `{muted-foreground}` | Icon and text |
-| `--c-risk-tier-standard-bg` | `{secondary}` | |
-| `--c-risk-tier-official-ink` | `{info}` | Icon only |
-| `--c-risk-tier-official-bg` | `color-mix(in oklab, {info} 14%, transparent)` | |
-| `--c-risk-tier-tolerated-ink` | `{warning}` | Icon only |
-| `--c-risk-tier-tolerated-bg` | `color-mix(in oklab, {warning} 18%, transparent)` | |
-| `--c-risk-tier-unverified-ink` | `{destructive}` | Outline, no fill |
 | `--c-risk-tier-height-sm` | `1.25rem` | |
 | `--c-risk-tier-height-md` | `1.5rem` | |
 

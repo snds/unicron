@@ -8,15 +8,15 @@
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "preview": "vite preview",
-    "test:motion": "playwright test"
+    "test:motion": "playwright test",
+    "shots": "node scripts/shots.mjs"
   },
   "dependencies": {
     "@unicron/tokens": "workspace:*",
     "@unicron/ui": "workspace:*",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "sonner": "^2.0.8"
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",

@@ -3,6 +3,7 @@
 // clipboard clear, and a gate hook. Not an Input type="password" variant: that keeps the value in
 // the DOM and only toggles visibility.
 // Promoted from: snds/lockdown · PR snds/unicron (this PR) · DSA none (first principles, Lockdown brief §5.7)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 15:512 Field Row and 32:48 Text Field; no app PR, no DSA record)
 // Spec: docs/specs/security/secret-field.md
 "use client"
 
@@ -10,14 +11,14 @@ import * as React from "react"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
-import { IconButton, type IconButtonProps } from "../icon-button"
-import { Button } from "../ui/button"
-import { Field, FieldDescription, FieldError, FieldLabel } from "../ui/field"
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupTextarea } from "../ui/input-group"
+import { AdaptiveMenuItem, overflowMenuLabel } from "../ui/adaptive"
+import { FieldRowOverflow } from "../ui/field-row"
+import { FloatButton, type FloatButtonKind, type FloatButtonSize } from "../ui/float-button"
+import { fieldTextOnTouch } from "../ui/input"
 import { Skeleton } from "../ui/skeleton"
-import { Spinner } from "../ui/spinner"
-import { readSecondsToken, useCopyCountdown, useReducedMotion } from "./copy-countdown"
+import { readSecondsToken, useCopyCountdown, type CopyCountdownState } from "./copy-countdown"
 import { useCrownJewel } from "./crown-jewel"
+import { TextAction, rowClasses } from "./parts"
 
 export type SecretGate = "none" | "biometric" | "password"
 export type SecretRevealMode = "hold" | "toggle"
@@ -83,6 +84,43 @@ export const secretFieldErrors = {
   copy: "Couldn't copy this field",
 } as const
 
+/** What a fill-only field says in place of its value (a share that may fill, never show or copy). */
+export const secretFieldFillOnlyText = "Fills in the browser only; never shown or copied."
+
+/**
+ * The words on the field's own text actions. Each is part of its control's accessible name
+ * ("Hold to show Password", "Copy Password"), so a voice-control user can say what they see.
+ */
+export const secretFieldWords = {
+  show: "Show",
+  hold: "Hold to show",
+  hide: "Hide",
+  copy: "Copy",
+  retry: "Retry",
+  clearsIn: (seconds: number) => `Clears in ${seconds} s`,
+  cleared: "Cleared",
+} as const
+
+/**
+ * The row's layout, Field Row's sizes (Figma 15:512): `default` puts the label in a column on the
+ * value's baseline (desktop), `stacked` puts it over the value (phone). `auto` (the default) is
+ * `default` in a container 32rem wide or more and `stacked` below it.
+ */
+export type SecretFieldSize = "auto" | "default" | "stacked"
+
+/** A read row's trailing ⋯ (contract 5.1c C18). */
+interface MenuProps {
+  /**
+   * More actions behind a trailing overflow button (⋯), after the text actions (contract 5.1c C18,
+   * Lockdown LA5): `AdaptiveMenu` parts from the app ("Show large type", "History"). Always shown;
+   * a menu on a desktop, a sheet on a phone. A row that copies or shows the value from there uses
+   * `SecretFieldMenuItem`, which runs this field's own copy and reveal, never a path around them.
+   */
+  menu?: React.ReactNode
+  /** The overflow button's name and the menu's title. Default "More actions for {label}". */
+  menuLabel?: string
+}
+
 interface CommonProps {
   /** The field's name ("Password", "Secret Key"). Also the subject of the live-region texts. */
   label: string
@@ -95,8 +133,18 @@ interface CommonProps {
   className?: string
 }
 
-export interface SecretFieldReadProps extends CommonProps {
+export interface SecretFieldReadProps extends CommonProps, MenuProps {
   mode?: "read"
+  /** Never set on a field that reveals and copies; see `SecretFieldFillOnlyProps`. */
+  fillOnly?: false
+  /** Field Row's layout. Default `auto`. */
+  size?: SecretFieldSize
+  /**
+   * Bind controls outside the row to this field: the phone's bottom-row eye and copy buttons
+   * (`SecretFieldRemoteButton`). Make it with `useSecretFieldRemote()`. The remote runs the
+   * field's own reveal and copy, with the same gate, hold, lifetime and clipboard timer.
+   */
+  remote?: SecretFieldRemote
   /** One-shot: the field consumes the buffer and zeroes it after use. */
   getSecret: () => Promise<Uint8Array>
   host: SecretFieldHost | SecretFieldReferenceHost
@@ -151,12 +199,272 @@ export interface SecretFieldEditProps extends CommonProps {
   required?: boolean
   /** For a form library that tracks touched fields. */
   onBlur?: (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void
+  /** Shown in the empty box ("Left empty, it stays as it is."). */
+  placeholder?: string
+  /**
+   * Nothing to type here: the box shows this line instead of an input ("Made when you save",
+   * "Removed when you save.", "Made by a passkey provider; kept as it is."). No value, no Show.
+   */
+  stateText?: string
+  /** Text actions on the label's line, at its end: `Generate`, `Remove`, `Keep`, `Options`. Two at most read well. */
+  actions?: SecretFieldTextAction[]
+  /** Default `new-password` (one line) or `off` (several). `current-password` where a known secret is asked for (a gate). */
+  autoComplete?: "new-password" | "current-password" | "off"
+  /** The input or textarea, for a dialog's first focus. */
+  inputRef?: React.Ref<HTMLInputElement & HTMLTextAreaElement>
 }
 
-export type SecretFieldProps = SecretFieldReadProps | SecretFieldEditProps
+/** One word that does one thing, on the edit field's label line. */
+export interface SecretFieldTextAction {
+  label: string
+  onClick: () => void
+  disabled?: boolean
+  /** Its accessible name when the word alone is not enough ("Generate a password"). It must contain `label`. */
+  "aria-label"?: string
+}
+
+/**
+ * A secret this person may have filled into a page but never sees or copies (a fill-only share).
+ * The row draws its label and one sentence; there is no reveal, no copy, no `more` slot, and
+ * nothing is ever fetched. A remote bound to it draws nothing.
+ */
+export interface SecretFieldFillOnlyProps extends Omit<CommonProps, "children" | "mono">, MenuProps {
+  mode?: "read"
+  fillOnly: true
+  size?: SecretFieldSize
+  remote?: SecretFieldRemote
+  /** In place of `secretFieldFillOnlyText`. */
+  fillOnlyText?: string
+}
+
+export type SecretFieldProps = SecretFieldReadProps | SecretFieldEditProps | SecretFieldFillOnlyProps
 
 export function SecretField(props: SecretFieldProps) {
-  return props.mode === "edit" ? <SecretFieldEdit {...props} /> : <SecretFieldRead {...props} />
+  if (props.mode === "edit") return <SecretFieldEdit {...props} />
+  if (props.fillOnly) return <SecretFieldFillOnly {...props} />
+  return <SecretFieldRead {...props} />
+}
+
+// ── remote: controls outside the row that drive this field ───────────────────────────────────
+
+/** What a remote button draws from: the field's state, as the field reports it. */
+export interface SecretFieldRemoteState {
+  label: string
+  revealMode: SecretRevealMode
+  revealed: boolean
+  /** A gate or a fetch is running. */
+  busy: boolean
+  /** Locked, or the field is showing an error. */
+  disabled: boolean
+  gated: boolean
+  /** The field may be revealed and copied (false for a fill-only field, or before a field binds). */
+  available: boolean
+  copyPhase: CopyCountdownState
+  copySecondsLeft: number
+}
+
+type RevealHandlers = {
+  onPointerDown?: (e: React.PointerEvent<HTMLButtonElement>) => void
+  onPointerUp?: (e: React.PointerEvent<HTMLButtonElement>) => void
+  onPointerCancel?: (e: React.PointerEvent<HTMLButtonElement>) => void
+  onPointerLeave?: (e: React.PointerEvent<HTMLButtonElement>) => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLButtonElement>) => void
+  onKeyUp?: (e: React.KeyboardEvent<HTMLButtonElement>) => void
+  onBlur?: (e: React.FocusEvent<HTMLButtonElement>) => void
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+}
+
+interface RemoteBinding {
+  reveal: RevealHandlers
+  copy: () => void
+  /** Bring the row into view before a remote reveal, so the value shows where it is read. */
+  show: () => void
+}
+
+/** Made by `useSecretFieldRemote()`; pass the same object to the field and to its remote buttons. */
+export interface SecretFieldRemote {
+  /** For `SecretFieldRemoteButton`. */
+  readonly subscribe: (onChange: () => void) => () => void
+  /** For `SecretFieldRemoteButton`: `null` until a field binds. */
+  readonly getSnapshot: () => SecretFieldRemoteState | null
+}
+
+interface RemoteImpl extends SecretFieldRemote {
+  binding: () => RemoteBinding | null
+  bind: (binding: RemoteBinding | null, state: SecretFieldRemoteState | null) => void
+}
+
+function createRemote(): RemoteImpl {
+  let state: SecretFieldRemoteState | null = null
+  let bound: RemoteBinding | null = null
+  const listeners = new Set<() => void>()
+  return {
+    binding: () => bound,
+    subscribe(onChange) {
+      listeners.add(onChange)
+      return () => listeners.delete(onChange)
+    },
+    getSnapshot: () => state,
+    bind(binding, next) {
+      bound = binding
+      const same =
+        state === next ||
+        (state !== null &&
+          next !== null &&
+          (Object.keys(next) as (keyof SecretFieldRemoteState)[]).every((k) => state![k] === next[k]))
+      if (same) return
+      state = next
+      for (const l of listeners) l()
+    },
+  }
+}
+
+/** A remote for one SecretField: pass it to the field's `remote` and to each `SecretFieldRemoteButton`. */
+export function useSecretFieldRemote(): SecretFieldRemote {
+  const [remote] = React.useState(createRemote)
+  return remote
+}
+
+/** Bind a field to its remote: report the state after each render, and hand over the handlers. */
+function useRemoteBinding(remote: SecretFieldRemote | undefined, state: SecretFieldRemoteState, binding: RemoteBinding) {
+  const impl = remote as RemoteImpl | undefined
+  React.useLayoutEffect(() => {
+    if (!impl) return
+    impl.bind(binding, state)
+  })
+  React.useEffect(() => {
+    if (!impl) return
+    return () => impl.bind(null, null)
+  }, [impl])
+}
+
+export interface SecretFieldRemoteButtonProps {
+  remote: SecretFieldRemote
+  /** `reveal`: the eye (hold or tap, as the field says). `copy`: the timed copy. */
+  action: "reveal" | "copy"
+  /** Default: `neutral` for reveal, `primary` for copy (Lockdown's phone item, Figma 40:357). */
+  kind?: FloatButtonKind
+  /** Default `l` (48), the phone's bottom row. */
+  size?: FloatButtonSize
+}
+
+/**
+ * A float button in the phone's bottom row that drives a SecretField somewhere above it: the eye
+ * shows the value in the field's own row (held or tapped, gated, for the field's lifetime), and
+ * copy runs the field's timed copy. Its name says what it does ("Hold to show Password", "Copy
+ * Password"); the countdown and "Cleared" show in the row and are spoken there. It draws nothing
+ * until a field binds, and nothing for a fill-only field.
+ */
+export function SecretFieldRemoteButton({ remote, action, kind, size = "l" }: SecretFieldRemoteButtonProps) {
+  const state = React.useSyncExternalStore(remote.subscribe, remote.getSnapshot, () => null)
+  const impl = remote as RemoteImpl
+  if (!state || !state.available) return null
+  if (action === "copy") {
+    return (
+      <FloatButton
+        data-slot="secret-field-remote-copy"
+        label={`${secretFieldWords.copy} ${state.label}`}
+        icon={state.copyPhase === "cleared" ? "checkmark" : "copy"}
+        kind={kind ?? "primary"}
+        size={size}
+        disabled={state.busy || state.disabled}
+        onClick={() => impl.binding()?.copy()}
+      />
+    )
+  }
+  const name = state.revealed
+    ? `${secretFieldWords.hide} ${state.label}`
+    : state.revealMode === "hold"
+      ? `${secretFieldWords.hold} ${state.label}`
+      : `${secretFieldWords.show} ${state.label}`
+  const call = <K extends keyof RevealHandlers>(key: K) =>
+    ((e: Parameters<NonNullable<RevealHandlers[K]>>[0]) => {
+      const handler = impl.binding()?.reveal[key] as ((event: typeof e) => void) | undefined
+      // A reveal starts here: bring the row into view first, so the value shows where it is read.
+      if (!state.revealed && (key === "onPointerDown" || key === "onKeyDown" || key === "onClick")) impl.binding()?.show()
+      handler?.(e)
+    }) as NonNullable<RevealHandlers[K]>
+  return (
+    <FloatButton
+      data-slot="secret-field-remote-reveal"
+      label={name}
+      icon={state.revealed ? "view--off" : "view"}
+      kind={kind ?? "neutral"}
+      size={size}
+      aria-pressed={state.revealed}
+      disabled={state.busy || state.disabled}
+      onPointerDown={call("onPointerDown")}
+      onPointerUp={call("onPointerUp")}
+      onPointerCancel={call("onPointerCancel")}
+      onPointerLeave={call("onPointerLeave")}
+      onKeyDown={call("onKeyDown")}
+      onKeyUp={call("onKeyUp")}
+      onBlur={call("onBlur")}
+      onClick={call("onClick")}
+    />
+  )
+}
+
+// ── the overflow menu's own rows: copy and show through the field's paths ────────────────────────
+
+interface SecretFieldMenuContextValue {
+  label: string
+  revealMode: SecretRevealMode
+  revealed: boolean
+  /** The field can be copied and shown (false for fill-only, a locked field, or one showing an error). */
+  available: boolean
+  busy: boolean
+  copy: () => void
+  /** A tap reveal or hide: the field's own `reveal` and `mask`. Absent in hold mode. */
+  toggle?: () => void
+}
+
+const SecretFieldMenuContext = React.createContext<SecretFieldMenuContextValue | null>(null)
+
+export interface SecretFieldMenuItemProps {
+  /**
+   * `copy`: the field's timed copy (its gate, the clipboard countdown, the conditional clear).
+   * `reveal`: the field's own reveal, shown in the row, gated, for the field's lifetime, one field
+   * at a time. A field that reveals only while held has no tap reveal, so its `reveal` row draws
+   * nothing: Hold to show stays on the row.
+   */
+  action: "copy" | "reveal"
+  /** The row's words. Default "Copy" / "Show" or "Hide". */
+  children?: React.ReactNode
+}
+
+/**
+ * A row of a SecretField's overflow menu that copies or shows its value (contract 5.1c C18). It
+ * runs the field's own handlers, exactly as the row's Copy and Show do, so the gate, the clipboard
+ * countdown and clear, the lifetime and the one-revealed rule all hold. Use it inside `menu`;
+ * an app's own row must never read the secret to copy or show it.
+ */
+export function SecretFieldMenuItem({ action, children }: SecretFieldMenuItemProps) {
+  const field = React.useContext(SecretFieldMenuContext)
+  if (!field) throw new Error("SecretFieldMenuItem must be inside a SecretField's menu.")
+  if (!field.available) return null
+  if (action === "copy") {
+    return (
+      <AdaptiveMenuItem icon="copy" disabled={field.busy} onSelect={field.copy}>
+        {children ?? secretFieldWords.copy}
+      </AdaptiveMenuItem>
+    )
+  }
+  if (!field.toggle) return null
+  return (
+    <AdaptiveMenuItem icon={field.revealed ? "view--off" : "view"} disabled={field.busy} onSelect={field.toggle}>
+      {children ?? (field.revealed ? secretFieldWords.hide : secretFieldWords.show)}
+    </AdaptiveMenuItem>
+  )
+}
+
+/** The trailing ⋯ of a SecretField row, with the field's context for its own menu rows. */
+function SecretFieldOverflow({ field, menu, menuLabel }: { field: SecretFieldMenuContextValue; menu: React.ReactNode; menuLabel?: string }) {
+  return (
+    <SecretFieldMenuContext.Provider value={field}>
+      <FieldRowOverflow label={menuLabel ?? overflowMenuLabel(field.label)}>{menu}</FieldRowOverflow>
+    </SecretFieldMenuContext.Provider>
+  )
 }
 
 // ── one revealed field per document ─────────────────────────────────────────────────────────────
@@ -286,6 +594,10 @@ function SecretFieldRead({
   children,
   id: idProp,
   className,
+  size = "auto",
+  remote,
+  menu,
+  menuLabel,
 }: SecretFieldReadProps) {
   const autoId = React.useId()
   const id = idProp ?? autoId
@@ -298,7 +610,6 @@ function SecretFieldRead({
   // So a gated field reveals as a toggle, with the lifetime, and says so when it shows.
   const revealMode: SecretRevealMode = gated ? "toggle" : revealModeProp
   const holdFellBack = gated && revealModeProp === "hold"
-  const reducedMotion = useReducedMotion()
 
   const root = React.useRef<HTMLDivElement>(null)
   const valueEl = React.useRef<HTMLSpanElement>(null)
@@ -517,7 +828,7 @@ function SecretFieldRead({
 
   // ── reveal control: hold (default) or toggle ────────────────────────────────────────────────────
   const isRevealed = phase === "revealed"
-  const holdHandlers: Pick<IconButtonProps, "onPointerDown" | "onPointerUp" | "onPointerCancel" | "onPointerLeave" | "onKeyDown" | "onKeyUp" | "onBlur" | "onClick"> =
+  const holdHandlers: RevealHandlers =
     revealMode === "hold"
       ? {
           onPointerDown: (e) => {
@@ -570,15 +881,18 @@ function SecretFieldRead({
 
   const copyPhase = countdown.state
   const copyLeft = countdown.secondsLeft
-  const revealGlyph = isRevealed ? "visibility_off" : "visibility"
-  const copyTooltip =
+  const revealName = isRevealed ? `${secretFieldWords.hide} ${label}` : revealMode === "hold" ? `${secretFieldWords.hold} ${label}` : `${secretFieldWords.show} ${label}`
+  const revealWord = isRevealed ? secretFieldWords.hide : revealMode === "hold" ? secretFieldWords.hold : secretFieldWords.show
+  // The tooltip of the old icon button, kept as the copy control's description: how the clear runs.
+  const copyNote =
     copyPhase === "counting"
       ? `Copied · clears in ${copyLeft} s${conditionalClear ? "" : ", even if you copy something else"}`
       : copyPhase === "cleared"
-        ? "Cleared"
+        ? secretFieldWords.cleared
         : gated
           ? `Copy ${label} (confirm it's you first)`
           : undefined
+  const copyNoteId = `${id}-copy-note`
 
   const onControlKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "c") {
@@ -587,108 +901,166 @@ function SecretFieldRead({
     }
   }
 
+  useRemoteBinding(
+    remote,
+    {
+      label,
+      revealMode,
+      revealed: isRevealed,
+      busy: gateBusy || phase === "loading",
+      disabled: locked || phase === "error",
+      gated,
+      available: true,
+      copyPhase,
+      copySecondsLeft: copyLeft,
+    },
+    {
+      reveal: holdHandlers,
+      copy: () => void copy(),
+      show: () => root.current?.scrollIntoView?.({ block: "nearest" }),
+    }
+  )
+
+  const row = rowClasses(size)
+  const labelId = `${id}-label`
+
   return (
-    <div ref={root} data-slot="secret-field" data-mode="read" data-state={phase} data-gate={crown.gated ? "crown-jewel" : gate} data-reveal-mode={revealMode} className={className}>
-      <Field>
-        <FieldLabel htmlFor={id}>{label}</FieldLabel>
-        <div data-slot="secret-field-control" className={cn(mono && "font-mono")}>
-          <InputGroup onKeyDown={onControlKeyDown}>
-            {phase === "error" ? (
-              <span data-slot="secret-field-error" role="alert" className="text-destructive flex flex-1 items-center gap-2 px-2.5 text-sm">
-                {errorWords}
-                <Button variant="link" size="inline" onClick={retry}>
-                  Retry
-                </Button>
-              </span>
-            ) : (
+    <div
+      ref={root}
+      data-slot="secret-field"
+      data-mode="read"
+      data-state={phase}
+      data-gate={crown.gated ? "crown-jewel" : gate}
+      data-reveal-mode={revealMode}
+      data-size={size}
+      className={cn(row.root, className)}
+    >
+      <div data-slot="secret-field-control" className={row.inner} onKeyDown={onControlKeyDown}>
+        <div className={row.body}>
+          <span id={labelId} data-slot="secret-field-label" className={row.label}>
+            {label}
+          </span>
+          {phase === "error" ? (
+            <span data-slot="secret-field-error" role="alert" className="type-caption text-critical-text flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3">
+              {errorWords}
+              <TextAction tone="critical" onClick={retry}>
+                {secretFieldWords.retry}
+              </TextAction>
+            </span>
+          ) : (
+            <span
+              id={id}
+              data-slot="secret-field-value"
+              role="textbox"
+              aria-readonly="true"
+              aria-labelledby={isRevealed ? spelledNameId : hiddenNameId}
+              tabIndex={0}
+              className={cn(
+                // Clipped: a narrow row never lets the mask or a long value run under its actions.
+                "text-text-body flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden rounded-sm whitespace-nowrap select-none",
+                mono ? "type-code-inline" : "type-ui",
+                isRevealed && "tracking-(--c-secret-field-letter-spacing)"
+              )}
+              // Through the style prop as well as the class, so it holds before any stylesheet loads (React sets it through the CSSOM: strict-CSP safe).
+              style={{ userSelect: "none", WebkitUserSelect: "none" }}
+            >
+              {/* Revealed: the text node and its spelled name are written imperatively, never through React state.
+                  The span stays mounted while loading: `reveal` writes into it after `getSecret` resolves, and a
+                  host whose fetch crosses a bridge (any IPC call) resolves after the loading render has committed. */}
+              {/* The wash behind a shown value hugs the text: out in the open, and only as wide as it is. */}
               <span
-                id={id}
-                data-slot="secret-field-value"
-                role="textbox"
-                aria-readonly="true"
-                aria-labelledby={isRevealed ? spelledNameId : hiddenNameId}
-                tabIndex={0}
+                ref={valueEl}
+                data-slot="secret-field-revealed"
                 className={cn(
-                  "mx-1.5 flex h-6 min-w-0 flex-1 items-center truncate rounded-sm px-1 text-sm outline-none transition-colors motion-reduce:transition-none",
-                  isRevealed
-                    ? "bg-(--c-secret-field-revealed-bg) tracking-(--c-secret-field-letter-spacing) contrast-more:bg-transparent forced-colors:bg-transparent"
-                    : "text-muted-foreground"
+                  "min-w-0 truncate",
+                  isRevealed && "rule-box -mx-1 bg-(--c-secret-field-revealed-bg) px-1 contrast-more:bg-transparent forced-colors:bg-transparent"
                 )}
-                style={{ userSelect: "none", WebkitUserSelect: "none" }}
-              >
-                {/* Revealed: the text node and its spelled name are written imperatively, never through React state.
-                    The span stays mounted while loading: `reveal` writes into it after `getSecret` resolves, and a
-                    host whose fetch crosses a bridge (any IPC call) resolves after the loading render has committed. */}
-                <span ref={valueEl} data-slot="secret-field-revealed" className="truncate" />
-                <span id={hiddenNameId} className="sr-only">
-                  {label}, hidden
-                </span>
-                <span id={spelledNameId} ref={spelledEl} className="sr-only" />
-                {phase === "loading" && <Skeleton data-slot="secret-field-loading" className="h-4 flex-1" />}
-                {!isRevealed && phase !== "loading" && (
-                  <>
-                    <span aria-hidden className="tracking-[0.2em] contrast-more:hidden forced-colors:hidden">
-                      {"•".repeat(maskCount)}
-                    </span>
-                    <span aria-hidden className="hidden contrast-more:inline forced-colors:inline">
-                      Hidden
-                    </span>
-                  </>
-                )}
-                {isRevealed && (
-                  <span aria-hidden className="text-muted-foreground ml-2 hidden text-xs contrast-more:inline forced-colors:inline">
-                    Shown
-                  </span>
-                )}
+              />
+              <span id={hiddenNameId} className="sr-only">
+                {label}, hidden
               </span>
-            )}
-            <InputGroupAddon align="inline-end">
-              <IconButton
-                data-slot="secret-field-reveal"
-                label={isRevealed ? `Hide ${label}` : revealMode === "hold" ? `Hold to show ${label}` : `Show ${label}`}
-                aria-pressed={isRevealed}
-                disabled={gateBusy || phase === "loading" || phase === "error" || locked}
-                onPointerDown={holdHandlers.onPointerDown}
-                onPointerUp={holdHandlers.onPointerUp}
-                onPointerCancel={holdHandlers.onPointerCancel}
-                onPointerLeave={holdHandlers.onPointerLeave}
-                onKeyDown={holdHandlers.onKeyDown}
-                onKeyUp={holdHandlers.onKeyUp}
-                onBlur={holdHandlers.onBlur}
-                onClick={holdHandlers.onClick}
-              >
-                {gateFor === "reveal" ? (
-                  <Spinner />
-                ) : (
-                  <GlyphWithGate name={revealGlyph} gated={gated} />
-                )}
-              </IconButton>
-              <IconButton
-                data-slot="secret-field-copy"
-                label={`Copy ${label}`}
-                tooltip={copyTooltip}
-                disabled={gateBusy || phase === "error" || locked}
-                onClick={() => void copy()}
-              >
-                {gateFor === "copy" ? (
-                  <Spinner />
-                ) : copyPhase === "counting" ? (
-                  <CopyCountdown left={copyLeft} total={clipboardSeconds} numeric={reducedMotion} />
-                ) : copyPhase === "cleared" ? (
-                  <>
-                    <Icon name="check" />
-                    <span className="sr-only">Cleared</span>
-                  </>
-                ) : (
-                  <GlyphWithGate name="content_copy" gated={gated} />
-                )}
-              </IconButton>
-              {children && <span data-slot="secret-field-more">{children}</span>}
-            </InputGroupAddon>
-          </InputGroup>
+              <span id={spelledNameId} ref={spelledEl} className="sr-only" />
+              {phase === "loading" && (
+                // The bar sits in a box one text line tall with the line's own baseline (an invisible
+                // letter in the value's role). Alone, the bar gave the value no text baseline, so the
+                // row lined the label up with the bar's bottom edge and grew 8px while it loaded.
+                <span data-slot="secret-field-loading-line" className="flex min-w-0 flex-1 items-center before:invisible before:w-0 before:overflow-hidden before:content-['x']">
+                  <Skeleton data-slot="secret-field-loading" className="h-4 flex-1" />
+                </span>
+              )}
+              {!isRevealed && phase !== "loading" && (
+                <>
+                  <span aria-hidden className="tracking-(--c-secret-field-mask-spacing) contrast-more:hidden forced-colors:hidden">
+                    {"•".repeat(maskCount)}
+                  </span>
+                  <span aria-hidden className="hidden contrast-more:inline forced-colors:inline">
+                    Hidden
+                  </span>
+                </>
+              )}
+              {isRevealed && (
+                <span aria-hidden className="type-overline text-text-label hidden contrast-more:inline forced-colors:inline">
+                  Shown
+                </span>
+              )}
+            </span>
+          )}
         </div>
-        {description && <FieldDescription>{description}</FieldDescription>}
-      </Field>
+        <div data-slot="secret-field-actions" className={row.actions}>
+          {(copyPhase === "counting" || copyPhase === "cleared") && (
+            // The clipboard's own countdown, in the live colour: it is running now (rules §2.5.4).
+            // Spoken through the live region at the start and the end, not every second.
+            <span data-slot="secret-field-copy-countdown" aria-hidden className="type-overline text-secondary-live whitespace-nowrap">
+              {copyPhase === "counting" ? secretFieldWords.clearsIn(copyLeft) : secretFieldWords.cleared}
+            </span>
+          )}
+          <TextAction
+            data-slot="secret-field-reveal"
+            aria-label={revealName}
+            aria-pressed={isRevealed}
+            busy={gateFor === "reveal"}
+            disabled={gateBusy || phase === "loading" || phase === "error" || locked}
+            {...holdHandlers}
+          >
+            {gated && gateFor !== "reveal" && <Icon data-slot="secret-field-gate" name="locked--filled" size="sm" />}
+            {revealWord}
+          </TextAction>
+          <TextAction
+            data-slot="secret-field-copy"
+            aria-label={`${secretFieldWords.copy} ${label}`}
+            aria-describedby={copyNote ? copyNoteId : undefined}
+            busy={gateFor === "copy"}
+            disabled={gateBusy || phase === "error" || locked}
+            onClick={() => void copy()}
+          >
+            {gated && gateFor !== "copy" && <Icon name="locked--filled" size="sm" />}
+            {secretFieldWords.copy}
+          </TextAction>
+          {copyNote && (
+            <span id={copyNoteId} className="sr-only">
+              {copyNote}
+            </span>
+          )}
+          {children && <span data-slot="secret-field-more" className="flex items-baseline gap-4">{children}</span>}
+          {menu ? (
+            <SecretFieldOverflow
+              menu={menu}
+              menuLabel={menuLabel}
+              field={{
+                label,
+                revealMode,
+                revealed: isRevealed,
+                available: !locked && phase !== "error",
+                busy: gateBusy || phase === "loading",
+                copy: () => void copy(),
+                // The same click the row's Show answers in toggle mode; a held reveal has no tap form.
+                toggle: revealMode === "toggle" ? () => (isRevealed ? mask() : void reveal()) : undefined,
+              }}
+            />
+          ) : null}
+        </div>
+      </div>
+      {description && <p data-slot="secret-field-description" className="type-caption text-text-secondary -mt-2 pb-3">{description}</p>}
       <span role="status" aria-live="polite" className="sr-only">
         {live}
       </span>
@@ -696,44 +1068,42 @@ function SecretFieldRead({
   )
 }
 
-function GlyphWithGate({ name, gated }: { name: "visibility" | "visibility_off" | "content_copy"; gated: boolean }) {
-  return (
-    <span className="relative inline-flex">
-      <Icon name={name} />
-      {gated && (
-        <span data-slot="secret-field-gate" className="absolute -right-1 -bottom-1 [&>svg]:size-2.5!">
-          <Icon name="lock" fill />
-        </span>
-      )}
-    </span>
+// ── fill only ────────────────────────────────────────────────────────────────────────────────────
+function SecretFieldFillOnly({ label, description, id: idProp, className, size = "auto", remote, fillOnlyText, menu, menuLabel }: SecretFieldFillOnlyProps) {
+  const autoId = React.useId()
+  const id = idProp ?? autoId
+  const row = rowClasses(size)
+  // Bound, but unavailable: a remote button for this field draws nothing.
+  useRemoteBinding(
+    remote,
+    { label, revealMode: "toggle", revealed: false, busy: false, disabled: true, gated: false, available: false, copyPhase: "idle", copySecondsLeft: 0 },
+    { reveal: {}, copy: () => {}, show: () => {} }
   )
-}
-
-/** The copy countdown: a ring that drains, or, under reduced motion, the seconds as text. */
-function CopyCountdown({ left, total, numeric }: { left: number; total: number; numeric: boolean }) {
-  if (numeric) {
-    return (
-      <span data-slot="secret-field-copy-countdown" className="text-[0.625rem] font-medium tabular-nums">
-        {left} s
-      </span>
-    )
-  }
-  const progress = total > 0 ? Math.max(0, Math.min(1, left / total)) : 0
   return (
-    <svg data-slot="secret-field-copy-countdown" viewBox="0 0 20 20" className="size-4 -rotate-90" aria-hidden fill="none">
-      <circle cx="10" cy="10" r="8" strokeWidth="2" className="stroke-(--c-secret-field-copy-track) forced-colors:stroke-[GrayText]" />
-      <circle
-        cx="10"
-        cy="10"
-        r="8"
-        strokeWidth="2"
-        pathLength={100}
-        strokeDasharray="100"
-        strokeDashoffset={100 - progress * 100}
-        strokeLinecap="round"
-        className="stroke-(--c-secret-field-copy-progress) transition-[stroke-dashoffset] duration-(--motion-tick) ease-linear forced-colors:stroke-[CanvasText]"
-      />
-    </svg>
+    <div data-slot="secret-field" data-mode="read" data-fill-only="" data-state="masked" data-size={size} className={cn(row.root, className)}>
+      <div data-slot="secret-field-control" className={row.inner}>
+        <div className={row.body}>
+          <span id={`${id}-label`} data-slot="secret-field-label" className={row.label}>
+            {label}
+          </span>
+          <span id={id} data-slot="secret-field-value" role="textbox" aria-readonly="true" aria-labelledby={`${id}-label ${id}-words`} tabIndex={0} className="type-ui text-text-secondary min-w-0 flex-1">
+            <span id={`${id}-words`}>{fillOnlyText ?? secretFieldFillOnlyText}</span>
+          </span>
+        </div>
+        {menu ? (
+          // No words here to share a baseline with: the ⋯ centres on the row's line instead.
+          <div data-slot="secret-field-actions" className={cn(row.actions, "self-center")}>
+            {/* Never shown or copied: its own copy and show rows draw nothing here. */}
+            <SecretFieldOverflow
+              menu={menu}
+              menuLabel={menuLabel}
+              field={{ label, revealMode: "toggle", revealed: false, available: false, busy: false, copy: () => {} }}
+            />
+          </div>
+        ) : null}
+      </div>
+      {description && <p data-slot="secret-field-description" className="type-caption text-text-secondary -mt-2 pb-3">{description}</p>}
+    </div>
   )
 }
 
@@ -774,87 +1144,149 @@ function SecretFieldEdit({
   name,
   required,
   onBlur,
+  placeholder,
+  stateText,
+  actions,
+  autoComplete,
+  inputRef,
 }: SecretFieldEditProps) {
   const autoId = React.useId()
   const id = idProp ?? autoId
   const meterId = `${id}-strength`
+  const helperId = `${id}-helper`
   const [shown, setShown] = React.useState(false)
-  const meter = strength ? STRENGTH[strength] : null
+  const meter = strength && stateText === undefined ? STRENGTH[strength] : null
+  const helper = error ?? description
+  const describedBy = [meter ? meterId : null, helper ? helperId : null].filter(Boolean).join(" ") || undefined
   const shared = {
     id,
     name,
     value,
     required,
+    placeholder,
     "aria-required": required || undefined,
     spellCheck: false,
     autoCorrect: "off",
     autoCapitalize: "off",
     disabled,
     "aria-invalid": error ? true : undefined,
-    "aria-describedby": meter ? meterId : undefined,
+    "aria-describedby": describedBy,
     onBlur,
   } as const
   // A masked textarea copies like a password input: not at all.
   const blockWhileMasked = (e: React.SyntheticEvent) => {
     if (!shown) e.preventDefault()
   }
+  const control = cn(
+    "text-text-body placeholder:text-text-label min-w-0 flex-1 bg-transparent outline-none disabled:cursor-not-allowed",
+    mono ? "type-code-inline" : "type-ui",
+    // 16px on a touch screen, as every field: iOS zooms the page into a field set under 16px.
+    fieldTextOnTouch
+  )
 
   return (
-    <div data-slot="secret-field" data-mode="edit" data-multiline={multiline ? "true" : undefined} data-state={shown ? "revealed" : "masked"} className={className}>
-      <Field data-invalid={error ? "true" : undefined} data-disabled={disabled ? "true" : undefined}>
-        <FieldLabel htmlFor={id}>{label}</FieldLabel>
-        <div data-slot="secret-field-control" className={cn(mono && "font-mono")}>
-          <InputGroup>
-            {multiline ? (
-              <InputGroupTextarea
-                {...shared}
-                rows={rows}
-                // A textarea has no type="password": the stylesheet masks it (-webkit-text-security,
-                // or transparent ink where an engine lacks that), and lifts the mask on Show.
-                data-masked={shown ? undefined : ""}
-                onChange={(e) => onChange(e.target.value)}
-                autoComplete="off"
-                onCopy={blockWhileMasked}
-                onCut={blockWhileMasked}
-                onDragStart={blockWhileMasked}
-              />
-            ) : (
-              <InputGroupInput
-                {...shared}
-                type={shown ? "text" : "password"}
-                onChange={(e) => onChange(e.target.value)}
-                autoComplete="new-password"
-              />
-            )}
-            <InputGroupAddon align="inline-end" className={cn(multiline && "self-start")}>
-              <IconButton
-                data-slot="secret-field-reveal"
-                label={shown ? `Hide ${label}` : `Show ${label}`}
-                icon={shown ? "visibility_off" : "visibility"}
-                aria-pressed={shown}
-                disabled={disabled}
-                onClick={() => setShown((s) => !s)}
-              />
-              {children && <span data-slot="secret-field-more">{children}</span>}
-            </InputGroupAddon>
-          </InputGroup>
-        </div>
-        {meter && (
-          <div id={meterId} data-slot="secret-field-meter" data-strength={strength} className="flex items-center gap-2 text-xs">
-            <span aria-hidden className="flex flex-1 gap-1">
-              {[1, 2, 3].map((n) => (
-                <span key={n} className={cn("bg-border h-1 flex-1 rounded-full", n <= meter.segments && meter.className)} />
-              ))}
-            </span>
-            <span className="text-muted-foreground">
-              <span className="sr-only">Strength: </span>
-              {meter.word}
-            </span>
-          </div>
+    <div
+      data-slot="secret-field"
+      data-mode="edit"
+      data-multiline={multiline ? "true" : undefined}
+      data-state={stateText !== undefined ? "settled" : shown ? "revealed" : "masked"}
+      data-invalid={error ? "true" : undefined}
+      data-disabled={disabled ? "true" : undefined}
+      className={cn("flex flex-col gap-1", className)}
+    >
+      {/* The Text Field look (Figma 32:48): an overline label, the box, a helper line. Text actions share the label's line. */}
+      <div className="flex min-w-0 items-baseline gap-4">
+        <label htmlFor={stateText === undefined ? id : undefined} id={`${id}-label`} className={cn("type-overline min-w-0 flex-1", error ? "text-critical-text" : "text-text-label")}>
+          {label}
+        </label>
+        {actions && actions.length > 0 && (
+          <span data-slot="secret-field-actions" className="flex shrink-0 items-baseline gap-4">
+            {actions.map((a) => (
+              <TextAction key={a.label} aria-label={a["aria-label"]} disabled={disabled || a.disabled} onClick={a.onClick}>
+                {a.label}
+              </TextAction>
+            ))}
+          </span>
         )}
-        {description && !error && <FieldDescription>{description}</FieldDescription>}
-        {error && <FieldError>{error}</FieldError>}
-      </Field>
+      </div>
+      <div
+        data-slot="secret-field-control"
+        className={cn(
+          // The box: raised, a 1px hairline inside; 2px primary on focus, 2px critical on error (both inside, so the box never grows).
+          "bg-surface-raised flex min-h-control gap-2 rounded px-4 py-3",
+          multiline ? "items-start" : "items-center",
+          error ? "rule-box-emphasis [--rule-color:var(--critical-fill)]" : "rule-box focus-within:rule-box-emphasis",
+          disabled && "opacity-50"
+        )}
+      >
+        {stateText !== undefined ? (
+          <span data-slot="secret-field-value" aria-labelledby={`${id}-label`} className="type-ui text-text-label min-w-0 flex-1">
+            {stateText}
+          </span>
+        ) : multiline ? (
+          <textarea
+            {...shared}
+            ref={inputRef}
+            data-slot="secret-field-value"
+            rows={rows}
+            // A textarea has no type="password": the stylesheet masks it (-webkit-text-security,
+            // or transparent ink where an engine lacks that), and lifts the mask on Show.
+            data-masked={shown ? undefined : ""}
+            onChange={(e) => onChange(e.target.value)}
+            autoComplete={autoComplete ?? "off"}
+            onCopy={blockWhileMasked}
+            onCut={blockWhileMasked}
+            onDragStart={blockWhileMasked}
+            className={cn(control, "field-sizing-content resize-none")}
+          />
+        ) : (
+          <input
+            {...shared}
+            ref={inputRef}
+            data-slot="secret-field-value"
+            type={shown ? "text" : "password"}
+            onChange={(e) => onChange(e.target.value)}
+            autoComplete={autoComplete ?? "new-password"}
+            className={control}
+          />
+        )}
+        {stateText === undefined && (
+          <TextAction
+            data-slot="secret-field-reveal"
+            aria-label={`${shown ? secretFieldWords.hide : secretFieldWords.show} ${label}`}
+            aria-pressed={shown}
+            disabled={disabled}
+            onClick={() => setShown((s) => !s)}
+          >
+            {shown ? secretFieldWords.hide : secretFieldWords.show}
+          </TextAction>
+        )}
+        {children && <span data-slot="secret-field-more" className="flex shrink-0 items-center gap-2">{children}</span>}
+      </div>
+      {meter && (
+        // The strength rule: three cells and the core's word, always together (the word carries it).
+        <div id={meterId} data-slot="secret-field-meter" data-strength={strength} className="flex items-center gap-3 pt-1">
+          <span aria-hidden className="flex flex-1 gap-0.5">
+            {[1, 2, 3].map((n) => (
+              <span key={n} className={cn("h-1 flex-1", n <= meter.segments ? meter.className : "bg-line-rule")} />
+            ))}
+          </span>
+          <span className="type-overline text-text-label">
+            <span className="sr-only">Strength: </span>
+            {meter.word}
+          </span>
+        </div>
+      )}
+      {helper &&
+        (error ? (
+          <p id={helperId} data-slot="secret-field-error" role="alert" className="type-caption text-critical-text">
+            {error}
+          </p>
+        ) : (
+          <p id={helperId} data-slot="secret-field-description" className="type-caption text-text-secondary">
+            {description}
+          </p>
+        ))}
     </div>
   )
 }

@@ -1,0 +1,40 @@
+{
+  "$description": "Tier 1 · App theme: Lockdown (signal green 152, live steel blue 245 (a proposal in the decision record, not confirmed)). The 28 theme slots, 14 per ground: Figma's `lockdown / graphite` and `lockdown / stone` modes of `Unicron / Theme`, each hex copied exactly from the primitive the role aliases. Emitted in dist/tokens.css as `[data-theme=\"lockdown\"] { --g-theme-… }`. Raw hex only, and only these slots: a change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
+  "$extensions": {
+    "unicron.app": { "name": "lockdown", "order": 3, "figmaModes": { "graphite": "lockdown / graphite", "stone": "lockdown / stone" } }
+  },
+  "theme": {
+    "graphite": {
+      "ground": { "$type": "color", "$value": "#171A18", "$description": "Figma VariableID:5:63 (lockdown/graphite/bg): surface/ground in lockdown / graphite." },
+      "raised": { "$type": "color", "$value": "#1F2320", "$description": "Figma VariableID:5:64 (lockdown/graphite/surf): surface/raised in lockdown / graphite." },
+      "rule": { "$type": "color", "$value": "#303431", "$description": "Figma VariableID:5:65 (lockdown/graphite/rule): line/rule in lockdown / graphite." },
+      "grid-dot": { "$type": "color", "$value": "#373C38", "$description": "Figma VariableID:5:66 (lockdown/graphite/dot): line/grid-dot in lockdown / graphite." },
+      "faint": { "$type": "color", "$value": "#5C625E", "$description": "Figma VariableID:5:67 (lockdown/graphite/faint): text/faint in lockdown / graphite." },
+      "label": { "$type": "color", "$value": "#B0B6B1", "$description": "Figma VariableID:5:68 (lockdown/graphite/mute): text/label in lockdown / graphite." },
+      "secondary": { "$type": "color", "$value": "#D1D5D2", "$description": "Figma VariableID:5:69 (lockdown/graphite/sub): text/secondary in lockdown / graphite." },
+      "body": { "$type": "color", "$value": "#EEF1EE", "$description": "Figma VariableID:5:70 (lockdown/graphite/ink): text/body in lockdown / graphite." },
+      "primary-fill": { "$type": "color", "$value": "#008231", "$description": "Figma VariableID:5:71 (lockdown/graphite/org): primary/fill in lockdown / graphite." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:72 (lockdown/graphite/onO): primary/on-fill in lockdown / graphite." },
+      "primary-text": { "$type": "color", "$value": "#67CA85", "$description": "Figma VariableID:5:73 (lockdown/graphite/ptext): primary/text in lockdown / graphite." },
+      "primary-soft": { "$type": "color", "$value": "#152C1C", "$description": "Figma VariableID:5:74 (lockdown/graphite/psoft): primary/soft in lockdown / graphite." },
+      "primary-display": { "$type": "color", "$value": "#11AE5B", "$description": "Figma VariableID:7:7 (lockdown/graphite/pdisp): primary/display in lockdown / graphite." },
+      "live": { "$type": "color", "$value": "#7CBBF0", "$description": "Figma VariableID:5:75 (lockdown/graphite/sec): secondary/live in lockdown / graphite." }
+    },
+    "stone": {
+      "ground": { "$type": "color", "$value": "#EDF1EE", "$description": "Figma VariableID:5:78 (lockdown/stone/bg): surface/ground in lockdown / stone." },
+      "raised": { "$type": "color", "$value": "#F5FAF6", "$description": "Figma VariableID:5:79 (lockdown/stone/surf): surface/raised in lockdown / stone." },
+      "rule": { "$type": "color", "$value": "#CED4D0", "$description": "Figma VariableID:5:80 (lockdown/stone/rule): line/rule in lockdown / stone." },
+      "grid-dot": { "$type": "color", "$value": "#B9C0BB", "$description": "Figma VariableID:5:81 (lockdown/stone/dot): line/grid-dot in lockdown / stone." },
+      "faint": { "$type": "color", "$value": "#A0A6A1", "$description": "Figma VariableID:5:82 (lockdown/stone/faint): text/faint in lockdown / stone." },
+      "label": { "$type": "color", "$value": "#656A66", "$description": "Figma VariableID:5:83 (lockdown/stone/mute): text/label in lockdown / stone." },
+      "secondary": { "$type": "color", "$value": "#3B3E3C", "$description": "Figma VariableID:5:84 (lockdown/stone/sub): text/secondary in lockdown / stone." },
+      "body": { "$type": "color", "$value": "#141715", "$description": "Figma VariableID:5:85 (lockdown/stone/ink): text/body in lockdown / stone." },
+      "primary-fill": { "$type": "color", "$value": "#007625", "$description": "Figma VariableID:5:86 (lockdown/stone/org): primary/fill in lockdown / stone." },
+      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma VariableID:5:87 (lockdown/stone/onO): primary/on-fill in lockdown / stone." },
+      "primary-text": { "$type": "color", "$value": "#007839", "$description": "Figma VariableID:5:88 (lockdown/stone/ptext): primary/text in lockdown / stone." },
+      "primary-soft": { "$type": "color", "$value": "#CCE8D2", "$description": "Figma VariableID:5:89 (lockdown/stone/psoft): primary/soft in lockdown / stone." },
+      "primary-display": { "$type": "color", "$value": "#007625", "$description": "Figma VariableID:7:8 (lockdown/stone/pdisp): primary/display in lockdown / stone." },
+      "live": { "$type": "color", "$value": "#296898", "$description": "Figma VariableID:5:90 (lockdown/stone/sec): secondary/live in lockdown / stone." }
+    }
+  }
+}

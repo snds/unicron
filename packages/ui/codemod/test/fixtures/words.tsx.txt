@@ -1,0 +1,46 @@
+// Every string here is an ordinary word that happens to be a Material Symbols name.
+// None of them sits in an icon position, so the codemod must leave the file exactly as it is.
+import { useState } from "react"
+
+type Action = "add" | "close" | "search" | "delete" | "edit"
+type Level = "info" | "warning" | "error"
+
+export function Panel({ action, level }: { action: Action; level: Level }) {
+  const [mode, setMode] = useState<"list" | "search">("list")
+  const title = action === "add" ? "Add" : action === "close" ? "Close" : "Search"
+  const tone = level === "error" ? "destructive" : level === "warning" ? "attention" : "muted"
+  const handlers: Record<Action, () => void> = {
+    add: () => setMode("list"),
+    close: () => setMode("list"),
+    search: () => setMode("search"),
+    delete: () => console.error("delete", "warning"),
+    edit: () => console.info("edit"),
+  }
+  switch (action) {
+    case "add":
+    case "close":
+      handlers[action]()
+      break
+    default:
+      handlers["search"]()
+  }
+  return (
+    <form role="search" method="post" data-state={mode} data-level={level} className={tone}>
+      <label htmlFor="search">Search, add, close, delete: it's "home" for every list</label>
+      <input id="search" type="search" name="search" enterKeyHint="search" autoComplete="email" />
+      <input type="password" name="password" />
+      <button type="submit" value="send" title={title} aria-label="send">
+        {mode === "search" ? "search" : "list"}
+      </button>
+      <a href="#home" rel="help" target="link">
+        {`Press ${"add"} then ${mode}`}
+      </a>
+      <Tabs defaultValue="inbox" variant="link" orientation="horizontal">
+        <Tab value="inbox" name="mail" kind="star" />
+      </Tabs>
+    </form>
+  )
+}
+export const routes = ["home", "search", "settings", "history"].map((route) => `/${route}`)
+export const copy = { close: "Close", search: "Search", label: "label", icon_label: "search" }
+export const pattern = /['"](add|close)['"]/

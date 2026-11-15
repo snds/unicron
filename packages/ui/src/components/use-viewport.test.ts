@@ -18,12 +18,14 @@ describe("viewportWidthFor", () => {
   it.each([
     [320, "compact"],
     [382, "compact"],
-    [639, "compact"],
-    [640, "medium"],
+    [599, "compact"],
+    [600, "medium"],
     [669, "medium"],
-    [767, "medium"],
-    [768, "expanded"],
-    [951, "expanded"],
+    [820, "medium"],
+    [951, "medium"],
+    [1023, "medium"],
+    [1024, "expanded"],
+    [1180, "expanded"],
     [1279, "expanded"],
     [1280, "wide"],
     [2559, "wide"],
@@ -36,7 +38,10 @@ describe("where a detail goes", () => {
     ["ultrawide", 5120, 2160, "beside"],
     ["laptop", 1440, 900, "beside"],
     ["iPad on its side", 1180, 820, "beside"],
-    ["iPhone Duo open, on its side", 951, 585, "beside"],
+    ["iPad Pro on its side", 1366, 1024, "beside"],
+    ["iPad mini on its side", 1133, 744, "beside"],
+    // Medium (600 to 1023) is one content column: the detail is pushed, a companion slides over.
+    ["iPhone Duo open, on its side", 951, 585, "sheet"],
     ["iPad upright", 820, 1180, "sheet"],
     ["iPhone Duo open, upright", 669, 867, "sheet"],
     ["iPhone", 390, 844, "sheet"],
@@ -81,6 +86,13 @@ describe("where the nav goes", () => {
     ["iPhone", 390, 844, "bar"],
     ["small iPhone", 375, 667, "bar"],
     ["iPhone in Safari, with its bars showing", 390, 664, "bar"],
+    // Tall and narrow is not squat: height is not scarce on any of these.
+    ["a large iPhone's width in a short browser tab", 430, 667, "bar"],
+    ["a narrow window, 844 tall", 528, 844, "bar"],
+    ["a narrow window, 844 tall, wider", 560, 844, "bar"],
+    ["a window just under medium, 844 tall", 599, 844, "bar"],
+    ["a window just under medium, 900 tall", 599, 900, "bar"],
+    ["narrow and exactly 600 tall", 420, 600, "bar"],
     ["Android foldable, cover", 344, 882, "bar"],
     ["iPhone Duo, open", 669, 867, "bar"],
     ["iPad", 820, 1180, "bar"],
@@ -88,6 +100,10 @@ describe("where the nav goes", () => {
     ["iPhone Duo, folded", 382, 580, "rail"],
     ["iPhone Duo, folded, in landscape", 594, 368, "rail"],
     ["iPhone Duo, two windows", 385, 571, "rail"],
+    ["narrow and just under 600 tall", 420, 599, "rail"],
+    // By size alone these are the folded Duo, so they take its rail (flagged for Sean).
+    ["a small iPhone in Safari, both bars showing", 375, 553, "rail"],
+    ["a small Android phone in Chrome", 360, 560, "rail"],
   ])("%s: %s", (_, w, h, expected) => expect(at(w, h).navPlacement).toBe(expected))
 
   it("doesn't move because a keyboard resized the page", () => {

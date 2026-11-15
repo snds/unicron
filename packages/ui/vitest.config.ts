@@ -6,7 +6,9 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.test.tsx"],
+    // Both spellings: a hook's or a helper's tests are plain .ts (use-viewport.test.ts), and a
+    // pattern that named only .tsx left them out of `pnpm test` and CI.
+    include: ["src/**/*.test.{ts,tsx}"],
     css: false,
   },
 })

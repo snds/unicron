@@ -364,6 +364,8 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   stagger: () => <StaggerSpecimen />,
   draw: () => <DrawSpecimen />,
   shake: () => <ShakeSpecimen />,
+  fade: () => <ToggleSpecimen className="motion-fade" label="Appears where it is" />,
+  anchor: () => <ToggleSpecimen className="motion-anchor" label="A step off its trigger" />,
   dialog: () => <DialogSpecimen />,
   popover: () => <PopoverSpecimen />,
   tooltip: () => <TooltipSpecimen />,

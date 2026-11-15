@@ -1,0 +1,16 @@
+// Icon names that travel through a plain function call or an untyped table.
+// The codemod cannot know these are icons, so it leaves them and says so.
+declare function mark(seq: number, icon: string, text: string): void
+declare const how: string
+
+mark(1, "play_arrow", "Picked up again")
+mark(2, how === "deny" ? "block" : "reply", "Answered")
+mark(3, "error", "Failed")
+mark(4, "close", "Changes rejected")
+console.log("error", "close")
+
+export const SCREENS = [
+  ["security", "security", "Security"],
+  ["recovery", "health_and_safety", "Recovery"],
+  ["status", "warning", "Status"],
+]

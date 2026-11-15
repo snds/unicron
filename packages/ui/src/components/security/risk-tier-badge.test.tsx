@@ -25,6 +25,29 @@ describe("RiskTierBadge: the closed vocabulary", () => {
     expect(screen.getByText("Unverified")).toBeVisible()
   })
 
+  // An asking AgentPrompt is the needs-you yellow. The page's inks are near-white on graphite
+  // (1.15:1 on the yellow), so there the word, the glyph and the edge take the yellow's own ink.
+  it.each(riskTiers)("surface=needs-you draws %s in the ink that sits on the yellow", (tier) => {
+    const { container } = render(<RiskTierBadge tier={tier} verified surface="needs-you" />)
+    expect(container.querySelector('[data-slot="risk-tier-badge"]')).toHaveAttribute("data-surface", "needs-you")
+    const pill = container.querySelector('[data-slot="risk-tier-badge-pill"]')!
+    const classes = pill.className.split(/\s+/)
+    expect(classes).toEqual(expect.arrayContaining(["text-needs-you-on-fill", "inset-ring", "inset-ring-needs-you-on-fill"]))
+    for (const page of ["text-foreground", "text-text-body", "text-muted-foreground", "inset-ring-warning"]) expect(classes).not.toContain(page)
+    // The word still says the tier.
+    expect(pill).toHaveTextContent(riskTierCopy[tier].label)
+  })
+
+  it("on the yellow the blocked state keeps its own critical tile; on the page nothing changes", () => {
+    const { container, rerender } = render(<RiskTierBadge tier="official" verified={false} surface="needs-you" />)
+    const pill = () => container.querySelector('[data-slot="risk-tier-badge-pill"]')!
+    expect(pill().className).toContain("bg-critical-soft")
+    expect(pill().className).not.toContain("text-needs-you-on-fill")
+    rerender(<RiskTierBadge tier="tolerated" verified />)
+    expect(container.querySelector('[data-slot="risk-tier-badge"]')).toHaveAttribute("data-surface", "page")
+    expect(pill().className).not.toContain("needs-you")
+  })
+
   it("reads Checking until the host has verified the manifest", () => {
     const { container } = render(<RiskTierBadge tier="official" />)
     expect(container.querySelector('[data-slot="risk-tier-badge"]')).toHaveAttribute("data-tier", "loading")
@@ -61,6 +84,33 @@ describe("RiskTierBadge: the closed vocabulary", () => {
     expect(pill.className).toContain("forced-colors:border-current")
     expect(pill.className).toContain("contrast-more:bg-transparent")
     expect(pill.className).toContain("h-(--c-risk-tier-height-md)")
-    expect(pill.className).toContain("motion-reduce:")
+    // Carbon icons are SVG paths: no icon-font axes to raise, and no glyph fill to animate.
+    expect(pill.className).not.toContain("--c-icon-")
+    expect(pill.className).not.toContain("svg>text")
+  })
+
+  it("stops the loading pulse under reduced motion", () => {
+    // No verdict yet (verified is undefined) is the loading state.
+    const { container } = render(<RiskTierBadge tier="official" />)
+    const pill = container.querySelector('[data-slot="risk-tier-badge-pill"]')!
+    expect(pill.className).toContain("animate-pulse")
+    expect(pill.className).toContain("motion-reduce:animate-none")
+  })
+})
+
+describe("RiskTierBadge 1.0: Badge's square mono caps, a tone per state", () => {
+  it("built in and verified are quiet, use with care is the warning tone, unverified the critical one", () => {
+    const pill = (tier: RiskTier, verified?: boolean) => {
+      const { container, unmount } = render(<RiskTierBadge tier={tier} verified={verified} />)
+      const cls = container.querySelector('[data-slot="risk-tier-badge-pill"]')!.className
+      unmount()
+      return cls
+    }
+    expect(pill("standard", true)).toContain("type-overline")
+    expect(pill("standard", true)).toContain("rule-box")
+    expect(pill("official", true)).toContain("text-text-body")
+    expect(pill("tolerated", true)).toContain("inset-ring-warning")
+    expect(pill("standard", false)).toContain("inset-ring-critical-fill")
+    expect(pill("standard", true)).not.toMatch(/rounded-full/)
   })
 })

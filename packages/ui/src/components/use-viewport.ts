@@ -4,8 +4,12 @@
 import { useSyncExternalStore } from "react"
 
 /**
- * Minimum widths in CSS pixels, widest first. They are Tailwind's `sm`, `md` and `xl`, plus the
- * `ultrawide` breakpoint in the stylesheet, so a class and this hook always agree.
+ * Minimum widths in CSS pixels, widest first. The three shell classes are the contract's (Unicron
+ * 1.0, contract 5.2): `compact` under 600 is the phone chrome; `medium` 600 to 1023 is the desktop
+ * shell with one content column; `expanded` from 1024 (Tailwind's `lg`) is the full desktop shell.
+ * `wide` (Tailwind's `xl`) and `ultrawide` are expanded with more room: the frame widens its
+ * gutters and its list there. `medium` (600) has no Tailwind twin; decide layout from this hook or
+ * the frame parts, never from a `sm:` or `md:` class.
  *
  * The measured sizes these were checked against, width × height:
  *   iPhone 382–440 × 620–956, or 660–956 × 375–440 turned sideways.
@@ -16,8 +20,8 @@ import { useSyncExternalStore } from "react"
 export const VIEWPORT_WIDTHS = [
   { name: "ultrawide", minWidth: 2560 },
   { name: "wide", minWidth: 1280 },
-  { name: "expanded", minWidth: 768 },
-  { name: "medium", minWidth: 640 },
+  { name: "expanded", minWidth: 1024 },
+  { name: "medium", minWidth: 600 },
   { name: "compact", minWidth: 0 },
 ] as const
 
@@ -30,8 +34,18 @@ const KEYBOARD_MIN_HEIGHT = 120
 /** With a keyboard up, less room than these leaves no space for an app's bars. */
 const TIGHT_HEIGHT = 560
 const MINIMAL_HEIGHT = 400
-/** Narrow, and taller than wide by less than this: a folded Duo, or a window beside another. Not an iPhone. */
+/**
+ * Squat: narrow, under `SQUAT_MAX_HEIGHT` tall, and taller than wide by less than `RAIL_MAX_RATIO`.
+ * A folded Duo (382 × 580) or a window beside another (385 × 571): height is what is scarce there,
+ * so the bottom row stands at the side. Not an iPhone (620 tall and up), and not a tall narrow
+ * window: the ratio alone called 430 × 667 and every width from 528 to 599 at 844 tall squat, and
+ * drew a vertical tab bar beside 400px of empty column on screens that are not short at all.
+ *
+ * By size alone a small phone in a browser with both of its bars showing (375 × 553, 360 × 560)
+ * is the folded Duo, and still takes the side rail; nothing here can tell the two apart.
+ */
 const RAIL_MAX_RATIO = 1.6
+const SQUAT_MAX_HEIGHT = 600
 
 /**
  * - `book`: folded along a vertical line, so there's a left and a right part.
@@ -128,7 +142,7 @@ export function classifyViewport(r: ViewportReading, previous: Viewport | null):
 
   const landscape = r.width >= height
   const short = landscape && height < SHORT_HEIGHT
-  const squat = viewportWidthFor(r.width) === "compact" && height / r.width < RAIL_MAX_RATIO
+  const squat = viewportWidthFor(r.width) === "compact" && height < SQUAT_MAX_HEIGHT && height / r.width < RAIL_MAX_RATIO
   // The smaller of the two, when they disagree: a little spare room beats a cropped control.
   const zoomed = (r.visualScale ?? 1) > 1.01
   const pageHeight = keyboardOpen || zoomed ? r.height : Math.min(r.height, r.visualHeight + r.visualOffsetTop)

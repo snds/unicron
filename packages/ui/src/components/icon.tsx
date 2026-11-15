@@ -1,25 +1,38 @@
+// Owned component (not generated): one icon from the curated Carbon set, drawn as inline SVG.
 // Promoted from: Seeded from snds/mailbird; tone: snds/mailbird · PR snds/unicron#2 · DSA none (raised from correct-use override counts)
-import type { CSSProperties, SVGProps } from "react"
-import type { MaterialSymbol } from "material-symbols"
+// Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 18:738; no app PR, no DSA record)
+import type { SVGProps } from "react"
 
+import { iconNodes, type IconName } from "../icons/registry"
 import { cn } from "../lib/utils"
 
-export type IconName = MaterialSymbol
+// The types travel with the component. The functions (registerIcons, isIconName, iconNames) live
+// in ../icons/registry and are exported from the package root.
+export type { CoreIconName, IconName, UnicronIconRegistry } from "../icons/registry"
 
-export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name" | "fill"> {
-  /** Material Symbols ligature name, e.g. "inbox", "calendar_month". */
+/** `md` is 20 px, the default. `sm` is 16 px, for compact controls. A number is that many px. */
+export type IconSize = "md" | "sm" | number
+
+const SIZES = { md: 20, sm: 16 } as const
+
+/**
+ * An icon's props: the svg's own, less `name`, `children` and `fill`. The fill is always the
+ * current text color. Material Symbols' `fill`, `weight`, `grade` and `opticalSize` props are gone
+ * in 1.0, so passing one is a type error that names it ("Property 'fill' does not exist"). A filled
+ * glyph is a name of its own in Carbon (`star--filled`, `pin--filled`); `unicron-codemod icons`
+ * rewrites `fill` to it where the curated set has one, and lists every other use.
+ */
+export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name" | "children" | "fill"> {
+  /** A Carbon icon name from the curated set, e.g. "arrow--right", or a name the app registered. */
   name: IconName
-  /** FILL axis. Booleans map to 0/1; omit to inherit --c-icon-fill. */
-  fill?: boolean | number
-  /** wght axis, 100–700. Omit to inherit --c-icon-wght. */
-  weight?: number
-  /** GRAD axis, -25–200. Omit to inherit --c-icon-grad. */
-  grade?: number
-  /** opsz axis, 20–48. Match the rendered px size for best stroke balance. */
-  opticalSize?: number
+  /**
+   * `md` 20 px (default), `sm` 16 px, or a number of px. Compact controls (Button, Top Tab, chips)
+   * size their own icons to 16, so a caller rarely sets this.
+   */
+  size?: IconSize
   /** Accessible name. Without it the icon is decorative (aria-hidden). */
   label?: string
-  /** Ink. Omit to inherit the surrounding text color (the usual case inside a control). */
+  /** Ink. Omit to take the surrounding text color (the usual case inside a control). */
   tone?: IconTone
 }
 
@@ -31,78 +44,36 @@ const TONES: Record<IconTone, string> = {
 }
 
 /**
- * Material Symbols, rendered as the glyph inside an <svg>.
+ * One icon: Carbon's 32 px drawing, scaled to the box and filled with the current text color.
  *
- * Why an <svg> wrapper instead of a <span class="material-symbols-rounded">:
- * every shadcn component styles its icons through `svg` selectors
- * (`[&_svg:not([class*='size-'])]:size-4`, `has-[>svg]:…`). Wrapping the
- * ligature in an svg keeps that whole contract working unchanged, while the
- * variable-font axes (fill, weight, grade, optical size) stay live and
- * animatable through CSS custom properties.
+ * The size is set with `width` and `height` attributes, not classes. Attributes lose to any CSS
+ * rule, so a control that sizes its icons (`[&_svg:not([class*='size-'])]:size-4`) and a caller's
+ * own `size-*` class both still win. At 20 px Carbon's 2 px line draws at 1.25 px; at 16, 1 px.
+ *
+ * A name with nothing registered under it draws an empty box of the same size and carries
+ * `data-icon-missing`, so the layout holds and the gap can be found.
  */
-export function Icon({
-  name,
-  fill,
-  weight,
-  grade,
-  opticalSize,
-  label,
-  tone,
-  className,
-  style,
-  ...props
-}: IconProps) {
-  // Props become local overrides of the tier-3 icon tokens, so a parent can
-  // still drive the axes (e.g. nav item active → --c-icon-fill: 1).
-  const axes = {
-    ...(fill !== undefined && { "--c-icon-fill": Number(fill) }),
-    ...(weight !== undefined && { "--c-icon-wght": weight }),
-    ...(grade !== undefined && { "--c-icon-grad": grade }),
-    ...(opticalSize !== undefined && { "--c-icon-opsz": opticalSize }),
-  } as CSSProperties
-
+export function Icon({ name, size = "md", label, tone, className, ...props }: IconProps) {
+  const px = typeof size === "number" ? size : SIZES[size]
+  const nodes = iconNodes(name)
   return (
     <svg
       data-slot="icon"
-      viewBox="0 0 24 24"
-      // Presentation attributes lose to any CSS size class, so shadcn's
-      // size-* rules and caller classNames still win.
-      width="1.25em"
-      height="1.25em"
-      fill="currentColor"
+      data-icon-name={name}
+      data-icon-missing={nodes ? undefined : ""}
+      viewBox="0 0 32 32"
+      width={px}
+      height={px}
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
-      className={cn("shrink-0 select-none", tone && TONES[tone], className)}
-      style={{ ...axes, ...style }}
+      className={cn("shrink-0", tone && TONES[tone], className)}
       {...props}
+      // After the spread: an untyped `fill` from a caller still written for Material Symbols
+      // cannot override the current color.
+      fill="currentColor"
     >
-      {/* Anchored at the left edge, not centred with text-anchor="middle": WebKit (Safari, and
-          every Mac app's web view) centres SVG text by the width of the unjoined letters ("home"
-          is four glyphs, 96 units) before the font joins them into one icon, so a centred icon
-          lands far off to the left, outside the box. Every Material Symbol is exactly 1em wide,
-          so at x=0 it fills the 24-unit box the same in every engine. */}
-      <text
-        x="0"
-        y="12"
-        dominantBaseline="central"
-        fontSize="24"
-        // The glyph is a ligature, so it never takes the text's case or tracking: inside an
-        // uppercase label "link" became "LINK", which isn't an icon, and the letters showed.
-        style={{
-          fontFamily: '"Material Symbols Rounded"',
-          fontFeatureSettings: '"liga"',
-          textTransform: "none",
-          letterSpacing: "normal",
-          fontVariantCaps: "normal",
-          fontVariationSettings:
-            "'FILL' var(--c-icon-fill), 'wght' var(--c-icon-wght), 'GRAD' var(--c-icon-grad), 'opsz' var(--c-icon-opsz)",
-          transition:
-            "--c-icon-fill var(--motion-base) var(--motion-ease), --c-icon-wght var(--motion-base) var(--motion-ease)",
-        }}
-      >
-        {name}
-      </text>
+      {nodes}
     </svg>
   )
 }

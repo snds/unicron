@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { CodeDisplay, CodeDisplayList, groupCode, spellCode } from "./code-display"
+import { AdaptiveMenuItem } from "../ui/adaptive"
+import { CodeDisplay, CodeDisplayList, CodeDisplayMenuItem, groupCode, spellCode } from "./code-display"
 
 const base = { issuer: "GitHub", account: "sean", code: "482917", next: "330558", period: 30, expiresAt: 1000 }
 const at = (secondsLeft: number) => ({ ...base, now: 1000 - secondsLeft })
@@ -465,3 +466,246 @@ describe("states", () => {
     expect(codes[codes.length - 1]).toHaveAttribute("data-rolling", "true")
   })
 })
+
+describe("CodeDisplay 1.0: layouts and the segmented countdown", () => {
+  const cells = () => Array.from(document.querySelectorAll('[data-slot="progress-segment"]'))
+
+  it("field is the default; density still maps (detail → field, list → row, compact → compact)", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} />)
+    expect(root()).toHaveAttribute("data-layout", "field")
+    rerender(<CodeDisplay {...at(18)} density="list" />)
+    expect(root()).toHaveAttribute("data-layout", "row")
+    rerender(<CodeDisplay {...at(18)} density="compact" />)
+    expect(root()).toHaveAttribute("data-layout", "compact")
+    rerender(<CodeDisplay {...at(18)} density="list" layout="tile" />)
+    expect(root()).toHaveAttribute("data-layout", "tile")
+  })
+
+  it("30 cells in the live colour with the seconds in words; critical cells and seconds near expiry", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} />)
+    expect(cells()).toHaveLength(30)
+    expect(cells().filter((c) => c.className.includes("bg-(--c-progress-live)"))).toHaveLength(18)
+    const seconds = document.querySelector('[data-slot="code-display-timer"]')!
+    expect(seconds).toHaveTextContent("18 S")
+    expect(seconds).toHaveClass("type-overline", "text-secondary-live")
+    rerender(<CodeDisplay {...at(4)} />)
+    expect(cells().filter((c) => c.className.includes("bg-(--c-progress-critical)"))).toHaveLength(4)
+    expect(document.querySelector('[data-slot="code-display-timer"]')).toHaveClass("text-critical-text")
+    // The countdown is drawn, not spoken: the group's label carries the seconds.
+    expect(document.querySelector('[data-slot="progress"]')).toHaveAttribute("aria-hidden", "true")
+  })
+
+  it("each layout sets the code in its Figma role", () => {
+    const code = () => document.querySelector('[data-slot="code-display-code"]')!
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="field" />)
+    expect(code()).toHaveClass("type-code-display")
+    rerender(<CodeDisplay {...at(18)} layout="row" />)
+    expect(code()).toHaveClass("type-number-count")
+    rerender(<CodeDisplay {...at(18)} layout="tile" />)
+    expect(code()).toHaveClass("type-number-metric")
+    expect(root()).toHaveClass("bg-surface-raised", "rule-box")
+  })
+
+  it("the issuer sits over the account 10 apart in a tile and 4 in a row, as the Lockdown codes screens draw them; the compact row keeps them touching", () => {
+    const who = () => document.querySelector('[data-slot="code-display-issuer"]')!.parentElement!
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="tile" issuer="GitHub" account="mira@studio.dev" />)
+    expect(who()).toHaveClass("flex-col", "gap-2.5")
+    rerender(<CodeDisplay {...at(18)} layout="row" issuer="GitHub" account="mira@studio.dev" />)
+    expect(who()).toHaveClass("flex-col", "gap-1")
+    rerender(<CodeDisplay {...at(18)} layout="compact" issuer="GitHub" account="mira@studio.dev" />)
+    expect(who().className).not.toMatch(/(^|\s)gap-/)
+  })
+
+  it("the field layout is the code on an item (Lockdown Desktop / 01): no hairline above, the code centred after a label that hugs its words, the bar 10 under it", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="field" label="Steam Guard" />)
+    expect(root()).toHaveAttribute("data-rule", "none")
+    expect(root().className.split(" ")).not.toContain("rule-t")
+    const label = document.querySelector('[data-slot="code-display-label"]') as HTMLElement
+    // The label hugs its words: no fixed column, so the code is centred between it and the seconds.
+    expect(label.className).not.toContain("w-(--c-field-row-label-width)")
+    expect(label).toHaveClass("type-overline", "shrink-0")
+    const codeArea = document.querySelector('[data-slot="code-display-copy"]')!.parentElement!
+    expect(codeArea).toHaveClass("flex-1", "justify-center", "@max-lg/row:justify-start")
+    // 10 under the code's line and 14 above the row's end: the stack's 8 and 12, and 2 on each
+    // side of the bar from its own row, so the forms without a bar stay on the 4px grid.
+    const stack = root().firstElementChild as HTMLElement
+    expect(stack).toHaveClass("gap-2", "pb-3")
+    expect(document.querySelector('[data-slot="code-display-bar-row"]')).toHaveClass("my-0.5")
+    // A field that stands alone can ask for the hairline.
+    rerender(<CodeDisplay {...at(18)} layout="field" label="Steam Guard" rule="top" />)
+    expect(root().className.split(" ")).toContain("rule-t")
+  })
+
+  it("a row or a tile is one target: the copy button's hit area covers it, except while concealed", () => {
+    const { rerender } = render(<CodeDisplay {...at(18)} layout="tile" />)
+    expect(screen.getByRole("button", { name: "Copy code" }).className).toContain("after:inset-0")
+    rerender(<CodeDisplay {...at(18)} layout="tile" concealed />)
+    expect(screen.getByRole("button", { name: "Copy code" }).className).not.toContain("after:inset-0")
+  })
+
+  it("concealed: a Show action reveals the code for this period", () => {
+    render(<CodeDisplay {...at(20)} concealed />)
+    expect(within(root()).queryByText("482")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Show code" }))
+    expect(within(root()).getByText("482")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Show code" })).toBeNull()
+  })
+
+  it("the counter kind: no cells, no seconds; Counter 14 and Next code", () => {
+    render(<CodeDisplay variant="hotp" issuer="Router admin" counter={14} code="330918" onAdvance={() => {}} />)
+    expect(cells()).toHaveLength(0)
+    expect(document.querySelector('[data-slot="code-display-counter"]')).toHaveTextContent("Counter 14")
+    expect(screen.getByRole("button", { name: "Next code" })).toHaveClass("type-overline")
+  })
+
+  it("the field layout's label: the label prop, else the issuer, else One-time code", () => {
+    const label = () => document.querySelector('[data-slot="code-display-label"]')
+    const { rerender } = render(<CodeDisplay {...at(18)} label="Steam Guard" />)
+    expect(label()).toHaveTextContent("Steam Guard")
+    rerender(<CodeDisplay {...at(18)} />)
+    expect(label()).toHaveTextContent("GitHub")
+    rerender(<CodeDisplay {...at(18)} issuer={undefined} />)
+    expect(label()).toHaveTextContent("One-time code")
+  })
+
+  it("the copy countdown reads as words on the copy control, in the live colour", async () => {
+    render(<CodeDisplay {...at(20)} clipboardTimer={12} onCopy={() => {}} />)
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }))
+    })
+    const status = document.querySelector('[data-slot="code-display-copy-status"]')!
+    expect(status).toHaveTextContent("Clears in 12 s")
+    expect(status).toHaveClass("text-secondary-live")
+    expect(screen.getByRole("button", { name: "Copy code" })).toContainElement(status as HTMLElement)
+  })
+
+  it("CodeDisplayList layout=grid lays tiles in as many columns as fit", () => {
+    render(
+      <CodeDisplayList layout="grid">
+        <CodeDisplay {...at(18)} layout="tile" />
+      </CodeDisplayList>
+    )
+    const list = document.querySelector('[data-slot="code-display-list"]')!
+    expect(list).toHaveAttribute("data-layout", "grid")
+    expect(list.className).toContain("grid-cols-[repeat(auto-fill,minmax(var(--c-code-tile-min-width),1fr))]")
+  })
+})
+
+describe("CodeDisplay menu: the trailing ⋯ (contract 5.1c C18, Lockdown LA5)", () => {
+  const menu = (onOpen?: () => void, onLarge?: () => void) => (
+    <>
+      <AdaptiveMenuItem icon="launch" onSelect={onOpen}>
+        Open item
+      </AdaptiveMenuItem>
+      <AdaptiveMenuItem icon="text--scale" onSelect={onLarge}>
+        Show large type
+      </AdaptiveMenuItem>
+      <CodeDisplayMenuItem action="reveal" />
+      <CodeDisplayMenuItem action="copy" />
+    </>
+  )
+  const more = (name = "More actions for GitHub") => screen.getByRole("button", { name })
+  const openMenu = async (name?: string) => {
+    await act(async () => {
+      fireEvent.click(more(name))
+    })
+    return screen.findByRole("menu")
+  }
+  const items = (menuEl: HTMLElement) => within(menuEl).getAllByRole("menuitem").map((i) => i.textContent)
+
+  it.each(["field", "row", "tile"] as const)("%s: a real button, always shown, named for the code, above the row's copy target", (layout) => {
+    render(<CodeDisplay {...at(20)} layout={layout} menu={menu()} />)
+    const button = more()
+    expect(button.tagName).toBe("BUTTON")
+    expect(button).toHaveAttribute("data-overflow-menu")
+    // Above a row's or a tile's stretched copy target, so a press on it never copies.
+    const wrap = root().querySelector('[data-slot="code-display-menu"]') as HTMLElement
+    expect(wrap.className.split(" ")).toEqual(expect.arrayContaining(["relative", "z-10"]))
+    expect(wrap).toContainElement(button)
+  })
+
+  it("compact draws no ⋯ (a popup's line has its own row menu)", () => {
+    render(<CodeDisplay {...at(20)} layout="compact" menu={menu()} />)
+    expect(screen.queryByRole("button", { name: /More actions/ })).toBeNull()
+  })
+
+  it("the field layout names it after its label", () => {
+    render(<CodeDisplay {...at(20)} label="Steam Guard" menu={menu()} />)
+    expect(more("More actions for Steam Guard")).toBeInTheDocument()
+  })
+
+  it("its copy row runs the code's own copy: onCopy, the countdown on the copy control, one clear", async () => {
+    const onCopy = vi.fn()
+    const onClear = vi.fn()
+    render(<CodeDisplay {...at(20)} clipboardTimer={10} onCopy={onCopy} onClipboardClear={onClear} menu={menu()} />)
+    const m = await openMenu()
+    expect(items(m)).toEqual(["Open item", "Show large type", "Copy code"])
+    vi.useFakeTimers()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Copy code" }))
+    })
+    expect(onCopy).toHaveBeenCalledWith("482917", "code")
+    expect(live()).toHaveTextContent("Copied. Clipboard clears in 10 seconds.")
+    expect(screen.getByRole("button", { name: "Copy code" })).toHaveTextContent("10")
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+    expect(onClear).toHaveBeenCalledTimes(1)
+  })
+
+  it("in the last seconds its copy row takes the next code, as the code itself does", async () => {
+    const onCopy = vi.fn()
+    render(<CodeDisplay {...at(2)} onCopy={onCopy} menu={menu()} />)
+    const m = await openMenu()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Copy the next code" }))
+    })
+    expect(onCopy).toHaveBeenCalledWith("330558", "next")
+  })
+
+  it("inside a crown jewel its copy row asks for the use proof first", async () => {
+    const onCopy = vi.fn()
+    const requestProof = vi.fn(() => Promise.resolve(false))
+    const { CrownJewelSurface } = await import("./crown-jewel")
+    render(
+      <CrownJewelSurface host="app" title="Steam Guard" requestProof={requestProof}>
+        <CodeDisplay {...at(20)} onCopy={onCopy} menu={menu()} />
+      </CrownJewelSurface>
+    )
+    const m = await openMenu()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Copy code" }))
+    })
+    expect(requestProof).toHaveBeenCalledWith("use")
+    expect(onCopy).not.toHaveBeenCalled()
+  })
+
+  it("concealed: a Show code row reveals it for this period; a press anywhere else in the menu never does", async () => {
+    const onOpen = vi.fn()
+    render(<CodeDisplay {...at(20)} layout="row" concealed menu={menu(onOpen)} />)
+    expect(root()).toHaveAttribute("data-state", "concealed")
+    // The ⋯ itself does not reveal by reaching the row.
+    let m = await openMenu()
+    expect(root()).toHaveAttribute("data-state", "concealed")
+    expect(items(m)).toEqual(["Open item", "Show large type", "Show code", "Copy code"])
+    // An app's row, drawn in a portal, does not reveal it by bubbling to the row either.
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Open item" }))
+    })
+    expect(onOpen).toHaveBeenCalledOnce()
+    expect(root()).toHaveAttribute("data-state", "concealed")
+    m = await openMenu()
+    await act(async () => {
+      fireEvent.click(within(m).getByRole("menuitem", { name: "Show code" }))
+    })
+    expect(root()).toHaveAttribute("data-state", "default")
+    expect(within(root()).getByText("482")).toBeInTheDocument()
+  })
+
+  it("a CodeDisplayMenuItem outside a code's menu is a mistake, said at once", () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {})
+    expect(() => render(<CodeDisplayMenuItem action="copy" />)).toThrow(/inside a CodeDisplay/)
+    quiet.mockRestore()
+  })
+})
+

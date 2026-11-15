@@ -65,6 +65,21 @@ describe("groups (test 1)", () => {
     expect(captionOf("e")).toBeNull()
     expect(captionOf("r")).toBeNull()
   })
+
+  it("sits on the 4px grid: a character's line is as tall as its fitted size, a multiple of 8px, and a caption is the caption role 4 under it", async () => {
+    await open({}, "Tr4-9lO0_bZ2e")
+    const glyph = charOf("4").firstElementChild as HTMLElement
+    expect(glyph.className.split(" ")).toContain("leading-(--c-large-type-leading)")
+    expect(glyph.className).not.toMatch(/leading-(none|tight|\d)/)
+    const caption = charOf("0").querySelector('[data-slot="large-type-view-caption"]') as HTMLElement
+    expect(caption.className.split(" ")).toEqual(expect.arrayContaining(["type-caption", "mt-1"]))
+    expect(caption.className).not.toMatch(/leading-|text-\(length/)
+    // The fitted size: 40 to 96, in steps of 8 (no stylesheet here, so the 40 and 96 fallbacks).
+    const size = Number.parseFloat((document.querySelector('[data-slot="large-type-view-canvas"]') as HTMLElement).style.fontSize)
+    expect(size).toBeGreaterThanOrEqual(40)
+    expect(size).toBeLessThanOrEqual(96)
+    expect(size % 8).toBe(0)
+  })
 })
 
 describe("accessible name (test 3)", () => {
@@ -175,5 +190,23 @@ describe("hosts and variants", () => {
     await act(async () => {})
     expect(chars()).toHaveLength(0)
     expect(screen.getByText("Couldn't read this value")).toBeInTheDocument()
+  })
+})
+
+describe("LargeTypeView 1.0: the viewer", () => {
+  it("counts down in the cross-app words and closes from Done", async () => {
+    const onOpenChange = vi.fn()
+    await open({ onOpenChange, lifetime: 120 })
+    expect(document.querySelector('[data-slot="large-type-view-timer"]')).toHaveTextContent("Hides in 02:00")
+    expect(document.querySelector('[data-slot="large-type-view-timer"]')).toHaveClass("text-secondary-live")
+    fireEvent.click(screen.getByRole("button", { name: "Done" }))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it("the legend's marks are squares", async () => {
+    await open()
+    const marks = document.querySelectorAll('[data-slot="large-type-view-legend"] [aria-hidden]')
+    expect(marks).toHaveLength(3)
+    for (const m of marks) expect(m.className).not.toContain("rounded")
   })
 })

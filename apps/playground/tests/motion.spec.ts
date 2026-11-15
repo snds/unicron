@@ -14,9 +14,9 @@ import { motionContracts, type MotionContract } from "../../../packages/ui/src/l
 
 const CEILING_MS = 400
 /** Contracts that open and close, so they have an exit and can be reversed mid-way. */
-const TOGGLES = new Set(["pop", "slide", "collapse", "dialog", "popover", "tooltip", "menu", "select"])
-/** Frosted-glass surfaces: the surface itself must never fade, or its backdrop blur switches off. */
-const GLASS = new Set(["menu", "select"])
+const TOGGLES = new Set(["pop", "slide", "collapse", "fade", "anchor", "dialog", "popover", "tooltip", "menu", "select"])
+/** Lists opened and closed many times a day: from the keyboard they do not animate at all. */
+const KEYBOARD_INSTANT = new Set(["menu", "select"])
 /**
  * Under reduced motion the system still lets colour fade (index.css → reduced motion): a colour
  * change moves nothing. So a colour may animate there whatever the recipe; anything else may not.
@@ -233,8 +233,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
         await open(page, contract)
         await freeze(page, contract)
         await seek(page, contract, 0.5)
-        // What fades: the surface, or for frosted glass its content.
-        const fading = GLASS.has(contract.id) ? surface(page, contract).locator("> *").first() : surface(page, contract)
+        const fading = surface(page, contract)
         const mid = Number(await fading.evaluate((el) => getComputedStyle(el).opacity))
         expect(mid).toBeGreaterThan(0)
         expect(mid).toBeLessThan(1)
@@ -249,23 +248,26 @@ for (const contract of motionContracts as readonly MotionContract[]) {
       })
     }
 
-    if (GLASS.has(contract.id)) {
-      test("keeps its backdrop blur all the way through", async ({ page }) => {
+    // The 1.0 look: every layer is solid and square, and fades (or fades and moves a step). None
+    // zooms or blurs at any point of its entrance.
+    if (contract.surfaces) {
+      test("keeps the 1.0 look all the way through: no zoom, no blur", async ({ page }) => {
         await open(page, contract)
         await freeze(page, contract)
         for (const share of [0, 0.5, 1]) {
           await seek(page, contract, share)
-          const { opacity, blur } = await surface(page, contract).evaluate((el) => ({
-            opacity: getComputedStyle(el).opacity,
-            blur: getComputedStyle(el, "::before").backdropFilter,
+          const look = await surface(page, contract).evaluate((el) => ({
+            scale: getComputedStyle(el).scale,
+            blur: getComputedStyle(el).backdropFilter,
           }))
-          // A faded surface cannot blur what is behind it, so the surface itself stays solid.
-          expect(opacity, `${contract.id} surface at ${share}`).toBe("1")
-          expect(blur, `${contract.id} glass layer at ${share}`).toContain("blur(")
+          expect(look.scale, `${contract.id} scale at ${share}`).toBe("none")
+          expect(look.blur, `${contract.id} backdrop filter at ${share}`).toBe("none")
         }
         await release(page)
       })
+    }
 
+    if (KEYBOARD_INSTANT.has(contract.id)) {
       test("does not animate when opened and closed from the keyboard", async ({ page }) => {
         const trigger = card(page, contract).locator("[data-trigger]")
         await trigger.scrollIntoViewIfNeeded()
@@ -281,3 +283,34 @@ for (const contract of motionContracts as readonly MotionContract[]) {
     }
   })
 }
+
+// ── loops ──────────────────────────────────────────────────────────────────────────────────────
+// Nothing loops under reduced motion, whatever variant puts the loop on: the indeterminate Progress
+// pulses through `group-data-indeterminate/progress:animate-pulse`, which a rule on the bare class
+// name would miss (index.css → reduced motion).
+test("no loop runs under reduced motion, or in a data-motion=reduced box, a variant's loop included", async ({ page }) => {
+  const loops = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>("[class*='animate-spin'], [class*='animate-pulse'], [class*='animate-ping'], [class*='animate-bounce']")]
+        .filter((el) => getComputedStyle(el).animationName !== "none")
+        .map((el) => el.getAttribute("data-slot") ?? el.tagName.toLowerCase())
+    )
+  const open = async () => {
+    await page.goto("/?view=progress&chrome=0")
+    await expect(page.locator('[data-slot="playground-view"]')).toHaveAttribute("data-view-state", "ready")
+  }
+  await open()
+  const indeterminate = page.locator('[data-slot="progress"][data-indeterminate] [data-slot="progress-track"]').first()
+  expect(await indeterminate.evaluate((el) => getComputedStyle(el).animationName), "the indeterminate track pulses").toBe("pulse")
+  expect(await loops()).toContain("progress-track")
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await open()
+  expect(await indeterminate.evaluate((el) => getComputedStyle(el).animationName)).toBe("none")
+  expect(await loops(), "loops still running under reduced motion").toEqual([])
+
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await open()
+  await page.evaluate(() => document.body.setAttribute("data-motion", "reduced"))
+  expect(await loops(), "loops still running in a data-motion=reduced box").toEqual([])
+})

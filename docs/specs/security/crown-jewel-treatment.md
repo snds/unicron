@@ -1,6 +1,15 @@
 # CrownJewel treatment
 
-_Spec v0.3 · 2026-10-17 · Proposed by Lockdown (brief §2.9 point 5, §5.7; `02-model.md` §3; `04-security.md` §10) · Status: built in `@unicron/ui` 0.4.0 (PR #15); v0.3 adds `biometricName={null}`, `crownJewelGateErrors`, and the call-time judging pattern; this spec describes the build_
+_Spec v0.3 · 2026-10-17 · Proposed by Lockdown (brief §2.9 point 5, §5.7; `02-model.md` §3; `04-security.md` §10) · Status: built in `@unicron/ui` 0.4.0 (PR #15); v0.3 adds `biometricName={null}`, `crownJewelGateErrors`, and the call-time judging pattern; this spec describes the build. v1.0 (2026-11-13) restyles the three parts; the 1.0 section says what changed and wins where an older section disagrees_
+
+## 1.0: the 2026-11 look (contract 5.1a)
+
+- **Surface.** A square panel (rules §1.2: square corners for everything but a control), padding 16, gap 12, on the inverted ground; no edge. Banner: a filled lock (16), "Crown jewel" in `type-overline`, the "This device only" Badge, and the explain control as a 16px `help` glyph ("What crown jewel means"). Besides the roles it re-mapped before, it now re-maps the two washes (`--state-hover`, `--state-pressed` to `--c-crown-jewel-hover` and `-pressed`, 3% and 4%: a 6% wash took body ink under Lc 90 on the light inverted ground), `--line-grid-dot`, and the coloured inks a nested part paints (`--secondary-live`, `--critical-text`, `--destructive` and `--c-progress-live` to the surface's ink, `--c-progress-track` to its border), because inks solved for the page's ground lose their contrast on the inverted one. `--c-crown-jewel-muted-ink` is 76% (was 72%) so label ink holds Lc 60 in all eight modes. An item that cannot be decrypted is a solid `critical-fill` line with `critical-on-fill` text, which reads on either ground (u1 open issue 2). All of it is measured in `scripts/recipes/security.mjs`.
+- **Gate.** The question frame (480, the shared Dialog's `--c-dialog-question-min-width`): overline "Crown jewel", title "Confirm it's you" (its accessible name, as before), the reason in `type-body`, and the account password in **SecretField's edit box** (`autoComplete="current-password"`, with Show), which closes the open item "the password step is `Input type="password"`". Cancel (secondary) and Confirm (primary), both inert for the arming delay; no close glyph. Enter submits.
+- **Mark.** The filled lock at 16 (`sm`) or 20 (`md`).
+- **Explain.** The question frame, "Got it" as its one primary; a click on the scrim closes it.
+
+Unchanged: the context, `requestProof`, the built-in gate's levels, tries and lock, the host rule, every word.
 
 ## Purpose and the user job
 
@@ -88,13 +97,11 @@ Tier 3 under `crown-jewel`; the surface assigns each to the roles listed, inline
 
 | Token | Aliases | Assigned to |
 |---|---|---|
-| `--c-crown-jewel-surface` | `{protected}` | `--background`, `--card`, `--popover`, `--primary-foreground` |
-| `--c-crown-jewel-ink` | `{protected-foreground}` | `--foreground`, `--card-foreground`, `--popover-foreground`, `--primary`, `--secondary-foreground`, `--accent-foreground` |
-| `--c-crown-jewel-muted` | `color-mix(in oklab, {protected-foreground} 12%, transparent)` | `--muted`, `--secondary`, `--accent` |
-| `--c-crown-jewel-muted-ink` | `color-mix(in oklab, {protected-foreground} 72%, transparent)` | `--muted-foreground`, `--ring`; one knob beyond v0.1 so hints keep contrast |
-| `--c-crown-jewel-border` | `color-mix(in oklab, {protected-foreground} 24%, transparent)` | `--border`, `--input` |
-| `--c-crown-jewel-icon-fill` | `1` | `--c-icon-fill` |
-| `--c-crown-jewel-icon-wght` | `500` | `--c-icon-wght` |
+| `--c-crown-jewel-surface` | `{protected}` | `--background`, `--card`, `--popover`, `--primary-foreground`; 1.0 roles `--surface-ground`, `--primary-on-fill` |
+| `--c-crown-jewel-ink` | `{protected-foreground}` | `--foreground`, `--card-foreground`, `--popover-foreground`, `--primary`, `--secondary-foreground`, `--accent-foreground`; 1.0 roles `--text-body`, `--text-secondary`, `--primary-fill` |
+| `--c-crown-jewel-muted` | `color-mix(in oklab, {protected-foreground} 12%, transparent)` | `--muted`, `--secondary`, `--accent`; 1.0 role `--surface-raised` |
+| `--c-crown-jewel-muted-ink` | `color-mix(in oklab, {protected-foreground} 72%, transparent)` | `--muted-foreground`, `--ring`, 1.0 role `--text-label`; one knob beyond v0.1 so hints keep contrast |
+| `--c-crown-jewel-border` | `color-mix(in oklab, {protected-foreground} 24%, transparent)` | `--border`, `--input`; 1.0 role `--line-rule` |
 | `--c-crown-jewel-reveal-lifetime` | `20s` | Read by nested SecretFields (above) |
 | `--c-crown-jewel-gate-attempts` | `3` | Default attempts |
 

@@ -14,10 +14,8 @@ export type IconButtonProps = Omit<React.ComponentProps<typeof TooltipTrigger>, 
   Pick<VariantProps<typeof buttonVariants>, "variant" | "size"> & {
   /** What the button does, in a few words. It is both the accessible name and the tooltip. */
   label: string
-  /** The glyph. Omit it and pass children instead to size or tint the icon yourself. */
+  /** The icon, by its Carbon name. Omit it and pass children instead to size or tint the icon yourself. */
   icon?: IconName
-  /** Fill the glyph (an on state: pinned, flagged). */
-  fill?: boolean
   /** Longer tooltip text, when the label alone undersells the action. Defaults to `label`. */
   tooltip?: React.ReactNode
   /** Keyboard shortcut shown in the tooltip, e.g. "E" or "⌘⇧L". */
@@ -41,7 +39,6 @@ export type IconButtonProps = Omit<React.ComponentProps<typeof TooltipTrigger>, 
 export function IconButton({
   label,
   icon,
-  fill,
   tooltip,
   shortcut,
   render,
@@ -68,7 +65,7 @@ export function IconButton({
         className={on && typeof className !== "function" ? cn("relative", className) : className}
         {...props}
       >
-        {children ?? (icon && <Icon name={icon} fill={fill} />)}
+        {children ?? (icon && <Icon name={icon} />)}
         {on?.mark}
       </TooltipTrigger>
       <TooltipContent>

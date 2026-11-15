@@ -1,0 +1,47 @@
+{
+  "$description": "Tier 3 · Component knobs for the leaf controls (packages/ui: progress.tsx, checkbox.tsx, float-button.tsx), merged with component.json at build and emitted as --c-*. It adds knobs and re-declares none. The controls' own sizes (Button 40 / 32, Switch 44 × 24 with a 16 knob, Checkbox 16, Badge and Kbd 20, a skeleton row's 12px bars 20px apart) sit on the 4px spacing scale and the size roles, so they need no knob.",
+  "progress": {
+    "$description": "Progress, added with the 2026-11 restyle beside the knobs in component.json (height, segment-gap, fill, complete, warning, over). Each fill is drawn on `track` (scripts/recipes/controls.mjs).",
+    "track": {
+      "$type": "color",
+      "$value": "{line-rule}",
+      "$description": "The empty part of a bar, and an empty cell of a segmented one. Figma: List Row progress, segments 20 to 32."
+    },
+    "live": {
+      "$type": "color",
+      "$value": "{secondary-live}",
+      "$description": "Live or agent activity: a segmented bar's default fill, and tone=\"live\" on either variant. Figma: List Row progress, segments 1 to 19."
+    },
+    "primary": {
+      "$type": "color",
+      "$value": "{primary-fill}",
+      "$description": "tone=\"primary\", and a budget under its warning mark: a quantity that is not live. Figma: Warpcore's spend bar, Synapse's checks bar."
+    },
+    "critical": {
+      "$type": "color",
+      "$value": "{critical-fill}",
+      "$description": "tone=\"critical\": a countdown that is about to run out. Figma (Lockdown codes): the ticks near expiry."
+    }
+  },
+  "checkbox": {
+    "$description": "Checkbox (packages/ui checkbox.tsx), added with the 2026-11 restyle.",
+    "edge": {
+      "$type": "color",
+      "$value": "{text-label}",
+      "$description": "The edge of an unchecked box. It is the only thing that shows an empty checkbox (its raised fill barely differs from the ground), so it is the label ink, 4.8:1 or more against the ground and a raised surface, not the 1px line-rule hairline, which measures 1.3:1 to 1.4:1 (WCAG 1.4.11 asks 3:1 for what identifies a control). Not drawn in Figma: the Vale Notes frame draws only the done square."
+    }
+  },
+  "float-button": {
+    "$description": "FloatButton's long press (onLongPress). Behaviour timers, not motion: the component reads them when a press starts, and falls back to these same values without the stylesheet.",
+    "long-press-delay": {
+      "$type": "duration",
+      "$value": "500ms",
+      "$description": "How long a press is held before it counts as a long press."
+    },
+    "long-press-slop": {
+      "$type": "dimension",
+      "$value": "10px",
+      "$description": "How far the pointer may drift during the hold before the long press is called off."
+    }
+  }
+}

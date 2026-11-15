@@ -15,7 +15,7 @@ describe("StatusOrb", () => {
       const orb = screen.getByRole("img", { name: statusOrbCopy[state] })
       expect(orb).toHaveAttribute("data-slot", "status-orb")
       expect(orb).toHaveAttribute("data-state", state)
-      // No words on screen (a glyph's ligature is aria-hidden inside the icon).
+      // No words on screen (the icon is an aria-hidden SVG with no text in it).
       expect(orb.textContent).not.toContain(statusOrbCopy[state])
       unmount()
     }
@@ -26,12 +26,12 @@ describe("StatusOrb", () => {
   })
 
   it("draws queued, paused and stopped as still glyphs of their own, coloured from their own tokens", () => {
-    const glyphs = { queued: "schedule", paused: "pause_circle", stopped: "stop_circle" } as const
+    const glyphs = { queued: "time--filled", paused: "pause--outline--filled", stopped: "stop--filled" } as const
     for (const [state, name] of Object.entries(glyphs)) {
       const { container, unmount } = render(<StatusOrb state={state as keyof typeof glyphs} tooltip={false} />)
       const glyph = container.querySelector('[data-slot="status-orb-glyph"]')
       expect(glyph).toBeInTheDocument()
-      expect(glyph?.textContent).toContain(name)
+      expect(glyph).toHaveAttribute("data-icon-name", name)
       expect(container.querySelector('[data-slot="status-orb-halo"]')).toBeNull()
       expect(css).toContain(`[data-slot="status-orb"][data-state="${state}"] { color: var(--c-status-orb-${state}); }`)
       // Nothing waiting or over moves.
@@ -44,9 +44,9 @@ describe("StatusOrb", () => {
     const names = new Set(statusOrbStates.map((state) => statusOrbCopy[state]))
     expect(names.size).toBe(statusOrbStates.length)
     const { container, rerender } = render(<StatusOrb state="stopped" tooltip={false} />)
-    const stopped = container.querySelector('[data-slot="status-orb-glyph"]')?.textContent
+    const stopped = container.querySelector('[data-slot="status-orb-glyph"]')?.getAttribute("data-icon-name")
     rerender(<StatusOrb state="failed" tooltip={false} />)
-    expect(container.querySelector('[data-slot="status-orb-glyph"]')?.textContent).not.toBe(stopped)
+    expect(container.querySelector('[data-slot="status-orb-glyph"]')?.getAttribute("data-icon-name")).not.toBe(stopped)
     rerender(<StatusOrb state="idle" tooltip={false} />)
     expect(container.querySelector('[data-slot="status-orb-glyph"]')).toBeNull()
   })
@@ -90,5 +90,32 @@ describe("StatusOrb", () => {
   it("holds still under reduced motion, with a dashed ring for working", () => {
     expect(reduced).toMatch(/\[data-slot="status-orb-halo"\] \{\s*animation: none;/)
     expect(reduced).toMatch(/\[data-state="working"\] > \[data-slot="status-orb-halo"\] \{\s*border-style: dashed;/)
+  })
+})
+
+describe("StatusOrb in the 2026-11 look", () => {
+  const knobs = JSON.parse(readFileSync(resolve(__dirname, "../../../../tokens/tokens/component/chat.json"), "utf8"))["status-orb"]
+
+  it("takes live from secondary-live, needs-you from the yellow, and the rest from label ink", () => {
+    expect(knobs.thinking.$value).toBe("{secondary-live}")
+    expect(knobs.working.$value).toBe("{secondary-live}")
+    expect(knobs["needs-you"].$value).toBe("{needs-you-fill}")
+    expect(knobs.failed.$value).toBe("{critical-text}")
+    for (const state of ["idle", "queued", "paused", "stopped", "offline"]) expect(knobs[state].$value).toBe("{text-label}")
+  })
+
+  it("outlines the needs-you square in the yellow's ink, so it reads on stone", () => {
+    expect(knobs["needs-you-edge"].$value).toBe("{needs-you-on-fill}")
+    const { container, rerender } = render(<StatusOrb state="needs-you" tooltip={false} />)
+    const dot = container.querySelector('[data-slot="status-orb-dot"]')!
+    expect(dot.className).toContain("ring-(length:--stroke-rule)")
+    expect(dot.className).toContain("ring-(--c-status-orb-needs-you-edge)")
+    rerender(<StatusOrb state="working" tooltip={false} />)
+    expect(container.querySelector('[data-slot="status-orb-dot"]')!.className).not.toContain("ring-")
+  })
+
+  it("draws its dot and halo square: the stylesheet gives them no radius", () => {
+    const block = css.slice(css.indexOf("StatusOrb (components/ui/status-orb.tsx)"), css.indexOf("Indicator (components/ui/indicator.tsx)"))
+    expect(block).not.toMatch(/border-radius/)
   })
 })

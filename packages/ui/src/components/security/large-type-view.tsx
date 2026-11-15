@@ -1,21 +1,22 @@
 // Owned component (not generated): a secret full screen, grouped in threes, for reading across a room
 // or typing into something without a keyboard. Spec: docs/specs/security/large-type-view.md.
 // Promoted from: snds/lockdown · PR snds/unicron (this PR) · DSA none (first principles, Lockdown brief §5.7)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction; not drawn in Figma, built from the Lockdown brief I9; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
+import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
-import { IconButton } from "../icon-button"
 import { Button } from "../ui/button"
 import { Kbd } from "../ui/kbd"
-import { Label } from "../ui/label"
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet"
 import { Skeleton } from "../ui/skeleton"
 import { Switch } from "../ui/switch"
 import { readSecondsToken, useCopyCountdown, useHighContrast } from "./copy-countdown"
 import { useCrownJewel } from "./crown-jewel"
+import { ReviewFrame, formatCountdown } from "./parts"
 
 export type LargeTypeCaptions = "auto" | "always" | "off"
 export type LargeTypeCharClass = "digit" | "letter" | "symbol"
@@ -101,6 +102,8 @@ const SHOULDER_NOTICE_S = 3
 const WARN_AT_S = 30
 const SIZE_STEP = 1.15
 const SIZE_STEPS = 4
+/** The fitted character size is a multiple of this many px (two steps of the 4px grid). */
+const SIZE_GRID = 8
 const SIZE_KEY = "unicron:large-type:size-step"
 const CHAR_EM = 0.62
 
@@ -152,21 +155,6 @@ export function spellValue(value: string, groupSize: number, caseSensitive = tru
     .join(", pause, ")
 }
 
-function readPx(el: Element | null, name: string, fallbackPx: number): number {
-  if (!el || typeof getComputedStyle !== "function") return fallbackPx
-  try {
-    const raw = getComputedStyle(el).getPropertyValue(name).trim()
-    const m = /^(-?\d*\.?\d+)(rem|px|em)?$/.exec(raw)
-    if (!m) return fallbackPx
-    const n = Number(m[1])
-    if (m[2] === "px") return n
-    const root = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-    return n * root
-  } catch {
-    return fallbackPx
-  }
-}
-
 function readStoredStep(): number {
   try {
     const v = Number(window.localStorage.getItem(SIZE_KEY))
@@ -176,10 +164,9 @@ function readStoredStep(): number {
   }
 }
 
+/** The time left in the cross-app words (decisions §13): `NN s` up to a minute, `MM:SS` past it. */
 function formatClock(s: number): string {
-  const m = Math.floor(s / 60)
-  const r = s % 60
-  return `${m}:${r < 10 ? "0" : ""}${r}`
+  return formatCountdown(s)
 }
 
 // ── Canvas ────────────────────────────────────────────────────────────────────────────────────
@@ -211,7 +198,7 @@ function Canvas({ value, groupSize, captionsOn, captionMode, caseSensitive, show
         <span
           key={gi}
           data-slot="large-type-view-group"
-          className="inline-flex flex-col items-center contrast-more:border contrast-more:border-foreground contrast-more:px-[0.1em] forced-colors:border"
+          className="inline-flex flex-col items-center contrast-more:border contrast-more:border-text-body contrast-more:px-[0.1em] forced-colors:border"
         >
           <span className="inline-flex items-start gap-x-(--c-large-type-char-gap)">
             {g.map((ch, ci) => {
@@ -222,11 +209,13 @@ function Canvas({ value, groupSize, captionsOn, captionMode, caseSensitive, show
                   <span
                     aria-hidden
                     className={cn(
-                      "font-mono leading-none [font-feature-settings:'zero']",
+                      // Not a type role: the one fitted size in the system (--c-large-type-min-size
+                      // to -max-size, a multiple of 8px), on a line as tall as itself.
+                      "font-mono leading-(--c-large-type-leading) [font-feature-settings:'zero']",
                       kind === "digit" && "text-(--c-large-type-digit-ink)",
                       kind === "letter" && "text-(--c-large-type-letter-ink)",
                       kind === "symbol" && "text-(--c-large-type-symbol-ink)",
-                      "contrast-more:text-foreground"
+                      "contrast-more:text-text-body"
                     )}
                   >
                     {ch === " " ? " " : ch}
@@ -235,7 +224,9 @@ function Canvas({ value, groupSize, captionsOn, captionMode, caseSensitive, show
                     <span
                       data-slot="large-type-view-caption"
                       aria-hidden
-                      className="text-(--c-large-type-caption-ink) mt-[0.15em] text-center font-sans text-(length:--c-large-type-caption-size) leading-tight whitespace-nowrap"
+                      // The caption role (13/20), 4 under its character: a role and a spacing step, so
+                      // a row of characters with captions stays on the 4px grid (it was 12/15, 2px under).
+                      className="type-caption text-(--c-large-type-caption-ink) mt-1 text-center whitespace-nowrap"
                     >
                       {caption}
                     </span>
@@ -245,7 +236,7 @@ function Canvas({ value, groupSize, captionsOn, captionMode, caseSensitive, show
             })}
           </span>
           {showIndex && (
-            <span data-slot="large-type-view-index" aria-hidden className="text-muted-foreground mt-1 font-sans text-xs tabular-nums">
+            <span data-slot="large-type-view-index" aria-hidden className="type-meta text-text-label mt-1">
               {gi * groupSize + 1}–{gi * groupSize + g.length}
             </span>
           )}
@@ -256,14 +247,15 @@ function Canvas({ value, groupSize, captionsOn, captionMode, caseSensitive, show
 }
 
 function Legend() {
+  // Marks are squares (contract §1.6), each beside its word.
   const row = (cls: LargeTypeCharClass, word: string, ink: string) => (
-    <span className="inline-flex items-center gap-1.5" data-class={cls}>
-      <span aria-hidden className={cn("size-2.5 rounded-full contrast-more:bg-foreground", ink)} />
+    <span className="inline-flex items-center gap-2" data-class={cls}>
+      <span aria-hidden className={cn("size-2 contrast-more:bg-text-body", ink)} />
       {word}
     </span>
   )
   return (
-    <div data-slot="large-type-view-legend" className="text-muted-foreground flex flex-wrap gap-4 text-xs">
+    <div data-slot="large-type-view-legend" className="type-overline text-text-label flex flex-wrap gap-4">
       {row("digit", "digits", "bg-(--c-large-type-digit-ink)")}
       {row("letter", "letters", "bg-(--c-large-type-letter-ink)")}
       {row("symbol", "symbols", "bg-(--c-large-type-symbol-ink)")}
@@ -303,15 +295,15 @@ function PrintPage({
     <article
       data-slot="large-type-view"
       data-variant="print"
-      className="bg-background text-foreground flex w-full flex-col gap-6 p-8 print:p-0"
-      style={{ "--c-large-type-digit-ink": "var(--foreground)", "--c-large-type-symbol-ink": "var(--foreground)" } as React.CSSProperties}
+      className="bg-surface-ground text-text-body flex w-full flex-col gap-6 p-8 print:p-0"
+      style={{ "--c-large-type-digit-ink": "var(--text-body)", "--c-large-type-symbol-ink": "var(--text-body)" } as React.CSSProperties}
     >
-      <header data-slot="large-type-view-header" className="flex items-baseline justify-between gap-4 border-b pb-3">
-        <h1 className="text-base font-medium">{title}</h1>
-        <time className="text-muted-foreground text-xs">{date}</time>
+      <header data-slot="large-type-view-header" className="rule-b flex items-baseline justify-between gap-4 pb-3">
+        <h1 className="type-subtitle">{title}</h1>
+        <time className="type-meta text-text-label">{date}</time>
       </header>
       {status === "loading" && <Skeleton className="h-16 w-full" />}
-      {status === "error" && <p className="text-destructive text-sm">Couldn't read this value</p>}
+      {status === "error" && <p className="type-body text-critical-text">Couldn't read this value</p>}
       {status === "shown" && value !== null && (
         <Canvas
           value={value}
@@ -468,14 +460,17 @@ export function LargeTypeView({
 
   const fontSize = React.useMemo(() => {
     const el = popupRef.current
-    const min = readPx(el, "--c-large-type-min-size", 40)
-    const max = readPx(el, "--c-large-type-max-size", 96)
+    const min = el ? readLength(el, "--c-large-type-min-size", 40) : 40
+    const max = el ? readLength(el, "--c-large-type-max-size", 96) : 96
     const n = value?.length ?? 0
     const g = Math.max(1, Math.ceil(n / groupSize))
     const em = n * CHAR_EM + Math.max(0, n - g) * 0.1 + Math.max(0, g - 1) * 1.5
     const fit = width > 0 && em > 0 ? width / em : max
     const stepped = fit * Math.pow(SIZE_STEP, sizeStep)
-    return Math.round(Math.max(min, Math.min(max, stepped)))
+    // Held to a multiple of 8px: the character's line (as tall as its size) and the half-em between
+    // wrapped rows then sit on the 4px grid. Rounded down, so the fitted line never overflows.
+    const snapped = Math.floor(Math.min(max, stepped) / SIZE_GRID) * SIZE_GRID
+    return Math.max(min, snapped)
   }, [value, width, groupSize, sizeStep])
 
   const resize = (delta: number) => {
@@ -533,116 +528,101 @@ export function LargeTypeView({
   const captionsShown = captionsOn || highContrast
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        ref={popupRef}
-        side="bottom"
-        fullscreen
-        showCloseButton={false}
-        initialFocus={closeRef}
-        data-slot="large-type-view"
-        data-status={status}
-        onKeyDown={onKeyDown}
-        className="bg-background text-foreground"
-      >
-        <SheetHeader data-slot="large-type-view-header" className="flex-row items-center justify-between gap-3 border-b">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <SheetTitle className="truncate">{title}</SheetTitle>
-            <SheetDescription>
-              {shoulder ? "Anyone who can see your screen can read this." : "Shown in large type. Press Escape to hide it."}
-            </SheetDescription>
-          </div>
-          <SheetClose render={<Button ref={closeRef} variant="ghost" size="icon" aria-label="Close" />}>
-            <Icon name="close" />
-          </SheetClose>
-        </SheetHeader>
-
-        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6">
-          {status === "loading" && (
-            <div data-slot="large-type-view-canvas" aria-busy className="flex flex-wrap gap-(--c-large-type-group-gap)">
-              <Skeleton className="h-16 w-40" />
-              <Skeleton className="h-16 w-40" />
-              <Skeleton className="h-16 w-40" />
-            </div>
-          )}
-          {status === "error" && (
-            <div data-slot="large-type-view-canvas" className="text-destructive text-sm">
-              Couldn't read this value
-            </div>
-          )}
-          {status === "expired" && (
-            <div data-slot="large-type-view-canvas" className="flex flex-col items-start gap-3 text-sm">
-              <span className="text-muted-foreground">Hidden.</span>
-              <Button variant="outline" onClick={showAgain}>
-                Show again
-              </Button>
-            </div>
-          )}
-          {status === "shown" && value !== null && (
-            <Canvas
-              canvasRef={canvasRef}
-              value={value}
-              groupSize={groupSize}
-              captionsOn={captionsShown}
-              captionMode={captions}
-              caseSensitive={caseSensitive}
-              showIndex={showIndex}
-              fontSize={fontSize}
-            />
-          )}
-          {status === "shown" && <Legend />}
-        </div>
-
-        <div data-slot="large-type-view-controls" className="flex flex-wrap items-center gap-3 border-t p-4">
-          <IconButton label="Smaller" shortcut="-" icon="remove" variant="outline" disabled={sizeStep <= -SIZE_STEPS} onClick={() => resize(-1)} />
-          <IconButton label="Larger" shortcut="+" icon="add" variant="outline" disabled={sizeStep >= SIZE_STEPS} onClick={() => resize(1)} />
-          <Label className="flex items-center gap-2 text-sm">
+    <ReviewFrame
+      open={open}
+      onOpenChange={(next) => onOpenChange?.(next)}
+      size="viewer"
+      fullscreenOnPhone
+      closeOnOutsideClick
+      ref={popupRef}
+      closeRef={closeRef}
+      initialFocus={closeRef}
+      data-slot="large-type-view"
+      data-status={status}
+      onKeyDown={onKeyDown}
+      overline="Large type"
+      title={<span className="block truncate">{title}</span>}
+      bodyClassName="gap-6"
+      footer={
+        <div data-slot="large-type-view-controls" className="flex flex-wrap items-center gap-3">
+          <Button variant="secondary" size="icon" aria-label="Smaller" aria-keyshortcuts="-" disabled={sizeStep <= -SIZE_STEPS} onClick={() => resize(-1)}>
+            <Icon name="subtract" />
+          </Button>
+          <Button variant="secondary" size="icon" aria-label="Larger" aria-keyshortcuts="+" disabled={sizeStep >= SIZE_STEPS} onClick={() => resize(1)}>
+            <Icon name="add" />
+          </Button>
+          <label className="type-ui text-text-body inline-flex items-center gap-2">
             <Switch checked={captionsShown} disabled={highContrast} onCheckedChange={(v) => setCaptionsOn(v)} />
             Captions
-          </Label>
-          <Button variant="outline" size="sm" disabled={status !== "shown"} onClick={spellOut}>
-            <Icon name="record_voice_over" data-icon="inline-start" />
+          </label>
+          <Button variant="secondary" disabled={status !== "shown"} onClick={spellOut}>
+            <Icon name="voice-activate" />
             Spell out
           </Button>
           {allowCopy && (
-            <IconButton
-              data-slot="large-type-view-copy"
-              label="Copy"
-              shortcut="C"
-              tooltip={
-                countdown.state === "counting"
-                  ? `Copied · clears in ${countdown.secondsLeft} s`
-                  : countdown.state === "cleared"
-                    ? "Cleared"
-                    : "Copy"
-              }
-              variant="outline"
-              disabled={status !== "shown"}
-              onClick={() => void copy()}
-            >
-              {countdown.state === "counting" ? (
-                <span className="text-xs tabular-nums">{countdown.secondsLeft}</span>
-              ) : countdown.state === "cleared" ? (
-                <Icon name="check" />
-              ) : (
-                <>
-                  <Icon name="content_copy" />
-                  {crown.gated && <Icon name="lock" className="size-3" />}
-                </>
+            <span className="inline-flex items-center gap-3">
+              <Button data-slot="large-type-view-copy" variant="secondary" aria-keyshortcuts="C" disabled={status !== "shown"} onClick={() => void copy()}>
+                {crown.gated && <Icon name="locked--filled" />}
+                Copy
+              </Button>
+              {countdown.state !== "idle" && (
+                <span data-slot="large-type-view-copy-status" aria-hidden className="type-overline text-secondary-live whitespace-nowrap">
+                  {countdown.state === "counting" ? `Clears in ${countdown.secondsLeft} s` : "Cleared"}
+                </span>
               )}
-            </IconButton>
+            </span>
           )}
-          <span data-slot="large-type-view-timer" className="text-muted-foreground ml-auto text-sm tabular-nums">
-            {status === "shown" ? `Hides in ${formatClock(secondsLeft)}` : status === "expired" ? "Hidden" : ""}
-          </span>
-          <span className="text-muted-foreground hidden items-center gap-1 text-xs sm:inline-flex">
-            <Kbd>Esc</Kbd> hides
+          <span className="ml-auto inline-flex items-center gap-4">
+            <span data-slot="large-type-view-timer" className="type-overline text-secondary-live whitespace-nowrap">
+              {status === "shown" ? `Hides in ${formatClock(secondsLeft)}` : status === "expired" ? "Hidden" : ""}
+            </span>
+            <span className="type-meta text-text-label hidden items-center gap-1 group-data-[form=dialog]/review:inline-flex">
+              <Kbd>Esc</Kbd> hides
+            </span>
+            <Button onClick={() => onOpenChange?.(false)}>Done</Button>
           </span>
         </div>
-        <span aria-live="polite" className="sr-only" data-slot="large-type-view-live">
-          <span key={live.n}>{live.text}</span>
-        </span>
-      </SheetContent>
-    </Sheet>
+      }
+    >
+      <DialogPrimitive.Description data-slot="large-type-view-notice" className={cn("type-caption", shoulder ? "text-text-body" : "text-text-secondary")}>
+        {shoulder ? "Anyone who can see your screen can read this." : "Shown in large type. Press Escape to hide it."}
+      </DialogPrimitive.Description>
+      {status === "loading" && (
+        <div data-slot="large-type-view-canvas" aria-busy className="flex flex-wrap gap-(--c-large-type-group-gap)">
+          <Skeleton className="h-16 w-40" />
+          <Skeleton className="h-16 w-40" />
+          <Skeleton className="h-16 w-40" />
+        </div>
+      )}
+      {status === "error" && (
+        <div data-slot="large-type-view-canvas" className="type-body text-critical-text">
+          Couldn't read this value
+        </div>
+      )}
+      {status === "expired" && (
+        <div data-slot="large-type-view-canvas" className="flex flex-col items-start gap-3">
+          <span className="type-body text-text-secondary">Hidden.</span>
+          <Button variant="secondary" onClick={showAgain}>
+            Show again
+          </Button>
+        </div>
+      )}
+      {status === "shown" && value !== null && (
+        <Canvas
+          canvasRef={canvasRef}
+          value={value}
+          groupSize={groupSize}
+          captionsOn={captionsShown}
+          captionMode={captions}
+          caseSensitive={caseSensitive}
+          showIndex={showIndex}
+          fontSize={fontSize}
+        />
+      )}
+      {status === "shown" && <Legend />}
+      <span aria-live="polite" className="sr-only" data-slot="large-type-view-live">
+        <span key={live.n}>{live.text}</span>
+      </span>
+    </ReviewFrame>
   )
 }

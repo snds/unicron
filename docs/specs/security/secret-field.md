@@ -1,6 +1,34 @@
 # SecretField
 
-_Spec v0.4 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5 `hidden` kind; `03-architecture.md` §8) · Status: built in `@unicron/ui` 0.4.0 (PR #16); v0.3 adds the host-contract items a desktop host found (copy by reference, the host's error words, a gated reveal is a toggle); v0.4 adds edit mode over several lines, `name` / `required` / `onBlur`, and the shared strength mapping; this spec describes the build_
+_Spec v0.4 · 2026-10-17 · Proposed by Lockdown (brief §5.7; `02-model.md` §5 `hidden` kind; `03-architecture.md` §8) · Status: built in `@unicron/ui` 0.4.0 (PR #16); v0.3 adds the host-contract items a desktop host found (copy by reference, the host's error words, a gated reveal is a toggle); v0.4 adds edit mode over several lines, `name` / `required` / `onBlur`, and the shared strength mapping; this spec describes the build. v1.0 (2026-11-13) restyles it to the 2026-11 direction and adds `size`, the remote buttons, `fillOnly` and the edit states; the 1.0 section says what changed and wins where an older section disagrees_
+
+## 1.0: the 2026-11 look (contract 5.1a, 5.1b row 49)
+
+**Read mode is a Field Row** (Figma 15:512): no box. A 1px `line-rule` on top, drawn inside (`rule-t`). The label is `type-overline` in `text-label` in a 140 column (`--c-field-row-label-width`, the shared Field Row's own knob) on the value's baseline; the value is `type-code-inline` in `text-body` (the mask is 12 dots, spaced by `--c-secret-field-mask-spacing`), clipped so it never runs under the actions; the actions are **words** in `type-overline`, `text-body`, no box (`TextAction`, a Base UI button with `hit-area`). A shown value sits on a raised chip with a hairline (`--c-secret-field-revealed-bg` = `{surface-raised}`, `rule-box`). The clipboard's countdown is visible words beside the actions, in `secondary-live` because it is running now: "Clears in 28 s", then "Cleared".
+
+| Prop | Values | Notes |
+|---|---|---|
+| `size` | `auto` (default) · `default` · `stacked` | Field Row's sizes. `auto` is `default` in a container 32rem wide or more and `stacked` (label over value, actions centred) below it, through a container query, so the same row stacks in a phone column by itself |
+| `remote` | from `useSecretFieldRemote()` | Binds controls outside the row to this field (below) |
+| `fillOnly` | `true` | `SecretFieldFillOnlyProps`: label and one sentence (`secretFieldFillOnlyText`, or `fillOnlyText`); no reveal, no copy, no `more` slot, nothing fetched |
+
+**The words.** `secretFieldWords`: `Show`, `Hold to show`, `Hide`, `Copy`, `Retry`, `Clears in N s`, `Cleared`. Figma draws `REVEAL`; the build says `Show` / `Hold to show` because the accessible names hosts already test are "Show Password", "Hold to show Password" and "Hide Password", and a visible word must be part of the name (WCAG 2.5.3). Flagged for Sean.
+
+**Remote buttons** (Lockdown 40:357: the phone's bottom row has an eye and a primary copy). `const remote = useSecretFieldRemote()`; pass `remote` to the field and to `<SecretFieldRemoteButton remote={remote} action="reveal" | "copy" kind? size? />`. The buttons are FloatButtons (L by default; reveal neutral, copy primary) that run the field's own handlers: the same gate, hold or tap, lifetime, one-revealed rule, clipboard timer and conditional clear. The value shows in the field's row, which is scrolled into view first; the countdown and "Cleared" show and are spoken there. Names: "Hold to show Password" / "Show Password" / "Hide Password" (with `aria-pressed`), "Copy Password". A remote draws nothing until a field binds, nothing for a fill-only field, and goes when the field unmounts.
+
+**Edit mode is the Text Field box** (Figma 32:48): overline label (critical ink on error), then a `surface-raised` box with a 1px hairline inside, `min-h-control` (48), 12 / 16 padding, 2px `primary-fill` inside on focus (no outer ring) and 2px `critical-fill` on error; the value in `type-code-inline`; `Show` / `Hide` as a word at the end of the box; helper in `caption`. The strength rule is three 4px cells and the word in `type-overline` (cells: `--c-secret-field-meter-*`, now `critical-text`, `warning`, `primary-text`, which hold Lc 30 as solids on both grounds).
+
+| Prop (edit) | Values | Notes |
+|---|---|---|
+| `placeholder` | string | "Left empty, it stays as it is." |
+| `stateText` | string | Nothing to type: the box shows this line instead of an input ("Made when you save", "Removed when you save.", "Made by a passkey provider; kept as it is."). No Show, no strength |
+| `actions` | `{ label, onClick, disabled?, "aria-label"? }[]` | Words on the label's line, at its end: `Generate`, `Remove`, `Keep`, `Options`, `Type one instead` |
+| `autoComplete` | `new-password` (default) · `current-password` · `off` | `current-password` where a known secret is asked for (CrownJewelGate uses it) |
+| `inputRef` | ref | The input or textarea, for a dialog's first focus |
+
+Unchanged: the host contract (`SecretFieldHost`, `SecretFieldReferenceHost`, `copyRef`, `clipboardHolds`, `gate`), every timer, the one-revealed rule, hide on blur, lock and leaving the viewport, the gated-reveal-is-a-toggle rule, Cmd/Ctrl+C, the spelled name, the announcements and every name. The ring countdown, the icon buttons and their tooltips are gone; the tooltip's words ("Copied · clears in 28 s, even if you copy something else") are now the copy control's description.
+
+Tokens added in `tokens/component/security.json`: `--c-secret-field-mask-spacing` (the label column reads the shared `--c-field-row-label-width`; `--c-security-row-label-width` was removed on 2026-11-14); re-declared there: `revealed-bg`, `meter-weak`, `meter-fair`, `meter-strong`. Removed in 1.0 (no longer read): `--c-secret-field-copy-track`, `--c-secret-field-copy-progress`.
 
 ## Purpose and the user job
 
@@ -95,8 +123,6 @@ Tier 3 under `secret-field`:
 | `--c-secret-field-reveal-lifetime` | `30s` | |
 | `--c-secret-field-clipboard-timer` | `30s` | Default; host may override within 10–90 s |
 | `--c-secret-field-revealed-bg` | `color-mix(in oklab, {warning} 10%, transparent)` | Exposure cue |
-| `--c-secret-field-copy-track` | `{border}` | |
-| `--c-secret-field-copy-progress` | `{foreground}` | |
 | `--c-secret-field-meter-weak` | `{destructive}` | |
 | `--c-secret-field-meter-fair` | `{warning}` | |
 | `--c-secret-field-meter-strong` | `{primary}` | |

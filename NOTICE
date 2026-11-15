@@ -3,5 +3,26 @@ Copyright 2026 Sean Sands
 
 Portions derived from snds/mailbird, Apache-2.0, and shadcn/ui, MIT.
 
-This product also depends on Base UI (MIT) and Google Material Symbols
-(Apache-2.0), installed as packages and not redistributed here.
+The icon drawings in packages/ui/src/icons/data.gen.ts, and in the published
+@unicron/ui, are from IBM Carbon (@carbon/icons,
+https://github.com/carbon-design-system/carbon), Copyright IBM Corp., licensed under
+the Apache License, Version 2.0. Each drawing is Carbon's 32 px art, unchanged, stored
+as the inner markup of its SVG. @carbon/icons itself is a development dependency and
+is not redistributed.
+
+The toast module in packages/ui/vendor/sonner.js, and in the published @unicron/ui, is
+sonner (https://github.com/emilkowalski/sonner), Copyright (c) 2023 Emil Kowalski,
+licensed under the MIT License. It is the published module less the <style> tag it adds
+to the page as it loads. packages/ui/scripts/build-sonner.mjs makes it, and the full
+licence text is at the top of the file.
+
+The typefaces are Geist and Geist Mono (https://github.com/vercel/geist-font),
+Copyright 2024 The Geist Project Authors, licensed under the SIL Open Font License,
+Version 1.1. They are installed as the packages @fontsource-variable/geist and
+@fontsource-variable/geist-mono and are not redistributed here: the tokens name the
+families, and the @unicron/ui stylesheet imports the font files from those packages.
+
+This product also depends on Base UI, sonner, cmdk, react-resizable-panels, next-themes,
+qrcode-generator, clsx, tailwind-merge, tw-animate-css and Tailwind CSS (all MIT), and on
+class-variance-authority (Apache-2.0). They are installed as packages and are not
+redistributed here.

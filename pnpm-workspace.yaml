@@ -5,3 +5,7 @@ packages:
 # @snds/dsa is a git dependency; its `prepare` script compiles TypeScript on install.
 onlyBuiltDependencies:
   - "@snds/dsa"
+
+# @carbon/icons (a devDependency of @unicron/ui) has an IBM telemetry postinstall; never run it.
+ignoredBuiltDependencies:
+  - "@carbon/icons"

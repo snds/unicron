@@ -4,9 +4,10 @@ The transform that produces unicron's primitives. shadcn's CLI ships only Lucide
 
 1. It reads the Base UI base components (`apps/v4/registry/bases/base/ui/*.tsx`).
 2. It inlines the style file's classes (`styles/style-nova.css` by default).
-3. It swaps every `<IconPlaceholder lucide="…">` for `<Icon name="…">`, a Material Symbol, using `icon-map.json`.
+3. It swaps every `<IconPlaceholder lucide="…">` for `<Icon name="…">`, an IBM Carbon icon from unicron's curated set, using `icon-map.json`. One entry there swaps an icon for a component instead: the loader becomes `<Spinner />`, which is an arc of its own and not an icon.
 4. It rewrites the imports. `--alias-mode package` (the default) writes the relative imports `@unicron/ui` uses. `--alias-mode app` writes an app's `@/…` aliases.
-5. It adds every Material Symbol it emitted to `.material-symbols.json` in the output folder, the seed for subsetting the icon font.
+
+The name is historical. The transform first swapped Lucide for Material Symbols, and the first line of every generated file still says "the shadcn-material transform". Since unicron 1.0 it writes Carbon names. There is no icon font and no manifest to subset: an icon must be in `packages/ui/src/icons/names.json`, and the transform stops if it is not.
 
 ## Add or refresh a primitive
 
@@ -21,7 +22,7 @@ Then:
 2. **Export it:** add `export * from "./components/ui/<name>"` to `packages/ui/src/index.ts`, and a row to `docs/03-components.md`.
 3. **Keep the header.** The two generated lines stay first. A primitive that came through the promotion loop adds its `Promoted from:` line after them (`docs/06-contributing.md` → Provenance).
 
-`SHADCN_STYLE=vega pnpm regen …` picks another style. The transform stops if a component uses a Lucide icon that isn't mapped yet; add the mapping to `icon-map.json`.
+`SHADCN_STYLE=vega pnpm regen …` picks another style. The transform stops if a component uses a Lucide icon that isn't mapped yet: add the mapping to `icon-map.json`, with a Carbon name that has the same meaning. If that Carbon icon is not in the curated set yet, add it to `packages/ui/src/icons/names.json` and run `pnpm --filter @unicron/ui icons:build`. Do not regenerate `spinner.tsx`: unicron's is hand-owned.
 
 ## Regenerating over an owned file
 

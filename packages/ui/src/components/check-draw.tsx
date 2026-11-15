@@ -1,12 +1,12 @@
-// Owned component (not generated): a check mark that draws itself. Material Symbols is a font, and
-// a font glyph cannot be drawn stroke by stroke, so this one mark is an SVG path.
+// Owned component (not generated): a check mark that draws itself. The icon set's glyphs are filled
+// outlines, which cannot be drawn stroke by stroke, so this one mark is a stroked SVG path.
 // Promoted from: Seeded in snds/unicron (motion layer; no app PR, no DSA record)
 import * as React from "react"
 
 import { cn } from "../lib/utils"
 
 export interface CheckDrawProps extends Omit<React.ComponentProps<"svg">, "children"> {
-  /** Stroke width in the 24-unit box. Default 2.5, close to the icon font's weight 400 at 20px. */
+  /** Stroke width in the 24-unit box. Default 2.5. */
   weight?: number
 }
 

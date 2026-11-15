@@ -1,13 +1,14 @@
 // Owned component (not generated): the updates part of an app's Settings → About, so every app
 // shows its version, channel, status and update actions in the same words and the same shape.
 // Promoted from: snds/lockdown, snds/synapse · PR snds/unicron (this PR) · DSA none (hand-raised in the unified updates plan, U6)
+// Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 15:512 Field Row and 32:54 Toggle Row; no app PR, no DSA record)
+"use client"
+
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
-import { Icon } from "../icon"
-import { Button, buttonVariants } from "./button"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "./field"
-import { Switch } from "./switch"
+import { TextAction, rowClasses } from "../security/parts"
+import { ToggleRow } from "./toggle-row"
 
 /** Where an update stands, as the update kit's shell reports it. */
 export type UpdateState = "idle" | "checking" | "up_to_date" | "downloading" | "ready" | "available" | "failed"
@@ -49,6 +50,8 @@ export interface UpdateStatus {
  * to `words` to change it (a translation, an app's own phrasing).
  */
 export interface UpdateWords {
+  /** The row's label, in the label column ("Version"; "Server" for a server's row). */
+  label?: string
   /** The check button. */
   check: string
   /** The button shown once an update is ready. */
@@ -107,11 +110,13 @@ export function updateLine(status: UpdateStatus, appName: string): string {
 
 /** The default English words. */
 export const updateWords: UpdateWords = {
+  label: "Version",
   check: "Check for updates",
   restart: "Restart to update",
   reload: "Reload app",
   release: "Get it from GitHub",
-  autoCheck: "Check automatically",
+  // The cross-app words (decisions §3): one name for this switch in all four apps.
+  autoCheck: "Check for updates automatically",
   channel: (channel) =>
     channel === "local"
       ? "builds made on this Mac"
@@ -170,78 +175,71 @@ function UpdateStatusRow({
   const ready = status.state === "ready"
   const failed = status.state === "failed"
   const link = status.state === "available" ? status.link : null
+  const row = rowClasses("auto")
   return (
-    <div
-      data-slot="update-status-row"
-      data-state={status.state}
-      className={cn("gap-3 flex flex-col", className)}
-      {...props}
-    >
-      <div data-slot="update-status-row-text" className="gap-0.5 flex flex-col">
-        <p data-slot="update-status-row-version" className="type-body-strong">
-          {w.version(appName, status.version, w.channel(status.channel))}
-        </p>
-        {/* A live region, so a check's outcome is read out. Busy while downloading, so the
-            percentage isn't read out at every step; the outcome is. */}
-        <p
-          data-slot="update-status-row-line"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          aria-busy={status.state === "downloading" || undefined}
-          className={cn("type-support", failed && "text-destructive")}
-        >
-          {w.line(status, appName)}
-        </p>
-      </div>
-      <div data-slot="update-status-row-actions" className="gap-2 flex flex-wrap items-center">
-        <Button size="sm" variant="outline" disabled={!canCheckForUpdates(status)} onClick={onCheck}>
-          <Icon name="refresh" data-icon="inline-start" />
-          {w.check}
-        </Button>
-        {ready ? (
-          <Button size="sm" onClick={onRestart}>
-            <Icon name="restart_alt" data-icon="inline-start" />
-            {w.restart}
-          </Button>
-        ) : (
-          <Button size="sm" variant="ghost" onClick={onReload}>
-            <Icon name="replay" data-icon="inline-start" />
-            {w.reload}
-          </Button>
-        )}
-        {link && (
-          // A link drawn as a button: it goes somewhere, so it keeps the link role.
-          <a
-            data-slot="update-status-row-release"
-            href={link}
-            target="_blank"
-            rel="noreferrer"
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-            onClick={
-              onOpenLink
-                ? (event) => {
-                    event.preventDefault()
-                    onOpenLink(link)
+    <div data-slot="update-status-row" data-state={status.state} className={cn(row.root, className)} {...props}>
+      <div className={cn(row.inner, "@max-lg/row:items-start")}>
+        <div className={row.body}>
+          <span data-slot="update-status-row-label" className={row.label}>
+            {w.label ?? updateWords.label}
+          </span>
+          {/* The value column: the version, the one status line, then the actions as a line of
+              words (Field Row's action, in the overline role; this row has two or three). */}
+          <div data-slot="update-status-row-text" className="flex min-w-0 flex-1 flex-col gap-1">
+            <p data-slot="update-status-row-version" className="type-code-inline text-text-body break-words">
+              {w.version(appName, status.version, w.channel(status.channel))}
+            </p>
+            {/* A live region, so a check's outcome is read out. Busy while downloading, so the
+                percentage isn't read out at every step; the outcome is. */}
+            <p
+              data-slot="update-status-row-line"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              aria-busy={status.state === "downloading" || undefined}
+              className={cn("type-caption", failed ? "text-destructive" : "text-text-secondary")}
+            >
+              {w.line(status, appName)}
+            </p>
+            <div data-slot="update-status-row-actions" className="flex flex-wrap items-baseline gap-x-4 gap-y-2 pt-2">
+              <TextAction disabled={!canCheckForUpdates(status)} onClick={onCheck}>
+                {w.check}
+              </TextAction>
+              {ready ? <TextAction onClick={onRestart}>{w.restart}</TextAction> : <TextAction onClick={onReload}>{w.reload}</TextAction>}
+              {link && (
+                // A link drawn as a text action: it goes somewhere, so it keeps the link role.
+                <a
+                  data-slot="update-status-row-release"
+                  href={link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="type-overline text-text-body hit-area -mx-1 rounded px-1 whitespace-nowrap underline-offset-4 hover:bg-state-hover hover:underline active:bg-state-pressed"
+                  onClick={
+                    onOpenLink
+                      ? (event) => {
+                          event.preventDefault()
+                          onOpenLink(link)
+                        }
+                      : undefined
                   }
-                : undefined
-            }
-          >
-            <Icon name="open_in_new" data-icon="inline-start" />
-            {w.release}
-          </a>
-        )}
+                >
+                  {w.release}
+                </a>
+              )}
+            </div>
+            {ready && restartNote && (
+              <p data-slot="update-status-row-note" className="type-meta text-text-label">
+                {restartNote}
+              </p>
+            )}
+            {error && (
+              <p data-slot="update-status-row-error" role="alert" className="type-caption text-critical-text">
+                {error}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
-      {ready && restartNote && (
-        <p data-slot="update-status-row-note" className="type-meta">
-          {restartNote}
-        </p>
-      )}
-      {error && (
-        <p data-slot="update-status-row-error" role="alert" className="type-support text-destructive">
-          {error}
-        </p>
-      )}
     </div>
   )
 }
@@ -258,32 +256,25 @@ export interface AutoCheckSwitchProps extends Omit<React.ComponentProps<"div">, 
 }
 
 /**
- * The "Check automatically" row: a label, when the check runs, and a switch. Nothing renders when
- * the build has no updates, since there is nothing to check.
+ * The "Check automatically" row: a Toggle Row with a label, when the check runs, and a switch.
+ * Nothing renders when the build has no updates, since there is nothing to check.
  */
 function AutoCheckSwitch({ status, onCheckedChange, disabled, words, className, ...props }: AutoCheckSwitchProps) {
   const w = { ...updateWords, ...words }
-  const id = React.useId()
   if (!status.enabled) return null
+  // The shared Toggle Row (Figma 32:54): the label in `ui` names the switch, the one caption line
+  // describes it, the rule on top (contract §9.9), no side padding so it lines up with the Field
+  // Rows above it in About. The whole row is the target.
   return (
-    <Field
-      orientation="horizontal"
-      data-disabled={disabled ? "true" : undefined}
-      className={className}
-      {...props}
-    >
-      <FieldContent>
-        <FieldLabel htmlFor={`${id}-switch`}>{w.autoCheck}</FieldLabel>
-        <FieldDescription id={`${id}-description`}>{w.autoCheckWhen(status.channel)}</FieldDescription>
-      </FieldContent>
-      <Switch
-        id={`${id}-switch`}
-        aria-describedby={`${id}-description`}
+    <div data-slot="auto-check-switch" data-disabled={disabled ? "true" : undefined} className={className} {...props}>
+      <ToggleRow
+        label={w.autoCheck}
+        description={w.autoCheckWhen(status.channel)}
         checked={status.auto_check}
         disabled={disabled}
         onCheckedChange={(on) => onCheckedChange(on)}
       />
-    </Field>
+    </div>
   )
 }
 

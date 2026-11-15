@@ -1,6 +1,7 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
 // Promoted from: snds/warpcore · PR snds/unicron#66 · DSA none
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: the handle is the 1px rule, ink under the pointer, a square grip; no app PR, no DSA record)
 "use client"
 
 import * as ResizablePrimitive from "react-resizable-panels"
@@ -63,7 +64,9 @@ function ResizableHandle({
         // On touch, the handle's own box covers its press area. Otherwise a finger beside the line
         // lands on the pane, and if anything in there scrolls, the browser takes the drag as a pan.
         "pointer-coarse:z-10 pointer-coarse:before:absolute pointer-coarse:before:inset-y-0 pointer-coarse:before:-inset-x-4 pointer-coarse:before:content-[''] aria-[orientation=horizontal]:pointer-coarse:before:inset-x-0 aria-[orientation=horizontal]:pointer-coarse:before:-inset-y-4",
-        "bg-border data-[separator=hover]:bg-ring data-[separator=active]:bg-ring focus-visible:bg-ring focus-visible:ring-ring/50 relative flex w-px shrink-0 items-center justify-center outline-none transition-colors focus-visible:ring-3 aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full [&[aria-orientation=horizontal]>div]:rotate-90",
+        // The 1px rule between panes; under the pointer, while dragged and with keyboard focus it
+        // turns to ink (`--c-resizable-active`). Keyboard focus also takes the one focus ring.
+        "relative flex w-px shrink-0 items-center justify-center bg-line-rule transition-colors data-[separator=hover]:bg-(--c-resizable-active) data-[separator=active]:bg-(--c-resizable-active) focus-visible:bg-(--c-resizable-active) aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full [&[aria-orientation=horizontal]>div]:rotate-90",
         className
       )}
       {...props}
@@ -71,7 +74,8 @@ function ResizableHandle({
       {withGrip && (
         <div
           data-slot="resizable-handle-grip"
-          className="bg-muted-foreground in-data-[separator=hover]:bg-ring in-data-[separator=active]:bg-ring z-10 flex h-6 w-1 shrink-0 rounded-lg transition-colors"
+          // A 4 × 24 square-cornered bar in the label ink; ink with the line.
+          className="z-10 flex h-6 w-1 shrink-0 bg-(--c-resizable-grip) transition-colors in-data-[separator=active]:bg-(--c-resizable-active) in-data-[separator=hover]:bg-(--c-resizable-active)"
         />
       )}
     </ResizablePrimitive.Separator>

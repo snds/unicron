@@ -1,0 +1,105 @@
+{
+  "$description": "Tier 3 · Component knobs for the overlays (packages/ui: dialog.tsx, sheet.tsx, popover.tsx, dropdown-menu.tsx, tooltip.tsx, command.tsx, sonner.tsx, truncated-text.tsx, adaptive.tsx, confirm-dialog.tsx), merged with component.json at build and emitted as --c-*. Every overlay is solid and square: surface-raised, a 1px line-rule, the 2px radius at most, no blur, no shadow. Sizes on the 4px spacing scale (a 44 or 48 close button, a 36 x 4 grabber, a 36px menu row) are Tailwind spacing and the size roles, so they need no knob. This file re-declares four knobs of component.json that the 2026-11 restyle changes: dialog.padding, sheet.handle, sheet.compact-height and popover.width.",
+  "dialog": {
+    "padding": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "The space inside a dialog, at its sides and bottom (Figma: Lockdown D05 and D09, Vale D02 draw 24). A sticky DialogFooter reaches out by it to run edge to edge. Re-declared from component.json, where it was 1rem."
+    },
+    "padding-top": {
+      "$type": "dimension",
+      "$value": "1rem",
+      "$description": "The space above the header's overline (Figma: 16 on every drawn desktop dialog). The close button sits 4px lower, centred on the 52px overline and title."
+    },
+    "margin": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "The least space a dialog leaves to the screen's edge on every side. Every size is capped at the screen less twice this, so below a size's width a dialog is as wide as it can be (Synapse SNA5: the viewport less 48px)."
+    },
+    "question": {
+      "$description": "size=\"question\": a confirmation, a one-field layer, the gate (cross-app decisions §14). Min and max are the drawn width; raise the max to let wide content widen it.",
+      "min-width": { "$type": "dimension", "$value": "30rem" },
+      "max-width": { "$type": "dimension", "$value": "30rem" }
+    },
+    "review": {
+      "$description": "size=\"review\": read one thing and answer it (Figma: Lockdown D09, 560).",
+      "min-width": { "$type": "dimension", "$value": "35rem" },
+      "max-width": { "$type": "dimension", "$value": "35rem" }
+    },
+    "form": {
+      "$description": "size=\"form\", the default: a form (Figma: Lockdown D05 and Vale D08, 640).",
+      "min-width": { "$type": "dimension", "$value": "40rem" },
+      "max-width": { "$type": "dimension", "$value": "40rem" }
+    },
+    "compose": {
+      "$description": "size=\"compose\": writing at length (Figma: Vale D02, 720).",
+      "min-width": { "$type": "dimension", "$value": "45rem" },
+      "max-width": { "$type": "dimension", "$value": "45rem" }
+    },
+    "viewer": {
+      "$description": "size=\"viewer\": a diff review, a merge, a page to print or read large (960).",
+      "min-width": { "$type": "dimension", "$value": "60rem" },
+      "max-width": { "$type": "dimension", "$value": "60rem" }
+    }
+  },
+  "sheet": {
+    "handle": {
+      "$type": "color",
+      "$value": "{line-grid-dot}",
+      "$description": "The grabber, the 36 x 4 bar at the top of a bottom sheet (Figma 25. Sheet Header: line/grid-dot, no radius). Re-declared from component.json, where it was 45% of the label ink."
+    },
+    "compact-height": {
+      "$type": "dimension",
+      "$value": "calc(100% - 3rem)",
+      "$description": "The tallest a content-height bottom sheet gets: the screen less 48px (a percentage of a fixed box is of the screen it is fixed to, and unlike 100dvh never runs past a home-screen app's real height), so the page still shows above it. Past it the sheet's body scrolls. height=\"full\" takes the whole screen instead. Re-declared from component.json, where it was a fixed 75dvh: Figma's sheets hug their content (Vale 05, Lockdown 11)."
+    }
+  },
+  "popover": {
+    "width": {
+      "$type": "dimension",
+      "$value": "20rem",
+      "$description": "PopoverContent's width: 320, so a PopoverHeader's overline, title and 44px close fit beside each other. It never outgrows the space on screen. Re-declared from component.json, where it was 18rem."
+    }
+  },
+  "tooltip": {
+    "max-width": {
+      "$type": "dimension",
+      "$value": "20rem",
+      "$description": "The widest a tooltip gets before its text wraps."
+    }
+  },
+  "truncated-text": {
+    "min-width": {
+      "$type": "dimension",
+      "$value": "12rem",
+      "$description": "The least width of TruncatedText's full text (Synapse f-hovercard, SNA3; contract 5.1c C17), so a short text still opens as a readable card, not a sliver. Synapse's own hovercard holds 12rem."
+    },
+    "max-width": {
+      "$type": "dimension",
+      "$value": "22rem",
+      "$description": "The most width of TruncatedText's full text before it wraps (Synapse f-hovercard, SNA3; contract 5.1c C17), and never wider than the room the screen leaves. Synapse's own hovercard holds 22rem."
+    }
+  },
+  "toaster": {
+    "width": {
+      "$type": "dimension",
+      "$value": "22.5rem",
+      "$description": "A toast's width on a desktop. On a phone it spans the screen less its offsets."
+    },
+    "offset": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "How far toasts sit from the bottom left of the window when the frame gives no place for them. A frame sets --frame-toast-left and --frame-toast-bottom to put them at the bottom left of its content column (cross-app decisions §1), or above a phone's bottom row."
+    },
+    "offset-compact": {
+      "$type": "dimension",
+      "$value": "1rem",
+      "$description": "The same on a phone, when the frame gives no place: the 16px page gutter."
+    },
+    "gap": {
+      "$type": "dimension",
+      "$value": "0.5rem",
+      "$description": "The space between two toasts. The Toaster reads it once when it mounts, and falls back to 8px without the stylesheet."
+    }
+  }
+}

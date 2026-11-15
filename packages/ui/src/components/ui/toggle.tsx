@@ -1,24 +1,37 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
-// Overrides (tools/shadcn-material/overrides.json): pressed state is the primary fill, not bg-muted (snds/unicron#6: muted on the page measured about Lc 8 / 1.1:1; primary measures Lc 96+ / 17:1 in both modes against the page and the unpressed item)
+// Overrides (tools/shadcn-material/overrides.json): pressed state is the primary fill, not bg-muted (snds/unicron#6). Superseded by the 2026-11 restyle below (pressed is inverted ink); the override entry still writes the old fill on a regen, so carry this file over by hand until it is updated.
+// Promoted from: Seeded in snds/unicron (2026-11 design direction: pressed is inverted ink, as the active Filter Chip (Figma 15:503), never the identity colour; no app PR, no DSA record)
 "use client"
 
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
+// Pressed is inverted ink: the ink as the fill, the ground as the label, as an active Filter Chip
+// and a current FloatButton are. It is never the identity colour, so a pressed tool never reads as
+// the screen's one primary action. Hover and pressed move the fill toward the ground (90%, 80%),
+// as every solid does. Unpressed, a toggle is a ghost button: ink, with the hover and pressed washes.
+const PRESSED =
+  "aria-pressed:bg-foreground aria-pressed:text-background aria-pressed:hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] aria-pressed:active:bg-[color-mix(in_oklab,var(--foreground)_80%,var(--background))]"
+
 const toggleVariants = cva(
-  "hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/60 dark:aria-invalid:ring-destructive/50 aria-invalid:border-destructive data-[state=on]:bg-primary data-[state=on]:text-primary-foreground gap-1 rounded-lg text-sm font-medium transition-[color,background-color,border-color,box-shadow] [&_svg:not([class*='size-'])]:size-4 group/toggle inline-flex items-center justify-center whitespace-nowrap outline-none hover:bg-muted focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  cn(
+    "group/toggle inline-flex shrink-0 items-center justify-center gap-2 rounded-lg type-overline whitespace-nowrap text-foreground transition-[color,background-color,box-shadow] select-none hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    PRESSED
+  ),
   {
     variants: {
       variant: {
         default: "bg-transparent",
-        outline: "border-input hover:bg-muted border bg-transparent",
+        // A hairline box around it at rest.
+        outline: "bg-transparent rule-box",
       },
+      // The Button's heights: 40, 32 (rows and toolbars), 48. Under 44 they take a touch target of 44.
       size: {
-        default: "h-8 min-w-8 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        sm: "h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 min-w-9 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        default: "hit-area h-10 min-w-10 px-3",
+        sm: "hit-area h-8 min-w-8 px-2",
+        lg: "h-control min-w-(--spacing-control) px-4",
       },
     },
     defaultVariants: {
@@ -28,19 +41,14 @@ const toggleVariants = cva(
   }
 )
 
+/** A button that stays pressed (`aria-pressed`): a tool that is on, a format that applies. */
 function Toggle({
   className,
   variant = "default",
   size = "default",
   ...props
 }: TogglePrimitive.Props & VariantProps<typeof toggleVariants>) {
-  return (
-    <TogglePrimitive
-      data-slot="toggle"
-      className={cn(toggleVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+  return <TogglePrimitive data-slot="toggle" className={cn(toggleVariants({ variant, size, className }))} {...props} />
 }
 
 export { Toggle, toggleVariants }

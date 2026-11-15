@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 // Converts shadcn registry sources (Base UI base + a style file such as Nova)
-// into project components that use Material Symbols instead of Lucide.
+// into project components that use unicron's <Icon> (IBM Carbon) instead of Lucide.
 //
 // Why this exists: the shadcn CLI only offers lucide/tabler/hugeicons/phosphor/
 // remixicon, and it fetches pre-transformed code from ui.shadcn.com. This script
 // does the same transform locally, from a checkout of github.com/shadcn-ui/ui,
 // so the output is reproducible and reviewable.
+//
+// The folder is still called shadcn-material: it first swapped Lucide for Material
+// Symbols, and every generated file's first line names "the shadcn-material transform".
+// Since unicron 1.0 the icons are Carbon (icon-map.json).
 //
 // Usage (from the unicron root; see tools/shadcn-material/README.md):
 //   node tools/shadcn-material/transform.mjs [--alias-mode package|app] <shadcn-checkout> <out-dir> [component ...]
@@ -47,7 +51,14 @@ const ALIASES = {
 const style = process.env.SHADCN_STYLE ?? "nova"
 const registry = path.join(checkout, "apps/v4/registry")
 const uiDir = path.join(registry, "bases/base/ui")
-const iconMap = JSON.parse(fs.readFileSync(path.join(here, "icon-map.json"), "utf8"))
+const { $description: _iconMapDoc, ...iconMap } = JSON.parse(fs.readFileSync(path.join(here, "icon-map.json"), "utf8"))
+// The curated icon set. An icon the transform emits must be in it, or <Icon> cannot draw it.
+const namesFile = path.join(here, "..", "..", "packages", "ui", "src", "icons", "names.json")
+const curated = new Set(
+  Object.entries(JSON.parse(fs.readFileSync(namesFile, "utf8")))
+    .filter(([group]) => !group.startsWith("$"))
+    .flatMap(([, names]) => names)
+)
 // Per-file edits applied after the style is inlined (see overrides.json). This is how a change
 // to a generated primitive survives `pnpm regen`: put it here, not only in the output file.
 const { $description: _overridesDoc, ...overrides } = JSON.parse(fs.readFileSync(path.join(here, "overrides.json"), "utf8"))
@@ -59,8 +70,6 @@ for (const m of css.matchAll(/\.(cn-[\w-]+)\s*\{\s*@apply\s+([^;]+);\s*\}/g)) {
   styleMap.set(m[1], m[2].trim().replace(/\s+/g, " "))
 }
 
-// Every Material Symbol the transform emits, so the font can be subset later.
-const usedIcons = new Set()
 const unresolved = new Set()
 
 function inlineStyleTokens(src) {
@@ -83,31 +92,37 @@ function inlineStyleTokens(src) {
 }
 
 function swapIcons(src, file) {
-  let touched = false
+  let icons = 0
+  const elements = new Map()
   const out = src.replace(/<IconPlaceholder\b([\s\S]*?)\/>/g, (_, attrs) => {
     const lucide = attrs.match(/lucide="([^"]+)"/)?.[1]
-    const name = iconMap[lucide]
-    if (!name) throw new Error(`${file}: no Material Symbol mapped for lucide "${lucide}" (edit icon-map.json)`)
-    usedIcons.add(name)
-    touched = true
+    const to = iconMap[lucide]
+    if (!to) throw new Error(`${file}: no Carbon icon mapped for lucide "${lucide}" (edit icon-map.json)`)
     const rest = attrs
       .replace(/\s*(lucide|tabler|hugeicons|phosphor|remixicon)="[^"]*"/g, "")
       .trim()
+    if (typeof to === "object") {
+      // The icon is replaced by a component (the spinner). That component's own file is hand-owned.
+      if (file === `${to.from}.tsx`) throw new Error(`${file}: ${to.element} is hand-owned in unicron (an SVG arc, not an icon); do not regenerate it`)
+      elements.set(to.element, to.from)
+      return `<${to.element}${rest ? " " + rest : ""} />`
+    }
+    if (!curated.has(to)) throw new Error(`${file}: "${to}" (for lucide "${lucide}") is not in packages/ui/src/icons/names.json. Add it there and run \`pnpm --filter @unicron/ui icons:build\`.`)
+    icons++
     // name goes last so a spread of svg props (which can carry `name`) can't override it.
-    return `<Icon${rest ? " " + rest : ""} name="${name}" />`
+    return `<Icon${rest ? " " + rest : ""} name="${to}" />`
   })
-  if (!touched) return out
-  // Components that are just an icon (Spinner) type their props as svg props;
-  // Icon's axis props (fill: boolean) replace svg's string `fill`.
-  const iconOnly = out.includes('React.ComponentProps<"svg">')
-  return out
-    .replaceAll('React.ComponentProps<"svg">', 'Omit<IconProps, "name">')
-    .replace(
-      /import \{ IconPlaceholder \} from "[^"]+"\n/,
-      iconOnly
-        ? `import { Icon, type IconProps } from "${ALIASES.icon}"\n`
-        : `import { Icon } from "${ALIASES.icon}"\n`
-    )
+  if (!icons && !elements.size) return out
+  // A component that is just an icon types its props as svg props; Icon's props are those plus its own.
+  const iconOnly = icons > 0 && out.includes('React.ComponentProps<"svg">')
+  const imports = [
+    ...(icons ? [iconOnly ? `import { Icon, type IconProps } from "${ALIASES.icon}"\n` : `import { Icon } from "${ALIASES.icon}"\n`] : []),
+    ...[...elements].sort().map(([element, from]) => `import { ${element} } from "${ALIASES.ui}${from}"\n`),
+  ]
+  return (iconOnly ? out.replaceAll('React.ComponentProps<"svg">', 'Omit<IconProps, "name">') : out).replace(
+    /import \{ IconPlaceholder \} from "[^"]+"\n/,
+    imports.join("")
+  )
 }
 
 function applyOverrides(src, file) {
@@ -153,7 +168,4 @@ for (const file of files) {
   console.log(`✓ ${file}`)
 }
 
-const manifest = path.join(outDir, ".material-symbols.json")
-const previous = fs.existsSync(manifest) ? JSON.parse(fs.readFileSync(manifest, "utf8")) : []
-fs.writeFileSync(manifest, JSON.stringify([...new Set([...previous, ...usedIcons])].sort(), null, 2) + "\n")
 if (unresolved.size) console.log(`dropped marker classes: ${[...unresolved].sort().join(", ")}`)
