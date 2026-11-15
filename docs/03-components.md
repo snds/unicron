@@ -687,6 +687,8 @@ A primitive never writes its own duration or curve. It picks a recipe from
 | pop | `motion-pop` | a small surface arriving from its anchor | opacity and scale from 0.96, `--motion-base` in, `--motion-fast` out | fades in place |
 | fade | `motion-fade` (+ `motion-fade-fast`) | a surface that appears where it is: a dialog, a tooltip, the dim behind a layer | opacity, `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways | the same |
 | anchor | `motion-anchor` (+ `motion-anchor-fast`) | a surface that opens off its trigger: a popover, a menu, a select's list | opacity, and 8px away from the trigger on the side Base UI places it (`data-side`); `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways and still when opened or closed from the keyboard | fades in place |
+| appear | `motion-appear` | a value that changes in place on an element that stays mounted (a shown secret) | fades in, `--motion-fast`, each time the class is put on | the same |
+| fill in turn | `motion-fill-in-turn` on the parent | cells that light up as a level rises (a strength rule) | each child's colour changes `--motion-stagger` after the one before, `--motion-base` | colours change together, no stagger |
 | slide | `motion-slide` + `motion-slide-from-{top,bottom,left,right}` | a surface arriving from an edge | opacity and translate on `--motion-spring-firm`; `--motion-base` out | fades in place |
 | collapse | `motion-collapse` | a panel opening by height | height and opacity, `--motion-state`, move curve | height changes at once; content fades |
 | stagger | `motion-stagger` on the parent | a list appearing for the first time | children rise 4px, `--motion-stagger` apart, capped at `--motion-stagger-max` steps | every row is there at once |
@@ -699,6 +701,15 @@ A primitive never writes its own duration or curve. It picks a recipe from
   DropdownMenu and Select use the short anchor: 120ms both ways, and still when opened or closed
   from the keyboard. Each has a contract and browser checks, including one that it never zooms
   or blurs on the way in.
+- **Lockdown's feedback, in the 1.0 look** (words, not icons): the clipboard countdown's words on
+  SecretField and CodeDisplay ("Clears in 28 s", "Cleared") fade in over 120ms when they appear and
+  when the phase changes, and hold still as the seconds tick. A SecretField's value fades in where
+  the dots were when shown, and the dots fade back in when hidden, 120ms. The strength rule's
+  cells change colour one after another, 50ms apart. Each has a contract and browser checks.
+- **Shake is opt-in.** No field shakes by default: an error is the 2px critical border and words.
+  An app shakes a field on a refusal it chooses (a wrong PIN, a wrong code) with `useShake`:
+  `const shake = useShake()`, `<Input {...shake.props} />`, then `shake.shake()` when it refuses.
+  Under reduced motion the field does not move; the border and the words carry it.
 - **Entrances and exits are transitions.** pop, slide, collapse, fade and anchor read Base UI's `data-starting-style`
   and `data-ending-style` (and `@starting-style` for a plain mount), so closing mid-open turns round
   from where it is. Nothing restarts.

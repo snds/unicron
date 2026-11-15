@@ -564,7 +564,13 @@ export function CodeDisplay({
       </span>
       {copyStatus && (
         // The clipboard's countdown, on the copy control: the live colour, because it is running now.
-        <span data-slot="code-display-copy-status" className="type-overline text-secondary-live whitespace-nowrap">
+        // Keyed by the phase: the words fade in when they appear and when "Clears in" turns to
+        // "Cleared", and hold still as the seconds tick (motion-fade-fast).
+        <span
+          key={copyPhase}
+          data-slot="code-display-copy-status"
+          className="motion-fade motion-fade-fast type-overline text-secondary-live whitespace-nowrap"
+        >
           {copyStatus === "Cleared" ? (
             <>
               <Icon name="checkmark" size="sm" className="mr-1 inline align-[-0.2em]" />

@@ -28,6 +28,7 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
+  SecretField,
   Select,
   SelectContent,
   SelectItem,
@@ -38,6 +39,8 @@ import {
   TooltipTrigger,
   useShake,
   type MotionContractId,
+  type SecretFieldHost,
+  type SecretStrength,
 } from "@unicron/ui"
 
 type Mode = "full" | "reduced"
@@ -356,6 +359,51 @@ function SelectSpecimen() {
   )
 }
 
+const secretHost: SecretFieldHost = {
+  copy: () => Promise.resolve(),
+  clear: () => Promise.resolve(),
+  clipboardHolds: () => Promise.resolve(true),
+  gate: () => Promise.resolve(true),
+}
+const secret = () => Promise.resolve(new TextEncoder().encode("larch-ember-quartz-17"))
+
+/** A SecretField with a button outside it that presses one of its own controls. */
+function SecretFieldSpecimen({ press, label }: { press: "copy" | "reveal"; label: string }) {
+  const box = useRef<HTMLDivElement>(null)
+  return (
+    <>
+      <Button
+        data-trigger
+        variant="outline"
+        size="sm"
+        onClick={() => box.current?.querySelector<HTMLButtonElement>(`[data-slot="secret-field-${press}"]`)?.click()}
+      >
+        {label}
+      </Button>
+      <div ref={box} className="w-full">
+        <SecretField label="Password" size="default" revealMode="toggle" getSecret={secret} host={secretHost} />
+      </div>
+    </>
+  )
+}
+
+const LEVELS: SecretStrength[] = ["weak", "fair", "strong"]
+
+function StrengthSpecimen() {
+  const [level, setLevel] = useState(0)
+  const [value, setValue] = useState("larch-ember")
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setLevel((n) => (n + 1) % LEVELS.length)}>
+        Next level
+      </Button>
+      <div className="w-full">
+        <SecretField mode="edit" label="New password" value={value} onChange={setValue} strength={LEVELS[level]} />
+      </div>
+    </>
+  )
+}
+
 const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   press: () => <PressSpecimen />,
   pop: () => <ToggleSpecimen className="motion-pop" label="A small surface" />,
@@ -371,6 +419,9 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   tooltip: () => <TooltipSpecimen />,
   menu: () => <MenuSpecimen />,
   select: () => <SelectSpecimen />,
+  "copy-words": () => <SecretFieldSpecimen press="copy" label="Copy" />,
+  reveal: () => <SecretFieldSpecimen press="reveal" label="Show" />,
+  strength: () => <StrengthSpecimen />,
 }
 
 function Fact({ term, children }: { term: string; children: ReactNode }) {

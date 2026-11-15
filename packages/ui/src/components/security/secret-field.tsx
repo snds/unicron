@@ -973,7 +973,9 @@ function SecretFieldRead({
                 data-slot="secret-field-revealed"
                 className={cn(
                   "min-w-0 truncate",
-                  isRevealed && "rule-box -mx-1 bg-(--c-secret-field-revealed-bg) px-1 contrast-more:bg-transparent forced-colors:bg-transparent"
+                  isRevealed && "rule-box -mx-1 bg-(--c-secret-field-revealed-bg) px-1 contrast-more:bg-transparent forced-colors:bg-transparent",
+                  // Shown: the value fades in where the dots were (it stays mounted, so a keyframe).
+                  isRevealed && "motion-appear"
                 )}
               />
               <span id={hiddenNameId} className="sr-only">
@@ -990,7 +992,7 @@ function SecretFieldRead({
               )}
               {!isRevealed && phase !== "loading" && (
                 <>
-                  <span aria-hidden className="tracking-(--c-secret-field-mask-spacing) contrast-more:hidden forced-colors:hidden">
+                  <span aria-hidden data-slot="secret-field-mask" className="motion-fade motion-fade-fast tracking-(--c-secret-field-mask-spacing) contrast-more:hidden forced-colors:hidden">
                     {"•".repeat(maskCount)}
                   </span>
                   <span aria-hidden className="hidden contrast-more:inline forced-colors:inline">
@@ -1010,7 +1012,14 @@ function SecretFieldRead({
           {(copyPhase === "counting" || copyPhase === "cleared") && (
             // The clipboard's own countdown, in the live colour: it is running now (rules §2.5.4).
             // Spoken through the live region at the start and the end, not every second.
-            <span data-slot="secret-field-copy-countdown" aria-hidden className="type-overline text-secondary-live whitespace-nowrap">
+            // Keyed by the phase, so the words fade in when they appear and when "Clears in" turns to
+            // "Cleared", and hold still as the seconds tick (motion-fade-fast).
+            <span
+              key={copyPhase}
+              data-slot="secret-field-copy-countdown"
+              aria-hidden
+              className="motion-fade motion-fade-fast type-overline text-secondary-live whitespace-nowrap"
+            >
               {copyPhase === "counting" ? secretFieldWords.clearsIn(copyLeft) : secretFieldWords.cleared}
             </span>
           )}
@@ -1266,7 +1275,8 @@ function SecretFieldEdit({
       {meter && (
         // The strength rule: three cells and the core's word, always together (the word carries it).
         <div id={meterId} data-slot="secret-field-meter" data-strength={strength} className="flex items-center gap-3 pt-1">
-          <span aria-hidden className="flex flex-1 gap-0.5">
+          {/* The cells light one after another as the level rises (motion-fill-in-turn). */}
+          <span aria-hidden data-slot="secret-field-meter-cells" className="motion-fill-in-turn flex flex-1 gap-0.5">
             {[1, 2, 3].map((n) => (
               <span key={n} className={cn("h-1 flex-1", n <= meter.segments ? meter.className : "bg-line-rule")} />
             ))}
