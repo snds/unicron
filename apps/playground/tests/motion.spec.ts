@@ -122,6 +122,12 @@ async function entered(page: Page, contract: MotionContract) {
   const popup = surface(page, contract)
   await popup.waitFor({ state: "attached" })
   await expect(popup).not.toHaveAttribute("data-starting-style", /.*/)
+  // A part that is already on the page (a secret's value, a strength rule) starts to move once the
+  // host answers and React re-renders: give it a moment to begin. Nothing to wait for is fine too
+  // (a keyboard-opened menu does not animate).
+  await page
+    .waitForFunction((selector) => [...document.querySelectorAll(selector)].some((el) => el.getAnimations({ subtree: true }).length > 0), roots(contract), { timeout: 1500 })
+    .catch(() => {})
 }
 
 /** Send it away again, still with the pointer. */
@@ -283,6 +289,19 @@ for (const contract of motionContracts as readonly MotionContract[]) {
     }
   })
 }
+
+// ── the clipboard countdown ────────────────────────────────────────────────────────────────────
+// The words fade in when the countdown starts, and then hold still: each second's new number is
+// not a new entrance (the span is keyed by the phase, not by the seconds).
+test("copy-words: the seconds tick without motion", async ({ page }) => {
+  const contract = motionContracts.find((c) => c.id === "copy-words")! as MotionContract
+  await open(page, contract)
+  await release(page)
+  const words = surface(page, contract)
+  const first = await words.textContent()
+  await expect(words).not.toHaveText(first ?? "", { timeout: 4000 })
+  expect(await freeze(page, contract), "the words moved when the seconds changed").toEqual([])
+})
 
 // ── loops ──────────────────────────────────────────────────────────────────────────────────────
 // Nothing loops under reduced motion, whatever variant puts the loop on: the indeterminate Progress

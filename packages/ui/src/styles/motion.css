@@ -7,6 +7,8 @@
  *   motion-fade (+ -fast)           a surface that fades in place: a dialog, a tooltip, a backdrop
  *   motion-anchor (+ -fast)         a surface that fades and moves a step off its anchor: a popover,
  *                                   a menu, a select's list
+ *   motion-appear                   a value that changes in place fades in (a revealed secret)
+ *   motion-fill-in-turn             cells change colour one after another (a strength rule)
  *   motion-slide (+ -from-*)        a surface arriving from an edge on the firm spring
  *   motion-collapse                 a panel opening by height
  *   motion-stagger                  children entering in turn
@@ -137,6 +139,39 @@
     transition-property: none;
   }
 
+  /* ── appear ────────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * A value that changes in place, on an element that stays mounted (a secret written into its
+   * span when shown): it fades in each time the class is put on. Opacity only, --motion-fast.
+   */
+  .motion-appear {
+    animation: motion-appear var(--motion-fast) var(--motion-ease-enter) backwards;
+  }
+
+  /* ── fill in turn ──────────────────────────────────────────────────────────────────────────── */
+  /*
+   * Cells that light up as a level rises (a strength rule): each changes colour a stagger step
+   * after the one before. Colour only, so nothing moves.
+   */
+  .motion-fill-in-turn > * {
+    transition-property: background-color;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-enter);
+    transition-delay: calc(min(var(--motion-index, 0), var(--motion-stagger-max)) * var(--motion-stagger));
+  }
+  .motion-fill-in-turn > :nth-child(2) {
+    --motion-index: 1;
+  }
+  .motion-fill-in-turn > :nth-child(3) {
+    --motion-index: 2;
+  }
+  .motion-fill-in-turn > :nth-child(4) {
+    --motion-index: 3;
+  }
+  .motion-fill-in-turn > :nth-child(n + 5) {
+    --motion-index: 4;
+  }
+
   /* Base UI marks a popup that should not animate (a tooltip moving between neighbours). */
   .motion-fade[data-instant],
   .motion-anchor[data-instant] {
@@ -243,6 +278,11 @@
     translate: 0 4px;
   }
 }
+@keyframes motion-appear {
+  from {
+    opacity: 0;
+  }
+}
 @keyframes motion-draw {
   from {
     stroke-dashoffset: 1;
@@ -307,6 +347,9 @@
   [data-shake] {
     animation: none;
   }
+  .motion-fill-in-turn > * {
+    transition-delay: initial;
+  }
 }
 [data-motion="reduced"] {
   .motion-press:active,
@@ -336,5 +379,8 @@
   .motion-draw,
   [data-shake] {
     animation: none;
+  }
+  .motion-fill-in-turn > * {
+    transition-delay: initial;
   }
 }

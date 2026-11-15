@@ -86,6 +86,7 @@ Exports: `groupCode`, `spellCode`, `CodeDisplayList`, `CodeDisplayState`, `CodeD
 | cleared | Check plus sr-only "Cleared", tooltip "Cleared", for 2 s, as SecretField; only when the clear is known to have run (below). Otherwise the countdown ends silently and the button goes back to copy |
 | HOTP busy | "Next code" disabled while `onAdvance` is pending, or when it is absent |
 | reduced motion | Ring in 5 s steps; no crossfade |
+| copy words (1.0) | "Clears in 28 s" and "Cleared" fade in over 120ms when they appear and when the phase changes, never on a tick (`motion-fade-fast`, contract `copy-words`) |
 | high contrast and forced colors | Ring hidden, "N s" text shown; expiring adds an underline |
 
 ## Behavior and timing
@@ -118,7 +119,7 @@ Tier 3 under `code`:
 | `--c-code-expiring-at` | `5s` | |
 | `--c-code-next-at` | `10s` | |
 | `--c-code-copy-next-at` | `3s` | |
-| `--c-code-rollover-duration` | `200ms` | Literal; tier 2 has no duration role |
+| `--c-code-rollover-duration` | `{motion-base}` (200ms) | |
 
 ## Keyboard and screen reader
 

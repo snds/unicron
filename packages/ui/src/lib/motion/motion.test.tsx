@@ -2,6 +2,7 @@ import type * as React from "react"
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react"
 
 import { CheckDraw } from "../../components/check-draw"
+import { Input } from "../../components/ui/input"
 import { motionContracts, rubberBand, useShake, withViewTransition } from "./index"
 
 describe("rubberBand", () => {
@@ -64,6 +65,23 @@ describe("useShake", () => {
     act(() => result.current.props.onAnimationEnd(ended("motion-shake-a")))
     expect(result.current.props["data-shake"]).toBeUndefined()
     expect(result.current.shaking).toBe(false)
+  })
+
+  it("works on the system Input: an app shakes a field on a refusal it chooses", () => {
+    function Pin() {
+      const shake = useShake()
+      return (
+        <>
+          <Input aria-label="PIN" aria-invalid {...shake.props} />
+          <button onClick={shake.shake}>wrong PIN</button>
+        </>
+      )
+    }
+    render(<Pin />)
+    const field = screen.getByLabelText("PIN")
+    expect(field).not.toHaveAttribute("data-shake")
+    fireEvent.click(screen.getByText("wrong PIN"))
+    expect(field).toHaveAttribute("data-shake", "a")
   })
 
   it("keeps the same shake function between renders", () => {

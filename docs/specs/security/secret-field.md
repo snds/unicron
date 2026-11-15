@@ -99,7 +99,8 @@ Exports: `spellSecret`, `secretStrengthFromScore`, `secretFieldAnnouncements`, `
 | disabled | Edit mode only; read mode is gated or `locked`, never disabled |
 | edit | `InputGroupInput` with its own show toggle; meter weak `destructive`, fair `warning`, strong `primary`, always with the word |
 | edit, several lines | `multiline`: `InputGroupTextarea` (`data-multiline` on the root), `data-masked` until Show, so it draws as dots; the Show control sits at the top right |
-| reduced motion | Ring becomes text "28 s"; no tint transition |
+| reduced motion | Ring becomes text "28 s"; no tint transition. The fades below stay (opacity only); the strength cells change together |
+| motion (1.0) | The clipboard's words fade in over 120ms when they appear and when "Clears in" turns to "Cleared", never on a tick (`motion-fade-fast`). A shown value fades in where the dots were, and the dots fade back in, 120ms (`motion-appear`, `motion-fade-fast`). The strength cells change colour one after another, 50ms apart (`motion-fill-in-turn`). Contracts `copy-words`, `reveal`, `strength` (docs/03-components.md → Motion recipes) |
 | high contrast and forced colors | Dots become the word "Hidden"; "Shown" is added while revealed; tint dropped |
 
 ## Behavior and timing
