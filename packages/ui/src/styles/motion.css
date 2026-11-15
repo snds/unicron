@@ -4,6 +4,9 @@
  *
  *   motion-press, motion-press-sm   a control going down under a press
  *   motion-pop                      a small surface arriving from its anchor and leaving faster
+ *   motion-fade (+ -fast)           a surface that fades in place: a dialog, a tooltip, a backdrop
+ *   motion-anchor (+ -fast)         a surface that fades and moves a step off its anchor: a popover,
+ *                                   a menu, a select's list
  *   motion-slide (+ -from-*)        a surface arriving from an edge on the firm spring
  *   motion-collapse                 a panel opening by height
  *   motion-stagger                  children entering in turn
@@ -57,6 +60,87 @@
   .motion-pop[data-ending-style] {
     transition-duration: var(--motion-fast);
     transition-timing-function: var(--motion-ease-exit);
+  }
+
+  /* ── fade ──────────────────────────────────────────────────────────────────────────────────── */
+  /* A surface that appears where it is: a dialog, a tooltip, the dim behind a layer. */
+  .motion-fade {
+    transition-property: opacity;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-enter);
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  .motion-fade[data-starting-style],
+  .motion-fade[data-ending-style] {
+    opacity: 0;
+  }
+  .motion-fade[data-ending-style] {
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-exit);
+  }
+  /* Met often (a tooltip, the command palette): short both ways. */
+  .motion-fade-fast {
+    transition-duration: var(--motion-fast);
+  }
+
+  /* ── anchor ────────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * A surface that opens off a trigger: it fades and moves one step (8px) away from its anchor,
+   * on the side Base UI puts it (`data-side`). No zoom.
+   */
+  .motion-anchor {
+    --motion-anchor-step: calc(var(--spacing) * 2);
+    --motion-anchor-x: 0px;
+    --motion-anchor-y: calc(var(--motion-anchor-step) * -1);
+    transition-property: opacity, translate;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-enter);
+    @starting-style {
+      opacity: 0;
+      translate: var(--motion-anchor-x) var(--motion-anchor-y);
+    }
+  }
+  .motion-anchor[data-side="top"] {
+    --motion-anchor-y: var(--motion-anchor-step);
+  }
+  .motion-anchor:is([data-side="left"], [data-side="inline-start"]) {
+    --motion-anchor-x: var(--motion-anchor-step);
+    --motion-anchor-y: 0px;
+  }
+  .motion-anchor:is([data-side="right"], [data-side="inline-end"]) {
+    --motion-anchor-x: calc(var(--motion-anchor-step) * -1);
+    --motion-anchor-y: 0px;
+  }
+  /* Over its trigger (a select's chosen item), it has no side to come from: it fades in place. */
+  .motion-anchor[data-side="none"] {
+    --motion-anchor-y: 0px;
+  }
+  .motion-anchor[data-starting-style],
+  .motion-anchor[data-ending-style] {
+    opacity: 0;
+    translate: var(--motion-anchor-x) var(--motion-anchor-y);
+  }
+  .motion-anchor[data-ending-style] {
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease-exit);
+  }
+  /*
+   * A list met often (a menu, a select): short both ways, and still when it is opened or closed
+   * from the keyboard, where the highlight is already on an item and an entrance only delays it.
+   */
+  .motion-anchor-fast {
+    transition-duration: var(--motion-fast);
+  }
+  .motion-anchor-fast:has(:focus-visible) {
+    transition-property: none;
+  }
+
+  /* Base UI marks a popup that should not animate (a tooltip moving between neighbours). */
+  .motion-fade[data-instant],
+  .motion-anchor[data-instant] {
+    transition-property: none;
   }
 
   /* ── slide ─────────────────────────────────────────────────────────────────────────────────── */
@@ -207,10 +291,13 @@
     }
   }
   .motion-slide[data-starting-style],
-  .motion-slide[data-ending-style] {
+  .motion-slide[data-ending-style],
+  .motion-anchor[data-starting-style],
+  .motion-anchor[data-ending-style] {
     translate: none;
   }
-  .motion-slide {
+  .motion-slide,
+  .motion-anchor {
     @starting-style {
       translate: none;
     }
@@ -234,10 +321,13 @@
     }
   }
   .motion-slide[data-starting-style],
-  .motion-slide[data-ending-style] {
+  .motion-slide[data-ending-style],
+  .motion-anchor[data-starting-style],
+  .motion-anchor[data-ending-style] {
     translate: none;
   }
-  .motion-slide {
+  .motion-slide,
+  .motion-anchor {
     @starting-style {
       translate: none;
     }

@@ -34,9 +34,11 @@ export type DropdownMenuWidth = MenuWidth
 const PANEL =
   "bg-surface-raised text-text-body rule-box relative flex flex-col gap-1 rounded p-2 outline-none max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto data-closed:overflow-hidden"
 
-/** It fades and moves 8px off its anchor: no zoom. */
-const PANEL_MOTION =
-  "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 duration-(--motion-fast) ease-(--motion-ease)"
+/**
+ * It fades and moves 8px off its anchor: no zoom. 120ms both ways, and still when opened or closed
+ * from the keyboard (motion-anchor-fast).
+ */
+const PANEL_MOTION = "motion-anchor motion-anchor-fast"
 
 function DropdownMenuContent({
   align = "start",

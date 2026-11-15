@@ -426,7 +426,7 @@ Semantic roles carry motion; components use these, never a raw duration or curve
 | Role | Value | For |
 |---|---|---|
 | `--motion-press` | 100ms (`duration.press`) | a control going down under a press |
-| `--motion-fast` | 120ms (`duration.fast`) | hover, a small state change, anything leaving |
+| `--motion-fast` | 120ms (`duration.fast`) | hover, a small state change, a tooltip or a menu appearing, anything leaving |
 | `--motion-base` | 200ms (`duration.base`) | a small surface arriving: a dialog, a popover, a toast |
 | `--motion-state` | 280ms (`duration.state`) | a surface changing state: a sheet or a panel opening, a selection moving |
 | `--motion-move` | 400ms (`duration.move`) | travel across the screen |

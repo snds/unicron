@@ -88,8 +88,8 @@ function PopoverContent({
           className={cn(
             "bg-surface-raised text-text-body type-body rule-box flex flex-col gap-4 rounded p-4 outline-hidden",
             "w-(--c-popover-width) max-w-(--available-width) max-h-(--available-height) overflow-y-auto origin-(--transform-origin) z-50",
-            // Fades and moves 8px off its anchor: no zoom.
-            "data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 duration-(--motion-fast) ease-(--motion-ease)",
+            // Fades and moves 8px off its anchor: no zoom. 200ms in, 120ms out (motion-anchor).
+            "motion-anchor",
             className
           )}
           {...props}

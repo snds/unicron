@@ -685,13 +685,21 @@ A primitive never writes its own duration or curve. It picks a recipe from
 |---|---|---|---|---|
 | press | `motion-press`, `motion-press-sm` | a control going down under a press | scale to `--motion-press-depth` in `--motion-press`; back in `--motion-fast` | no scale; colour still changes |
 | pop | `motion-pop` | a small surface arriving from its anchor | opacity and scale from 0.96, `--motion-base` in, `--motion-fast` out | fades in place |
+| fade | `motion-fade` (+ `motion-fade-fast`) | a surface that appears where it is: a dialog, a tooltip, the dim behind a layer | opacity, `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways | the same |
+| anchor | `motion-anchor` (+ `motion-anchor-fast`) | a surface that opens off its trigger: a popover, a menu, a select's list | opacity, and 8px away from the trigger on the side Base UI places it (`data-side`); `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways and still when opened or closed from the keyboard | fades in place |
 | slide | `motion-slide` + `motion-slide-from-{top,bottom,left,right}` | a surface arriving from an edge | opacity and translate on `--motion-spring-firm`; `--motion-base` out | fades in place |
 | collapse | `motion-collapse` | a panel opening by height | height and opacity, `--motion-state`, move curve | height changes at once; content fades |
 | stagger | `motion-stagger` on the parent | a list appearing for the first time | children rise 4px, `--motion-stagger` apart, capped at `--motion-stagger-max` steps | every row is there at once |
 | draw | `motion-draw` (`CheckDraw`) | a success mark | a stroke draws in `--motion-base` | the mark is simply there |
 | shake | `data-shake` (`useShake`) | a refusal | three swings that die away, `--motion-state` | no movement; the error colour and text carry it |
 
-- **Entrances and exits are transitions.** pop, slide and collapse read Base UI's `data-starting-style`
+- **Overlays on recipes, in the 1.0 look** (fade, or fade and a step; no zoom, no blur):
+  Dialog and its dim fade in place, 200ms in and 120ms out. Popover is the anchor recipe, 200ms
+  in and 120ms out. Tooltip and the command palette use the short fade, 120ms both ways.
+  DropdownMenu and Select use the short anchor: 120ms both ways, and still when opened or closed
+  from the keyboard. Each has a contract and browser checks, including one that it never zooms
+  or blurs on the way in.
+- **Entrances and exits are transitions.** pop, slide, collapse, fade and anchor read Base UI's `data-starting-style`
   and `data-ending-style` (and `@starting-style` for a plain mount), so closing mid-open turns round
   from where it is. Nothing restarts.
 - **Two exceptions to "transform and opacity".** collapse animates height, because the content below
