@@ -70,7 +70,6 @@ export * from "./components/ui/badge"
 export * from "./components/ui/banner"
 export * from "./components/ui/button-group"
 export * from "./components/ui/button"
-export * from "./components/ui/calendar-event"
 export * from "./components/ui/chat-message"
 export * from "./components/ui/checkbox"
 export * from "./components/ui/chip-field"
@@ -172,3 +171,24 @@ export * from "./components/ui/top-bar"
 export * from "./components/ui/top-tabs"
 export * from "./components/ui/truncated-text"
 export * from "./components/ui/update-status"
+// The web build watch (Updates 5): the rules and their page wiring; the hook is in update-status.
+export {
+  BUILD_JSON_LIMIT,
+  BUILD_WATCH_INPUTS,
+  CHECK_EVERY_MS,
+  HIDDEN_FOR_MS,
+  IDLE_FOR_MS,
+  MIN_GAP_MS,
+  QUIET_EVERY_MS,
+  buildWatchReloadedKey,
+  createBuildWatch,
+  pageBuild,
+  quietByTheClock,
+  readBuild,
+  startBuildWatch,
+  type BuildWatch,
+  type BuildWatchEnv,
+  type BuildWatchState,
+  type RunningBuildWatch,
+  type StartBuildWatchOptions,
+} from "./lib/update-watch"

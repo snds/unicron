@@ -108,7 +108,7 @@ export default function SwipeRowView() {
         <SwipeRow
           leading={{ label: "Review", icon: "review", confirm: true, onReview: say("Review opened: SEA-51") }}
           trailing={[
-            { label: "Stop", icon: "stop", onAction: say("Stop: asks first") },
+            { label: "Stop", icon: "stop--filled", onAction: say("Stop: asks first") },
             { label: "Pause", icon: "pause", reversible: true, onAction: say("Paused: SEA-48") },
           ]}
         >

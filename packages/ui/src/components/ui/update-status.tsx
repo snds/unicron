@@ -6,6 +6,7 @@
 
 import * as React from "react"
 
+import type { BuildWatch, BuildWatchState } from "../../lib/update-watch"
 import { cn } from "../../lib/utils"
 import { TextAction, rowClasses } from "../security/parts"
 import { ToggleRow } from "./toggle-row"
@@ -278,4 +279,16 @@ function AutoCheckSwitch({ status, onCheckedChange, disabled, words, className, 
   )
 }
 
-export { UpdateStatusRow, AutoCheckSwitch }
+const NO_WATCH = () => () => {}
+const NO_STATE = (): BuildWatchState | null => null
+
+/**
+ * A web page's build watch (`startBuildWatch`, lib/update-watch), as a screen reads it: the state,
+ * or null where no watch runs (a dev server, a desktop shell with its own updater). Pass the app's
+ * one running watch; the hook only listens.
+ */
+function useBuildWatch(watch: BuildWatch | null | undefined): BuildWatchState | null {
+  return React.useSyncExternalStore(watch ? watch.subscribe : NO_WATCH, watch ? watch.state : NO_STATE, NO_STATE)
+}
+
+export { UpdateStatusRow, AutoCheckSwitch, useBuildWatch }

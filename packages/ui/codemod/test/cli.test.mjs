@@ -91,9 +91,13 @@ describe("JSX attributes", () => {
 describe("props that are gone in 1.0", () => {
   it("turns fill into the glyph's filled name, bare or behind a state", () => {
     assert.equal(run(`<Icon name="keep" fill={current.pinned} size="sm" />`).output, `<Icon name={current.pinned ? "pin--filled" : "pin"} size="sm" />`)
-    assert.equal(run(`<Icon name="star" fill label="favourite" />`).output, `<Icon name="star--filled" label="favourite" />`)
+    assert.equal(run(`<Icon name="lock" fill label="locked" />`).output, `<Icon name="locked--filled" label="locked" />`)
     assert.equal(run(`<Icon name='check_circle' fill={true} />`).output, `<Icon name='checkmark--filled' />`)
-    assert.equal(run(`<IconButton icon="star" aria-pressed={active} fill={active} />`).output, `<IconButton icon={active ? "star--filled" : "star"} aria-pressed={active} />`)
+    assert.equal(run(`<IconButton icon="keep" aria-pressed={active} fill={active} />`).output, `<IconButton icon={active ? "pin--filled" : "pin"} aria-pressed={active} />`)
+    // star--filled left the core set in 1.1 (an extra): a filled star is the app's to register, so fill stays, listed.
+    const star = run(`<Icon name="star" fill label="favourite" />`)
+    assert.equal(star.output, `<Icon name="star" fill label="favourite" />`)
+    assert.match(star.removedProps[0].hint, /"star" has no filled form/)
     assert.equal(run(`<Icon\n  name="notifications"\n  fill={armed && !pinned}\n/>`).output, `<Icon\n  name={(armed && !pinned) ? "notification--filled" : "notification"}\n/>`)
     assert.equal(run(`<Icon name="keep" fill={false} />`).output, `<Icon name="pin" />`)
     const { filled } = run(`<Icon name="keep" fill={current.pinned} />`)
@@ -244,6 +248,11 @@ describe("the command", () => {
     assert.match(out.stdout, /a\.tsx:27:18 {2}"forward"/)
     assert.match(out.stdout, /a\.tsx:32:19 {2}"content_copy" \(would be "copy"\)/)
     assert.equal(fs.readFileSync(path.join(dir, "a.tsx"), "utf8"), fixture("jsx.tsx.txt"))
+  })
+
+  it("rewrites the names an app's spec spelled another way (link--off → unlink)", () => {
+    assert.equal(run(`<Icon name="link--off" />`).output, `<Icon name="unlink" />`)
+    assert.equal(run(`<Icon name="key" />`).output, `<Icon name="password" />`)
   })
 
   it("writes the files, and refuses a second pass", () => {

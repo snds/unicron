@@ -11,6 +11,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
 
 import { motionContracts, type MotionContract } from "../../../packages/ui/src/lib/motion/contracts"
+import { frameMotionContracts } from "../src/motion-frame"
 
 const CEILING_MS = 400
 /** Contracts that open and close, so they have an exit and can be reversed mid-way. */
@@ -145,12 +146,21 @@ function expectWithinContract(seen: Seen[], contract: MotionContract, allowed: r
   }
 }
 
-test.beforeEach(async ({ page }) => {
+/**
+ * A check that reads a motion mid-way needs Chrome's slowed animation clock (below), which only
+ * Chromium's debugging protocol offers. In WebKit and Firefox those checks are skipped, by name;
+ * the rest of this file runs in all three engines (Unicron 107).
+ */
+const MID_WAY = "reads a motion mid-way: needs Chromium's slowed animation clock (DevTools protocol)"
+
+test.beforeEach(async ({ page, browserName }) => {
   // Run every animation at a fiftieth of its speed, so a 120ms entrance is still under way when
   // it is read. This slows the clock, not the animation: its own duration is unchanged.
-  const devtools = await page.context().newCDPSession(page)
-  await devtools.send("Animation.enable")
-  await devtools.send("Animation.setPlaybackRate", { playbackRate: 0.02 })
+  if (browserName === "chromium") {
+    const devtools = await page.context().newCDPSession(page)
+    await devtools.send("Animation.enable")
+    await devtools.send("Animation.setPlaybackRate", { playbackRate: 0.02 })
+  }
   await page.goto("/?view=motion")
   await expect(page.locator('[data-slot="motion-view"]')).toBeVisible()
 })
@@ -172,6 +182,7 @@ test("the roles resolve, and none of the transition roles is over the ceiling", 
 
 for (const contract of motionContracts as readonly MotionContract[]) {
   test.describe(contract.id, () => {
+    test.skip(({ browserName }) => browserName !== "chromium", MID_WAY)
     test("moves only what it says, for as long as it says", async ({ page }, testInfo) => {
       const limit = await roleMs(page, contract.duration)
       await open(page, contract)
@@ -333,3 +344,83 @@ test("no loop runs under reduced motion, or in a data-motion=reduced box, a vari
   await page.evaluate(() => document.body.setAttribute("data-motion", "reduced"))
   expect(await loops(), "loops still running in a data-motion=reduced box").toEqual([])
 })
+
+// ── the frame's own moving parts (Unicron 112) ──────────────────────────────────────────────────
+// The tab bar folding to its active tab, and the content going back after a pull. Their cards sit in
+// the Motion view's "The frame" section (src/motion.tsx), with the same facts as a contract, and
+// the same checks: only what the card lists moves, for no longer than its role, and nothing but a
+// colour moves under reduced motion.
+for (const frameContract of frameMotionContracts) {
+  // The same shape the helpers above read: its moving part is the specimen in its card.
+  const contract = {
+    ...frameContract,
+    surfaces: [`[data-frame-contract="${frameContract.id}"] [data-specimen]`],
+  } as unknown as MotionContract
+  const frameCard = (page: Page) => page.locator(`[data-frame-contract="${frameContract.id}"]`)
+  const start = async (page: Page) => {
+    const box = frameCard(page)
+    await box.scrollIntoViewIfNeeded()
+    if (frameContract.id === "pull-release") {
+      await expect(box.locator('[data-slot="app-frame-list"]')).toHaveAttribute("data-pull-ready", "")
+    }
+    await box.locator("[data-trigger]").click()
+    await page
+      .waitForFunction((selector) => [...document.querySelectorAll(selector)].some((el) => el.getAnimations({ subtree: true }).length > 0), roots(contract), { timeout: 1500 })
+      .catch(() => {})
+  }
+
+  test.describe(frameContract.id, () => {
+    test.skip(({ browserName }) => browserName !== "chromium", MID_WAY)
+    test("has its card, with its facts", async ({ page }) => {
+      const box = frameCard(page)
+      await expect(box).toHaveCount(1)
+      await expect(box).toContainText(frameContract.duration)
+      await expect(box.locator("[data-specimen]")).toBeVisible()
+    })
+
+    test("moves only what it says, for as long as it says", async ({ page }, testInfo) => {
+      const limit = await roleMs(page, frameContract.duration)
+      await start(page)
+      const seen = await freeze(page, contract)
+      expect(seen.length, `${frameContract.id} did not animate`).toBeGreaterThan(0)
+      expectWithinContract(seen, contract, frameContract.properties, limit)
+      // The thing it exists to move is moving: the bar's width, or the content's place.
+      const main = frameContract.id === "pull-release" ? "transform" : "flex-grow"
+      expect(seen.map((s) => s.property), `${frameContract.id} does not move ${main}`).toContain(main)
+      for (const [name, share] of [["start", 0], ["middle", 0.5], ["end", 1]] as const) {
+        await seek(page, contract, share)
+        const file = testInfo.outputPath(`${frameContract.id}-${name}.png`)
+        await frameCard(page).screenshot({ path: file })
+        await testInfo.attach(`${frameContract.id} ${name}`, { path: file, contentType: "image/png" })
+      }
+      await release(page)
+      if (frameContract.id === "tab-bar-minimize") {
+        // The way back out runs on the same role.
+        await frameCard(page).locator("[data-trigger]").click()
+        const leaving = await freeze(page, contract)
+        expect(leaving.length, "the bar did not animate as it unfolded").toBeGreaterThan(0)
+        expectWithinContract(leaving, contract, frameContract.properties, limit)
+        await release(page)
+      } else {
+        // The content is back where it was.
+        await expect.poll(() => frameCard(page).locator('[data-slot="app-frame-list"]').evaluate((el) => getComputedStyle(el).transform)).toBe("none")
+      }
+    })
+
+    test("does not move under reduced motion", async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" })
+      await start(page)
+      const seen = await freeze(page, contract)
+      for (const { property } of seen) {
+        expect([...frameContract.reducedProperties, ...COLOUR_ONLY], `${frameContract.id} still animates ${property} under reduced motion`).toContain(property)
+      }
+      await release(page)
+      if (frameContract.id === "tab-bar-minimize") {
+        // The end state is there all the same: folded to the one tab.
+        await expect(frameCard(page).locator('[data-slot="tab-bar"]')).toHaveAttribute("data-minimized", "")
+      } else {
+        expect(await frameCard(page).locator('[data-slot="app-frame-list"]').evaluate((el) => getComputedStyle(el).transform)).toBe("none")
+      }
+    })
+  })
+}

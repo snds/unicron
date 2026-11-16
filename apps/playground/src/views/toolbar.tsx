@@ -40,8 +40,8 @@ export default function ToolbarView() {
 
       <Specimen label="Map // zoom, vertical">
         <Toolbar aria-label="Map" orientation="vertical">
-          <ToolbarButton label="Zoom in" icon="zoom--in" />
-          <ToolbarButton label="Zoom out" icon="zoom--out" />
+          <ToolbarButton label="Zoom in" icon="add" />
+          <ToolbarButton label="Zoom out" icon="subtract" />
           <ToolbarSeparator />
           <ToolbarButton label="Fit" icon="fit-to-screen" />
         </Toolbar>

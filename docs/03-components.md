@@ -93,7 +93,6 @@ was restyled; [07 · Migrating to 1.0](07-migrating-to-1.0.md) lists what change
 | `meta-list` | `MetaList`, `MetaItem` (`label`): a mono label over a value, in columns | Data Display | dl. 1.0 |
 | `steps` | `Steps`, `Step` (`title`, `status`: done, current, upcoming, failed; `statusLabel`, `live`, `index`, `leading`, `detail`, `badge`, `action`, `href` or `onClick`, `disabled`), `StepsFolio` (`current`, `total`, `title`), `stepStatusWords` | Navigation | ol. 1.0 |
 | `tile` | `Tile` (`edge`: primary, none; `swatch`, `size`: default, compact; `selected`, `href` or `onClick`), `tileVariants`, `swatchFillClasses`, `SwatchId` | Layout | div, button or link (useRender). 1.0 |
-| `calendar-event` | `CalendarEvent` (`tone`: primary, neutral; `time`, `title`, `place`, `swatch`, `compact`, `selected`, `mark`, `href`), `calendarEventVariants` | Data Display | button or link (useRender). 1.0 |
 | `log-row` | `LogRow` (`time`, `dateTime`, `href`, `link`) | Data Display | div or link (useRender). 1.0 |
 | `diff-block` | `DiffBlock` (`path`, `previousPath`, `state`, `lines` or `diff`, `stats`, `additions`, `deletions`, `lineNumbers`, `foldable`, `maxLines`, `wrap`, `wrapToggle`, `copy`, `actions`), `parseDiffLines`, `parseUnifiedDiff` | Data Display | section. 1.0 |
 | `file-chip` | `FileChip` (`name`, `type`, `size`, `thumbnail`, `busy`, `critical`, `href` or `onClick`, `action`) | Data Display | div + a link or a button. 1.0 |
@@ -280,8 +279,12 @@ transform (README → Regenerating components) rather than hand-writing.
 ### Icons
 
 `<Icon name="arrow--right" />` draws an inline SVG from the curated Carbon set. The name is typed
-(`IconName`); a name not in the set is a type error. Add one to `src/icons/names.json` (a Carbon
-svg name with 32px art) and run `pnpm --filter @unicron/ui icons:build`.
+(`IconName`); a name not in the set is a type error. The set is Figma's 57, what the components
+draw, and the Carbon match for every Material name the four apps used (265 since 1.1; the 47
+extras left, see [08 · Migrating to 1.1](08-migrating-to-1.1.md#icons)). The data is one object a
+bundler cannot trim, so every icon in it costs every app: a name joins `src/icons/names.json` only
+when a component or the icon map needs it (then `pnpm --filter @unicron/ui icons:build`). Anything
+else is the app's, with `registerIcons`.
 
 - 20px by default. A compact control (Button, Top Tab, a chip, inline meta) draws its icon at
   16px itself; callers do not pass a size. `Icon` sets its size with `width` and `height`, not a
@@ -290,6 +293,24 @@ svg name with 32px art) and run `pnpm --filter @unicron/ui icons:build`.
   stands alone, outside a control.
 - With `label` it is `role="img"`; without one it is `aria-hidden`.
 - An app registers a glyph Carbon lacks with `registerIcons` ([consuming](05-consuming.md#4a-icons-carbon)).
+  A mirrored Carbon glyph needs no new art: wrap Carbon's markup in a flipping group. Vale's
+  forward is Carbon's `reply`, mirrored (the playground's Icons view draws it):
+
+  ```ts
+  import reply from "@carbon/icons/svg/32/reply.svg?raw" // Vite; any loader that gives the text
+  import { registerIcons } from "@unicron/ui"
+
+  const inner = reply.replace(/^<svg[^>]*>|<\/svg>\s*$/g, "")
+  registerIcons({ "vale--forward": `<g transform="matrix(-1 0 0 1 32 0)">${inner}</g>` })
+
+  declare module "@unicron/ui" {
+    interface UnicronIconRegistry { "vale--forward": true }
+  }
+  ```
+- `timer` (Carbon's stopwatch) and `snooze` (its alarm clock with a z) are their own icons since
+  1.1, not `time`; `time` is the plain clock. The left panel pair is Figma's `open-panel` family,
+  as on the right (`open-panel--left`, `open-panel--filled--left` while open). A spec that asks for
+  `key` means `password`, and `link--off` means `unlink` (MAPPING.md → Names Carbon spells another way).
 - No sparkle icons.
 
 ### Button, FloatButton, IconButton
@@ -343,6 +364,13 @@ The mark is `aria-hidden`; its words are in the host's name. The older `indicato
 - **Label.** Above a field it is a mono caps overline. Beside a checkbox, a radio or a switch it
   is running text, and takes that look by itself. A `Label` used anywhere else as running text
   needs `variant="choice"`.
+- **Keep a field's label short.** The overline is a name, not a sentence: one to three words
+  that say what goes in the box ("Backup password", "Server", "Recovery email"). Anything
+  longer (when to leave it empty, what it is for, a limit) goes in the helper line under the box,
+  in sentence case. So "A new backup password (leave empty to keep the one you have)" is the label
+  `Backup password` with the helper `Leave empty to keep the one you have.` A long overline wraps
+  into a block of mono capitals that is slow to read and pushes the box down, out of line with
+  its neighbours.
 - **Select or NativeSelect.** `NativeSelect` is the default for a form: the system draws the list,
   and on a phone that is the picker people know. Use `Select` when an option needs more than a
   line of plain text, or when the list has to match the menus beside it. Past about 15 options,
@@ -674,6 +702,39 @@ every app shows its updates the same way. Pass the update kit's `UpdateStatus`
   when the build has no updates.
 - Pass `words` to change any of the words. `updateLine(status, appName)` is the status line on its
   own, for a menu or a command palette.
+
+**A web page's own update: the build watch** (`lib/update-watch`, 1.1). One copy for Warpcore,
+Vale and Lockdown's web vault, which each had their own. The app's build writes `build.json`
+(`{"build": "<id>"}`) beside the page and the same id in `<meta name="<prefix>-build">`; the
+watch asks for `build.json` at load, when the tab comes back, when the device is online again,
+every 15 minutes in view, and when a lazy file fails to load.
+
+```ts
+import { startBuildWatch, useBuildWatch } from "@unicron/ui"
+
+// Once, from main.tsx. Null on a dev server (no build id): nothing is watched.
+export const buildWatch = startBuildWatch({
+  storagePrefix: "lockdown",           // the key `lockdown.build.reloadedFor`, the tag `lockdown-build`
+  canReloadNow,                        // the app's: nothing typed, nothing open, nothing in flight
+  mayReload: async () => !(await session.state()).signed_in, // the app's own rule, asked last
+})
+
+// In the screen that shows the sign.
+const watch = useBuildWatch(buildWatch) // { current, latest, ready, needed, checkedAt } or null
+```
+
+- **It reloads by itself only when every rule says yes:** a quiet moment (the tab hidden for a
+  minute, or no key, click, touch or wheel for five; the wheel counts, since reading is use), the
+  app's `canReloadNow()`, the app's `mayReload()`, and not already once for that build in this tab
+  (no session storage, no reload by itself: a bad deploy cannot loop).
+- **Blocked** (`needed`): a lazy file of the old build is gone. The page no longer waits for a quiet
+  moment, only for the other rules, and otherwise says "Reload to continue".
+- **Reload pressed** is `buildWatch.reloadNow()`: `save()` (if given), then a reload at once,
+  whatever the rules say.
+- An answer that is not a plain build id (a sign-in page, an error, a proxy's page) never means
+  new and never takes an offer back. The request goes to the page's own origin, past the cache,
+  with no cookie (`credentials` changes that) and no referrer.
+- Its rules are `createBuildWatch(env)` with no DOM, for an app that wires them itself or tests them.
 
 ## Motion recipes
 

@@ -5,7 +5,8 @@
 //                                   src/icons/material.gen.ts
 //   node codemod/sync.mjs --check   write nothing; exit 1 if any of them is stale or the map is wrong
 //
-// Hand-edited in material-to-carbon.json: the name entries, `_notes`, `_usage`, `_about`, `_carbon`.
+// Hand-edited in material-to-carbon.json: the name entries, `_notes`, `_usage`, `_about`, `_carbon`,
+// and `_aliases` (names an app's spec wrote that Carbon spells another way: `link--off` → `unlink`).
 // Derived here: `_curated` (every name Icon can draw, from src/icons/names.json) and `_same_word`
 // (Material names that are also curated Carbon names with a different drawing; the codemod lists
 // those when it finds one outside an icon position, because the type checker cannot).
@@ -44,6 +45,12 @@ for (const name of names) {
   } else if (typeof to !== "string") problems.push(`"${name}" must map to a name or null`)
   else if (!curatedSet.has(to)) problems.push(`"${name}" maps to "${to}", which is not in src/icons/names.json`)
 }
+const aliases = map._aliases ?? {}
+for (const [alias, to] of Object.entries(aliases)) {
+  if (curatedSet.has(alias)) problems.push(`the alias "${alias}" is itself a curated name`)
+  if (typeof to !== "string" || !curatedSet.has(to)) problems.push(`the alias "${alias}" maps to "${to}", which is not in src/icons/names.json`)
+}
+const aliasNames = Object.keys(aliases).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 for (const name of Object.keys(map._notes ?? {})) if (!names.includes(name)) problems.push(`_notes has "${name}", which is not in the map`)
 for (const name of groups.figma ?? []) if (!curatedSet.has(name)) problems.push(`Figma's "${name}" is missing from the curated set`)
 
@@ -52,6 +59,7 @@ const sameWord = sorted.filter((name) => curatedSet.has(name) && map[name] !== n
 const next = {
   _about: map._about,
   _carbon: map._carbon,
+  ...(aliasNames.length ? { _aliases: Object.fromEntries(aliasNames.map((n) => [n, aliases[n]])) } : {}),
   _curated: curated,
   _same_word: sameWord,
   _notes: Object.fromEntries(sorted.filter((n) => map._notes?.[n]).map((n) => [n, map._notes[n]])),
@@ -120,6 +128,14 @@ const icon = iconFromMaterial(stored) ?? (isIconName(stored) ? stored : "documen
 
 Translate only what was written before the switch. A name in both sets (see *Same word*) means the Material drawing in old data and the Carbon one in new data, so mark the stored data with a version, or translate it in one migration, rather than on every read.
 
+## Names Carbon spells another way (${aliasNames.length})
+
+Names an app's spec wrote as if Carbon had them. Carbon draws the same thing under another name; the codemod rewrites these too.
+
+| Asked for | Carbon |
+|---|---|
+${aliasNames.map((n) => `| ${code(n)} | ${code(aliases[n])} |`).join("\n")}
+
 ## Same word, different drawing (${sameWord.length})
 
 These Material names are also names in the curated Carbon set, but the right Carbon icon has another name. The type checker accepts the old name, so a use the codemod could not reach compiles and draws the wrong thing. The codemod lists every such use it leaves.
@@ -144,9 +160,7 @@ function SAME_WORD_NOTE(name) {
     pin: "a pushpin",
     rule: "a shield with lines",
     send: "a paper plane pointing right (kept for a Sent folder)",
-    snooze: "an alarm clock with a z",
     stop: "an empty square",
-    timer: "a stopwatch",
     warning: "a circle with an exclamation mark",
   }
   return drawn[name] ?? "a variant of the same idea"
