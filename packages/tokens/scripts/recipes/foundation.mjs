@@ -8,8 +8,8 @@
 //     (primary-soft), and the hover and pressed washes. The values were solved for Lc 62 on the
 //     lowest of the eight surfaces of each ground (global.json → swatch), so nothing here is an
 //     exception.
-//   - edge-t and edge-b (packages/ui/src/styles/index.css) paint the same primary-fill edge as
-//     edge-l, on the same surfaces: the core's primary-fill-ground, -raised and primary-edge-soft
+//   - edge-t and edge-b (packages/ui/src/styles/index.css) paint the same primary-mark edge as
+//     edge-l, on the same surfaces: the core's primary-mark-ground, -raised and primary-edge-soft
 //     measure them (graphite misses there are Figma's fill, named in the core).
 //
 // The diff washes (diff-added, diff-removed) are measured in the core table (body-diff-added,

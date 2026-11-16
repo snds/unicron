@@ -38,7 +38,7 @@ export const recipes = [
   // ── Accessory on the yellow and the critical ground ────────────────────────────────────────
   { id: "strip-ny-hover", source: "accessory needs-you open button: hover:bg-needs-you-on-fill/5", kind: "on-fill", paint: r("needs-you-on-fill"), over: [...NEEDS_YOU, r("needs-you-on-fill", 0.05)] },
   { id: "strip-ny-press", source: "accessory needs-you open button: active:bg-needs-you-on-fill/9", kind: "on-fill", paint: r("needs-you-on-fill"), over: [...NEEDS_YOU, r("needs-you-on-fill", 0.09)] },
-  { id: "strip-critical-edge", source: "accessory critical: inset-ring-critical-fill on the page (the critical Banner's edge)", kind: "border-rest", paint: r("critical-fill"), over: GROUND },
+  { id: "strip-critical-edge", source: "accessory critical: inset-ring-line-invalid on the page (the critical Banner's edge; Unicron 17 and 19)", kind: "border-rest", paint: r("line-invalid"), over: GROUND },
 
   // ── NavItem's check box (a checkable item) ──────────────────────────────────────────────────
   { id: "nav-check-on", source: "nav-item checked: the check in text-surface-ground on bg-text-body", kind: "on-fill", paint: r("surface-ground"), over: [r("surface-ground"), r("text-body")] },
@@ -50,49 +50,48 @@ export default recipes
 
 /**
  * The pairs the chrome paints that a core recipe in contrast.mjs already measures: `id` is the
- * part and state, `core` the recipe that measures that exact pair. `*` marks the ones that miss a
- * floor and are named exceptions in the core (Figma's value, or a contract wash over one), flagged
- * for Sean there and in the docs summary.
+ * part and state, `core` the recipe that measures that exact pair. Where a pair misses in an app's
+ * theme, it is in that app's exceptions, not here.
  */
 export const sameAsCore = [
   // AppLockup (Figma 28:2297)
   { id: "lockup-initial", core: "primary-on-fill", source: "app-lockup mark: the initial in text-primary-on-fill on bg-primary-fill" },
   { id: "lockup-wordmark", core: "body-ground", source: "app-lockup name: type-brand-wordmark text-text-body" },
-  { id: "lockup-mark", core: "primary-fill-ground *", source: "app-lockup mark: the bg-primary-fill square on the page (graphite)" },
+  { id: "lockup-mark", core: "primary-button-ground", source: "app-lockup mark: the bg-primary-fill square that holds the initial, on the page (a fill that holds a letter: reported)" },
   // TabBar and TabBarItem (Figma 20:1657, 20:1656)
-  { id: "tab-icon", core: "label-raised *", source: "tab-bar-item at rest: the icon in text-text-label on the raised bar (graphite)" },
-  { id: "tab-icon-hover", core: "label-raised-hover *", source: "tab-bar-item: hover:bg-state-hover (graphite)" },
-  { id: "tab-icon-press", core: "label-raised-pressed *", source: "tab-bar-item: active:bg-state-pressed (graphite; warpcore stone)" },
-  { id: "tab-active", core: "primary-text-soft *", source: "tab-bar-item active: the icon in text-primary-text on bg-primary-soft, as Figma's Dock Tab and phone frames draw it (graphite; lockdown stone)" },
+  { id: "tab-icon", core: "label-raised", source: "tab-bar-item at rest: the icon in text-text-label on the raised bar (graphite)" },
+  { id: "tab-icon-hover", core: "label-raised-hover", source: "tab-bar-item: hover:bg-state-hover (graphite)" },
+  { id: "tab-icon-press", core: "label-raised-pressed", source: "tab-bar-item: active:bg-state-pressed (graphite; warpcore stone)" },
+  { id: "tab-active", core: "primary-text-soft", source: "tab-bar-item active: the icon in text-primary-text on bg-primary-soft, as Figma's Dock Tab and phone frames draw it (graphite; lockdown stone)" },
   { id: "tab-active-tile", core: "primary-soft-raised", source: "tab-bar-item active: the soft tile against the raised bar" },
-  { id: "tab-bar-edge", core: "field-rest-ground", source: "tab-bar: rule-box, the resting hairline on the page" },
+  { id: "tab-bar-edge", core: "rule-ground", source: "tab-bar: rule-box, the resting hairline on the page" },
   // The mark
   { id: "mark-count-needs-you", core: "needs-you-on-fill", source: "nav-mark needs-you count: text-needs-you-on-fill on bg-needs-you-fill" },
   // Accessory (Figma 20:1713)
-  { id: "strip-meta", core: "label-raised *", source: "accessory neutral: the meta in text-text-label on bg-surface-raised (graphite)" },
-  { id: "strip-meta-hover", core: "label-raised-hover *", source: "accessory open button: hover:bg-state-hover under the meta (graphite)" },
+  { id: "strip-meta", core: "label-raised", source: "accessory neutral: the meta in text-text-label on bg-surface-raised (graphite)" },
+  { id: "strip-meta-hover", core: "label-raised-hover", source: "accessory open button: hover:bg-state-hover under the meta (graphite)" },
   { id: "strip-title", core: "body-raised", source: "accessory neutral, live: the title in text-text-body on bg-surface-raised" },
   { id: "strip-title-hover", core: "body-raised-hover", source: "accessory open button: hover:bg-state-hover under the title" },
-  { id: "strip-title-press", core: "body-raised-pressed *", source: "accessory open button: active:bg-state-pressed under the title (stone)" },
-  { id: "strip-live-meta", core: "live-raised *", source: "accessory live: the meta in text-secondary-live on bg-surface-raised (vale, lockdown graphite)" },
+  { id: "strip-title-press", core: "body-raised-pressed", source: "accessory open button: active:bg-state-pressed under the title (stone)" },
+  { id: "strip-live-meta", core: "live-raised", source: "accessory live: the meta in text-secondary-live on bg-surface-raised (vale, lockdown graphite)" },
   { id: "strip-live-mark", core: "live-mark-raised", source: "accessory live: the 8px bg-secondary-live square" },
   { id: "strip-progress-lit", core: "live-mark-raised", source: "accessory progress: a lit live cell on the raised strip" },
-  { id: "strip-edge", core: "field-rest-ground", source: "accessory neutral, live: rule-box on the page" },
+  { id: "strip-edge", core: "rule-ground", source: "accessory neutral, live: rule-box on the page" },
   { id: "strip-ny-ink", core: "needs-you-on-fill", source: "accessory needs-you: meta and title in text-needs-you-on-fill on bg-needs-you-fill" },
-  { id: "strip-critical-title", core: "body-critical-soft *", source: "accessory critical: the title in text-text-body on bg-critical-soft, as the critical Banner (stone)" },
+  { id: "strip-critical-title", core: "body-critical-soft", source: "accessory critical: the title in text-text-body on bg-critical-soft, as the critical Banner (stone)" },
   { id: "strip-critical-meta", core: "secondary-critical-soft", source: "accessory critical: the meta in text-text-secondary on bg-critical-soft, as the Banner's body" },
-  { id: "strip-critical-glyph", core: "critical-text-soft *", source: "accessory critical: warning--alt in text-critical-text on bg-critical-soft, as the Banner's icon (graphite)" },
+  { id: "strip-critical-glyph", core: "critical-text-soft", source: "accessory critical: warning--alt in text-critical-text on bg-critical-soft, as the Banner's icon (graphite)" },
   // NavItem and NavSection (Figma 15:487)
   { id: "nav-heading", core: "label-ground", source: "nav-section heading: type-overline text-text-label" },
   { id: "nav-label", core: "secondary-ground", source: "nav-item at rest: the label and icon in text-text-secondary" },
   { id: "nav-label-hover", core: "secondary-ground-hover", source: "nav-item: hover:bg-state-hover under the label" },
-  { id: "nav-label-press", core: "secondary-ground-pressed *", source: "nav-item: has-[main:active]:bg-state-pressed under the label (stone)" },
+  { id: "nav-label-press", core: "secondary-ground-pressed", source: "nav-item: has-[main:active]:bg-state-pressed under the label (stone)" },
   { id: "nav-count", core: "label-ground", source: "nav-item at rest: the count in text-text-label" },
-  { id: "nav-count-hover", core: "label-ground-hover *", source: "nav-item: hover:bg-state-hover under the count (graphite)" },
+  { id: "nav-count-hover", core: "label-ground-hover", source: "nav-item: hover:bg-state-hover under the count (graphite)" },
   { id: "nav-index", core: "faint-ground", source: "nav-item at rest: the index in text-text-faint (reported, no floor)" },
   { id: "nav-description", core: "label-ground", source: "nav-item description: type-caption text-text-label" },
   { id: "nav-disclosure", core: "label-ground", source: "nav-item disclosure: the chevron in text-text-label" },
-  { id: "nav-current", core: "body-soft *", source: "nav-item current: label, icon and count in text-text-body on bg-primary-soft (stone); a critical current item too" },
+  { id: "nav-current", core: "body-soft", source: "nav-item current: label, icon and count in text-text-body on bg-primary-soft (stone); a critical current item too" },
   { id: "nav-current-index", core: "secondary-soft", source: "nav-item current: the index in text-text-secondary on bg-primary-soft" },
   { id: "nav-current-description", core: "secondary-soft", source: "nav-item current: the description in text-text-secondary on bg-primary-soft" },
   { id: "nav-current-hover", core: "body-soft", source: "nav-item current under the pointer: the tile keeps its fill (no wash)" },
@@ -101,23 +100,23 @@ export const sameAsCore = [
   { id: "top-tab-label", core: "label-ground", source: "top-tab at rest: label and icon in text-text-label" },
   { id: "top-tab-index", core: "faint-ground", source: "top-tab: the index in text-text-faint (reported, no floor)" },
   { id: "top-tab-current", core: "body-ground", source: "top-tab current: text-text-body" },
-  { id: "top-tab-hover", core: "body-ground-hover *", source: "top-tab: hover:bg-state-hover, the label to text-text-body (stone)" },
-  { id: "top-tab-press", core: "body-ground-pressed *", source: "top-tab: active:bg-state-pressed (stone)" },
-  { id: "top-tab-indicator", core: "primary-fill-ground *", source: "top-tab current: the 2px bg-primary-fill indicator on the page (graphite)" },
+  { id: "top-tab-hover", core: "body-ground-hover", source: "top-tab: hover:bg-state-hover, the label to text-text-body (stone)" },
+  { id: "top-tab-press", core: "body-ground-pressed", source: "top-tab: active:bg-state-pressed (stone)" },
+  { id: "top-tab-indicator", core: "primary-mark-ground", source: "top-tab current: the 2px indicator, a mark with no words, in primary-mark (Unicron 19: bg-primary-mark, the identity text colour on graphite)" },
   // Rail and RailItem (Figma 44:106); NavItem in a collapsed NavSection draws the same
   { id: "rail-icon", core: "body-ground", source: "rail-item default: the icon in text-foreground" },
   { id: "rail-count", core: "label-ground", source: "rail-item default: the count in text-muted-foreground" },
-  { id: "rail-icon-hover", core: "body-ground-hover *", source: "rail-item: hover:bg-state-hover under the icon (stone)" },
-  { id: "rail-count-hover", core: "label-ground-hover *", source: "rail-item: hover:bg-state-hover under the count (graphite)" },
-  { id: "rail-active-icon", core: "primary-text-soft *", source: "rail-item active: the icon in text-primary-text on bg-primary-soft (graphite; lockdown stone)" },
-  { id: "rail-active-count", core: "label-soft *", source: "rail-item active: the count in text-muted-foreground on bg-primary-soft (every mode)" },
+  { id: "rail-icon-hover", core: "body-ground-hover", source: "rail-item: hover:bg-state-hover under the icon (stone)" },
+  { id: "rail-count-hover", core: "label-ground-hover", source: "rail-item: hover:bg-state-hover under the count (graphite)" },
+  { id: "rail-active-icon", core: "primary-text-soft", source: "rail-item active: the icon in text-primary-text on bg-primary-soft (graphite; lockdown stone)" },
+  { id: "rail-active-count", core: "label-soft", source: "rail-item active: the count in text-muted-foreground on bg-primary-soft (every mode)" },
   { id: "rail-live", core: "live-ground", source: "rail-item live (Figma: Alert): icon and count in text-secondary-live" },
   // PageHead and TopBar
   { id: "head-overline", core: "label-ground", source: "page-head: the overline in text-text-label" },
   { id: "head-title", core: "body-ground", source: "page-head: the title (display, display/compact, title) in text-text-body; top-bar title (subtitle)" },
   { id: "head-side", core: "label-ground", source: "page-head: count and meta in text-text-label (folio, code/display)" },
-  { id: "head-switcher-hover", core: "body-ground-hover *", source: "page-head switcher: hover:bg-state-hover over the title (stone)" },
-  { id: "head-switcher-hover-side", core: "label-ground-hover *", source: "page-head switcher: hover:bg-state-hover over the overline and the side meta (graphite)" },
+  { id: "head-switcher-hover", core: "body-ground-hover", source: "page-head switcher: hover:bg-state-hover over the title (stone)" },
+  { id: "head-switcher-hover-side", core: "label-ground-hover", source: "page-head switcher: hover:bg-state-hover over the overline and the side meta (graphite)" },
   // Focus, every part: the stylesheet's ring, measured by the core (ring-ground, ring-raised, ring-soft, ring-needs-you).
   { id: "focus", core: "ring-ground, ring-raised, ring-soft, ring-needs-you", source: "every chrome control: :focus-visible outline in --ring; on the yellow strip, on-needs-you" },
 ]

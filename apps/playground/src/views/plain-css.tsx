@@ -6,26 +6,36 @@
 // role resolved from tokens.css (this page's own stylesheet) in the same mode. The chips are
 // painted from the frame's values, not from this page's.
 //
-// The last frame carries the class `system`: it follows the browser's light or dark setting.
+// Since 1.1 (Unicron 14) a root with no ground class follows the browser's light or dark setting,
+// and `class="graphite"` or `class="stone"` forces one. The frames use those classes; the first
+// frame has no class. An app's frame also links the app's own theme sheet (Unicron 1: no app's
+// theme is in plain.css), from this origin too.
 import { useEffect, useRef, useState } from "react"
 
 import plainUrl from "@unicron/tokens/plain.css?url"
 
+import lockdownUrl from "../app-themes/lockdown.css?url"
+import synapseUrl from "../app-themes/synapse.css?url"
+import valeUrl from "../app-themes/vale.css?url"
+import warpcoreUrl from "../app-themes/warpcore.css?url"
 import { Block, Caption, Page } from "./_foundation"
 import { count } from "./_foundation-read"
 
-const APPS = ["warpcore", "vale", "lockdown", "synapse"] as const
-type Ground = "light" | "dark" | "system"
-type Frame = { app: (typeof APPS)[number]; ground: Ground }
+const APP_SHEETS = { warpcore: warpcoreUrl, vale: valeUrl, lockdown: lockdownUrl, synapse: synapseUrl } as const
+type App = keyof typeof APP_SHEETS
+/** The class on the frame's root: none follows the browser. */
+type Ground = "graphite" | "stone" | "none"
+type Frame = { app: App | null; ground: Ground }
 
 const FRAMES: Frame[] = [
-  ...APPS.flatMap((app) => [
-    { app, ground: "dark" as const },
-    { app, ground: "light" as const },
+  { app: null, ground: "none" },
+  { app: null, ground: "graphite" },
+  { app: null, ground: "stone" },
+  ...(Object.keys(APP_SHEETS) as App[]).flatMap((app) => [
+    { app, ground: "graphite" as const },
+    { app, ground: "stone" as const },
   ]),
-  { app: "lockdown", ground: "system" },
 ]
-const groundName = (ground: Ground) => (ground === "dark" ? "graphite" : ground === "light" ? "stone" : "system")
 
 /** The roles each card paints, from the frame's own values. */
 const ROLE_CHIPS = [
@@ -70,14 +80,16 @@ function colours(host: HTMLElement, names: Iterable<string>) {
 
 type Result = { properties: number; colours: number; equal: number; differ: string[]; sheets: number; values: Map<string, string> }
 
-function srcDoc(frame: Frame, href: string) {
+function srcDoc(frame: Frame, hrefs: string[]) {
+  const cls = frame.ground === "none" ? "" : ` class="${frame.ground}"`
+  const theme = frame.app ? ` data-theme="${frame.app}"` : ""
   return [
     "<!doctype html>",
-    `<html class="${frame.ground}" data-theme="${frame.app}">`,
+    `<html${cls}${theme}>`,
     "<head>",
     '<meta charset="utf-8">',
     `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'">`,
-    `<link rel="stylesheet" href="${href}">`,
+    ...hrefs.map((href) => `<link rel="stylesheet" href="${href}">`),
     "</head>",
     "<body></body>",
     "</html>",
@@ -88,11 +100,11 @@ function FrameCard({ frame }: { frame: Frame }) {
   const ref = useRef<HTMLIFrameElement>(null)
   const mirror = useRef<HTMLDivElement>(null)
   const [result, setResult] = useState<Result | null>(null)
-  const [href] = useState(() => new URL(plainUrl, window.location.href).href)
+  const [hrefs] = useState(() => [plainUrl, ...(frame.app ? [APP_SHEETS[frame.app]] : [])].map((url) => new URL(url, window.location.href).href))
   const prefersDark = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
-  // The same mode from this page's tokens.css. A `system` frame is compared with the ground the
-  // browser prefers.
-  const mirrorGround = frame.ground === "system" ? (prefersDark ? "dark" : "light") : frame.ground
+  // The same mode from this page's tokens.css (and its copy of the app's theme). A frame with no
+  // class is compared with the ground the browser prefers.
+  const mirrorGround = frame.ground === "none" ? (prefersDark ? "dark" : "light") : frame.ground === "graphite" ? "dark" : "light"
 
   useEffect(() => {
     const iframe = ref.current
@@ -114,15 +126,16 @@ function FrameCard({ frame }: { frame: Frame }) {
     return () => iframe.removeEventListener("load", read)
   }, [])
 
-  const name = frame.ground === "system" ? `${frame.app} / system (prefers ${prefersDark ? "dark" : "light"})` : `${frame.app} / ${groundName(frame.ground)}`
-  const reading = result ? `${result.sheets === 1 ? "loaded" : "NOT loaded"} under style-src 'self' // ${result.properties} properties` : null
+  const theme = frame.app ?? "default"
+  const name = frame.ground === "none" ? `${theme} / no class (prefers ${prefersDark ? "dark" : "light"})` : `${theme} / ${frame.ground}`
+  const reading = result ? `${result.sheets === hrefs.length ? "loaded" : "NOT loaded"} under style-src 'self' // ${result.properties} properties` : null
   const equal = result
     ? `${result.equal} of ${result.colours} colours equal tokens.css${result.differ.length ? ` // differs: ${result.differ.slice(0, 2).join(", ")}` : ""}`
     : undefined
   return (
     <figure data-plain-frame={name} data-equal={result ? result.equal === result.colours && result.colours > 0 : undefined} className="min-w-0">
-      <iframe ref={ref} title={`plain.css in ${name}`} srcDoc={srcDoc(frame, href)} className="absolute size-0 border-0" aria-hidden tabIndex={-1} />
-      <div ref={mirror} className={mirrorGround} data-theme={frame.app} hidden />
+      <iframe ref={ref} title={`plain.css in ${name}`} srcDoc={srcDoc(frame, hrefs)} className="absolute size-0 border-0" aria-hidden tabIndex={-1} />
+      <div ref={mirror} className={mirrorGround} data-theme={frame.app ?? undefined} hidden />
       <div className="rule-box grid gap-1 p-2">
         {[ROLE_CHIPS, SWATCH_CHIPS].map((chips) => (
           <div key={chips[0]} className={`grid gap-1 ${chips.length === 12 ? "grid-cols-12" : "grid-cols-10"}`}>
@@ -143,22 +156,23 @@ export default function PlainCssView() {
       slot="plain-css"
       overline="Foundation // Plain CSS // @unicron/tokens/plain.css"
       title="Plain CSS"
-      lead="Every role and knob in every mode, as plain custom properties: no Tailwind, nothing nested, nothing to fetch. Each card is a frame that allows only style-src 'self' and links only this sheet; its colours are read inside the frame and compared with this page's tokens.css."
+      lead="Every role and knob on both grounds, as plain custom properties: no Tailwind, nothing nested, nothing to fetch. Each card is a frame that allows only style-src 'self' and links this sheet, and an app's own theme sheet for an app's frame; its colours are read inside the frame and compared with this page's tokens.css."
     >
       <Block id="frames" overline={`Frames // ${count(FRAMES.length)}`} title="One frame per mode">
         <div className="relative grid gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           {FRAMES.map((frame) => (
-            <FrameCard key={`${frame.app}-${frame.ground}`} frame={frame} />
+            <FrameCard key={`${frame.app ?? "default"}-${frame.ground}`} frame={frame} />
           ))}
         </div>
       </Block>
       <Block id="use" overline="Use" title="In an extension frame">
-        <pre className="type-code-inline bg-surface-raised rule-box overflow-x-auto p-4">{`<html data-theme="lockdown" class="system">
+        <pre className="type-code-inline bg-surface-raised rule-box overflow-x-auto p-4">{`<html data-theme="lockdown">
   <link rel="stylesheet" href="plain.css">
+  <link rel="stylesheet" href="lockdown-theme.css">
 
 .frame { background: var(--surface-raised); color: var(--text-body); }`}</pre>
         <p className="type-caption text-text-secondary type-measure mt-3">
-          The class dark or light fixes the ground; system follows the browser. The roles go by their own names, var(--surface-raised); Tailwind's --color-* names are not in this sheet. Fonts load from the page's own origin.
+          With no class the frame follows the browser's light or dark setting; the class graphite or stone fixes the ground (dark and light still work). The app's theme is its own sheet, linked after this one. The roles go by their own names, var(--surface-raised); Tailwind's --color-* names are not in this sheet. Fonts load from the page's own origin.
         </p>
       </Block>
     </Page>

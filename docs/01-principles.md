@@ -19,17 +19,19 @@ each one ships on.
 ## How the layers sit
 
 ```
-tier 1  global     --g-*     raw values, and one set of theme slots per app
+tier 1  global     --g-*     raw values, and the theme slots of Unicron's own default theme
 tier 2  semantic   --*       roles: Figma's names, with the shadcn names as aliases (the ground swaps here)
-type roles         --type-*  23 text styles, one set for every app
+type roles         --type-*  24 text styles, one set for every app
 tier 3  component  --c-*     knobs the components read (alias tier 2)
-app extension                roles only one product has (declared by that product)
+app extension                the product's own theme (its 28 slots) and roles only it has
+                             (declared by that product)
 components                   @unicron/ui: Base UI behaviour, IBM Carbon icons
 patterns                     compositions promoted by people from dsa suggestions
 ```
 
-An app picks its theme with `data-theme` on `<html>`, and its ground (graphite or stone) with the
-`dark` class. A component never sets either ([02 · Tokens](02-tokens.md#two-axes)).
+An app declares its theme in its own layer and switches it on with `data-theme` on `<html>`; with
+none, Unicron's default theme shows. The ground (graphite or stone) is the `dark` class. A
+component never sets either ([02 · Tokens](02-tokens.md#two-axes)).
 
 ## Rules we keep
 
@@ -45,23 +47,11 @@ An app picks its theme with `data-theme` on `<html>`, and its ground (graphite o
 5. **Security-grade components are system components.** Lockdown needs UI that is safe by
    construction; those pieces live here so every product gets the same guarantees.
 
-### Where 1.0 bends rule 1 (open, for Sean)
-
-Rule 1 is not rewritten. Two things in 1.0 go against it as it is written, and Sean has not
-ruled on either:
-
-- **The four app themes live in the core.** `packages/tokens/tokens/themes/` holds a file each
-  for `warpcore`, `vale`, `lockdown` and `synapse`, so the core names four products. It was done
-  because Figma's `Unicron / Theme` collection holds all eight modes, and because the contrast
-  gate can then measure every app in one place. Each file sets the same 28 slots and nothing
-  else, and the roles stay generic. The other way: each app declares its two hues in its own
-  layer, and the contrast gate runs in four repos.
-- **`CalendarEvent` is a core component.** Only Vale has a calendar. It is here because it is on
-  Figma's `Unicron / Components` page. The other way: it moves to Vale's own layer.
-
-Both are in the questions list for the 1.0 release. Until Sean answers, do not treat either as a
-precedent: a fifth app theme, or another component named for one product's domain, is not
-something core accepts.
+Rule 1 holds as written, for the core too (Sean, 2026-11-16: the system follows its own rules
+and definitions). Since 1.1 the core names no product's theme: it ships one generic default
+theme, and each app declares its own hues and modes in its own layer and measures them with the
+contrast tool the core ships (`unicron-contrast`). A product's theme, like any role only one
+product understands, is an app extension.
 
 Rule 3 was also set aside once, for the same release. The components 1.0 added were seeded from
 the 2026-11 design direction, not promoted from a `dsa` record; the

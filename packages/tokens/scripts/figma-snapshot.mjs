@@ -3,13 +3,17 @@
 //
 // The read-out is made outside this repo, by read-only Plugin API scripts against the Figma file
 // "Unicron explorations" (file key ibZp32eAXdv9lPID6AMSF7). This script keeps only what the
-// tokens package builds: the 21 theme roles in the 8 modes, the 23 text styles, and the space,
-// radius and size numbers. scripts/figma-parity.mjs then holds every built value to the snapshot.
+// tokens package holds to Figma: the 21 theme roles in every mode (the four apps' 8 today, and a
+// Default pair once Sean adds it), the text styles, and the space, radius and size numbers. scripts/figma-parity.mjs then holds every built value to the snapshot.
 //
 // Run it only when Figma has changed and a new read-out exists:
 //   node scripts/figma-snapshot.mjs <path/to/figma-tokens.json>
-// Then fix the sources (tokens/themes/*.json, tokens/global.json, tokens/type.json) until
-// `pnpm --filter @unicron/tokens test` passes again. The snapshot is never edited by hand.
+// Then fix the sources until `pnpm --filter @unicron/tokens test` passes again: tokens/global.json
+// (the shared roles, and the default theme once Figma has a `Default` mode in Unicron / Theme),
+// tokens/type.json, and the playground's copies of the apps' themes
+// (apps/playground/src/app-themes/<app>.json; each app's own layer follows them). A mode named
+// `Default / graphite` or `Default / stone` is the core's theme; every other mode is an app's.
+// The snapshot is never edited by hand.
 
 import fs from "node:fs"
 import path from "node:path"
@@ -79,7 +83,7 @@ for (const variable of space.variables) {
 
 const snapshot = {
   $description:
-    "Snapshot of the Figma read-out: the theme roles in all 8 modes, the 23 type roles, and the space, radius and size numbers. Written by scripts/figma-snapshot.mjs; never edited by hand. scripts/figma-parity.mjs (run by `pnpm test`) fails when a built value differs from it.",
+    "Snapshot of the Figma read-out: the theme roles in every mode, the type roles, and the space, radius and size numbers. Written by scripts/figma-snapshot.mjs; never edited by hand. scripts/figma-parity.mjs (run by `pnpm test`) fails when a built value differs from it.",
   source: {
     file: "ibZp32eAXdv9lPID6AMSF7",
     name: "Unicron explorations",

@@ -47,6 +47,12 @@ export type MetricProps = Omit<useRender.ComponentProps<"a">, "children"> & {
    * Lockdown Health and Synapse Overview heroes draw it. For the hero only.
    */
   valueTone?: "default" | "primary"
+  /**
+   * The number changes while a person watches (a running total, a live count, a countdown): its
+   * figures turn tabular, so the digits keep their places as it changes (Unicron 11). A still
+   * number keeps Geist's proportional figures, as Figma draws them. Default `false`.
+   */
+  live?: boolean
   /** A Badge after the delta ("Near cap"). */
   badge?: React.ReactNode
   /** Under the number: a bar, a button. */
@@ -72,6 +78,7 @@ function Metric({
   size = "default",
   unit,
   valueTone = "default",
+  live = false,
   badge,
   children,
   href,
@@ -121,7 +128,7 @@ function Metric({
       <span data-slot="metric-figure" className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
         <span
           data-slot="metric-value"
-          className={cn("type-number-hero", valueTone === "primary" ? "text-primary-display" : "text-foreground")}
+          className={cn("type-number-hero", live && "type-number-tabular", valueTone === "primary" ? "text-primary-display" : "text-foreground")}
         >
           {value}
         </span>{" "}
@@ -143,7 +150,7 @@ function Metric({
   ) : (
     <>
       {labelNode}{" "}
-      <span data-slot="metric-value" className="type-number-metric text-foreground">
+      <span data-slot="metric-value" className={cn("type-number-metric text-foreground", live && "type-number-tabular")}>
         {value}
       </span>{" "}
       {deltaNode || badgeNode ? (
@@ -180,6 +187,7 @@ function Metric({
     state: {
       slot: "metric",
       size,
+      live,
     },
   })
 }

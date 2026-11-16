@@ -27,9 +27,9 @@ test("with no parameters it shows Foundations, and sets no data-theme", async ({
   await page.goto("/")
   await ready(page, "foundations")
   await expect(page.locator('[data-slot="foundations"]')).toBeVisible()
-  // No attribute: the tokens' own default mode shows, and the switcher names it.
+  // No attribute: the tokens' own default theme shows (Unicron's, since 1.1), and the switcher names it.
   await expect(html(page)).not.toHaveAttribute("data-theme")
-  await expect(page.locator('[data-switch="theme"]').getByRole("button", { name: "Warpcore" })).toHaveAttribute("aria-pressed", "true")
+  await expect(page.locator('[data-switch="theme"]').getByRole("button", { name: "Unicron" })).toHaveAttribute("aria-pressed", "true")
 })
 
 test("every file in src/views is a view, and the picker lists them all", async ({ page }) => {

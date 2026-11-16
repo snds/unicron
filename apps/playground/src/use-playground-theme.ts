@@ -1,13 +1,17 @@
-// Applies the theme in the address to the document: the app as <html data-theme="…">, the ground
-// as the `dark` or `light` class. Components never set either axis; the page root does.
+// Applies the theme in the address to the document: the app as <html data-theme="…"> (none for
+// Unicron's own default), the ground as the `dark` or `light` class. Components never set either
+// axis; the page root does. In the split view each half sets its own ground on a box (App.tsx).
 import { useEffect, useLayoutEffect } from "react"
 import { useTheme } from "next-themes"
 
-import { DEFAULT_APP_THEME, useAddress, type AppTheme, type Ground } from "./address"
+import { useAddress, type AppTheme, type Ground } from "./address"
 
 export interface PlaygroundTheme {
-  theme: AppTheme
+  /** The app's theme, or null for Unicron's own default (no data-theme). */
+  theme: AppTheme | null
   ground: Ground
+  /** Both grounds side by side. */
+  split: boolean
 }
 
 /**
@@ -30,7 +34,8 @@ export function usePlaygroundTheme(): PlaygroundTheme {
   }, [address.ground, setTheme])
 
   return {
-    theme: address.theme ?? DEFAULT_APP_THEME,
+    theme: address.theme,
     ground: address.ground ?? (resolvedTheme === "dark" ? "graphite" : "stone"),
+    split: address.split,
   }
 }

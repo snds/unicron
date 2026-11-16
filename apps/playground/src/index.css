@@ -1,6 +1,16 @@
 @import "@unicron/ui/styles";
 
 /*
+ * The four apps' themes (Unicron 1.1: each app declares its own; none lives in the core). These
+ * are the playground's copies, so the theme switcher can show them; with no data-theme the page
+ * shows Unicron's own default. Each sheet is a [data-theme="<app>"] block of the 28 slots.
+ */
+@import "./app-themes/warpcore.css";
+@import "./app-themes/vale.css";
+@import "./app-themes/lockdown.css";
+@import "./app-themes/synapse.css";
+
+/*
  * The Motion view's "10× slow" switch: the same roles, ten times longer, so a recipe can be
  * watched. Playground only; it reaches into tier 1 to multiply, which an app never does.
  */

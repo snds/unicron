@@ -3,8 +3,8 @@
 // (docs/02-tokens.md), and must NOT carry app roles — those live in a consumer's extension layer
 // (examples/app-extension.css), never in the core.
 //
-//   - the theme slots: 28 on :root (the default app's values) and the same 28 in one
-//     [data-theme="<app>"] block per app
+//   - the theme slots: 28 on :root, Unicron's default theme, and no [data-theme="<app>"] block:
+//     an app's theme lives in the app (Unicron 1)
 //   - Figma's theme roles, each reading its stone slot in light and its graphite slot in dark
 //   - the shadcn/ui contract and the sidebar contract, each pinned to the role it aliases
 //   - every colour of tiers 2 and 3 declared on both grounds, and every tier 2 colour in the
@@ -23,7 +23,8 @@ import { parseTokensCss, resolveValue } from "./lib/css.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const css = fs.readFileSync(path.join(here, "..", "dist", "tokens.css"), "utf8")
-const { tokens, themes, defaultApp, type: typeRoles } = JSON.parse(fs.readFileSync(path.join(here, "..", "dist", "tokens.json"), "utf8"))
+const builtJson = JSON.parse(fs.readFileSync(path.join(here, "..", "dist", "tokens.json"), "utf8"))
+const { tokens, themeSlots, type: typeRoles } = builtJson
 const built = parseTokensCss(css)
 const { root, light, dark, theme } = built
 
@@ -46,7 +47,7 @@ const DARK = [
   const selectors = [...bare.matchAll(/(?:^|\})\s*([^{}]+?)\s*\{/g)].map((m) => m[1])
   const known = [":root", LIGHT, DARK, "@theme inline", "@theme"]
   for (const selector of selectors) {
-    assert.ok(known.includes(selector) || /^\[data-theme="[\w-]+"\]$/.test(selector), `unexpected selector in tokens.css: "${selector}"`)
+    assert.ok(known.includes(selector), `unexpected selector in tokens.css: "${selector}" (no app's theme lives in the core)`)
   }
   assert.equal(selectors[0], ":root", "tokens.css must open with the tier 1 :root block")
 }
@@ -78,26 +79,26 @@ assert.ok(light.size && dark.size && theme.size && root.size, "expected :root, l
   }
 }
 
-// ── Theme slots: the app axis ────────────────────────────────────────────────────────────────
-const APPS = ["warpcore", "vale", "lockdown", "synapse"]
+// ── Theme slots: the theme axis ──────────────────────────────────────────────────────────────
+// The core holds Unicron's own default theme on :root, and no app's theme (Unicron 1). An app
+// declares the same 28 slots under its own [data-theme] (examples/app-extension.css).
 const SLOTS = [
   "ground", "raised", "rule", "grid-dot", "faint", "label", "secondary", "body",
   "primary-fill", "primary-on-fill", "primary-text", "primary-soft", "primary-display", "live",
 ]
 const slotNames = ["graphite", "stone"].flatMap((ground) => SLOTS.map((slot) => `--g-theme-${ground}-${slot}`))
-assert.deepEqual(Object.keys(built.themes), APPS, "expected one [data-theme] block per app, in Figma's order")
-assert.deepEqual(Object.keys(themes), APPS, "tokens.json: expected the same four app themes")
-assert.equal(defaultApp, "warpcore", "the default theme is Figma's default mode (warpcore)")
+assert.deepEqual(Object.keys(built.themes), [], "tokens.css declares no [data-theme=\"<app>\"] block: an app's theme lives in the app")
+assert.ok(!("themes" in builtJson) && !("defaultApp" in builtJson), "tokens.json carries no app themes and no default app")
+assert.deepEqual(themeSlots, slotNames, "tokens.json themeSlots: the 28 slot names, graphite then stone, in Figma's order")
 for (const name of slotNames) assert.match(root.get(name) ?? "", /^#[0-9A-F]{6}$/, `missing theme slot ${name} on :root`)
-for (const app of APPS) {
-  assert.deepEqual([...built.themes[app].keys()], slotNames, `[data-theme="${app}"] must declare the 28 theme slots and nothing else`)
-  for (const [name, value] of built.themes[app]) {
-    assert.match(value, /^#[0-9A-F]{6}$/, `[data-theme="${app}"] ${name}: a theme slot is a raw hex`)
-    assert.equal(themes[app][name], value, `tokens.json themes.${app}.${name} differs from the CSS`)
-  }
-}
-for (const name of slotNames) {
-  assert.equal(root.get(name), built.themes[defaultApp].get(name), `${name}: the default on :root must be ${defaultApp}'s value`)
+assert.ok(!fs.existsSync(path.join(here, "..", "tokens", "themes")), "tokens/themes/ is gone: an app's theme lives in the app")
+// The example app layer declares a whole theme: all 28 slots under its own [data-theme].
+{
+  const example = fs.readFileSync(path.join(here, "..", "examples", "app-extension.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "")
+  const block = /\[data-theme="([\w-]+)"\]\s*\{([^}]*)\}/.exec(example)
+  assert.ok(block, "examples/app-extension.css: expected a [data-theme=\"<app>\"] block that declares the app's theme")
+  const declared = [...block[2].matchAll(/(--g-theme-[\w-]+)\s*:/g)].map((m) => m[1])
+  assert.deepEqual([...declared].sort(), [...slotNames].sort(), "examples/app-extension.css: the theme block declares the 28 slots, and nothing else")
 }
 
 // ── Figma's theme roles (contract §1.3) ──────────────────────────────────────────────────────
@@ -143,23 +144,45 @@ const ALIASES = {
   "faint-foreground": "var(--text-faint)",
   primary: "var(--primary-fill)",
   "primary-foreground": "var(--primary-on-fill)",
-  ...same("border", "input", "sidebar-border")("var(--line-rule)"),
+  ...same("border", "sidebar-border")("var(--line-rule)"),
+  input: "var(--line-field)",
+  "line-field": "color-mix(in oklab, var(--text-label) 75%, var(--line-rule))",
   destructive: "var(--critical-text)",
   attention: "var(--needs-you-fill)",
   ...same("running", "running-foreground")("var(--secondary-live)"),
-  "running-surface": "color-mix(in oklab, var(--secondary-live) 14%, var(--surface-ground))",
+  "running-surface": "color-mix(in oklab, var(--secondary-live) 6%, var(--surface-ground))",
   "sidebar-accent": "var(--primary-soft)",
   "sidebar-primary": "var(--primary)",
   "sidebar-primary-foreground": "var(--primary-foreground)",
   "sidebar-ring": "var(--ring)",
-  "state-hover": "color-mix(in oklab, var(--text-body) 6%, transparent)",
-  "state-pressed": "color-mix(in oklab, var(--text-body) 10%, transparent)",
-  "diff-added": "color-mix(in oklab, var(--text-body) 8%, var(--surface-ground))",
+  "state-hover": "color-mix(in oklab, var(--text-body) 4%, transparent)",
+  "state-pressed": "color-mix(in oklab, var(--text-body) 6%, transparent)",
   "diff-removed": "var(--critical-soft)",
 }
 for (const [name, value] of Object.entries(ALIASES)) {
   assert.equal(light.get(`--${name}`), value, `--${name} (light) must be ${value}`)
   assert.equal(dark.get(`--${name}`), value, `--${name} (dark) must be ${value}`)
+}
+// Roles that differ by ground (1.1): stone first, graphite second.
+const BY_GROUND = {
+  // A mark with no words, a focus border and an error border take the fill on stone and the text
+  // colour on graphite, where the fill falls under its floor (Unicron 17 and 19).
+  "primary-mark": ["var(--primary-fill)", "var(--primary-text)"],
+  "line-focus": ["var(--primary-fill)", "var(--primary-text)"],
+  "line-invalid": ["var(--critical-fill)", "var(--critical-text)"],
+  // The added-line wash is lighter on stone, so body text on it holds Lc 90 (Unicron 28).
+  "diff-added": ["color-mix(in oklab, var(--text-body) 3%, var(--surface-ground))", "color-mix(in oklab, var(--text-body) 8%, var(--surface-ground))"],
+}
+for (const [name, [stone, graphite]] of Object.entries(BY_GROUND)) {
+  assert.equal(light.get(`--${name}`), stone, `--${name} (light) must be ${stone}`)
+  assert.equal(dark.get(`--${name}`), graphite, `--${name} (dark) must be ${graphite}`)
+}
+// The small-text inks (Synapse 1): each moves its ink towards a stronger one; the label ink only
+// as far as secondary, never past it. Their contrast is gated in contrast.mjs (text-small).
+for (const [name, toward, from] of [["small-label", "text-secondary", "text-label"], ["small-primary", "text-body", "primary-text"], ["small-critical", "text-body", "critical-text"], ["small-live", "text-body", "secondary-live"]]) {
+  for (const [ground, block] of [["light", light], ["dark", dark]]) {
+    assert.match(block.get(`--${name}`) ?? "", new RegExp(`^color-mix\\(in oklab, var\\(--${toward}\\) \\d+%, var\\(--${from}\\)\\)$`), `--${name} (${ground}) must mix --${from} towards --${toward}`)
+  }
 }
 
 const CORE = [
@@ -240,10 +263,11 @@ assert.equal(root.get("--g-scrim-stone"), "rgb(20 22 24 / 0.64)", "the stone scr
 // ── Type roles (contract §2) ─────────────────────────────────────────────────────────────────
 const TYPE_ROLES = [
   "display", "display-compact", "title", "lead", "subtitle", "body", "body-strong", "response", "ui", "ui-emphasis",
-  "label", "caption", "overline", "folio", "meta", "code-inline", "code-display", "number-hero", "number-metric",
+  "label", "caption", "overline", "folio", "meta", "mono-row", "code-inline", "code-display", "number-hero", "number-metric",
   "number-index", "number-count", "brand-wordmark", "icon-glyph",
 ]
-assert.deepEqual(Object.keys(typeRoles), TYPE_ROLES, "expected the 23 type roles, in Figma's order")
+assert.deepEqual(Object.keys(typeRoles), TYPE_ROLES, "expected the 24 type roles: Figma's 23 in Figma's order, and mono-row after meta (Lockdown 4, 1.1)")
+assert.deepEqual(Object.keys(typeRoles).filter((role) => typeRoles[role].figma === "pending"), ["mono-row"], "mono-row is the one type role waiting on its Figma style")
 const TYPE_PARTS = {
   family: /^var\(--g-font-(sans|mono)\)$/,
   weight: /^[4-7]00$/,
@@ -356,8 +380,8 @@ for (const prefix of APP_ONLY) assert.ok(!css.includes(prefix), `${prefix}* is a
 assert.ok(!/\{[a-z][\w.-]*\}/.test(css), "unresolved DTCG reference leaked into CSS")
 
 console.log(
-  `✓ round-trip: ${APPS.length} app themes × ${slotNames.length} slots (default ${defaultApp}), ${Object.keys(FIGMA_ROLES).length} Figma roles on both grounds, ` +
-    `${Object.keys(ALIASES).length} aliases pinned, ${colors} colours of tiers 2 and 3 on both grounds, ${TYPE_ROLES.length} type roles, theme map complete, ` +
+  `✓ round-trip: ${slotNames.length} theme slots, the Unicron default, and no app theme; ${Object.keys(FIGMA_ROLES).length} Figma roles on both grounds, ` +
+    `${Object.keys(ALIASES).length} aliases and ${Object.keys(BY_GROUND).length} ground-split roles pinned, ${colors} colours of tiers 2 and 3 on both grounds, ${TYPE_ROLES.length} type roles, theme map complete, ` +
     `${STATUS.length} status roles, ${MOTION.length} motion roles (${durationRoles.length} durations ≤ ${CEILING_MS}ms, ${springs.length} springs in band), no app roles`
 )
 
@@ -406,14 +430,18 @@ let swatchMeasures = 0
 // For a page with no Tailwind (the extension's in-page frames). Held to:
 //   - nothing to load and nothing Tailwind-only: no @import, url(), @font-face, @theme, @apply …
 //   - it parses: whole comments, then flat rules of custom properties only, no style rule inside
-//     another, and one @media (prefers-color-scheme: dark) block for the `system` ground
+//     another, and one @media (prefers-color-scheme: dark) block for a root that follows the browser
 //   - the same custom properties as tokens.css outside its Tailwind blocks, plus the font roles
-//   - every role and knob resolves to the same value as tokens.css in every mode (the 8, and no
-//     data-theme), and a `system` root takes the graphite values while the browser prefers dark
+//   - every role and knob resolves to the same value as tokens.css on both grounds, with no theme
+//     and with an app's theme on a box; a root with no ground class takes the graphite values while
+//     the browser prefers dark, and `stone` and `graphite` force a ground (Unicron 14)
 let plainChecked = 0
 {
   const plainCss = fs.readFileSync(path.join(here, "..", "dist", "plain.css"), "utf8")
-  const SYSTEM = ":root.system:not(.light), :root.system:not(.light) [data-theme]:not(.light):not(:root.system .light *)"
+  const FORCED = ":not(.light):not(.stone):not(.dark):not(.graphite)"
+  const SYSTEM = `:root${FORCED}, :root${FORCED} [data-theme]:not(.light):not(.stone):not(:root .light *):not(:root .stone *)`
+  const PLAIN_LIGHT = `${LIGHT}, .stone`
+  const PLAIN_DARK = `${DARK}, .graphite, .graphite [data-theme]:not(.light):not(.stone):not(.graphite .light *):not(.graphite .stone *)`
   const MEDIA = "@media (prefers-color-scheme: dark)"
 
   // Nothing to fetch, nothing a strict style-src would refuse, nothing only Tailwind reads.
@@ -455,7 +483,7 @@ let plainChecked = 0
     let target
     if (inMedia) target = selector === SYSTEM ? parsedPlain.system : null
     else if (app) target = parsedPlain.themes[app] ??= new Map()
-    else target = { ":root": parsedPlain.root, [LIGHT]: parsedPlain.light, [DARK]: parsedPlain.dark }[selector]
+    else target = { ":root": parsedPlain.root, [PLAIN_LIGHT]: parsedPlain.light, [PLAIN_DARK]: parsedPlain.dark }[selector]
     assert.ok(target, `plain.css: unexpected selector "${selector}"${inMedia ? ` inside ${MEDIA}` : ""}`)
     for (const [k, v] of declarations) target.set(k, v)
   }
@@ -475,7 +503,7 @@ let plainChecked = 0
     } else rule(false)
   }
   assert.equal(medias, 1, `plain.css: expected one "${MEDIA}" block`)
-  assert.deepEqual(Object.keys(parsedPlain.themes), APPS, "plain.css: expected one [data-theme] block per app")
+  assert.deepEqual(Object.keys(parsedPlain.themes), [], "plain.css: no app's theme lives in the core")
 
   // The same custom properties as tokens.css outside @theme, and the font roles.
   const FONT_ROLES = ["--font-sans", "--font-mono", "--font-heading"]
@@ -494,7 +522,12 @@ let plainChecked = 0
   const vars = (b, app, ground, extra = new Map()) =>
     new Map([...b.root, ...extra, ...(app ? b.themes[app] : []), ...b.light, ...(ground === "graphite" ? b.dark : ground === "system-dark" ? b.system : [])])
   const checked = [...new Set([...built.light.keys(), ...built.dark.keys(), ...FONT_ROLES])]
-  for (const app of [null, ...APPS]) {
+  // An app's theme on a box: here a made-up one, each slot on the other ground's value, so every
+  // role has to re-read its slots to come out right.
+  const appTheme = new Map(slotNames.map((n) => [n, root.get(n.replace(/graphite|stone/, (g) => (g === "graphite" ? "stone" : "graphite")))]))
+  built.themes.app = appTheme
+  parsedPlain.themes.app = appTheme
+  for (const app of [null, "app"]) {
     for (const ground of ["stone", "graphite"]) {
       const want = vars(built, app, ground, tokenFonts)
       const got = vars(parsedPlain, app, ground)
@@ -502,7 +535,7 @@ let plainChecked = 0
       for (const name of checked) {
         const expected = resolveValue(want.get(name), want)
         assert.equal(resolveValue(got.get(name), got), expected, `plain.css: ${name} in ${app ?? "default"} / ${ground} differs from tokens.css`)
-        assert.equal(resolveValue(system.get(name), system), expected, `plain.css: ${name} on a \`system\` root (browser prefers ${ground === "graphite" ? "dark" : "light"}) in ${app ?? "default"} differs from ${ground}`)
+        assert.equal(resolveValue(system.get(name), system), expected, `plain.css: ${name} on a root with no ground class (browser prefers ${ground === "graphite" ? "dark" : "light"}) in ${app ?? "default"} differs from ${ground}`)
         plainChecked++
       }
     }
@@ -511,5 +544,5 @@ let plainChecked = 0
 
 console.log(
   `✓ foundation: ${SWATCHES.length} swatches on both grounds, 30° apart from hue.red (${swatchMeasures} distance checks); ` +
-    `plain.css parses flat with nothing to load, and ${plainChecked} role and knob values equal tokens.css in 10 modes and on a system root`
+    `plain.css parses flat with nothing to load, follows the browser with no class (stone and graphite force a ground), and ${plainChecked} role and knob values equal tokens.css on both grounds, with and without an app's theme`
 )

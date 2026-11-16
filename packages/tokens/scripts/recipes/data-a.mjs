@@ -20,7 +20,7 @@
 //   neutral: text-body on surface-raised, and pressed (the wash laid on the tile) ... core body-raised; controls float-glyph-press (the same paint)
 //   needs-you: needs-you-on-fill on needs-you-fill (no pressed fill: at 80% over graphite the ink would fall under 75)
 //                                                                                     core needs-you-on-fill
-//   a tile against the row's ground ................................................. core primary-fill-ground (Figma value), needs-you-fill-ground
+//   a tile against the row's ground ................................................. core primary-button-ground (a fill with a label), needs-you-fill-ground
 // FilterChip
 //   off: text-label on the ground, under the hover and pressed washes ............... core label-ground, label-ground-hover, label-ground-pressed
 //   on, pressed (the ink at 80%) ...................................................... controls float-current-press (the same paint)
