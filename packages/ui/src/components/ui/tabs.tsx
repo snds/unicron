@@ -74,7 +74,7 @@ const TRIGGER = cn(
   // 40px tab, the indicator on its bottom edge. Under the pointer the indicator shows faintly.
   "group-data-[variant=line]/tabs-list:h-full group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:pt-4 group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:pb-2 group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:items-start",
   "group-data-vertical/tabs:group-data-[variant=line]/tabs-list:h-10 group-data-vertical/tabs:group-data-[variant=line]/tabs-list:justify-start group-data-vertical/tabs:group-data-[variant=line]/tabs-list:pl-3",
-  "after:absolute after:bg-primary-fill after:opacity-0 after:transition-opacity group-data-[variant=default]/tabs-list:after:hidden group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-0 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:left-0 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100 group-data-[variant=line]/tabs-list:not-data-active:hover:after:opacity-40"
+  "after:absolute after:bg-primary-mark after:opacity-0 after:transition-opacity group-data-[variant=default]/tabs-list:after:hidden group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-0 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:left-0 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100 group-data-[variant=line]/tabs-list:not-data-active:hover:after:opacity-40"
 )
 
 export type TabsTriggerProps = TabsPrimitive.Tab.Props & {

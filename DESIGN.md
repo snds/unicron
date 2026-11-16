@@ -3,41 +3,42 @@ name: unicron
 version: 1.0.0
 description: Industrial Spec. The shared look of Vale, Warpcore, Lockdown and Synapse. Square, flat and ink-first; a Swiss grid, Geist and Geist Mono, hairline rules; one identity colour per app, one live colour, one yellow for "this needs you".
 themes:
-  apps: [warpcore, vale, lockdown, synapse]
-  default: warpcore
+  apps: [warpcore, vale, lockdown, synapse]  # each declares its theme in its own layer (1.1)
+  default: unicron
   grounds: { graphite: dark, stone: light }
 colors:
-  # The default app (warpcore). Each app sets the same 28 slots in packages/tokens/tokens/themes/<app>.json.
+  # Unicron's own default theme (global.json → theme). Each app sets the same 28 slots in its own layer
+  # under [data-theme="<app>"]; the playground's copies are in apps/playground/src/app-themes/<app>.json.
   graphite:
-    surface-ground: "#18191D"
-    surface-raised: "#212125"
-    line-rule: "#313238"
-    line-grid-dot: "#393A40"
-    text-body: "#EFF0F3"
-    text-secondary: "#D3D4D8"
-    text-label: "#B2B4BA"
-    text-faint: "#5F6066"
-    primary-fill: "#5146EE"
+    surface-ground: "#181A1B"
+    surface-raised: "#1F2122"
+    line-rule: "#2F3033"
+    line-grid-dot: "#353739"
+    text-body: "#F2F4F6"
+    text-secondary: "#D8DBDF"
+    text-label: "#BABEC3"
+    text-faint: "#56585B"
+    primary-fill: "#4778B5"
     primary-on-fill: "#FFFFFF"
-    primary-text: "#A1AEFF"
-    primary-soft: "#1F2343"
-    primary-display: "#888EFF"
-    secondary-live: "#1EC5E4"
+    primary-text: "#A1C7F8"
+    primary-soft: "#1E2C3F"
+    primary-display: "#7AAEEF"
+    secondary-live: "#57D4D4"
   stone:
-    surface-ground: "#EFF0F5"
-    surface-raised: "#F7F8FD"
-    line-rule: "#D1D2D9"
-    line-grid-dot: "#BCBDC4"
-    text-body: "#151618"
-    text-secondary: "#3C3D40"
-    text-label: "#67696E"
-    text-faint: "#A3A4AB"
-    primary-fill: "#4837E0"
+    surface-ground: "#F3F4F6"
+    surface-raised: "#FBFCFD"
+    line-rule: "#D5D8DB"
+    line-grid-dot: "#BEC1C5"
+    text-body: "#050607"
+    text-secondary: "#3D4043"
+    text-label: "#606368"
+    text-faint: "#A5A8AC"
+    primary-fill: "#255B9C"
     primary-on-fill: "#FFFFFF"
-    primary-text: "#4E4DCD"
-    primary-soft: "#D5DDFF"
-    primary-display: "#4837E0"
-    secondary-live: "#007491"
+    primary-text: "#225899"
+    primary-soft: "#E4F0FF"
+    primary-display: "#255B9C"
+    secondary-live: "#007176"
   # The same in every app.
   needs-you: { fill: "#EDE54A", on-fill: "#1C1C1C" }
   critical:

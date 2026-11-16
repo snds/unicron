@@ -28,7 +28,7 @@
 //                status: live-ground, critical-text-ground (washes below)
 //   Tile         ink: body-raised · edge and selected box: primary-mark-raised,
 //                primary-mark-ground · hover: body-accent · pressed: controls:float-glyph-press
-//                (the same 10% ink mix in the raised surface)
+//                (the same 6% ink mix in the raised surface)
 //
 // `exceptions` lists the new pairs under their floor. Each is a contract state (§6.1: the hover
 // or pressed wash) laid over a Figma value that has no room for it; none is a paint chosen here.

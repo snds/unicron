@@ -71,7 +71,7 @@ export const recipes = [
   { id: "float-primary-press", source: "float button primary: active:bg-[color-mix(primary 85%, background)]", kind: "on-fill", paint: r("primary-foreground"), over: [mix("primary", "background", 0.15)] },
   { id: "float-current", source: "float button current or pressed: bg-foreground text-background", kind: "on-fill", paint: r("background"), over: [r("foreground")] },
   { id: "float-current-hover", source: "float button current: hover:bg-[color-mix(foreground 90%, background)]", kind: "on-fill", paint: r("background"), over: [mix("foreground", "background", 0.1)] },
-  { id: "float-current-press", source: "float button current: active:bg-[color-mix(foreground 85%, background)]", kind: "on-fill", paint: r("background"), over: [mix("foreground", "background", 0.15)] },
+  { id: "float-current-press", source: "float button current, an on or open filter chip, a pressed toggle: active:bg-[color-mix(foreground 86%, background)] (85% held Lc 74.8 on graphite; Unicron 28)", kind: "on-fill", paint: r("background"), over: [mix("foreground", "background", 0.14)] },
   { id: "float-current-page", source: "float button current: the inverted fill against the page", kind: "solid", paint: r("foreground"), over: [r("surface-ground")] },
 
   // ── Switch: the knob is the state mark, a solid on its track ────────────────────────────────

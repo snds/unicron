@@ -57,7 +57,7 @@ const strip = cva(
         // No border on the yellow. `on-needs-you`: rings inside take the yellow's ink.
         "needs-you": "on-needs-you bg-needs-you-fill",
         // Deprecated (Unicron 67): the critical Banner's look at strip size. Use a critical Banner.
-        critical: "bg-critical-soft inset-ring inset-ring-critical-fill",
+        critical: "bg-critical-soft inset-ring inset-ring-line-invalid",
       },
     },
     defaultVariants: { tone: "neutral" },

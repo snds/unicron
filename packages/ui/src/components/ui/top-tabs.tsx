@@ -46,7 +46,7 @@ export type TopTabProps = Omit<useRender.ComponentProps<"a">, "children" | "aria
 
 /**
  * TopTab: one section (Figma 15:498). A row of icon (16), index and label in the overline role, 6px
- * apart, and under it, 6px down, a 2px indicator as wide as the row: the primary fill when current,
+ * apart, and under it, 6px down, a 2px indicator as wide as the row: the primary mark when current,
  * nothing otherwise. Figma's tab has no padding, so its hit area would be 24px; here 12px of padding
  * on every side makes it 48 high without moving the drawn parts. Hover and pressed take the
  * contract's washes (§6), and the label and icon go to body ink.
@@ -84,7 +84,7 @@ function TopTab({ label, keepCase = false, index, icon, current = false, mark, r
             <span
               data-slot="top-tab-indicator"
               aria-hidden="true"
-              className={cn("h-(--stroke-emphasis) w-full", current ? "bg-primary-fill" : "bg-transparent")}
+              className={cn("h-(--stroke-emphasis) w-full", current ? "bg-primary-mark" : "bg-transparent")}
             />
           </span>
         ),

@@ -56,7 +56,7 @@ describe("FileChip (contract 5.1a, 5.1b #30)", () => {
     const { container } = render(<FileChip name="Pine Hollow booking.pdf" size="84 KB" critical="Too big to send" />)
     const chip = slot(container, "file-chip")
     expect(chip).toHaveAttribute("data-critical")
-    expect(chip.className.split(/\s+/)).toEqual(expect.arrayContaining(["rule-box-emphasis", "[--rule-color:var(--critical-fill)]"]))
+    expect(chip.className.split(/\s+/)).toEqual(expect.arrayContaining(["rule-box-emphasis", "[--rule-color:var(--line-invalid)]"]))
     expect(slot(container, "file-chip-type").className).toContain("bg-critical-fill")
     expect(slot(container, "file-chip-critical")).toHaveTextContent("Too big to send")
     expect(slot(container, "file-chip-critical").className).toContain("text-critical-text")

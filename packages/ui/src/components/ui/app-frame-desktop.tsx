@@ -269,9 +269,9 @@ function AppFrameSidebar({
           <div className="min-w-0 flex-1">{footer}</div>
           {footerControl}
           {inDrawer ? (
-            <SidebarControl label="Close sidebar" icon="side-panel--close" onClick={() => setDrawerOpen(false)} />
+            <SidebarControl label="Close sidebar" icon="open-panel--filled--left" onClick={() => setDrawerOpen(false)} />
           ) : onCollapsedChange ? (
-            <SidebarControl ref={collapseButton} label="Collapse sidebar" icon="side-panel--close" onClick={() => askCollapsed(true)} />
+            <SidebarControl ref={collapseButton} label="Collapse sidebar" icon="open-panel--filled--left" onClick={() => askCollapsed(true)} />
           ) : null}
         </div>
       ) : null}
@@ -337,7 +337,7 @@ function AppFrameSidebar({
                 <RailItem
                   ref={expandButton}
                   label="Expand sidebar"
-                  icon="side-panel--open"
+                  icon="open-panel--left"
                   aria-expanded={medium ? drawerOpen : false}
                   aria-keyshortcuts="Meta+Backslash Control+Backslash"
                   onClick={() => (medium ? setDrawerOpen(true) : askCollapsed(false))}

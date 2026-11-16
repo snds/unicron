@@ -138,7 +138,7 @@ describe("Accessory (Figma 20:1713)", () => {
   it("critical (deprecated): the critical Banner at strip size: soft ground, critical edge, the glyph in critical text, body title, secondary meta", () => {
     const { container } = render(<Accessory tone="critical" meta="Spend // Paused" title="$10.00 of $10.00 used" />)
     const strip = stripOf(container)
-    expect(classesOf(strip)).toEqual(expect.arrayContaining(["bg-critical-soft", "inset-ring", "inset-ring-critical-fill"]))
+    expect(classesOf(strip)).toEqual(expect.arrayContaining(["bg-critical-soft", "inset-ring", "inset-ring-line-invalid"]))
     expect(strip.querySelector('[data-slot="accessory-glyph"]')!.className).toContain("text-critical-text")
     expect(strip.querySelector('[data-slot="accessory-glyph"] [data-icon-name="warning--alt"]')).not.toBeNull()
     expect(container.querySelector('[data-slot="accessory-meta"]')!.className).toContain("text-text-secondary")

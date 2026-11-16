@@ -19,7 +19,7 @@ const chip = cva(
         false: "rule-box",
         // Something is wrong with the file (too big, blocked): the critical edge, and the reason in
         // place of its size. The edge is 2px, the error border fields draw.
-        true: "rule-box-emphasis [--rule-color:var(--critical-fill)]",
+        true: "rule-box-emphasis [--rule-color:var(--line-invalid)]",
       },
     },
     defaultVariants: { critical: false },

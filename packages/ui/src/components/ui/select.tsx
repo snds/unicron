@@ -47,13 +47,13 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
 }
 
 // The trigger is the Text Field's box (Figma 32:48): raised, a 1px rule inside, 48 tall, 16px in,
-// the value in the `ui` role. Under the pointer it takes the 6% hover wash laid on its fill, so it
+// the value in the `ui` role. Under the pointer it takes the 4% hover wash laid on its fill, so it
 // stays opaque; while its list is open it keeps the 2px focus border. `sm` is 40, for a row.
 const TRIGGER = cn(
   fieldBoxVariants(),
   "flex w-fit max-w-full min-w-0 items-center justify-between gap-2 whitespace-nowrap select-none",
   "data-[size=default]:h-control data-[size=default]:px-4 data-[size=sm]:h-10 data-[size=sm]:px-3 data-[size=sm]:hit-area",
-  "hover:bg-[color-mix(in_oklab,var(--text-body)_6%,var(--surface-raised))] data-popup-open:rule-box-emphasis data-placeholder:text-muted-foreground",
+  "hover:bg-[color-mix(in_oklab,var(--text-body)_4%,var(--surface-raised))] data-popup-open:rule-box-emphasis data-placeholder:text-muted-foreground",
   "data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0"
 )
 

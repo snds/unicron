@@ -828,7 +828,7 @@ export function CodeDisplay({
       className={cn(
         "relative flex flex-col select-none",
         tile
-          ? "bg-surface-raised rule-box min-h-(--c-code-tile-min-height) gap-2.5 rounded p-5 hover:bg-accent active:bg-[color-mix(in_oklab,var(--text-body)_10%,var(--surface-raised))]"
+          ? "bg-surface-raised rule-box min-h-(--c-code-tile-min-height) gap-2.5 rounded p-5 hover:bg-accent active:bg-[color-mix(in_oklab,var(--text-body)_6%,var(--surface-raised))]"
           : "rule-b min-h-(--c-code-row-min-height) gap-2 px-4 py-3.5 hover:bg-state-hover active:bg-state-pressed",
         className
       )}

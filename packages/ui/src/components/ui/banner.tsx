@@ -33,7 +33,7 @@ const banner = cva(
   {
     variants: {
       tone: {
-        critical: "bg-critical-soft inset-ring inset-ring-critical-fill",
+        critical: "bg-critical-soft inset-ring inset-ring-line-invalid",
         info: "bg-surface-raised rule-box",
         warning: "bg-surface-raised inset-ring inset-ring-warning",
         success: "bg-surface-raised inset-ring inset-ring-success",

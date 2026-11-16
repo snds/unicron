@@ -84,7 +84,7 @@ const swipeActionVariants = cva(
         primary: "bg-primary text-primary-foreground active:bg-primary/85",
         // Raised surface, a hairline on its left, ink. Pressed is the pressed wash laid on the
         // surface, so the tile stays opaque over the row's ground.
-        neutral: "rule-l bg-surface-raised text-foreground active:bg-[color-mix(in_oklab,var(--text-body)_10%,var(--surface-raised))]",
+        neutral: "rule-l bg-surface-raised text-foreground active:bg-[color-mix(in_oklab,var(--text-body)_6%,var(--surface-raised))]",
         // The yellow. Figma draws the tone and does not say what it is for: an approval's tile,
         // which only ever opens its review. Focus inside it takes the yellow's ink.
         "needs-you": "on-needs-you bg-needs-you-fill text-needs-you-on-fill",

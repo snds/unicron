@@ -16,14 +16,14 @@
 //   the focus ring, inset, on the ground and on primary-soft ........................ core ring-ground, ring-soft
 //   the segmented progress bar ....................................................... core live-progress; controls progress-*
 // SwipeAction
-//   primary: primary-on-fill on primary-fill, and pressed at 80% ................... core primary-on-fill, primary-on-fill-pressed-* (contract state)
+//   primary: primary-on-fill on primary-fill, and pressed at 85% ................... core primary-on-fill, primary-on-fill-pressed-* (contract state)
 //   neutral: text-body on surface-raised, and pressed (the wash laid on the tile) ... core body-raised; controls float-glyph-press (the same paint)
-//   needs-you: needs-you-on-fill on needs-you-fill (no pressed fill: at 80% over graphite the ink would fall under 75)
+//   needs-you: needs-you-on-fill on needs-you-fill (no pressed fill: a solid pressed at 85% over graphite would fall under 75)
 //                                                                                     core needs-you-on-fill
 //   a tile against the row's ground ................................................. core primary-button-ground (a fill with a label), needs-you-fill-ground
 // FilterChip
 //   off: text-label on the ground, under the hover and pressed washes ............... core label-ground, label-ground-hover, label-ground-pressed
-//   on, pressed (the ink at 80%) ...................................................... controls float-current-press (the same paint)
+//   on or open, pressed (the ink at 86%) .............................................. controls float-current-press (the same paint)
 // SectionHeader: overline and count (text-label); the collapsible title's washes .... core label-ground, label-ground-hover, label-ground-pressed
 // LogRow: time (text-label), words (text-body); a linked line's washes ................ core label-ground, body-ground, *-ground-hover, *-ground-pressed
 // DiffBlock

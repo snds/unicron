@@ -97,7 +97,7 @@ borders, the 2px corner, the motion roles ([what a component needs](docs/06-cont
 
 ```
 packages/tokens/tokens/{global,semantic,component}.json   DTCG sources (the truth)
-packages/tokens/tokens/themes/<app>.json                  the 28 theme slots of one app
+apps/playground/src/app-themes/<app>.json                 the 28 theme slots of one app (an example; each app's own layer holds them)
 packages/tokens/tokens/type.json                          the 23 type roles
 packages/tokens/tokens/component/<area>.json              component knobs, one file per area
 packages/tokens/tokens/figma/theme-2026-11.json           a snapshot of Figma, for the parity check

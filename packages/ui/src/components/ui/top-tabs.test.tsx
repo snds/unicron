@@ -51,7 +51,7 @@ describe("TopTabs and TopTab (Figma 15:498)", () => {
     const tasks = screen.getByRole("link", { name: "Tasks, 1 waiting on you" })
     expect(tasks.querySelector('[data-slot="top-tab-label"]')!.className).toContain("text-text-body")
     const indicator = tasks.querySelector('[data-slot="top-tab-indicator"]')!
-    expect(indicator.className).toContain("bg-primary-fill")
+    expect(indicator.className).toContain("bg-primary-mark")
     expect(indicator.className).not.toMatch(/rounded/)
     expect(tasks.querySelector('[data-slot="nav-mark"]')!.className).toContain("bg-needs-you-fill")
   })

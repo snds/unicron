@@ -745,6 +745,19 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     expect(body.y - summary.bottom).toBe(24)
   })
 
+  test("Vale: the list's title touches its overline on a desktop, 4 under it on a phone (Desktop / 01, Unicron 77)", async ({ page }) => {
+    await open(page, "shell-vale", "vale")
+    const list = page.locator('[data-slot="app-frame-list"]')
+    const overline = await box(list.locator('[data-slot="page-head-overline"]'))
+    const title = await box(list.locator('[data-slot="page-head-title"]'))
+    // Figma draws the overline and the 48/48 title with no gap on a desktop; it was 4 low.
+    expect(title.y - overline.bottom).toBe(0)
+    await page.setViewportSize({ width: 390, height: 844 })
+    const phoneOverline = await box(page.locator('[data-slot="page-head-overline"]').first())
+    const phoneTitle = await box(page.locator('[data-slot="page-head-title"]').first())
+    expect(phoneTitle.y - phoneOverline.bottom).toBe(4)
+  })
+
   test("Lockdown: the request 16 under the head at y 216, the fields 24 under it (Desktop / 01)", async ({ page }) => {
     await open(page, "shell-lockdown", "lockdown")
     const detail = page.locator('[data-slot="app-frame-detail"]')

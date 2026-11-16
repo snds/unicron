@@ -21,7 +21,7 @@ describe("Banner (Figma 32:89)", () => {
   })
 
   it("pins the drawn tones: critical-soft in a critical edge; info raised in a hairline", () => {
-    expect(bannerVariants({ tone: "critical" }).split(/\s+/)).toEqual(expect.arrayContaining(["bg-critical-soft", "inset-ring", "inset-ring-critical-fill"]))
+    expect(bannerVariants({ tone: "critical" }).split(/\s+/)).toEqual(expect.arrayContaining(["bg-critical-soft", "inset-ring", "inset-ring-line-invalid"]))
     expect(bannerVariants({ tone: "info" }).split(/\s+/)).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box"]))
     expect(bannerVariants({ tone: "warning" }).split(/\s+/)).toEqual(expect.arrayContaining(["bg-surface-raised", "inset-ring-warning"]))
     expect(bannerVariants({ tone: "success" }).split(/\s+/)).toEqual(expect.arrayContaining(["bg-surface-raised", "inset-ring-success"]))

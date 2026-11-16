@@ -1227,7 +1227,7 @@ function SecretFieldEdit({
           // The box: raised, a 1px hairline inside; 2px primary on focus, 2px critical on error (both inside, so the box never grows).
           "bg-surface-raised flex min-h-control gap-2 rounded px-4 py-3",
           multiline ? "items-start" : "items-center",
-          error ? "rule-box-emphasis [--rule-color:var(--critical-fill)]" : "rule-box focus-within:rule-box-emphasis",
+          error ? "rule-box-emphasis [--rule-color:var(--line-invalid)]" : "rule-box focus-within:rule-box-emphasis",
           disabled && "opacity-50"
         )}
       >

@@ -45,7 +45,7 @@ describe("Tabs", () => {
   it("line is Figma's Top Tab: overline, a 2px primary indicator, an index in the label ink", () => {
     render(<Subject variant="line" />)
     const tab = screen.getByRole("tab", { name: /Characters/ })
-    for (const name of ["type-overline", "text-muted-foreground", "data-active:text-foreground", "after:bg-primary-fill", "group-data-horizontal/tabs:after:h-0.5", "group-data-[variant=line]/tabs-list:data-active:after:opacity-100"]) expect(tab.className).toContain(name)
+    for (const name of ["type-overline", "text-muted-foreground", "data-active:text-foreground", "after:bg-primary-mark", "group-data-horizontal/tabs:after:h-0.5", "group-data-[variant=line]/tabs-list:data-active:after:opacity-100"]) expect(tab.className).toContain(name)
     expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).toContain("text-text-label")
     expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).not.toMatch(/faint/)
   })

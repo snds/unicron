@@ -247,7 +247,7 @@ function treeLevel(el: HTMLElement): number {
 /** A calendar's, a note's or a persona's colour: one of the twelve swatch roles (contract 5.1b #55). */
 export type NavItemSwatch = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
-/** The swatch's fill: the one shared class map (Tile's), so a NavItem square and a CalendarEvent bar read the same role. */
+/** The swatch's fill: the one shared class map (Tile's), so a NavItem square and a Tile's swatch read the same role. */
 function swatchFill(swatch: NavItemSwatch): string {
   return swatchFillClasses[String(swatch).padStart(2, "0") as SwatchId]
 }

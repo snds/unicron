@@ -819,7 +819,7 @@ describe("SecretField 1.0: edit mode in the Text Field box", () => {
     expect(box).toHaveClass("bg-surface-raised", "rule-box", "focus-within:rule-box-emphasis", "min-h-control")
     rerender(<SecretField mode="edit" label="Password" value="" onChange={() => {}} error="That isn't the master password." />)
     expect(box).toHaveClass("rule-box-emphasis")
-    expect(box.className).toContain("[--rule-color:var(--critical-fill)]")
+    expect(box.className).toContain("[--rule-color:var(--line-invalid)]")
     expect(screen.getByRole("alert")).toHaveTextContent("That isn't the master password.")
     expect(screen.getByLabelText("Password")).toHaveAttribute("aria-invalid", "true")
   })
