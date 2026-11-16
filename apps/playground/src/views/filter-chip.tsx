@@ -119,6 +119,29 @@ export default function FilterChipView() {
           <FilterChip kind="button">Envs</FilterChip>
         </div>
       </Specimen>
+
+      <Specimen label="Open // a trigger draws inverted while its picker is open, and keeps aria-expanded (Unicron 50)">
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterChip kind="trigger" aria-haspopup="dialog" aria-expanded={true}>
+            Auto // Coding
+          </FilterChip>
+          <FilterChip kind="trigger" aria-haspopup="dialog" aria-expanded={false}>
+            General
+          </FilterChip>
+        </div>
+      </Specimen>
+
+      <Specimen label="Keep case // a person's name keeps its own case (Vale 8)">
+        <FilterChipGroup label="Assigned to" defaultValue="anyone">
+          <FilterChip value="anyone">Anyone</FilterChip>
+          <FilterChip value="ana" keepCase count={4}>
+            Ana McKay
+          </FilterChip>
+          <FilterChip value="joris" keepCase count={2}>
+            Joris van der Berg
+          </FilterChip>
+        </FilterChipGroup>
+      </Specimen>
     </div>
   )
 }

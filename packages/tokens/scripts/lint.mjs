@@ -294,7 +294,13 @@ const CLASS_RULES = [
   [/(?<![\w-])(?:inset-)?shadow-(?!none(?![\w-])|\[inset_)[\w[(][^\s"'`]*/g, "a shadow; surfaces are solid with a 1px rule (shadow-none and a token-built shadow-[inset_…] stroke are fine)"],
 ]
 // `rounded-full` by name: file, how many times, and why it is round.
-const ROUND_ALLOWED = []
+const ROUND_ALLOWED = [
+  {
+    file: "packages/ui/src/components/ui/radio-group.tsx",
+    count: 2,
+    why: "the radio and its dot: the one round control (Unicron 41), so one choice of many never looks like a checkbox",
+  },
+]
 const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
 // An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not
 // inside var(…) or --spacing(…).

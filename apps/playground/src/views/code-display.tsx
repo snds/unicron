@@ -83,6 +83,10 @@ export default function CodeDisplayView() {
         <CodeDisplay layout="compact" issuer="Fastmail" account="kestrel.04@proton.me" code="019552" period={30} expiresAt={AT} now={AT - 4} />
       </Specimen>
 
+      <Specimen label="Compact, copy off // display only: the popup row's COPY CODE is its one copy (Lockdown 27)" width="22.375rem">
+        <CodeDisplay layout="compact" copy={false} issuer="GitHub" account="kestrel04" code="482193" period={30} expiresAt={AT} now={AT - 23} />
+      </Specimen>
+
       <Specimen label="States // the next code early, the clock notice, a warning, loading, an error">
         <CodeDisplay layout="field" label="One-time code" issuer="GitHub" code="482193" next="330918" period={30} expiresAt={AT} now={AT - 8} />
         <CodeDisplay layout="field" label="One-time code" issuer="Synology" code="330918" skewSeconds={-42} onFixClock={() => {}} period={30} expiresAt={AT} now={AT - 23} />

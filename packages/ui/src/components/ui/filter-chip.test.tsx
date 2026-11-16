@@ -144,8 +144,9 @@ describe("FilterChip kinds: a trigger and a plain button (contract 5.1c C13, War
     expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("aria-hidden", "true")
     expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("width", "16")
     const cls = chip.className.split(/\s+/)
-    // The off look, with the chevron 4 after the words; open, it keeps the pressed wash.
-    expect(cls).toEqual(expect.arrayContaining(["text-muted-foreground", "gap-1", "aria-expanded:bg-state-pressed"]))
+    // The off look, with the chevron 4 after the words; open, it draws inverted ink (Unicron 50).
+    expect(cls).toEqual(expect.arrayContaining(["text-muted-foreground", "gap-1", "aria-expanded:bg-foreground", "aria-expanded:text-background"]))
+    expect(cls).not.toContain("aria-expanded:bg-state-pressed")
     expect(cls).not.toContain("bg-foreground")
     await userEvent.click(chip)
     await userEvent.click(chip)
@@ -219,5 +220,44 @@ describe("FilterChip kinds: a trigger and a plain button (contract 5.1c C13, War
     expect(ref.current).toBe(chip)
     expect(chip).toHaveAttribute("aria-haspopup", "menu")
     expect(chip).toHaveAttribute("aria-expanded", "true")
+  })
+
+  it("open, a trigger draws inverted, keeps aria-expanded, and is still not on (Unicron 50)", () => {
+    render(
+      <FilterChip kind="trigger" aria-haspopup="menu" aria-expanded={true}>
+        General
+      </FilterChip>
+    )
+    const chip = screen.getByRole("button", { name: "General" })
+    expect(chip).toHaveAttribute("aria-expanded", "true")
+    expect(chip).not.toHaveAttribute("aria-pressed")
+    expect(chip).not.toHaveAttribute("data-active")
+    const cls = chip.className.split(/\s+/)
+    expect(cls).toEqual(
+      expect.arrayContaining([
+        "aria-expanded:bg-foreground",
+        "aria-expanded:text-background",
+        "aria-expanded:active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]",
+      ])
+    )
+  })
+})
+
+describe("FilterChip keepCase (Vale 8)", () => {
+  it("keeps a person's name in its own case; a plain label still takes capitals", () => {
+    render(
+      <>
+        <FilterChip keepCase count={3}>Ana McKay</FilterChip>
+        <FilterChip>All</FilterChip>
+      </>
+    )
+    const name = screen.getByRole("button", { name: /^Ana McKay / })
+    expect(name).toHaveAttribute("data-keep-case")
+    expect(name.querySelector('[data-slot="filter-chip-label"]')).toHaveClass("normal-case")
+    // The role is the same: only the case is kept.
+    expect(name).toHaveClass("type-overline")
+    const plain = screen.getByRole("button", { name: "All" })
+    expect(plain).not.toHaveAttribute("data-keep-case")
+    expect(plain.querySelector('[data-slot="filter-chip-label"]')).not.toHaveClass("normal-case")
   })
 })

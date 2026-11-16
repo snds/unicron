@@ -50,6 +50,16 @@ export default function ProgressView() {
         </Progress>
       </Specimen>
 
+      <Specimen label="Size 8 // Warpcore Spend draws the segmented bar 8 tall (Unicron 49)">
+        <Progress variant="segmented" size={8} tone="budget" value={6.4} max={10} tick={8}>
+          <ProgressLabel>$6.40 of $10.00 today // warns at $8.00</ProgressLabel>
+          <ProgressValue />
+        </Progress>
+        <Progress variant="segmented" size={8} tone="primary" value={41.2} max={50}>
+          <ProgressLabel>$41.20 of $50.00 this week</ProgressLabel>
+        </Progress>
+      </Specimen>
+
       <Specimen label="Tones // neutral (strength in 3), warning; a tick at 80% (5.1b #29)">
         <Progress variant="segmented" tone="neutral" segments={3} value={2} max={3}>
           <ProgressLabel>Fair</ProgressLabel>

@@ -29,7 +29,7 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-lg p-1 transition-[background-color,box-shadow] data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/80 data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill data-disabled:pointer-events-none data-disabled:opacity-50",
+        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-lg p-1 transition-[background-color,box-shadow] data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/85 data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) data-disabled:pointer-events-none data-disabled:opacity-50",
         className
       )}
       {...props}
