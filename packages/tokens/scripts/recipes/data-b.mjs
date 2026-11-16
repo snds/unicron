@@ -1,5 +1,6 @@
 // Contrast recipes for the data-b rows and blocks: FieldRow, ToggleRow, Metric, NeedsYou, Banner,
-// CalendarEvent, MetaList, Steps, Tile (packages/ui/src/components/ui).
+// MetaList, Steps, Tile (packages/ui/src/components/ui). CalendarEvent left the core in 1.1
+// (Unicron 2); its pressed-on-selection pairs stay below, because a selected ListRow draws them.
 //
 // This file measures the pairs these parts paint that no other table measures yet. A pair the
 // core table (scripts/contrast.mjs) or recipes/controls.mjs already measures is not measured
@@ -18,18 +19,15 @@
 //                the 2px ink rule: below
 //   NeedsYou     title and body: needs-you-on-fill · its buttons: controls:btn-ny*
 //   Banner       critical: body-critical-soft, secondary-critical-soft, critical-text-soft, the
-//                edge critical-fill-ground (2.9:1 on graphite, reported as the field's) · info,
+//                edge critical-edge-ground (line-invalid) · info,
 //                warning, success: body-raised, secondary-raised, rule-ground, warning-on-raised
 //                · its buttons: controls:btn-* (their washes over critical-soft: below)
-//   CalendarEvent primary: label-soft, body-soft, secondary-soft, primary-edge-soft and their
-//                -hover (pressed: below) · neutral: label-raised, body-raised, secondary-raised,
-//                rule-raised and their -hover, -pressed
 //   MetaList     label-ground, label-raised · body-ground, body-raised
 //   Steps        title, current index: body-ground (+ washes) · index, detail, status:
 //                label-ground (+ washes) · content: secondary-ground (+ washes) · live and failed
 //                status: live-ground, critical-text-ground (washes below)
-//   Tile         ink: body-raised · edge and selected box: primary-fill-raised,
-//                primary-fill-ground · hover: body-accent · pressed: controls:float-glyph-press
+//   Tile         ink: body-raised · edge and selected box: primary-mark-raised,
+//                primary-mark-ground · hover: body-accent · pressed: controls:float-glyph-press
 //                (the same 10% ink mix in the raised surface)
 //
 // `exceptions` lists the new pairs under their floor. Each is a contract state (§6.1: the hover
@@ -57,30 +55,24 @@ export const recipes = [
     // The label of a Button (secondary, ghost) in a critical Banner, under that button's wash.
     { id: `body-critical-soft-${state}`, source: `Banner critical: its action or close Button (text-foreground) under the button's ${state} wash on bg-critical-soft`, kind: "text-body", paint: r("foreground"), over: [r("surface-ground"), r("critical-soft"), wash] },
   ]),
-  // A primary (or selected) CalendarEvent pressed: the pressed wash laid over primary-soft. The
-  // core table measures the hover wash on primary-soft (body-soft-hover and the rest), not this.
-  { id: "body-soft-pressed", source: "CalendarEvent primary or selected: title text-foreground under active:after:bg-state-pressed on bg-primary-soft", kind: "text-body", paint: r("foreground"), over: [r("surface-ground"), r("primary-soft"), r("state-pressed")] },
-  { id: "secondary-soft-pressed", source: "CalendarEvent primary or selected: place text-support-foreground under the pressed wash on bg-primary-soft", kind: "text-secondary", paint: r("support-foreground"), over: [r("surface-ground"), r("primary-soft"), r("state-pressed")] },
-  { id: "label-soft-pressed", source: "CalendarEvent primary or selected: time text-muted-foreground under the pressed wash on bg-primary-soft", kind: "text-label", paint: r("muted-foreground"), over: [r("surface-ground"), r("primary-soft"), r("state-pressed")] },
+  // A selected row pressed: the pressed wash laid over primary-soft (a selected ListRow, an Item).
+  // The core table measures the hover wash on primary-soft (body-soft-hover and the rest), not this.
+  { id: "body-soft-pressed", source: "a selected row, pressed: its title (text-foreground) under bg-state-pressed on bg-primary-soft", kind: "text-body", paint: r("foreground"), over: [r("surface-ground"), r("primary-soft"), r("state-pressed")] },
+  { id: "secondary-soft-pressed", source: "a selected row, pressed: its detail (text-support-foreground) under the pressed wash on bg-primary-soft", kind: "text-secondary", paint: r("support-foreground"), over: [r("surface-ground"), r("primary-soft"), r("state-pressed")] },
+  { id: "label-soft-pressed", source: "a selected row, pressed: its meta (text-muted-foreground) under the pressed wash on bg-primary-soft", kind: "text-label", paint: r("muted-foreground"), over: [r("surface-ground"), r("primary-soft"), r("state-pressed")] },
 ]
 
-// The list has to match the misses exactly (`node scripts/contrast.mjs --print-exceptions` prints
-// them). Each belongs in the docs summary row "text on a hover or pressed wash" (SUMMARY in
-// contrast.mjs), with the core's own washes.
-const ON_STATE = "contract state (§6.1: the hover or pressed wash) over a Figma value with no room for it; flagged for Sean"
+// The list has to match the default theme's misses exactly (`node scripts/contrast.mjs
+// --print-exceptions` prints them). Each is a contract state (§6.1: the hover or pressed wash) laid
+// over a colour every theme shares, or over a selection tint on stone, where no ink is dark enough.
+// An app's theme lists its own misses in its exceptions file.
+const SHARED_CRITICAL = "a hover or pressed wash over Figma's critical colours, which every theme shares (critical-text solved to Lc 60 on the graphite ground with no room; black ink at Lc 88.6 on the stone critical-soft); flagged for Sean"
+const SELECTED_PRESSED = "the pressed wash on a selected row: on stone no ink is dark enough to hold Lc 90 over a selection tint that still shows; flagged for Sean"
 
 export const exceptions = [
-  { id: "live-ground-hover", modes: ["graphite", "warpcore / stone", "synapse / stone"], reason: ON_STATE },
-  { id: "live-ground-pressed", modes: "all", reason: ON_STATE },
-  { id: "live-raised-hover", modes: "graphite", reason: ON_STATE },
-  { id: "live-raised-pressed", modes: ["graphite", "warpcore / stone", "synapse / stone"], reason: ON_STATE },
-  { id: "critical-text-ground-hover", modes: "graphite", reason: ON_STATE },
-  { id: "critical-text-ground-pressed", modes: "all", reason: ON_STATE },
-  { id: "primary-display-ground-hover", modes: "graphite", reason: ON_STATE },
-  { id: "primary-display-ground-pressed", modes: "graphite", reason: ON_STATE },
-  { id: "body-critical-soft-hover", modes: "stone", reason: ON_STATE },
-  { id: "body-critical-soft-pressed", modes: "all", reason: ON_STATE },
-  { id: "body-soft-pressed", modes: ["stone", "lockdown / graphite"], reason: ON_STATE },
-  { id: "secondary-soft-pressed", modes: "all", reason: ON_STATE },
-  { id: "label-soft-pressed", modes: "all", reason: ON_STATE },
+  { id: "critical-text-ground-hover", modes: "graphite", reason: SHARED_CRITICAL },
+  { id: "critical-text-ground-pressed", modes: "graphite", reason: SHARED_CRITICAL },
+  { id: "body-critical-soft-hover", modes: "stone", reason: SHARED_CRITICAL },
+  { id: "body-critical-soft-pressed", modes: "stone", reason: SHARED_CRITICAL },
+  { id: "body-soft-pressed", modes: "stone", reason: SELECTED_PRESSED },
 ]

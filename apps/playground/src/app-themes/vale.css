@@ -1,0 +1,37 @@
+/*
+ * Vale's theme, as Vale declares it in its own layer (Unicron 1.1: no app's theme lives in the
+ * core). The 28 slots, 14 per ground, from Figma's `vale / graphite` and `vale / stone` modes. The
+ * playground loads it so its theme switcher can show Vale; vale.json beside it holds the same
+ * values with their Figma ids, and `unicron-contrast` measures them (its misses are listed in
+ * vale.exceptions.json). The contrast run fails if this file and vale.json differ.
+ */
+[data-theme="vale"] {
+  --g-theme-graphite-ground: #161A1C;
+  --g-theme-graphite-raised: #1E2224;
+  --g-theme-graphite-rule: #2E3436;
+  --g-theme-graphite-grid-dot: #353C3F;
+  --g-theme-graphite-faint: #5B6265;
+  --g-theme-graphite-label: #AFB5B9;
+  --g-theme-graphite-secondary: #D0D5D7;
+  --g-theme-graphite-body: #EDF1F3;
+  --g-theme-graphite-primary-fill: #27728F;
+  --g-theme-graphite-primary-on-fill: #FFFFFF;
+  --g-theme-graphite-primary-text: #86BDD7;
+  --g-theme-graphite-primary-soft: #1B292F;
+  --g-theme-graphite-primary-display: #58A0BE;
+  --g-theme-graphite-live: #87C0A6;
+  --g-theme-stone-ground: #ECF1F4;
+  --g-theme-stone-raised: #F4F9FC;
+  --g-theme-stone-rule: #CDD4D7;
+  --g-theme-stone-grid-dot: #B7BFC3;
+  --g-theme-stone-faint: #9EA6AA;
+  --g-theme-stone-label: #646A6D;
+  --g-theme-stone-secondary: #3A3E40;
+  --g-theme-stone-body: #141618;
+  --g-theme-stone-primary-fill: #186683;
+  --g-theme-stone-primary-on-fill: #FFFFFF;
+  --g-theme-stone-primary-text: #356B82;
+  --g-theme-stone-primary-soft: #D2E3EB;
+  --g-theme-stone-primary-display: #186683;
+  --g-theme-stone-live: #397059;
+}

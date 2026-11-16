@@ -328,7 +328,7 @@ html:has([data-slot="app-frame"]) body {
 }
 
 /*
- * Type roles: every piece of text takes one of these 23, never a hand-picked size or weight. One
+ * Type roles: every piece of text takes one of these 24, never a hand-picked size or weight. One
  * set serves every app and both grounds. The values are tokens (@unicron/tokens → type.json, read
  * from the Figma text styles): each role reads --type-<role>-family, -weight, -size, -leading and
  * -tracking. Every line height is a multiple of 4px.
@@ -336,16 +336,18 @@ html:has([data-slot="app-frame"]) body {
  * A role sets no ink, so text inherits its colour, with two exceptions kept from before 1.0:
  * type-overline and type-meta default to label ink. A colour class on the same element wins
  * (`type-overline text-secondary-live`): a single-property utility sorts after these.
- * The mono roles line their figures up (tabular): overline, folio, meta, code-inline,
+ * The mono roles line their figures up (tabular): overline, folio, meta, mono-row, code-inline,
  * code-display, number-count. The three sans number roles (number-hero, number-metric,
- * number-index) keep Geist's proportional figures, as Figma draws them: a Metric's "145" is 71px
- * wide with a plain 1 there, and 77px with a footed 1 in tabular figures (rules.md 3.1: figure
- * styles come from Figma). A value that counts up in place can add `tabular-nums` itself.
+ * number-index) keep Geist's proportional figures for a still number, as Figma draws them: a
+ * Metric's "145" is 71px wide with a plain 1 there, and 77px with a footed 1 in tabular figures
+ * (rules.md 3.1: figure styles come from Figma). A number that changes while a person watches (a
+ * countdown, a live metric) adds `type-number-tabular`, so its digits keep their places
+ * (Unicron 11): `type-number-metric type-number-tabular`. Metric's `live` does it.
  * Mixed sizes on one line align on the baseline (`items-baseline`).
  *
  * Eight of the names (page-title, section-title, group-title, body, body-strong, support, meta,
- * overline) were promoted from snds/synapse (UI review round 2, F14). The 23 roles are the
- * 2026-11 design direction (Figma, `Unicron Type/`).
+ * overline) were promoted from snds/synapse (UI review round 2, F14). 23 of the roles are the
+ * 2026-11 design direction (Figma, `Unicron Type/`); mono-row came in 1.1 (Lockdown 4).
  */
 :root {
   /* The longest line that reads well; prose wider than this is hard to follow back. */
@@ -485,6 +487,16 @@ html:has([data-slot="app-frame"]) body {
   font-variant-numeric: tabular-nums;
   color: var(--muted-foreground);
 }
+/* A row's mono line that holds a person's own words (a username, a site), as typed: 13px, where
+   meta is 12 (Lockdown 4; not in Figma yet). No default ink: the row sets it. */
+@utility type-mono-row {
+  font-family: var(--type-mono-row-family);
+  font-weight: var(--type-mono-row-weight);
+  font-size: var(--type-mono-row-size);
+  line-height: var(--type-mono-row-leading);
+  letter-spacing: var(--type-mono-row-tracking);
+  font-variant-numeric: tabular-nums;
+}
 /* Code and identifiers in a line: an address, a path, a field's value. */
 @utility type-code-inline {
   font-family: var(--type-code-inline-family);
@@ -526,6 +538,13 @@ html:has([data-slot="app-frame"]) body {
   font-size: var(--type-number-index-size);
   line-height: var(--type-number-index-leading);
   letter-spacing: var(--type-number-index-tracking);
+}
+/* The live modifier for the sans number roles (Unicron 11): a number that changes while a person
+   watches (a countdown, a live metric, a running total) keeps its digits in place. Add it beside
+   the role: `type-number-metric type-number-tabular`. A still number stays proportional, as Figma
+   draws it. Only the figure style: it sets no size, so it never stands alone as a role. */
+@utility type-number-tabular {
+  font-variant-numeric: tabular-nums;
 }
 /* A count or a code in a list, in mono. */
 @utility type-number-count {
@@ -584,9 +603,10 @@ html:has([data-slot="app-frame"]) body {
  *   rule-t, rule-r, rule-b, rule-l   one hairline: --stroke-rule wide, --line-rule
  *   rule-box                         a hairline on all four sides
  *   rule-box-emphasis                the same box at --stroke-emphasis: focus, error, a selected
- *                                    tile. Colour from --rule-color, or --primary-fill without one
+ *                                    tile. Colour from --rule-color, or --line-focus without one
+ *                                    (an error sets --rule-color: var(--line-invalid))
  *   edge-l                           the --stroke-emphasis left edge of a selected row, in
- *                                    --primary-fill (or --edge-color)
+ *                                    --primary-mark (or --edge-color)
  *   edge-t, edge-b                   the same edge along the top or the bottom: today's date when
  *                                    another day is picked (edge-b), a tab or tile marked from above
  *                                    (edge-t). Each has its own layer, so they compose with edge-l
@@ -729,7 +749,7 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-shadow, 0 0 transparent);
 }
 @utility rule-box-emphasis {
-  --rule-box: inset 0 0 0 var(--stroke-emphasis) var(--rule-color, var(--primary-fill));
+  --rule-box: inset 0 0 0 var(--stroke-emphasis) var(--rule-color, var(--line-focus));
   box-shadow:
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
@@ -774,7 +794,7 @@ html:has([data-slot="app-frame"]) body {
     inset 0 calc(var(--stroke-rule) * -1) 0 0 var(--line-rule);
 }
 @utility edge-l {
-  --rule-edge: inset var(--stroke-emphasis) 0 0 0 var(--edge-color, var(--primary-fill));
+  --rule-edge: inset var(--stroke-emphasis) 0 0 0 var(--edge-color, var(--primary-mark));
   box-shadow:
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
@@ -791,7 +811,7 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-shadow, 0 0 transparent);
 }
 @utility edge-t {
-  --rule-edge-t: inset 0 var(--stroke-emphasis) 0 0 var(--edge-color, var(--primary-fill));
+  --rule-edge-t: inset 0 var(--stroke-emphasis) 0 0 var(--edge-color, var(--primary-mark));
   box-shadow:
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),
@@ -808,7 +828,7 @@ html:has([data-slot="app-frame"]) body {
     var(--tw-shadow, 0 0 transparent);
 }
 @utility edge-b {
-  --rule-edge-b: inset 0 calc(var(--stroke-emphasis) * -1) 0 0 var(--edge-color, var(--primary-fill));
+  --rule-edge-b: inset 0 calc(var(--stroke-emphasis) * -1) 0 0 var(--edge-color, var(--primary-mark));
   box-shadow:
     var(--tw-inset-shadow, 0 0 transparent),
     var(--tw-inset-ring-shadow, 0 0 transparent),

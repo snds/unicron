@@ -10,13 +10,13 @@
 //   - a field's placeholder, a label-ink heading in the Select list, label-ink text on any raised
 //     box: core `label-raised`
 //   - a field's 2px focus and error borders: core `field-focus-*`, `field-error-*`
-//   - a field's resting hairline: core `field-rest-*` (reported, contract 9.4)
+//   - a field's resting border, line-field: core `field-rest-*` (3:1, Unicron 18)
 //   - a highlighted Select item (bg-accent): core `body-accent`, `label-accent`
 //   - a hover or pressed wash on the ground, a raised surface or a selected row (a tab, a toggle,
 //     a row, a radio row, a select trigger): core `*-hover`, `*-pressed`, `body-soft-hover`
 //   - a selected row's soft fill and 2px edge (Item): core `body-soft`, `label-soft`,
 //     `primary-edge-soft`
-//   - the Top Tab indicator, 2px of primary-fill on the ground: core `primary-fill-ground`
+//   - the Top Tab indicator, 2px of primary-mark on the ground: core `primary-mark-ground`
 //   - inverted ink (a pressed Toggle, the chosen segment of Tabs): controls `float-current*`
 //   - a critical Chip (ink on critical-soft inside a critical edge): controls `badge-critical*`
 //   - ghost and primary Buttons inside a field, a toolbar or a SplitButton: controls `btn-*`

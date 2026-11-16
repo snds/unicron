@@ -1,5 +1,13 @@
 {
-  "$description": "Tier 3 · Component knobs for the data-b rows and blocks (packages/ui: field-row.tsx, toggle-row.tsx, metric.tsx, needs-you.tsx, banner.tsx, calendar-event.tsx, meta-list.tsx, steps.tsx, tile.tsx), merged with component.json at build and emitted as --c-*. It adds knobs and re-declares none. Every other size these parts draw sits on the 4px spacing scale (paddings 8 to 24, the 40px index column, the 4px tile edge) or is a stroke role (the 2px metric rule, the 2px calendar bar), so it needs no knob. Drawn widths (Field Row 648, Metric 175, Needs You 534, Banner 358, Calendar Event 300) are only the size Figma drew; in use each part fills its container.",
+  "$description": "Tier 3 · Component knobs for the data-b rows and blocks (packages/ui: field-row.tsx, toggle-row.tsx, metric.tsx, needs-you.tsx, banner.tsx, meta-list.tsx, steps.tsx, tile.tsx), merged with component.json at build and emitted as --c-*. It adds knobs and re-declares none. Every other size these parts draw sits on the 4px spacing scale (paddings 8 to 24, the 40px index column, the 4px tile edge) or is a stroke role (the 2px metric rule), so it needs no knob. Drawn widths (Field Row 648, Metric 175, Needs You 534, Banner 358) are only the size Figma drew; in use each part fills its container.",
+  "diff": {
+    "$description": "DiffBlock's line washes (packages/ui diff-block.tsx). Unicron 28.",
+    "added": {
+      "$type": "color",
+      "$value": "{diff-added}",
+      "$description": "The wash behind an added line. The role diff-added, lightened on stone in 1.1 (3% of the ink in the ground, 8% on graphite) so body text on it holds Lc 90. `bg-diff-added` and `bg-(--c-diff-added)` draw the same colour."
+    }
+  },
   "field-row": {
     "$description": "FieldRow (Figma 6. Field Row, 15:512).",
     "label-width": {

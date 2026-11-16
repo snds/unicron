@@ -1,7 +1,8 @@
 // The playground shell: a bar to pick the view and the theme, and the view below it. The address
 // is the state (./address.ts), views are the files in ./views (./registry.ts), and the theme is
-// two axes applied to <html> (./theme-switcher.tsx). The shell lays out with plain elements and
-// styles no system component: design-system analytics scans this app.
+// two axes applied to <html> (./theme-switcher.tsx). With ?split=1 the view shows twice, graphite
+// beside stone, each half its own ground box (Unicron 113). The shell lays out with plain elements
+// and styles no system component: design-system analytics scans this app.
 import { Component, Suspense, useCallback, useLayoutEffect, useState, type ReactNode } from "react"
 import { NativeSelect, NativeSelectOption, Toaster } from "@unicron/ui"
 
@@ -78,21 +79,41 @@ export function App() {
             ))}
           </NativeSelect>
           <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2">
-            <ThemeSwitcher theme={shown.theme} ground={shown.ground} />
+            <ThemeSwitcher theme={shown.theme} ground={shown.ground} split={shown.split} />
           </div>
         </header>
       ) : null}
 
-      <main data-slot="playground-view" data-view={id} data-view-state={state}>
-        {view ? (
+      <main data-slot="playground-view" data-view={id} data-view-state={state} data-split={shown.split ? "" : undefined}>
+        {!view ? (
+          <Missing id={id} />
+        ) : shown.split ? (
+          // Both grounds side by side: a `dark` box and a `light` box, which the tokens resolve at
+          // any depth. What a view portals out (a dialog, a menu, a toast) takes the page's ground.
+          <div data-slot="playground-split" className="grid md:grid-cols-2">
+            {(["graphite", "stone"] as const).map((ground) => (
+              <section
+                key={ground}
+                data-ground={ground}
+                aria-label={ground === "graphite" ? "Graphite" : "Stone"}
+                className={`${ground === "graphite" ? "dark" : "light"} bg-surface-ground text-foreground min-w-0`}
+              >
+                <ViewBoundary key={id} onError={failed}>
+                  <Suspense fallback={null}>
+                    <view.Component />
+                    {ground === "stone" ? <Mounted onMount={ready} /> : null}
+                  </Suspense>
+                </ViewBoundary>
+              </section>
+            ))}
+          </div>
+        ) : (
           <ViewBoundary key={id} onError={failed}>
             <Suspense fallback={null}>
               <view.Component />
               <Mounted onMount={ready} />
             </Suspense>
           </ViewBoundary>
-        ) : (
-          <Missing id={id} />
         )}
       </main>
       <Toaster />
