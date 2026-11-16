@@ -17,7 +17,7 @@ describe("Input", () => {
   it("is the Text Field box, 48 tall and 16px in, with Figma's focus and error borders", () => {
     render(<Input aria-label="Email" />)
     const input = screen.getByRole("textbox", { name: "Email" })
-    expect(classes(input)).toEqual(expect.arrayContaining([...BOX, "h-control", "px-4", "focus:rule-box-emphasis", "aria-invalid:rule-box-emphasis", "aria-invalid:[--rule-color:var(--critical-fill)]"]))
+    expect(classes(input)).toEqual(expect.arrayContaining([...BOX, "h-control", "px-4", "focus:rule-box-emphasis", "aria-invalid:rule-box-emphasis", "focus:[--rule-color:var(--line-focus)]", "aria-invalid:[--rule-color:var(--line-invalid)]"]))
     // No ring of its own: the field draws its focus inside its box.
     expect(input.className).not.toMatch(/focus-visible:ring/)
     expect(input.className).not.toMatch(/(^|\s)border(\s|$)/)

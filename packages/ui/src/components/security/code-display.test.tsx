@@ -709,3 +709,60 @@ describe("CodeDisplay menu: the trailing ⋯ (contract 5.1c C18, Lockdown LA5)",
   })
 })
 
+describe("CodeDisplay copy={false}: display only (Lockdown 27)", () => {
+  it("compact with copy off draws the digits but no copy control; a click or Enter copies nothing", () => {
+    const onCopy = vi.fn()
+    render(<CodeDisplay {...at(20)} layout="compact" copy={false} onCopy={onCopy} />)
+    expect(root()).toHaveAttribute("data-copy", "off")
+    expect(screen.queryByRole("button", { name: /Copy/ })).toBeNull()
+    expect(document.querySelector('[data-slot="code-display-copy"]')).toBeNull()
+    const value = document.querySelector('[data-slot="code-display-value"]') as HTMLElement
+    expect(within(value).getAllByText(/^(482|917)$/).map((g) => g.textContent)).toEqual(["482", "917"])
+    fireEvent.click(value)
+    fireEvent.click(root())
+    fireEvent.keyDown(root(), { key: "Enter" })
+    fireEvent.keyDown(root(), { key: " " })
+    expect(onCopy).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-slot="code-display-copy-status"]')).toBeNull()
+  })
+
+  it("the code is still read out by its group's name, and is no Tab stop of its own", () => {
+    render(<CodeDisplay {...at(20)} layout="compact" copy={false} />)
+    expect(screen.getByRole("group", { name: /Code for GitHub, sean: 4 8 2, 9 1 7/ })).toBeInTheDocument()
+    expect(root()).not.toHaveAttribute("tabindex")
+    // Not an interactive row: no hover wash.
+    expect(root().className).not.toContain("hover:bg-state-hover")
+  })
+
+  it("concealed, it still reveals on Enter: Show is not a copy", () => {
+    render(<CodeDisplay {...at(20)} layout="compact" copy={false} concealed />)
+    expect(root()).toHaveAttribute("tabindex", "0")
+    fireEvent.keyDown(root(), { key: "Enter" })
+    expect(root()).toHaveAttribute("data-state", "default")
+    expect(screen.queryByRole("button", { name: /Copy/ })).toBeNull()
+  })
+
+  it("its menu's copy row is disabled too: the row's own button is the one copy", async () => {
+    const onCopy = vi.fn()
+    render(
+      <CodeDisplay
+        {...at(20)}
+        layout="row"
+        copy={false}
+        onCopy={onCopy}
+        menu={<CodeDisplayMenuItem action="copy">Copy code</CodeDisplayMenuItem>}
+      />
+    )
+    fireEvent.click(screen.getByRole("button", { name: /More actions/ }))
+    const item = await screen.findByRole("menuitem", { name: /Copy code/ })
+    expect(item).toHaveAttribute("aria-disabled", "true")
+    fireEvent.click(item)
+    expect(onCopy).not.toHaveBeenCalled()
+  })
+
+  it("copy is on by default: the digits are the copy control", () => {
+    render(<CodeDisplay {...at(20)} layout="compact" />)
+    expect(root()).not.toHaveAttribute("data-copy")
+    expect(screen.getByRole("button", { name: "Copy code" })).toBeInTheDocument()
+  })
+})

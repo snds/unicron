@@ -16,8 +16,17 @@ import { Tooltip, TooltipContent } from "./tooltip"
 export type FloatButtonKind = "neutral" | "primary"
 export type FloatButtonSize = "m" | "l"
 
-/** The keys that run the long-press action. Said to assistive tech through `aria-keyshortcuts`. */
-export const floatButtonLongPressKeys = "Shift+Enter"
+/**
+ * The keys that run the long-press action, said to assistive tech through `aria-keyshortcuts`:
+ * Shift+F10 and the context-menu key, the platform's own "more" keys (a right click runs it too).
+ * Not Shift+Enter: in a text field that makes a new line, so it read as two different things.
+ */
+export const floatButtonLongPressKeys = "Shift+F10 ContextMenu"
+
+/** True for the keys that run the long press: Shift+F10, or the context-menu key. */
+function isLongPressKey(event: React.KeyboardEvent) {
+  return event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")
+}
 
 const variants = cva(
   // A floating control sits over content, so every fill here is opaque: a hover is a mix towards
@@ -28,16 +37,18 @@ const variants = cva(
     variants: {
       look: {
         // Raised surface, hairline edge, ink glyph. Hover is the opaque highlight fill (accent: 8% of
-        // the ink in the raised surface); pressed is the contract's pressed wash (state-pressed,
-        // 10% of the ink) laid on the raised surface, so it stays opaque.
+        // the ink in the raised surface); pressed is the pressed role (state-pressed) laid as a
+        // layer over the raised surface, so it stays opaque and follows the role.
         neutral:
-          "rule-box bg-surface-raised text-foreground hover:bg-accent active:bg-[color-mix(in_oklab,var(--text-body)_10%,var(--surface-raised))] aria-expanded:bg-accent",
+          "rule-box bg-surface-raised text-foreground hover:bg-accent active:bg-surface-raised active:bg-[image:linear-gradient(var(--state-pressed),var(--state-pressed))] aria-expanded:bg-accent",
         // The create action, bottom right: the identity fill.
         primary:
-          "bg-primary text-primary-foreground hover:bg-[color-mix(in_oklab,var(--primary)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--primary)_80%,var(--background))]",
+          "bg-primary text-primary-foreground hover:bg-[color-mix(in_oklab,var(--primary)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--primary)_85%,var(--background))]",
         // Current or pressed: inverted ink, as the active Filter Chip is. Never a second primary fill.
+        // Held down it goes to 86% of the ink (Unicron 28). 80% put the ground-coloured glyph at
+        // Lc 68.2 to 68.4 on graphite and 85% still at 74.8 to 74.9; 86% holds 75.9 to 76.1.
         current:
-          "bg-foreground text-background hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--foreground)_80%,var(--background))]",
+          "bg-foreground text-background hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]",
       },
       size: {
         // 44: the touch floor.
@@ -94,21 +105,23 @@ const LONG_PRESS_FALLBACK_SLOP = 10
 
 type ButtonHandlers = Pick<
   ButtonPrimitive.Props,
-  "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerCancel" | "onPointerLeave" | "onClick" | "onKeyDown" | "onContextMenu"
+  "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerCancel" | "onPointerLeave" | "onClick" | "onKeyDown" | "onKeyUp" | "onContextMenu"
 >
 
 /**
  * The handlers behind `onLongPress`. Holding for --c-float-button-long-press-delay (500ms) runs
  * it; moving past --c-float-button-long-press-slop (10px), lifting, or the browser taking the
  * touch for a scroll calls it off. The click that ends a long press is swallowed, so the button's
- * own action does not run as well. The same action runs from the keyboard on Shift+Enter, and from
- * the context-menu key (or a right click), which is where a pointer user's "more" already lives.
+ * own action does not run as well. The same action runs from the keyboard on Shift+F10 or the
+ * context-menu key, and from a right click: where a keyboard or pointer user's "more" already lives.
  */
 function useLongPress(onLongPress: (() => void) | undefined): ButtonHandlers {
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const origin = React.useRef<{ x: number; y: number; slop: number } | null>(null)
   // True from the moment a hold runs the action until the pointer that held it has been lifted.
   const fired = React.useRef(false)
+  // True while a key has run the action, so the context menu that key may also raise runs nothing.
+  const keyed = React.useRef(false)
   const stopWatching = React.useRef<(() => void) | undefined>(undefined)
   const action = React.useRef(onLongPress)
   React.useEffect(() => {
@@ -180,15 +193,24 @@ function useLongPress(onLongPress: (() => void) | undefined): ButtonHandlers {
       event.preventBaseUIHandler()
     },
     onKeyDown(event) {
-      if (event.key !== "Enter" || !event.shiftKey || event.repeat) return
-      // Stops the button's own action: Enter would otherwise click it.
+      if (!isLongPressKey(event) || event.repeat) return
+      // Holds back the browser's own menu, which these keys open.
       event.preventDefault()
       event.preventBaseUIHandler()
+      keyed.current = true
       action.current?.()
     },
+    onKeyUp() {
+      keyed.current = false
+    },
     onContextMenu(event) {
-      // A touch long press also raises this, after the timer has already run the action.
+      // A touch long press also raises this, after the timer has already run the action, and so
+      // can the key that just ran it.
       event.preventDefault()
+      if (keyed.current) {
+        keyed.current = false
+        return
+      }
       if (fired.current) return
       cancel()
       action.current?.()
@@ -213,7 +235,7 @@ export type FloatButtonProps = Omit<TooltipPrimitive.Trigger.Props, "children" |
   current?: boolean | "page"
   /**
    * Runs when the button is held for about half a second, without also running its click. Always
-   * reachable without the gesture: Shift+Enter, the context-menu key, or a right click.
+   * reachable without the gesture: Shift+F10, the context-menu key, or a right click.
    */
   onLongPress?: () => void
   /** What the long press does, in a few words ("Quick create"). Shown in the tooltip and described to assistive tech. */
@@ -277,6 +299,7 @@ function FloatButton({
       onPointerLeave: props.onPointerLeave,
       onClick: props.onClick,
       onKeyDown: props.onKeyDown,
+      onKeyUp: props.onKeyUp,
       onContextMenu: props.onContextMenu,
     },
     press
@@ -311,7 +334,7 @@ function FloatButton({
       {hint ? (
         // Not drawn, and not part of the name: only what aria-describedby reads.
         <span id={hintId} hidden>
-          {`${hint}: hold, or press ${floatButtonLongPressKeys}`}
+          {`${hint}: hold, or press Shift+F10 or the menu key`}
         </span>
       ) : null}
     </>

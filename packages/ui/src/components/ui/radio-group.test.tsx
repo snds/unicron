@@ -43,9 +43,9 @@ describe("RadioGroup and RadioRow (contract 5.1b #23)", () => {
     expect(screen.getByRole("radiogroup").className).toContain("has-[>[data-slot=radio-row]]:gap-0")
   })
 
-  // Square, as the Checkbox, but chosen shows an 8px ink square inside, never a check, so the two
-  // never read alike. The empty edge is the label ink (held to 3:1), not the hairline.
-  it("the radio is a 16px square with a label-ink edge; chosen, an ink square inside", () => {
+  // Round: the one round control (Unicron 41), so an empty radio never looks like an empty checkbox.
+  // Chosen shows an 8px ink dot inside. The empty edge is the label ink (held to 3:1), not the hairline.
+  it("the radio is a 16px circle with a label-ink edge; chosen, an ink dot inside", () => {
     render(
       <RadioGroup aria-label="Keep which?" defaultValue="mine">
         <RadioGroupItem value="mine" aria-label="Mine" />
@@ -53,9 +53,11 @@ describe("RadioGroup and RadioRow (contract 5.1b #23)", () => {
       </RadioGroup>
     )
     const mine = screen.getByRole("radio", { name: "Mine" })
-    for (const name of ["size-4", "rounded-lg", "rule-box", "[--line-rule:var(--c-radio-edge)]", "data-checked:[--line-rule:var(--c-radio-mark)]", "hit-area"]) expect(mine.className).toContain(name)
-    expect(mine.querySelector('[data-slot="radio-group-indicator"]')!.className).toContain("bg-(--c-radio-mark)")
-    expect(mine.className).not.toContain("rounded-full")
+    for (const name of ["size-4", "rounded-full", "rule-box", "[--line-rule:var(--c-radio-edge)]", "data-checked:[--line-rule:var(--c-radio-mark)]", "hit-area"]) expect(mine.className).toContain(name)
+    const dot = mine.querySelector('[data-slot="radio-group-indicator"]')!
+    for (const name of ["size-2", "rounded-full", "bg-(--c-radio-mark)"]) expect(dot.className).toContain(name)
+    // Never the 2px corner of the square controls.
+    expect(mine.className).not.toContain("rounded-lg")
   })
 
   it("a disabled row cannot be chosen", async () => {
@@ -67,5 +69,16 @@ describe("RadioGroup and RadioRow (contract 5.1b #23)", () => {
     )
     await userEvent.click(screen.getByText("Claude, with your API key"))
     expect(screen.getByRole("radio", { name: "Off" })).toHaveAttribute("aria-checked", "true")
+  })
+
+  it("a RadioRow leads with the same round radio (ConfirmDialog's series choice uses it)", () => {
+    render(
+      <RadioGroup aria-label="Delete which events?" defaultValue="this">
+        <RadioRow value="this" label="This event" description="Only Wed 11.18." />
+      </RadioGroup>
+    )
+    const radio = screen.getByRole("radio", { name: "This event" })
+    expect(radio).toHaveAttribute("data-slot", "radio-group-item")
+    expect(radio.className).toContain("rounded-full")
   })
 })

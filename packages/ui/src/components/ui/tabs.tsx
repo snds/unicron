@@ -7,6 +7,7 @@ import type * as React from "react"
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
+import { NavMark, resolveNavMark, type NavMarkProp } from "./rail"
 
 function Tabs({ className, orientation = "horizontal", ...props }: TabsPrimitive.Root.Props) {
   return (
@@ -76,16 +77,46 @@ const TRIGGER = cn(
   "after:absolute after:bg-primary-fill after:opacity-0 after:transition-opacity group-data-[variant=default]/tabs-list:after:hidden group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-0 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:left-0 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100 group-data-[variant=line]/tabs-list:not-data-active:hover:after:opacity-40"
 )
 
-/** One tab. `index` is Figma's folio before the label ("03"), in the faint ink. */
-function TabsTrigger({ className, index, children, ...props }: TabsPrimitive.Tab.Props & { index?: React.ReactNode }) {
+export type TabsTriggerProps = TabsPrimitive.Tab.Props & {
+  /** Figma's folio before the label ("03"), in the label ink. It is read as part of the name. */
+  index?: React.ReactNode
+  /**
+   * A count, a square or a key after the label: the mark every navigation item shares (`rail.tsx`).
+   * Its words join the tab's accessible name ("Requests, 2"), so a count people see also reaches a
+   * screen reader (Lockdown 30, WCAG 1.3.1). Pass the count here, never as a hidden child.
+   */
+  mark?: NavMarkProp
+  /**
+   * Keep the label's own case instead of the overline's capitals: for a label that is data, such as
+   * a person's name ("Ana McKay"). Same role and size (Vale 8).
+   */
+  keepCase?: boolean
+}
+
+/** One tab. `index` is Figma's folio before the label ("03"); `mark` a count said in its name. */
+function TabsTrigger({ className, index, mark, keepCase = false, children, ...props }: TabsTriggerProps) {
+  const resolved = resolveNavMark(mark)
   return (
-    <TabsPrimitive.Tab data-slot="tabs-trigger" className={cn(TRIGGER, className)} {...props}>
+    <TabsPrimitive.Tab
+      data-slot="tabs-trigger"
+      data-keep-case={keepCase ? "" : undefined}
+      className={cn(TRIGGER, keepCase && "normal-case", className)}
+      {...props}
+    >
       {index !== undefined ? (
-        <span data-slot="tabs-trigger-index" className="text-faint-foreground group-data-[variant=default]/tabs-list:in-data-active:text-background">
+        <span data-slot="tabs-trigger-index" className="text-text-label group-data-[variant=default]/tabs-list:in-data-active:text-background">
           {index}
         </span>
       ) : null}
       {children}
+      {/* The mark is drawn for the eye; its words ("2", "2 waiting on you") are said once, here. */}
+      {/* The count takes the tab's own ink, so it reads on the inverted (chosen) segment too. */}
+      <NavMark mark={resolved} placement="inline" type="overline" className="text-inherit" />
+      {resolved?.words ? (
+        <span data-slot="tabs-trigger-mark-words" className="sr-only">
+          {`, ${resolved.words}`}
+        </span>
+      ) : null}
     </TabsPrimitive.Tab>
   )
 }

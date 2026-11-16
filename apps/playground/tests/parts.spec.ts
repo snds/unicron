@@ -735,12 +735,15 @@ test("the file chip's name is the label role, with 48 of layout around its three
   // name 158.41 wide and the chip 275.55; Figma draws 158 and 276.
 })
 
-test("an empty Composer draws Send at full strength, and it sends nothing", async ({ page }) => {
+test("an empty Composer dims Send to 50%, keeps it in the tab order, and it sends nothing (Unicron 51)", async ({ page }) => {
   await open(page, "composer")
   const send = page.locator('[data-slot="composer-send"][data-action="send"]').first()
   await expect(send).toHaveAttribute("aria-disabled", "true")
-  expect(await send.evaluate((el) => getComputedStyle(el).opacity)).toBe("1")
+  await expect(send).not.toHaveAttribute("disabled")
+  expect(await send.evaluate((el) => getComputedStyle(el).opacity)).toBe("0.5")
   expect(await colorOf(send, "background-color")).toBe(await role(page, "--primary-fill"))
+  await send.focus()
+  await expect(send).toBeFocused()
 })
 
 test("the hero Metric: its label sits on the number's line and the unit is 24 from the number, on its baseline", async ({ page }) => {
@@ -884,4 +887,81 @@ test.describe("a crumb on a touch tablet", () => {
     expect(hit.overflow).toBe("visible")
     if (hit.coarse) expect([hit.above, hit.below]).toEqual([true, true])
   })
+})
+
+// Unicron 1.1, controls and rows (decided 2026-11).
+
+test("the radio is the one round control: a circle with a round dot, beside the square checkbox (Unicron 41)", async ({ page }) => {
+  await open(page, "radio-group")
+  const radio = page.locator('[data-slot="radio-group-item"][data-checked]').first()
+  const seen = await radio.evaluate((el) => {
+    const dot = el.querySelector('[data-slot="radio-group-indicator"]')!
+    const box = el.getBoundingClientRect()
+    return { radius: getComputedStyle(el).borderTopLeftRadius, dot: getComputedStyle(dot).borderTopLeftRadius, w: box.width, h: box.height }
+  })
+  expect(seen.w).toBe(16)
+  expect(seen.h).toBe(16)
+  // rounded-full: a radius far past half the box draws a circle.
+  expect(Number.parseFloat(seen.radius)).toBeGreaterThanOrEqual(8)
+  expect(Number.parseFloat(seen.dot)).toBeGreaterThanOrEqual(4)
+})
+
+test("a trigger FilterChip draws inverted ink while its picker is open, and says aria-expanded (Unicron 50)", async ({ page }) => {
+  await open(page, "filter-chip")
+  const open_ = page.locator('[data-slot="filter-chip"][data-kind="trigger"][aria-expanded="true"]').first()
+  const shut = page.locator('[data-slot="filter-chip"][data-kind="trigger"][aria-expanded="false"]').first()
+  expect(await colorOf(open_, "background-color")).toBe(await role(page, "--text-body"))
+  expect(await colorOf(open_)).toBe(await role(page, "--surface-ground"))
+  expect(await shut.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)")
+})
+
+test("a segmented Progress of size 8 is 8 tall, its cells still 2 apart; the default stays 4 (Unicron 49)", async ({ page }) => {
+  await open(page, "progress", "warpcore")
+  const tall = page.locator('[data-slot="progress"][data-size="8"] [data-slot="progress-track"]').first()
+  const short = page.locator('[data-slot="progress"][data-size="4"] [data-slot="progress-track"]').first()
+  const measure = (el: Locator) =>
+    el.evaluate((node) => {
+      const cells = [...node.querySelectorAll('[data-slot="progress-segment"]')].map((c) => c.getBoundingClientRect())
+      return { height: node.getBoundingClientRect().height, cell: cells[0].height, gap: cells[1].left - cells[0].right }
+    })
+  expect(await measure(tall)).toEqual({ height: 8, cell: 8, gap: expect.closeTo(2, 0) })
+  expect((await measure(short)).height).toBe(4)
+})
+
+test("FloatButton's long press runs once from Shift+F10 and from the menu key, never from Shift+Enter (Unicron 48)", async ({ page }) => {
+  await open(page, "float-button")
+  const create = page.locator('[data-slot="float-button"][aria-haspopup="menu"][aria-label="New task"]')
+  const last = page.locator('div:has(> [data-slot="float-button"][aria-haspopup="menu"]) > p[aria-live="polite"]')
+  await create.focus()
+  await page.keyboard.press("Shift+Enter")
+  await expect(last).toHaveText("New task")
+  await page.keyboard.press("Shift+F10")
+  await expect(last).toHaveText("Quick create")
+  // No browser menu opened over it, and focus stayed on the button.
+  await expect(create).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(last).toHaveText("New task")
+  await page.keyboard.press("ContextMenu")
+  await expect(last).toHaveText("Quick create")
+  await expect(create).toBeFocused()
+  await expect(create).toHaveAttribute("aria-keyshortcuts", "Shift+F10 ContextMenu")
+})
+
+test("ListRow's status mark sits on the title line of a compact row, and the row keeps its 56 (Warpcore 18)", async ({ page }) => {
+  await open(page, "list-row")
+  const mark = page.locator('[data-slot="list-row-status-mark"]').first()
+  const seen = await mark.evaluate((el) => {
+    const row = el.closest('[data-slot="list-row"]')!.getBoundingClientRect()
+    const glyph = el.querySelector("svg")!.getBoundingClientRect()
+    return { row: row.height, glyph: glyph.width, inRow: glyph.top >= row.top && glyph.bottom <= row.bottom }
+  })
+  expect(seen).toEqual({ row: 56, glyph: 16, inRow: true })
+})
+
+test("CodeDisplay with copy off draws its digits and no copy control (Lockdown 27)", async ({ page }) => {
+  await open(page, "code-display", "lockdown")
+  const code = page.locator('[data-slot="code-display"][data-copy="off"]').first()
+  await expect(code.locator('[data-slot="code-display-value"]')).toBeVisible()
+  await expect(code.locator('[data-slot="code-display-copy"]')).toHaveCount(0)
+  await expect(code).not.toHaveAttribute("tabindex")
 })

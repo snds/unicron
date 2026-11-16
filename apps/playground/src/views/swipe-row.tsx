@@ -104,6 +104,18 @@ export default function SwipeRowView() {
         ))}
       </Specimen>
 
+      <Specimen label="Synapse checks // short words on the tiles, full words in the menu (Synapse 21); three tiles need a longer full swipe (Lockdown 18)">
+        <SwipeRow
+          trailing={[
+            { label: "Fix", menuLabel: "Fix with Claude Code", icon: "tools", onAction: say("Fix with Claude Code: baseline drift") },
+            { label: "Draft", menuLabel: "Draft a fix as a pull request", icon: "edit", onAction: say("Draft a fix as a pull request") },
+            { label: "Review", menuLabel: "Review the failing check", icon: "review", reversible: true, onAction: say("Review the failing check") },
+          ]}
+        >
+          <ListRow title="Baseline drift check failed" meta="synapse // checks // 3 files" metaStyle="plain" status="Failed" onClick={say("Opened: baseline drift")} />
+        </SwipeRow>
+      </Specimen>
+
       <Specimen label="Warpcore tasks // stop, pause; review on the right never approves">
         <SwipeRow
           leading={{ label: "Review", icon: "review", confirm: true, onReview: say("Review opened: SEA-51") }}

@@ -26,15 +26,21 @@ function TopTabs({ label, className, ...props }: TopTabsProps) {
 }
 
 export type TopTabProps = Omit<useRender.ComponentProps<"a">, "children" | "aria-label"> & {
-  /** The section's name, as written; the overline sets the capitals. */
+  /** The section's name, as written; the overline sets the capitals, unless `keepCase`. */
   label: string
-  /** The section's number ("01"), in faint ink before the label. Not read out. */
+  /** Keep the label's own case: for a label that is data, such as a person's name (Vale 8). */
+  keepCase?: boolean
+  /** The section's number ("01"), in faint ink before the label. Decoration: not read out. */
   index?: string
   /** A 16px glyph first in the row. */
   icon?: IconName
   /** The section showing: body ink, the 2px primary indicator, and `aria-current="page"`. */
   current?: boolean
-  /** A count, a square or a key after the label (the mark every navigation item shares): Warpcore's Tasks count in the needs-you tone. */
+  /**
+   * A count, a square or a key after the label (the mark every navigation item shares): Warpcore's
+   * Tasks count in the needs-you tone. Its words join the link's name ("Requests, 2"), so the count
+   * people see reaches a screen reader too (Lockdown 30).
+   */
   mark?: NavMarkProp
 }
 
@@ -45,7 +51,7 @@ export type TopTabProps = Omit<useRender.ComponentProps<"a">, "children" | "aria
  * on every side makes it 48 high without moving the drawn parts. Hover and pressed take the
  * contract's washes (§6), and the label and icon go to body ink.
  */
-function TopTab({ label, index, icon, current = false, mark, render, className, ...props }: TopTabProps) {
+function TopTab({ label, keepCase = false, index, icon, current = false, mark, render, className, ...props }: TopTabProps) {
   const resolved = resolveNavMark(mark)
   const ink = current ? "text-text-body" : "text-text-label group-hover/top-tab:text-text-body"
   return useRender({
@@ -70,7 +76,7 @@ function TopTab({ label, index, icon, current = false, mark, render, className, 
                   {index}
                 </span>
               ) : null}
-              <span data-slot="top-tab-label" className={cn("type-overline whitespace-nowrap transition-[color] duration-(--motion-fast) ease-(--motion-ease)", ink)}>
+              <span data-slot="top-tab-label" className={cn("type-overline whitespace-nowrap", keepCase && "normal-case", "transition-[color] duration-(--motion-fast) ease-(--motion-ease)", ink)}>
                 {label}
               </span>
               <NavMark mark={resolved} placement="inline" type="overline" className={ink} />

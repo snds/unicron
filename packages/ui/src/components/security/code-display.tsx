@@ -144,6 +144,14 @@ export interface CodeDisplayProps extends Omit<React.ComponentProps<"div">, "onC
   menu?: React.ReactNode
   /** The overflow button's name and the menu's title. Default "More actions for {label or issuer}". */
   menuLabel?: string
+  /**
+   * `false`: display only. The digits are drawn but are not a control: no copy on a click, Enter or
+   * the menu, no clipboard countdown, and the code is not a Tab stop of its own (unless it is
+   * concealed: Show still reveals it). For a row whose own button is the one copy (Lockdown's popup:
+   * COPY CODE goes through the app's clipboard path, so two copy controls for one secret never sit
+   * side by side; Lockdown 27). Mostly with `layout="compact"`. Default `true`.
+   */
+  copy?: boolean
 }
 
 interface CodeDisplayMenuContextValue {
@@ -303,6 +311,7 @@ export function CodeDisplay({
   error,
   menu,
   menuLabel,
+  copy: copyable = true,
   className,
   onKeyDown,
   onClick,
@@ -468,7 +477,7 @@ export function CodeDisplay({
   const copy = async () => {
     // While an HOTP advance is pending the code drawn is about to be replaced; a host that copies by
     // id would copy the new one while the old one shows, so copy waits for the advance to land.
-    if (!code || loading || error || advancing) return
+    if (!copyable || !code || loading || error || advancing) return
     if (crown.gated && !(await crown.requestProof("use"))) return
     const which: "code" | "next" = copyNext && nextDisplay ? "next" : "code"
     const value = which === "next" ? (nextDisplay as string) : display
@@ -507,8 +516,37 @@ export function CodeDisplay({
     copyPhase === "counting" ? `Clears in ${countdown.secondsLeft} s` : copyPhase === "cleared" ? "Cleared" : null
   // A row or a tile is one target: a click anywhere copies (the copy button's hit area covers it).
   // Not while concealed: then a click shows the code, and the copy button keeps to the digits.
-  const stretch = (layout === "row" || layout === "tile") && !hidden && !error && !loading
+  const stretch = copyable && (layout === "row" || layout === "tile") && !hidden && !error && !loading
   const codeType = layout === "tile" ? "type-number-metric" : layout === "field" ? "type-code-display" : "type-number-count"
+
+  // The digits (or the dots while concealed), drawn the same whether they copy or only show.
+  const digitsEl = (
+    <span
+      data-slot="code-display-code"
+      data-rolling={rolling ? "true" : undefined}
+      aria-hidden
+      className={cn(
+        "text-text-body flex items-baseline gap-(--c-code-group-gap) whitespace-nowrap",
+        codeType,
+        expectedDigits === 8 && "[font-feature-settings:'zero']",
+        expiring && "contrast-more:underline forced-colors:underline",
+        rolling && "animate-in fade-in-0 motion-reduce:animate-none"
+      )}
+      style={rolling ? { animationDuration: "var(--c-code-rollover-duration)" } : undefined}
+    >
+      {hidden
+        ? groups.map((g, i) => (
+            <span key={i} data-slot="code-display-group" data-concealed="">
+              {highContrast ? "*".repeat(g.length) : "•".repeat(g.length)}
+            </span>
+          ))
+        : groups.map((g, i) => (
+            <span key={i} data-slot="code-display-group">
+              {g}
+            </span>
+          ))}
+    </span>
+  )
 
   // ── Parts ──
   const codeEl = error ? (
@@ -520,6 +558,14 @@ export function CodeDisplay({
       {Array.from({ length: expectedDigits === 5 ? 1 : 2 }, (_, i) => (
         <Skeleton key={i} className="h-[1em] w-[3.2em] self-center" />
       ))}
+    </span>
+  ) : !copyable ? (
+    // Display only: the same digits, not a control (the group's name already spells them).
+    <span
+      data-slot="code-display-value"
+      className={cn("inline-flex min-w-0 items-baseline gap-3", (layout === "row" || layout === "compact") && "flex-row-reverse")}
+    >
+      {digitsEl}
     </span>
   ) : (
     <ButtonPrimitive
@@ -537,31 +583,7 @@ export function CodeDisplay({
         stretch && "after:absolute after:inset-0 after:content-['']"
       )}
     >
-      <span
-        data-slot="code-display-code"
-        data-rolling={rolling ? "true" : undefined}
-        aria-hidden
-        className={cn(
-          "text-text-body flex items-baseline gap-(--c-code-group-gap) whitespace-nowrap",
-          codeType,
-          expectedDigits === 8 && "[font-feature-settings:'zero']",
-          expiring && "contrast-more:underline forced-colors:underline",
-          rolling && "animate-in fade-in-0 motion-reduce:animate-none"
-        )}
-        style={rolling ? { animationDuration: "var(--c-code-rollover-duration)" } : undefined}
-      >
-        {hidden
-          ? groups.map((g, i) => (
-              <span key={i} data-slot="code-display-group" data-concealed="">
-                {highContrast ? "*".repeat(g.length) : "•".repeat(g.length)}
-              </span>
-            ))
-          : groups.map((g, i) => (
-              <span key={i} data-slot="code-display-group">
-                {g}
-              </span>
-            ))}
-      </span>
+      {digitsEl}
       {copyStatus && (
         // The clipboard's countdown, on the copy control: the live colour, because it is running now.
         // Keyed by the phase: the words fade in when they appear and when "Clears in" turns to
@@ -697,7 +719,9 @@ export function CodeDisplay({
     "data-copied": copied ?? undefined,
     role: "group",
     "aria-label": groupLabel,
-    tabIndex: 0,
+    "data-copy": copyable ? undefined : "off",
+    // Display only, the code is no Tab stop of its own: the row's own copy button is (Lockdown 27).
+    tabIndex: copyable || hidden ? 0 : undefined,
     onFocus: () => setFocused(true),
     onBlur: (e: React.FocusEvent<HTMLDivElement>) => {
       if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
@@ -726,7 +750,7 @@ export function CodeDisplay({
     menu && layout !== "compact" ? (
       <CodeDisplayMenuContext.Provider
         value={{
-          canCopy: Boolean(code) && !loading && !error && !advancing,
+          canCopy: copyable && Boolean(code) && !loading && !error && !advancing,
           hidden: hidden && !error && !loading,
           copyNext,
           copy: () => void copy(),
@@ -780,7 +804,7 @@ export function CodeDisplay({
 
   if (layout === "compact") {
     return (
-      <div {...rootProps} className={cn("rule-t relative flex min-h-14 items-center gap-4 py-3.5 select-none hover:bg-state-hover", className)} {...props}>
+      <div {...rootProps} className={cn("rule-t relative flex min-h-14 items-center gap-4 py-3.5 select-none", copyable && "hover:bg-state-hover", className)} {...props}>
         {media && <span data-slot="code-display-media" className="shrink-0">{media}</span>}
         <span className="flex min-w-0 flex-1 flex-col">
           {who2}
