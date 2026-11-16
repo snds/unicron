@@ -48,16 +48,24 @@ describe("Composer", () => {
     expect(document.querySelector('[data-slot="composer"]')).toHaveAttribute("data-state", "typing")
   })
 
-  it("an empty composer draws Send at full strength, as Figma's one drawn state; a disabled one dims", () => {
-    const { unmount } = render(<Composer />)
+  it("an empty composer dims Send to 50% and keeps it focusable with aria-disabled; a press does nothing (Unicron 51)", () => {
+    const onSend = vi.fn()
+    const { unmount } = render(<Composer onSend={onSend} />)
     const send = screen.getByRole("button", { name: "Send" })
     expect(send).toHaveAttribute("data-idle")
+    expect(send).toHaveAttribute("aria-disabled", "true")
     const cls = send.className.split(" ")
-    // The button's own rule dims an aria-disabled control to 50%; while only empty that is lifted.
-    expect(cls).toContain("aria-disabled:not-aria-busy:opacity-100")
-    expect(cls).not.toContain("aria-disabled:not-aria-busy:opacity-50")
+    // The button's own rule dims an aria-disabled control to 50%, and nothing lifts it any more.
+    expect(cls).toContain("aria-disabled:not-aria-busy:opacity-50")
+    expect(cls).not.toContain("aria-disabled:not-aria-busy:opacity-100")
     // It stays reachable, so focus is never lost to the page when the text is cleared under it.
     expect(send).not.toHaveAttribute("disabled")
+    send.focus()
+    expect(send).toHaveFocus()
+    fireEvent.keyDown(send, { key: "Enter" })
+    fireEvent.keyDown(send, { key: " " })
+    fireEvent.click(send)
+    expect(onSend).not.toHaveBeenCalled()
     unmount()
 
     const off = render(<Composer disabled />)

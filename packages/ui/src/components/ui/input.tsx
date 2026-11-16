@@ -16,8 +16,10 @@ export const fieldTextOnTouch = "pointer-coarse:text-(length:--type-body-size)"
  * The Text Field's box (Figma 32:48), for every field: Input, Textarea, InputGroup, the Select and
  * NativeSelect triggers, TextField and ChipField. The raised surface with a 1px rule drawn inside
  * it (a stroke never adds height), at least the control height (48), 16px in from the sides, the
- * value in the `ui` role. Focus is Figma's 2px inside border in the primary fill, and no outer
- * ring; invalid is the same border in the critical fill, and it stays while focused. Read-only
+ * value in the `ui` role. Focus is Figma's 2px inside border, and no outer ring; invalid is the
+ * same border, and it stays while focused. Their colours are the line roles `--line-focus` and
+ * `--line-invalid`, which hold 3:1 against the field on both grounds (WCAG 1.4.11); Figma's
+ * primary and critical fills measured 2.59:1 to 2.97:1 on graphite (Unicron 17). Read-only
  * drops the fill and keeps the rule. Disabled is half strength.
  *
  * `focus` is the box's own focus (an input); `within` is a box that holds the control (a group).
@@ -27,9 +29,9 @@ const fieldBoxVariants = cva(
   {
     variants: {
       focus: {
-        self: "focus:rule-box-emphasis aria-invalid:rule-box-emphasis aria-invalid:[--rule-color:var(--critical-fill)] [&[readonly]:not([aria-disabled=true])]:bg-transparent disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+        self: "focus:rule-box-emphasis focus:[--rule-color:var(--line-focus)] aria-invalid:rule-box-emphasis aria-invalid:[--rule-color:var(--line-invalid)] [&[readonly]:not([aria-disabled=true])]:bg-transparent disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
         within:
-          "focus-within:rule-box-emphasis has-[[aria-invalid=true]]:rule-box-emphasis has-[[aria-invalid=true]]:[--rule-color:var(--critical-fill)] has-[[data-slot$=-control][readonly]:not([aria-disabled=true])]:bg-transparent has-[[data-slot$=-control]:disabled]:opacity-50 has-[[data-slot$=-control][aria-disabled=true]]:opacity-50",
+          "focus-within:rule-box-emphasis focus-within:[--rule-color:var(--line-focus)] has-[[aria-invalid=true]]:rule-box-emphasis has-[[aria-invalid=true]]:[--rule-color:var(--line-invalid)] has-[[data-slot$=-control][readonly]:not([aria-disabled=true])]:bg-transparent has-[[data-slot$=-control]:disabled]:opacity-50 has-[[data-slot$=-control][aria-disabled=true]]:opacity-50",
       },
     },
     defaultVariants: { focus: "self" },

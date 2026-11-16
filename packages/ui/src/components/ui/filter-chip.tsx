@@ -14,7 +14,8 @@ export type FilterChipGroupType = "single" | "multiple"
 /**
  * What a chip does. `toggle` (the default) filters: on or off, or one of a group. `trigger` opens
  * something from the chip in place (a picker, a menu): a trailing `chevron--down` and
- * `aria-haspopup`. `button` is a plain action (the repository chip opens Envs). Neither of the last
+ * `aria-haspopup`; while its picker is open (`aria-expanded`) it draws inverted, as Figma draws it.
+ * `button` is a plain action (the repository chip opens Envs). Neither of the last
  * two has an on look (contract 5.1c C13, Warpcore NA2).
  */
 export type FilterChipKind = "toggle" | "trigger" | "button"
@@ -29,13 +30,19 @@ const chip = cva(
         // Label ink, no fill. Hover and pressed are the contract's washes.
         false: "text-muted-foreground hover:bg-state-hover active:bg-state-pressed",
         // Inverted ink, never the identity colour, so it never competes with a selected row.
-        // Hover and pressed take the ink to 90% and 80% over the ground, as a solid does.
-        true: "bg-foreground text-background hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--foreground)_80%,var(--background))]",
+        // Hover and pressed take the ink to 90% and 86% over the ground, as the current FloatButton
+        // does: at 86% the label holds Lc 75.9 on graphite (85% measured 74.8; Unicron 28).
+        true: "bg-foreground text-background hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]",
       },
     },
     defaultVariants: { active: false },
   }
 )
+
+// A trigger chip while its picker is open: inverted ink, as Figma draws it (Unicron 50), with the
+// on look's hover and pressed.
+const TRIGGER_OPEN =
+  "gap-1 pr-1 aria-expanded:bg-foreground aria-expanded:text-background aria-expanded:hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] aria-expanded:active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]"
 
 /** A filter chip's classes, for something drawn as one. */
 function filterChipVariants({ active = false, className }: { active?: boolean; className?: string } = {}): string {
@@ -57,8 +64,14 @@ export type FilterChipProps = Omit<ButtonPrimitive.Props, "value" | "children" |
   className?: string
   /** `toggle` (default), `trigger` (opens a picker or a menu in place) or `button` (a plain action). */
   kind?: FilterChipKind
-  /** The words, in sentence case ("All"). The chip sets the capitals. */
+  /** The words, in sentence case ("All"). The chip sets the capitals, unless `keepCase`. */
   children: React.ReactNode
+  /**
+   * Keep the label's own case instead of setting capitals: for a label that is data, such as a
+   * person's name ("Ana McKay", "Joris van der Berg"), which capitals would mangle. Same role, same
+   * size; only the case is kept (Vale 8).
+   */
+  keepCase?: boolean
   /** In a group: what this chip stands for. */
   value?: string
   /** After the label: how many rows the filter shows ("All 12"). A number is written as decisions §13 says. */
@@ -77,12 +90,14 @@ export type FilterChipProps = Omit<ButtonPrimitive.Props, "value" | "children" |
  * `kind="trigger"` and `kind="button"` are plain buttons in the chip's look, never on: no
  * `aria-pressed`, no radio role, and a group does not count them. Put them beside a group, or in
  * its `action` slot. A trigger works as the `render` of a `PopoverTrigger` or `DropdownMenuTrigger`,
- * which then sets its `aria-haspopup` and `aria-expanded`; while its layer is open it keeps the
- * pressed wash.
+ * which then sets its `aria-haspopup` and `aria-expanded`; while its layer is open it draws inverted
+ * ink, the on look, and still says `aria-expanded` (Unicron 50). Being open is not being on: it
+ * takes no `aria-pressed`.
  */
 function FilterChip({
   kind = "toggle",
   children,
+  keepCase = false,
   value,
   count,
   active: activeProp,
@@ -126,6 +141,7 @@ function FilterChip({
       data-kind={kind}
       data-value={value}
       data-active={active || undefined}
+      data-keep-case={keepCase ? "" : undefined}
       role={radio ? "radio" : undefined}
       aria-checked={radio ? active : undefined}
       aria-pressed={radio || !toggle ? undefined : active}
@@ -133,7 +149,7 @@ function FilterChip({
       aria-haspopup={kind === "trigger" ? "dialog" : undefined}
       tabIndex={radio ? (group.tabStop === value ? 0 : -1) : undefined}
       disabled={disabled}
-      className={filterChipVariants({ active, className: cn(kind === "trigger" && "gap-1 pr-1 aria-expanded:bg-state-pressed", className) })}
+      className={filterChipVariants({ active, className: cn(kind === "trigger" && TRIGGER_OPEN, className) })}
       onClick={(event) => {
         onClick?.(event)
         if (event.defaultPrevented || !toggle) return
@@ -148,7 +164,7 @@ function FilterChip({
       {...props}
     >
       {/* One inline run, so the space before the count survives the chip's flex box ("All 12"). */}
-      <span data-slot="filter-chip-label">
+      <span data-slot="filter-chip-label" className={keepCase ? "normal-case" : undefined}>
         {children}
         {countShown ? (
           <>

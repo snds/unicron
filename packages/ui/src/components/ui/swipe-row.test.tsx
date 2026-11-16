@@ -3,10 +3,11 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ListRow } from "./list-row"
-import { SwipeAction, SwipeRow, type SwipeRowAction } from "./swipe-row"
+import { SwipeAction, SwipeRow, swipeRowCrowdedTiles, type SwipeRowAction } from "./swipe-row"
 
 // jsdom lays nothing out: the row is 390 wide (a phone), and the knobs fall back to their values:
-// reveal 24, edge 24, tile 80, snap at half the tiles, full swipe at 60% of the row (234).
+// reveal 24, edge 24, tile 80, snap at half the tiles, full swipe at 60% of the row (234); on a
+// side with three tiles the full swipe starts one tile past the open tiles (240 + 80 = 320).
 const WIDTH = 390
 let rect: ReturnType<typeof vi.spyOn>
 beforeEach(() => {
@@ -105,7 +106,18 @@ describe("SwipeRow (contract §6.4)", () => {
   })
 
   it("a full swipe past 60% of the row runs the outermost action when it is reversible, once, and closes", () => {
-    const { container, calls } = vale()
+    const calls = { archive: vi.fn(), flag: vi.fn() }
+    const { container } = render(
+      <SwipeRow
+        trailing={[
+          { label: "Flag", icon: "flag", reversible: true, onAction: calls.flag },
+          { label: "Archive", icon: "archive", reversible: true, onAction: calls.archive },
+        ]}
+      >
+        <ListRow title="Cabin for the 20th, confirmed" />
+      </SwipeRow>
+    )
+    // Two tiles: the line is 60% of 390, 234.
     swipe(root(container), 380, 380 - 24 - 240)
     expect(calls.archive).toHaveBeenCalledTimes(1)
     expect(calls.flag).not.toHaveBeenCalled()
@@ -301,6 +313,29 @@ describe("SwipeRow (contract §6.4)", () => {
     expect(onAction).toHaveBeenCalledTimes(1)
   })
 
+  it("the context-menu key and a right click open SwipeRow's own menu too; Shift+Enter does not (Unicron 48)", async () => {
+    render(
+      <SwipeRow menuLabel="More for Stripe" trailing={[{ label: "Password", icon: "copy", onAction: () => undefined }]}>
+        <p tabIndex={0}>Stripe</p>
+      </SwipeRow>
+    )
+    const text = screen.getByText("Stripe")
+    act(() => {
+      fireEvent.keyDown(text, { key: "Enter", shiftKey: true })
+    })
+    expect(screen.queryByRole("menuitem", { name: "Password" })).toBeNull()
+    act(() => {
+      fireEvent.keyDown(text, { key: "ContextMenu" })
+    })
+    expect(await screen.findByRole("menuitem", { name: "Password" })).toBeInTheDocument()
+    await userEvent.keyboard("{Escape}")
+    expect(screen.queryByRole("menuitem", { name: "Password" })).toBeNull()
+    act(() => {
+      expect(fireEvent.contextMenu(text)).toBe(false)
+    })
+    expect(await screen.findByRole("menuitem", { name: "Password" })).toBeInTheDocument()
+  })
+
   it("reports where it comes to rest", () => {
     const onOpenChange = vi.fn()
     const { container } = render(
@@ -312,6 +347,71 @@ describe("SwipeRow (contract §6.4)", () => {
     expect(onOpenChange).toHaveBeenLastCalledWith("trailing")
     fireEvent.keyDown(root(container), { key: "Escape" })
     expect(onOpenChange).toHaveBeenLastCalledWith(null)
+  })
+})
+
+describe("SwipeRow with three tiles: a harder full swipe (Lockdown 18, Unicron gap 3)", () => {
+  it("opening the three tiles (240 at 390, past the old 234 line) only opens the row: nothing runs", () => {
+    expect(swipeRowCrowdedTiles).toBe(3)
+    const { container, calls } = vale()
+    swipe(root(container), 380, 380 - 24 - 250)
+    expect(calls.archive).not.toHaveBeenCalled()
+    expect(offsetOf(container)).toBe(-240)
+    expect(root(container)).toHaveAttribute("data-open", "trailing")
+  })
+
+  it("the row is not armed at 300, and is past the raised line (320) it is", () => {
+    const { container } = vale()
+    swipe(root(container), 380, 380 - 24 - 300, { up: false })
+    expect(root(container)).not.toHaveAttribute("data-armed")
+    fireEvent.pointerUp(root(container), { pointerId: 1, clientX: 380 - 24 - 300, clientY: 40 })
+    swipe(root(container), 385, 385 - 24 - 330, { up: false })
+    expect(root(container)).toHaveAttribute("data-armed")
+  })
+
+  it("a full swipe past one tile beyond the open tiles still runs the outermost reversible action", () => {
+    const { container, calls } = vale()
+    swipe(root(container), 385, 385 - 24 - 330)
+    expect(calls.archive).toHaveBeenCalledTimes(1)
+    expect(calls.flag).not.toHaveBeenCalled()
+    expect(offsetOf(container)).toBe(0)
+  })
+
+  it("on a narrow row the raised line stops at the row's width, so a full swipe stays possible", () => {
+    rect.mockImplementation(() => ({ x: 0, y: 0, top: 0, left: 0, bottom: 92, right: 300, width: 300, height: 92, toJSON: () => ({}) }) as DOMRect)
+    const { container, calls } = vale()
+    swipe(root(container), 295, 295 - 24 - 290)
+    expect(calls.archive).not.toHaveBeenCalled()
+    swipe(root(container), 299, -400)
+    expect(calls.archive).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("SwipeRow menuLabel (Synapse 21)", () => {
+  it("the tile keeps its short word; the menu and the tile's name use the full words", async () => {
+    const fix = vi.fn()
+    const { container } = render(
+      <SwipeRow
+        trailing={[
+          { label: "Fix", menuLabel: "Fix with Claude Code", icon: "review", onAction: fix },
+          { label: "Review", icon: "review", onAction: () => undefined },
+        ]}
+      >
+        <ListRow title="Baseline drift check failed" />
+      </SwipeRow>
+    )
+    swipe(root(container), 360, 360 - 24 - 130)
+    const tiles = [...container.querySelectorAll('[data-slot="swipe-row-trailing"] [data-slot="swipe-action"]')]
+    expect(tiles[0]).toHaveTextContent("Fix")
+    expect(tiles[0]).not.toHaveTextContent("Claude")
+    expect(tiles[0]).toHaveAttribute("aria-label", "Fix with Claude Code")
+    // Without a menuLabel the word is the name.
+    expect(tiles[1]).not.toHaveAttribute("aria-label")
+    fireEvent.keyDown(root(container), { key: "Escape" })
+    await userEvent.click(screen.getByRole("button", { name: /More/ }))
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Fix with Claude Code" }))
+    expect(fix).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole("menuitem", { name: "Fix" })).toBeNull()
   })
 })
 

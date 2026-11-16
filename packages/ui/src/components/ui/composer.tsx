@@ -98,16 +98,16 @@ function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null) {
  * then scrolls inside itself. On a touch screen the field's text is 16px, as every field's, so iOS
  * does not zoom into it. The send button is a 40px square on the primary fill with `send--alt`.
  *
- * While the field is only empty, Send is unavailable (`aria-disabled`: a press does nothing) but
- * drawn at full strength, as Figma draws the one state it has (21. Composer, and "Reply to Mira" on
- * Vale Desktop / 01): every composer on a resting screen is in that state. A composer that is
- * `disabled`, or whose sending is turned off, dims to 50%.
+ * While the field is only empty, Send is unavailable: `aria-disabled`, dimmed to 50%, and still in
+ * the tab order, so a keyboard reaches it and hears why; a press does nothing (Unicron 51: a
+ * full-strength button that does nothing feels broken). Figma draws only the full-strength state
+ * (21. Composer). A composer that is `disabled`, or whose sending is turned off, dims to 50% too.
  *
  * While `streaming` the button is Stop (focus moves back to the field when it swaps, and again
  * when the reply ends under the keyboard and Stop turns back into a Send that cannot send). While
  * `waiting` it is a clock that cancels the wait. Enter sends and Shift+Enter makes a line, or as
  * `sendKey` says, and never while an input method is composing. Focus draws the field's 2px
- * `primary-fill` inside border on the box, as a Text Field does.
+ * inside border in the focus line (`--line-focus`) on the box, as a Text Field does.
  *
  * Above the box, top to bottom: `status`, `chips`, then the `disabledReason` line. Inside it:
  * `attach` and `leadingAction` before the field.
@@ -278,9 +278,9 @@ export function Composer({
         data-idle={idle ? "" : undefined}
         loading={sending}
         disabled={!canSend && !sending}
-        // Only empty: it stays in the tab order, says it is unavailable, and keeps its full strength.
+        // Only empty: it stays in the tab order and says it is unavailable, dimmed to 50% by the
+        // button's own aria-disabled rule (Unicron 51). A press does nothing.
         focusableWhenDisabled={idle || (focusable && (disabled || sendDisabled)) ? true : undefined}
-        className={idle ? "aria-disabled:not-aria-busy:opacity-100" : undefined}
         {...trackFocus}
       >
         <Icon name="send--alt" className="size-5" />
@@ -322,8 +322,8 @@ export function Composer({
         className={cn(
           "bg-surface-raised rule-box min-h-control flex min-w-0 items-end gap-2 rounded-lg py-1 pr-1",
           attach || leadingAction ? "pl-1" : "pl-4",
-          // Focus in the field: Figma's 2px primary-fill inside border, as a Text Field draws it.
-          "has-[[data-slot=composer-field]:focus]:rule-box-emphasis",
+          // Focus in the field: Figma's 2px inside border in the focus line (--line-focus), as a Text Field draws it.
+          "has-[[data-slot=composer-field]:focus]:rule-box-emphasis has-[[data-slot=composer-field]:focus]:[--rule-color:var(--line-focus)]",
           disabled && !focusable && "opacity-50"
         )}
       >
