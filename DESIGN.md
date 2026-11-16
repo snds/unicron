@@ -61,9 +61,16 @@ stroke:
   rule: 1px
   emphasis: 2px
 motion:
+  press: 100ms
   fast: 120ms
   base: 200ms
+  state: 280ms
+  move: 400ms
+  ceiling: 400ms
   ease: cubic-bezier(0.2, 0, 0, 1)
+  ease-exit: cubic-bezier(0.32, 0, 0.67, 0)
+  ease-move: cubic-bezier(0.65, 0, 0.35, 1)
+  press-depth: 1px
 iconography:
   family: IBM Carbon (inline SVG, 32 px art)
   sizes: { md: 20px, sm: 16px }
@@ -255,6 +262,14 @@ Figma draws no states. These are the system's own, and they are still Sean's to 
 Motion is mechanical: short, eased firmly to a stop, on the motion roles
 ([motion](docs/02-tokens.md#motion)). Animate opacity and transform. Everything stills under
 reduced motion.
+
+- **Timing:** 100 to 400ms, never longer in a default. A press is 100ms; hover, a tooltip, a menu
+  and anything leaving 120ms; a layer arriving 200ms; a panel or sheet 280ms; travel 400ms.
+- **Press:** 1px into the page. No zoom.
+- **Layers:** fade in place, or fade and move one 8px step off the trigger. No zoom, no blur.
+- **Bounce:** none on a control met many times a minute. A sheet settles on a spring with under 3%
+  overshoot. More is the app's choice, in the expressive stylesheet.
+- The rules and every part's motion: [08 · Motion](docs/08-motion.md).
 
 ## Emphasis
 

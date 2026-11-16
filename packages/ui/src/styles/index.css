@@ -4,6 +4,11 @@
  * Then add the app's own extension layer (see @unicron/tokens/examples/app-extension.css).
  */
 @import "tailwindcss";
+/*
+ * Deprecated, kept for apps: no @unicron/ui part uses tw-animate-css any more (every part is on
+ * the recipes in motion.css), but an app's own `animate-in` classes still rely on this import.
+ * It goes in the next major release (docs/08-motion.md → What is left on purpose).
+ */
 @import "tw-animate-css";
 /* Geist and Geist Mono, the two families every type role uses (docs/02-tokens.md → Type). */
 @import "@fontsource-variable/geist";

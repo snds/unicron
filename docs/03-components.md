@@ -678,7 +678,8 @@ every app shows its updates the same way. Pass the update kit's `UpdateStatus`
 
 ## Motion recipes
 
-A primitive never writes its own duration or curve. It picks a recipe from
+The rules and the whole picture are in [08 · Motion](08-motion.md). A primitive never writes its
+own duration or curve. It picks a recipe from
 `packages/ui/src/styles/motion.css`, and each recipe is built only from the motion roles
 ([tokens → Motion](02-tokens.md#motion)).
 
