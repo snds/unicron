@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { useMediaQuery, useReducedMotion } from "../../lib/motion/use-reduced-motion"
+import { AppFrameAnnounceContext } from "../ui/app-frame-context"
 
 /** Parse a CSS duration ("5s", "200ms") or bare number of seconds. `undefined` when it is not one. */
 export function parseSeconds(raw: string | null | undefined): number | undefined {
@@ -105,4 +106,25 @@ export function useCopyCountdown(seconds: number, onExpire?: () => void): CopyCo
   React.useEffect(() => stop, [stop])
 
   return { state, secondsLeft, start, cancel }
+}
+
+/**
+ * Where a copied secret's countdown is said (Unicron 33): inside an AppFrame, the frame's one
+ * polite region, so the copy's "Copied. Clipboard clears in 30 seconds." and "Clipboard cleared."
+ * never talk over a status line or a strip. Returns a function that says a sentence there, read
+ * when it is called (stable across renders), and false as its second value outside a frame, where
+ * the part keeps its own region.
+ */
+export function useCopyAnnouncer(fallback: (message: string) => void): [(message: string) => void, boolean] {
+  const frame = React.useContext(AppFrameAnnounceContext)
+  const latest = React.useRef({ frame, fallback })
+  React.useEffect(() => {
+    latest.current = { frame, fallback }
+  })
+  const say = React.useCallback((message: string) => {
+    const { frame: announce, fallback: own } = latest.current
+    if (announce) announce(message)
+    else own(message)
+  }, [])
+  return [say, frame !== null]
 }

@@ -27,6 +27,18 @@ export const VIEWPORT_WIDTHS = [
 
 export type ViewportWidth = (typeof VIEWPORT_WIDTHS)[number]["name"]
 
+/**
+ * From the expanded width (1024) up to this many px, the desktop sidebar stands as its rail on
+ * every screen (Unicron 74): a list + detail screen needs the room there, and a sidebar that
+ * changed width from one section to the next felt unstable. From 1100 it is full again.
+ */
+export const SIDEBAR_RAIL_BELOW = 1100
+
+/** The sidebar is its rail at this width for every section (Unicron 74): 1024 to 1099. */
+export function sidebarRailAt(width: number): boolean {
+  return viewportWidthFor(width) === "expanded" && width < SIDEBAR_RAIL_BELOW
+}
+
 /** Under this height, turned sideways, a screen is "short". The `short:` variant uses the same line. */
 export const SHORT_HEIGHT = 480
 /** A keyboard is taller than this. A hardware keyboard's little accessory bar isn't. */

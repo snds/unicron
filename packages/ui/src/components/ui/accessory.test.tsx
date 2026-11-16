@@ -117,7 +117,25 @@ describe("Accessory (Figma 20:1713)", () => {
     expect(screen.queryByRole("button", { name: "Dismiss" })).toBeNull()
   })
 
-  it("critical: the critical Banner at strip size: soft ground, critical edge, the glyph in critical text, body title, secondary meta", () => {
+  it("critical is deprecated (Unicron 67): it still draws, and a development build warns once, pointing at a critical Banner", async () => {
+    vi.resetModules()
+    const { Accessory: Fresh } = await import("./accessory")
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      const { rerender } = render(<Fresh tone="critical" title="Spend paused" />)
+      rerender(<Fresh tone="critical" title="Spend paused again" />)
+      const said = warn.mock.calls.map((call) => String(call[0])).filter((text) => text.includes("critical"))
+      expect(said).toHaveLength(1)
+      expect(said[0]).toContain("deprecated")
+      expect(said[0]).toContain("Banner")
+      rerender(<Fresh tone="live" title="Syncing" />)
+      expect(warn.mock.calls.filter((call) => String(call[0]).includes("critical"))).toHaveLength(1)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  it("critical (deprecated): the critical Banner at strip size: soft ground, critical edge, the glyph in critical text, body title, secondary meta", () => {
     const { container } = render(<Accessory tone="critical" meta="Spend // Paused" title="$10.00 of $10.00 used" />)
     const strip = stripOf(container)
     expect(classesOf(strip)).toEqual(expect.arrayContaining(["bg-critical-soft", "inset-ring", "inset-ring-critical-fill"]))
@@ -205,5 +223,29 @@ describe("Accessory (Figma 20:1713)", () => {
     rerender(<Accessory tone="live" meta="Sending" countdown={7} title="Board games for the cabin" onOpen={() => {}} announce="Sending. 10 seconds to undo." />)
     expect(screen.getByRole("status")).toHaveTextContent("Sending. 10 seconds to undo.")
     expect(screen.getByRole("status")).not.toHaveTextContent("07")
+  })
+
+  it("says the countdown at the app's marks, once each, never each tick (Unicron 33)", () => {
+    const strip = (left: number) => <Accessory tone="needs-you" meta="Sign-in request" countdown={left} announceAt={[60, 30, 10]} title="Chrome on Windows" announce="Sign-in request." />
+    const { rerender } = render(strip(62))
+    const status = () => screen.getByRole("status")
+    expect(status()).toHaveTextContent("Sign-in request.")
+    rerender(strip(61))
+    expect(status()).toHaveTextContent("Sign-in request.")
+    rerender(strip(60))
+    expect(status()).toHaveTextContent("Chrome on Windows, 1 minute left")
+    rerender(strip(45))
+    expect(status()).toHaveTextContent("Chrome on Windows, 1 minute left")
+    rerender(strip(30))
+    expect(status()).toHaveTextContent("Chrome on Windows, 30 seconds left")
+    // A tick that skips a mark still says it.
+    rerender(strip(9))
+    expect(status()).toHaveTextContent("Chrome on Windows, 10 seconds left")
+  })
+
+  it("without announceAt, a countdown is never said", () => {
+    const { rerender } = render(<Accessory tone="live" meta="Sending" countdown={70} title="Board games" announce="Sending." />)
+    rerender(<Accessory tone="live" meta="Sending" countdown={60} title="Board games" announce="Sending." />)
+    expect(screen.getByRole("status")).toHaveTextContent("Sending.")
   })
 })

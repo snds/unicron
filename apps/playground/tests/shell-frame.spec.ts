@@ -102,16 +102,23 @@ test.describe("the phone's chrome on scroll (rules.md 6.5)", () => {
     })
   }
 
-  test("a scroll that stays under the threshold does not minimize, and a small scroll back up does not restore", async ({ page }) => {
+  test("a scroll that stays under the threshold does not minimize; any scroll back up brings the chrome back, as Safari's bar does (Unicron 68)", async ({ page }) => {
     await open(page, "shell-vale", "vale")
     const frame = page.locator('[data-slot="app-frame"]')
     await scrollShown(page, 40)
     await page.waitForTimeout(100)
     await expect(frame).not.toHaveAttribute("data-minimized")
-    await scrollShown(page, 300)
+    // The inbox scrolls 224 at this size: every position below stays inside the page.
+    await scrollShown(page, 150)
     await expect(frame).toHaveAttribute("data-minimized", "")
-    await scrollShown(page, 30)
+    // Further down it stays minimized; a small scroll back up, far from the top, restores it.
+    await scrollShown(page, 190)
     await page.waitForTimeout(100)
+    await expect(frame).toHaveAttribute("data-minimized", "")
+    await scrollShown(page, 170)
+    await expect(frame).not.toHaveAttribute("data-minimized")
+    // Down again past the line: minimized again.
+    await scrollShown(page, 210)
     await expect(frame).toHaveAttribute("data-minimized", "")
   })
 
@@ -205,17 +212,17 @@ test.describe("toasts in the frame (C6)", () => {
     expect(Math.abs(t.width - (f.width - 32))).toBeLessThanOrEqual(2)
   })
 
-  test("a live strip without an action gives way while the toast shows; the toast stands where it stood", async ({ page }) => {
+  test("an offline strip stays shown while the toast shows; the toast stacks 8 above it (Vale 15)", async ({ page }) => {
     await open(page, "app-frame-toasts", "vale")
-    const frame = contained(page, "Live strip, no action")
+    const frame = contained(page, "Offline strip")
     const toast = frame.locator("[data-sonner-toast]")
     await expect(toast).toBeVisible()
     const strip = frame.locator('[data-slot="accessory"]')
-    await expect(strip).toHaveAttribute("data-yield", "")
-    await expect(strip).toBeHidden()
+    await expect(strip).toBeVisible()
+    await expect(strip).not.toHaveAttribute("data-yield")
     const s = (await strip.boundingBox())!
     const t = await settledBox(toast)
-    expect(Math.abs(s.y + s.height - (t.y + t.height))).toBeLessThanOrEqual(2)
+    expect(Math.abs(s.y - (t.y + t.height) - 8)).toBeLessThanOrEqual(2)
   })
 
   test("a live strip with an action is never covered: no toast shows while it is up", async ({ page }) => {
@@ -227,16 +234,20 @@ test.describe("toasts in the frame (C6)", () => {
     await expect(frame.locator('[data-slot="accessory"]')).toBeVisible()
   })
 
-  test("a needs-you strip never gives way: the toast sits just under the top row", async ({ page }) => {
+  test("a needs-you strip stays shown: the toast stacks 8 above it, never under the top row (Synapse 10)", async ({ page }) => {
     await open(page, "app-frame-toasts", "vale")
     const frame = contained(page, "Needs-you strip")
     const toast = frame.locator("[data-sonner-toast]")
     await expect(toast).toBeVisible()
-    await expect(frame.locator('[data-slot="accessory"]')).toBeVisible()
+    const strip = frame.locator('[data-slot="accessory"]')
+    await expect(strip).toBeVisible()
+    const s = (await strip.boundingBox())!
     const top = (await frame.locator('[data-slot="app-frame-top-row"]').boundingBox())!
     const t = await settledBox(toast)
-    expect(t.y).toBeGreaterThanOrEqual(top.y + top.height - 1)
-    expect(t.y - (top.y + top.height)).toBeLessThanOrEqual(4)
+    expect(Math.abs(s.y - (t.y + t.height) - 8)).toBeLessThanOrEqual(2)
+    // The toast and the strip do not overlap, and the toast is nowhere near the top row.
+    expect(t.y + t.height).toBeLessThanOrEqual(s.y)
+    expect(t.y).toBeGreaterThan(top.y + top.height + 100)
   })
 })
 
@@ -281,6 +292,13 @@ test.describe("list + detail shrink order (C8)", () => {
     await expect(push.locator('[data-slot="app-frame-detail"]')).toHaveAttribute("data-pushed", "")
     await expect(push.locator('[data-slot="app-frame-list"]')).not.toHaveAttribute("data-shown")
     await expect(push.getByRole("button", { name: "Back" })).toBeVisible()
+
+    // 1024 to 1099 the sidebar is its rail on a screen with no detail too (Unicron 74).
+    const overview = contained(page, "1060, one column")
+    await expect(overview).not.toHaveAttribute("data-shrink")
+    const overviewSidebar = overview.locator('nav[data-slot="app-frame-sidebar"]')
+    await expect(overviewSidebar).toHaveAttribute("data-state", "rail")
+    expect(Math.round((await overviewSidebar.boundingBox())!.width)).toBe(48)
   })
 
   for (const [width, state] of [
@@ -622,15 +640,17 @@ test.describe("a pushed detail at medium width has a way back in every shell", (
 
 test.describe("the side panel with no room (Synapse, 1024 to 1070 wide)", () => {
   for (const width of [1024, 1040, 1070]) {
-    test(`shell-synapse at ${width}: no sheet opens by itself; the page stays usable`, async ({ page }) => {
+    test(`shell-synapse at ${width}: no sheet opens by itself; the page stays usable; with the sidebar as its rail the column has its room`, async ({ page }) => {
       await page.setViewportSize({ width, height: 768 })
       await open(page, "shell-synapse", "synapse")
       await expect(page.locator('[data-slot="app-frame"]')).toHaveAttribute("data-layout", "expanded")
-      // The Activity column has no room: it was drawn as an open modal sheet at load, the page inert under a scrim.
+      // The Activity column once had no room here: it was drawn as an open modal sheet at load, the page inert under a scrim.
       await page.waitForTimeout(300)
       await expect(page.locator('[data-slot="sheet-content"]')).toHaveCount(0)
-      await expect(page.locator('[data-slot="app-frame-side-panel"]')).toHaveCount(0)
       expect(await page.locator('[data-slot="app-frame-main"]').evaluate((el) => !el.closest("[inert]") && !el.closest('[aria-hidden="true"]'))).toBe(true)
+      // 1024 to 1099 the sidebar is its rail (Unicron 74), so the overview keeps its least width beside the column.
+      await expect(page.locator('nav[data-slot="app-frame-sidebar"]')).toHaveAttribute("data-state", "rail")
+      await expect(page.locator('aside[data-slot="app-frame-side-panel"]')).toBeVisible()
     })
   }
 
@@ -639,7 +659,8 @@ test.describe("the side panel with no room (Synapse, 1024 to 1070 wide)", () => 
     await open(page, "shell-synapse", "synapse")
     const column = page.locator('aside[data-slot="app-frame-side-panel"]')
     await expect(column).toBeVisible()
-    await page.setViewportSize({ width: 1040, height: 900 })
+    // Under the expanded width there is one content column: the panel steps aside, and no sheet opens by itself.
+    await page.setViewportSize({ width: 1000, height: 900 })
     await expect(column).toHaveCount(0)
     await expect(page.locator('[data-slot="sheet-content"]')).toHaveCount(0)
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -658,9 +679,11 @@ test.describe("the side panel with no room (Synapse, 1024 to 1070 wide)", () => 
     await expect(button).toHaveAttribute("aria-pressed", "false")
     await button.click()
     await expect(sheet).toBeVisible()
+    // It slides in: measure once it has arrived.
+    await settledBox(sheet)
+    const s = await box(sheet)
     const title = await box(sheet.locator('[data-slot="sheet-title"]'))
     const content = await box(sheet.locator('[data-slot="app-frame-side-panel"]'))
-    const s = await box(sheet)
     // The first text started on the sheet's own edge (x 640 of a sheet at 640); the title was 16 in.
     expect(content.x).toBe(title.x)
     expect(content.x - s.x).toBe(16)
@@ -819,11 +842,11 @@ test.describe("the short screen's trailing column has a floor", () => {
         // The app's primary action: whole, and 16 clear of the screen's end.
         expect(seen.createBottom).toBeLessThanOrEqual(height - 16)
         expect(seen.createTop).toBeGreaterThanOrEqual(0)
-        // The buttons never shrink; the tabs share what is left, 24 at least, 40 where there is room.
+        // The buttons never shrink, and neither do the tabs: every one is 44, the touch floor; where
+        // they do not fit, the bar scrolls (Unicron 29, 64).
         for (const h of seen.buttonHeights) expect(h).toBe(48)
         expect(seen.tabs.length).toBeGreaterThanOrEqual(3)
-        for (const h of seen.tabs) expect(h).toBeGreaterThanOrEqual(24)
-        if (height >= 390) for (const h of seen.tabs) expect(h).toBe(40)
+        for (const h of seen.tabs) expect(Math.round(h)).toBe(44)
         await context.close()
       })
     }
@@ -981,4 +1004,31 @@ test("the chat workspace's heads against Figma cw-01: the conversation's overlin
     }
   })
   expect(seen).toEqual({ overline: [84, 100], title: [104, 136], font: "500 24px/32px", collapse: [88, 132], tab: [98, 122], firstMessage: 156 })
+})
+
+test.describe("the account switcher (Unicron 73)", () => {
+  test("a menu of radio items: the arrow keys only move, Enter switches", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await open(page, "app-frame-sidebar", "synapse")
+    const title = page.locator('[data-slot="app-frame-switcher-title"]')
+    await expect(title).toHaveText("Personal")
+    const chevron = page.getByRole("button", { name: "Switch workspace" })
+    await chevron.focus()
+    await page.keyboard.press("Enter")
+    const menu = page.getByRole("menu")
+    await expect(menu).toBeVisible()
+    await expect(menu.getByRole("menuitemradio")).toHaveCount(3)
+    await expect(menu.getByRole("menuitemradio", { name: /Personal/ })).toHaveAttribute("aria-checked", "true")
+    // Moving over the accounts loads none of them.
+    for (let i = 0; i < 2; i++) await page.keyboard.press("ArrowDown")
+    await expect(title).toHaveText("Personal")
+    const highlighted = menu.locator('[role="menuitemradio"][data-highlighted]')
+    await expect(highlighted).toHaveCount(1)
+    const words = (await highlighted.textContent()) ?? ""
+    const picked = ["Studio", "Client work"].find((name) => words.startsWith(name))
+    expect(picked).toBeDefined()
+    await page.keyboard.press("Enter")
+    await expect(menu).toBeHidden()
+    await expect(title).toHaveText(picked!)
+  })
 })

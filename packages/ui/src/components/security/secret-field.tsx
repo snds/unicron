@@ -16,7 +16,7 @@ import { FieldRowOverflow } from "../ui/field-row"
 import { FloatButton, type FloatButtonKind, type FloatButtonSize } from "../ui/float-button"
 import { fieldTextOnTouch } from "../ui/input"
 import { Skeleton } from "../ui/skeleton"
-import { readSecondsToken, useCopyCountdown, type CopyCountdownState } from "./copy-countdown"
+import { readSecondsToken, useCopyAnnouncer, useCopyCountdown, type CopyCountdownState } from "./copy-countdown"
 import { useCrownJewel } from "./crown-jewel"
 import { TextAction, rowClasses } from "./parts"
 
@@ -643,6 +643,9 @@ function SecretFieldRead({
     failure.words ?? (typeof errorTextProp === "string" && errorTextProp ? errorTextProp : undefined) ?? secretFieldErrors[failure.action]
   const [gateBusy, setGateBusy] = React.useState(false)
   const [live, setLive] = React.useState("")
+  // The copy's countdown is said through the frame's one region inside an AppFrame (Unicron 33);
+  // the field's own region keeps everything else (shown, the gate), and the copy outside a frame.
+  const [sayCopy] = useCopyAnnouncer(setLive)
   // Knobs: the mask count and the clipboard default are rendered, so they are read from :root once;
   // the reveal lifetime is read from the field itself when a reveal starts (an event, never a
   // render), so a surface that re-maps it for its subtree is honoured. Spec defaults apply without the stylesheet.
@@ -687,7 +690,7 @@ function SecretFieldRead({
       } catch {
         /* the host reports its own failures */
       }
-      setLive(secretFieldAnnouncements.cleared)
+      sayCopy(secretFieldAnnouncements.cleared)
     })()
   })
   React.useEffect(() => {
@@ -817,7 +820,7 @@ function SecretFieldRead({
     setConditionalClear(Boolean(host.clipboardHolds) && hash !== null)
     onCopy?.()
     countdown.start()
-    setLive(secretFieldAnnouncements.copied(clipboardSeconds))
+    sayCopy(secretFieldAnnouncements.copied(clipboardSeconds))
   }
 
   const retry = () => {

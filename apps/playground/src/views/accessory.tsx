@@ -1,7 +1,7 @@
 // Accessory, the status strip, as Figma draws it (20:1713), with the tones and forms the apps add.
 // View: ?view=accessory
-import { useState, type ReactNode } from "react"
-import { Accessory, FloatButton, TabBar, TabBarItem } from "@unicron/ui"
+import { useEffect, useState, type ReactNode } from "react"
+import { Accessory, Banner, Button, FloatButton, TabBar, TabBarItem } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -9,6 +9,26 @@ function Specimen({ label, children }: { label: string; children: ReactNode }) {
       <h3 className="type-overline">{label}</h3>
       {children}
     </section>
+  )
+}
+
+/** A request whose time runs down for real, so a screen reader hears the marks: 01:15, then said at 60, 30 and 10. */
+function TickingRequest({ onReview }: { onReview: () => void }) {
+  const [left, setLeft] = useState(75)
+  useEffect(() => {
+    const id = setInterval(() => setLeft((s) => (s <= 1 ? 75 : s - 1)), 1000)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <Accessory
+      tone="needs-you"
+      meta="Sign-in request"
+      countdown={left}
+      announceAt={[60, 30, 10]}
+      title="Chrome on Windows"
+      announce="Sign-in request from Chrome on Windows."
+      action={{ label: "Review", onClick: onReview }}
+    />
   )
 }
 
@@ -43,8 +63,17 @@ export default function AccessoryView() {
         />
       </Specimen>
 
-      <Specimen label="Critical // stopped, and the person can act">
-        <Accessory tone="critical" meta="Spend // Paused at $10.00" title="New tasks wait until you raise the cap" action={{ label: "Open spend", onClick: () => setSaid("Open spend") }} />
+      <Specimen label="Broken // never a strip: a critical Banner at the top of its section (Unicron 67)">
+        <Banner
+          tone="critical"
+          title="Spend paused at $10.00"
+          body="New tasks wait until you raise the cap."
+          action={
+            <Button variant="secondary" size="sm" onClick={() => setSaid("Open spend")}>
+              Open spend
+            </Button>
+          }
+        />
       </Specimen>
 
       <Specimen label="Progress // the undo-send window, 10 segments">
@@ -73,6 +102,10 @@ export default function AccessoryView() {
           openLabel="Open the Outbox"
         />
         <Accessory tone="needs-you" meta="Sign-in request" countdown={94} title="Chrome on Windows" action={{ label: "Review", onClick: () => setSaid("Review") }} onOpen={() => setSaid("Opened the request")} />
+      </Specimen>
+
+      <Specimen label="Warned before time runs out // announceAt [60, 30, 10]: each mark is said once (Unicron 33)">
+        <TickingRequest onReview={() => setSaid("Review")} />
       </Specimen>
 
       <Specimen label="Dismissable // a finished background task">

@@ -92,7 +92,7 @@ export default function NeedsYouView() {
       </Specimen>
 
       {/* Each compact specimen has a scope of its own, so it hides only the block beside it. */}
-      <Specimen label="Compact // one 48 line, the title and one solid action, for the top of an open dialog or sheet (Lockdown LA8)">
+      <Specimen label="Compact // one 48 line, the title and one solid action 40 high (44 on touch, Unicron 88), for the top of an open dialog or sheet (Lockdown LA8)">
         <div className="flex flex-col gap-4">
           <NeedsYouProvider>
             <NeedsYou size="compact" announce={false} title="Sign-in request // 01:40 left" action={<Button variant="needs-you" size="sm">Review</Button>} />
