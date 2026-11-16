@@ -375,6 +375,19 @@ export const motionContracts = [
     reducedProperties: ["background-color"],
     surfaces: ['[data-contract="progress"] [data-slot="progress-indicator"]'],
   },
+  {
+    id: "sheet",
+    recipe: "AdaptiveSheetContent's own entrance · data-release (the phone sheet's drag)",
+    trigger: "the sheet opens or closes; on a phone, the grabber is dragged and let go",
+    properties: ["translate", "opacity"],
+    duration: "--motion-spring-firm-duration",
+    easing: ["--motion-ease-enter", "--motion-ease-exit", "--motion-spring-firm"],
+    frequency: "occasional",
+    interrupted: "Open and close are transitions and turn round mid-way. Grabbed again while it settles, the sheet carries on from where it is.",
+    reduced: "It fades in place. A drag still follows the finger; let go, the sheet is back, or gone, at once.",
+    reducedProperties: ["opacity"],
+    surfaces: ['[data-slot="sheet-content"]'],
+  },
 ] as const satisfies readonly MotionContract[]
 
 export type MotionContractId = (typeof motionContracts)[number]["id"]

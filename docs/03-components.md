@@ -696,6 +696,7 @@ A primitive never writes its own duration or curve. It picks a recipe from
 | stagger | `motion-stagger` on the parent | a list appearing for the first time | children rise 4px, `--motion-stagger` apart, capped at `--motion-stagger-max` steps | every row is there at once |
 | draw | `motion-draw` (`CheckDraw`) | a success mark | a stroke draws in `--motion-base` | the mark is simply there |
 | shake | `data-shake` (`useShake`) | a refusal | three swings that die away, `--motion-state` | no movement; the error colour and text carry it |
+| release | `data-release="drag"`, `"settle"`, `"dismiss"` (lib/motion → drag-release) | a dragged surface let go | none while dragging; back on the firm spring; out on the exit curve in `--motion-base` × `--motion-release-share` (0.5 for a fast flick, 1 for a let-go) | the drag still follows the finger; let go, it is back or gone at once |
 
 - **Overlays on recipes, in the 1.0 look** (fade, or fade and a step; no zoom, no blur):
   Dialog and its dim fade in place, 200ms in and 120ms out. Popover is the anchor recipe, 200ms
@@ -716,6 +717,15 @@ A primitive never writes its own duration or curve. It picks a recipe from
   (`--motion-base`, move curve); `ProgressIndicator` used on its own keeps Base UI's width unless
   given `share`. StatusOrb's needs-you ping is a copy of its ring that grows and fades (scale and
   opacity), no longer an animated shadow; under reduced motion the copy is not drawn.
+- **The phone sheet's drag.** AdaptiveSheetContent's grabber drags the sheet 1:1 down; pulled up
+  past open it resists and stops after 24px (`rubberBand`). Let go, it reads the speed of the last
+  100ms: past 30% of its height, or flicked faster than 0.5px per ms, it carries on out, faster for
+  a faster flick; otherwise it settles back on the firm spring. Grabbed again while settling, it
+  carries on from where it is. The rules are pure functions in `@unicron/ui/motion`
+  (`releaseVelocity`, `shouldDismiss`, `releaseShare`), so an app's own gesture (a swipe row) can
+  use the same ones. It stays on Base UI's Dialog: Base UI's Drawer would change the root every app
+  writes (`<Sheet>`), a breaking change for one gesture. Revisit when a second system part needs
+  snap points.
 - **Lockdown's feedback, in the 1.0 look** (words, not icons): the clipboard countdown's words on
   SecretField and CodeDisplay ("Clears in 28 s", "Cleared") fade in over 120ms when they appear and
   when the phase changes, and hold still as the seconds tick. A SecretField's value fades in where

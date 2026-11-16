@@ -34,11 +34,17 @@ import {
   PopoverTrigger,
   Progress,
   SecretField,
+  AdaptiveSheetContent,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Sheet,
+  SheetBody,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
   Switch,
   Tabs,
   TabsList,
@@ -495,6 +501,21 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
     </Collapsible>
   ),
   progress: () => <ProgressSpecimen />,
+  sheet: () => (
+    <Sheet>
+      <SheetTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Open sheet
+      </SheetTrigger>
+      <AdaptiveSheetContent>
+        <SheetHeader>
+          <SheetTitle>Sign-in request</SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <p>On a phone, drag the bar at the top: down to let it go, up and it resists.</p>
+        </SheetBody>
+      </AdaptiveSheetContent>
+    </Sheet>
+  ),
   "button-press": () => <Button data-trigger>Hold to send</Button>,
   switch: () => <Switch data-trigger aria-label="Lock after 5 minutes" />,
   checkbox: () => <Checkbox data-trigger aria-label="Remember this device" />,

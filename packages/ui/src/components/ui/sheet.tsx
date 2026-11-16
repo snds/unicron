@@ -8,6 +8,8 @@
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { cn } from "../../lib/utils"
+import { releaseShare, releaseVelocity, shouldDismiss, type DragSample } from "../../lib/motion/drag-release"
+import { rubberBand } from "../../lib/motion/rubber-band"
 import { useFocusFirstControl } from "../../lib/focus"
 
 import { FloatButton } from "./float-button"
@@ -230,9 +232,8 @@ function SheetContent({
   )
 }
 
-/** How far down (px), or what share of its height, a drag must go to dismiss. */
-const DISMISS_PX = 120
-const DISMISS_SHARE = 0.3
+/** How far a bottom sheet may be pulled up past open, in px: it resists, then stops. */
+const OVERPULL_MAX = 24
 
 /**
  * One sheet, two metaphors: on phones a bottom sheet (full width, content height or full, a
@@ -266,32 +267,65 @@ function AdaptiveSheetContent({
 }) {
   const popup = React.useRef<HTMLDivElement>(null)
   const close = React.useRef<HTMLDivElement>(null)
-  const drag = React.useRef<{ y: number; dy: number } | null>(null)
+  const drag = React.useRef<{ start: number; offset: number; samples: DragSample[] } | null>(null)
   const context = React.useMemo(() => ({ showCloseButton }), [showCloseButton])
   const scroll = React.useRef<HTMLDivElement>(null)
   const focusFirst = useFocusFirstControl(scroll, "sheet-content")
 
-  // Dragging the grabber down follows the finger; far enough lets go.
+  // The grabber drags the sheet. Down, it follows the finger 1:1; up, past open, it resists
+  // (rubberBand) and stops after OVERPULL_MAX. Let go, it reads the speed of the last moment: far
+  // enough down or flicked down, it carries on out, faster for a faster flick; otherwise it settles
+  // back on the firm spring. The motion is the `data-release` recipe (styles/motion.css).
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    drag.current = { y: e.clientY, dy: 0 }
+    // Re-grabbed while settling: it carries on from where it is now, not from rest.
+    const el = popup.current
+    const now = el ? getComputedStyle(el).translate : "none"
+    const from = now && now !== "none" ? Number.parseFloat(now.split(" ")[1] ?? "0") || 0 : 0
+    drag.current = { start: e.clientY - from, offset: from, samples: [{ t: e.timeStamp, at: e.clientY }] }
+    el?.setAttribute("data-release", "drag")
+    if (el) el.style.translate = `0 ${from}px`
     e.currentTarget.setPointerCapture?.(e.pointerId)
   }
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!drag.current || !popup.current) return
-    drag.current.dy = Math.max(0, e.clientY - drag.current.y)
-    popup.current.style.transition = "none"
-    popup.current.style.transform = `translateY(${drag.current.dy}px)`
+    const d = drag.current
+    const el = popup.current
+    if (!d || !el) return
+    const raw = e.clientY - d.start
+    d.offset = raw >= 0 ? raw : rubberBand(raw, OVERPULL_MAX)
+    d.samples.push({ t: e.timeStamp, at: e.clientY })
+    if (d.samples.length > 16) d.samples.shift()
+    el.style.translate = `0 ${d.offset}px`
   }
   const onPointerUp = () => {
     const d = drag.current
     drag.current = null
     const el = popup.current
     if (!d || !el) return
-    el.style.transition = ""
-    el.style.transform = ""
-    if (d.dy > DISMISS_PX || d.dy > el.offsetHeight * DISMISS_SHARE) {
-      close.current?.querySelector<HTMLElement>('[data-slot="sheet-close"]')?.click()
+    const velocity = releaseVelocity(d.samples)
+    const settle = () => {
+      el.setAttribute("data-release", "settle")
+      el.style.translate = ""
+      const done = (event: TransitionEvent) => {
+        if (event.target !== el || event.propertyName !== "translate") return
+        el.removeEventListener("transitionend", done)
+        if (el.getAttribute("data-release") === "settle") el.removeAttribute("data-release")
+      }
+      el.addEventListener("transitionend", done)
     }
+    if (shouldDismiss({ offset: d.offset, size: el.offsetHeight, velocity })) {
+      el.style.setProperty("--motion-release-share", String(releaseShare(velocity)))
+      el.setAttribute("data-release", "dismiss")
+      el.style.translate = "0 100%"
+      close.current?.querySelector<HTMLElement>('[data-slot="sheet-close"]')?.click()
+      // A host that keeps the sheet open (it refuses the close) gets it back, not stranded off-screen.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (el.isConnected && !el.hasAttribute("data-ending-style") && el.getAttribute("data-open") !== null) settle()
+        })
+      )
+      return
+    }
+    settle()
   }
 
   return (

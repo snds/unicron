@@ -14,7 +14,7 @@ import { motionContracts, type MotionContract } from "../../../packages/ui/src/l
 
 const CEILING_MS = 400
 /** Contracts that open and close, so they have an exit and can be reversed mid-way. */
-const TOGGLES = new Set(["pop", "slide", "collapse", "fade", "anchor", "dialog", "popover", "tooltip", "menu", "select", "collapsible"])
+const TOGGLES = new Set(["pop", "slide", "collapse", "fade", "anchor", "dialog", "popover", "tooltip", "menu", "select", "collapsible", "sheet"])
 /** Components closed by their own trigger, not by a click outside. */
 const SELF_CLOSING = new Set(["collapsible"])
 /** Where scale is the value itself (a Progress fill), not a zoom. */
@@ -378,4 +378,90 @@ test("status orb: the needs-you ping grows on scale and fades, and is gone under
   await page.goto("/?view=status-orb&chrome=0")
   await expect(page.locator('[data-slot="status-orb"][data-state="needs-you"]').first()).toBeVisible()
   expect(await pings(), "the ping still runs under reduced motion").toEqual([])
+})
+
+// ── the phone sheet's drag ─────────────────────────────────────────────────────────────────────
+// On a phone the sheet follows the grabber 1:1 down and resists up; let go short, it settles back
+// on the firm spring; flicked, it goes, faster than a let-go.
+test.describe("sheet drag", () => {
+  test.use({ viewport: { width: 375, height: 812 } })
+
+  async function openSheet(page: Page) {
+    const sheet = page.locator('[data-slot="sheet-content"]')
+    await card(page, motionContracts.find((c) => c.id === "sheet")! as MotionContract).locator("[data-trigger]").click()
+    await sheet.waitFor()
+    await expect(sheet).not.toHaveAttribute("data-starting-style", /.*/)
+    await release(page)
+    const bar = await sheet.locator('[data-slot="sheet-grabber"]').boundingBox()
+    return { sheet, x: bar!.x + bar!.width / 2, y: bar!.y + bar!.height / 2 }
+  }
+  const offset = (sheet: Locator) => sheet.evaluate((el) => Number.parseFloat(getComputedStyle(el).translate.split(" ")[1] ?? "0") || 0)
+  const transitions = (sheet: Locator) =>
+    sheet.evaluate((el) =>
+      el.getAnimations().map((a) => ({
+        property: (a as CSSTransition).transitionProperty,
+        duration: Number(a.effect!.getComputedTiming().duration),
+      }))
+    )
+
+  test("pulled up past open it resists; let go, it settles back on the firm spring", async ({ page }) => {
+    const { sheet, x, y } = await openSheet(page)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y - 200, { steps: 8 })
+    const up = await offset(sheet)
+    expect(up).toBeLessThan(0)
+    expect(up).toBeGreaterThan(-24)
+    await expect(sheet).toHaveAttribute("data-release", "drag")
+    // Hold still a moment, so the release is a let-go, not a flick.
+    await page.waitForTimeout(150)
+    await page.mouse.up()
+    await expect(sheet).toHaveAttribute("data-release", "settle")
+    const settle = await transitions(sheet)
+    expect(settle.map((t) => t.property)).toEqual(["translate"])
+    expect(settle[0]!.duration).toBe(await roleMs(page, "--motion-spring-firm-duration"))
+    await release(page)
+    expect(await offset(sheet)).toBe(0)
+  })
+
+  test("a short slow drag down settles back; a short flick down dismisses it, in under --motion-base", async ({ page }) => {
+    const { sheet, x, y } = await openSheet(page)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    for (const step of [10, 20, 30, 40]) {
+      await page.mouse.move(x, y + step)
+      await page.waitForTimeout(150)
+    }
+    expect(await offset(sheet)).toBeCloseTo(40, 0)
+    await page.mouse.up()
+    await expect(sheet).toHaveAttribute("data-release", "settle")
+    await release(page)
+    await expect(sheet).toBeVisible()
+
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + 40, { steps: 2 })
+    await page.mouse.up()
+    await expect(sheet).toHaveAttribute("data-release", "dismiss")
+    const out = await transitions(sheet)
+    expect(out.map((t) => t.property)).toContain("translate")
+    for (const t of out) expect(t.duration).toBeLessThan(await roleMs(page, "--motion-base"))
+    await release(page)
+    await expect(sheet).toBeHidden()
+  })
+
+  test("under reduced motion the drag still follows the finger, and the release is instant", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const { sheet, x, y } = await openSheet(page)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    for (const step of [15, 30]) {
+      await page.mouse.move(x, y + step)
+      await page.waitForTimeout(150)
+    }
+    expect(await offset(sheet)).toBeCloseTo(30, 0)
+    await page.mouse.up()
+    expect((await transitions(sheet)).filter((t) => t.property === "translate")).toEqual([])
+    expect(await offset(sheet)).toBe(0)
+  })
 })

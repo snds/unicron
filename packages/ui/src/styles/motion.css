@@ -16,6 +16,8 @@
  *   motion-stagger                  children entering in turn
  *   motion-draw                     a stroke drawing itself (a check)
  *   data-shake                      a refusal: three swings that die away (lib/motion → useShake)
+ *   data-release                    a dragged surface let go: settles back on the firm spring, or
+ *                                   carries on out, faster for a flick (lib/motion → drag-release)
  *
  * Entrances and exits read Base UI's `data-starting-style` / `data-ending-style`, so they are
  * transitions: closed mid-open, they turn round from where they are. `@starting-style` gives the
@@ -342,6 +344,32 @@
   }
 }
 
+
+/*
+ * Release, unlayered: a dragged surface's own transition (a utility on the popup) must give way
+ * while it is held and let go, so these sit above the layers. See the recipe list at the top.
+ */
+/* ── release ───────────────────────────────────────────────────────────────────────────────── */
+/*
+ * A surface the pointer is dragging follows it 1:1, with no transition (data-release="drag").
+ * Let go short of dismissal, it settles back on the firm spring (under 3% overshoot, so no
+ * visible bounce). Let go past it, or flicked, it carries on out on the exit curve, in a share
+ * of --motion-base that shrinks as the flick gets faster (--motion-release-share, 0.5 to 1).
+ */
+[data-release="drag"] {
+  transition-property: none;
+}
+[data-release="settle"] {
+  transition-property: translate;
+  transition-duration: var(--motion-spring-firm-duration);
+  transition-timing-function: var(--motion-spring-firm);
+}
+[data-release="dismiss"] {
+  transition-property: translate, opacity;
+  transition-duration: calc(var(--motion-base) * var(--motion-release-share, 1));
+  transition-timing-function: var(--motion-ease-exit);
+}
+
 /*
  * Reduced motion, per recipe. The system-wide layer in index.css already limits every transition
  * to colour and opacity; these remove what would otherwise jump or still play. Nothing is lost: a
@@ -384,6 +412,13 @@
   .motion-fill-in-turn > * {
     transition-delay: initial;
   }
+  /* Let go, a dragged surface is at its end at once: back in place, or gone (it still fades). */
+  [data-release="settle"] {
+    transition-property: none;
+  }
+  [data-release="dismiss"] {
+    transition-property: opacity;
+  }
 }
 [data-motion="reduced"] {
   .motion-push:active {
@@ -419,5 +454,12 @@
   }
   .motion-fill-in-turn > * {
     transition-delay: initial;
+  }
+  /* Let go, a dragged surface is at its end at once: back in place, or gone (it still fades). */
+  [data-release="settle"] {
+    transition-property: none;
+  }
+  [data-release="dismiss"] {
+    transition-property: opacity;
   }
 }

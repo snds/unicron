@@ -348,24 +348,72 @@ describe("AdaptiveSheetContent (2026-11)", () => {
     expect(grabber.className.split(" ")).toContain("sm:hidden")
   })
 
-  it("a drag down past 120px on the grabber dismisses it; a short one springs back", () => {
-    const onOpenChange = vi.fn()
-    render(
-      <Sheet open onOpenChange={onOpenChange}>
-        <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
-      </Sheet>
-    )
-    const grabber = popup().querySelector('[data-slot="sheet-grabber"]') as HTMLElement
-    // jsdom has no layout: give the sheet a height, so 30% of it is 120.
-    Object.defineProperty(popup(), "offsetHeight", { configurable: true, value: 400 })
-    fireEvent.pointerDown(grabber, { clientY: 100, pointerId: 1 })
-    fireEvent.pointerMove(grabber, { clientY: 140, pointerId: 1 })
-    fireEvent.pointerUp(grabber, { clientY: 140, pointerId: 1 })
-    expect(onOpenChange).not.toHaveBeenCalled()
-    fireEvent.pointerDown(grabber, { clientY: 100, pointerId: 1 })
-    fireEvent.pointerMove(grabber, { clientY: 260, pointerId: 1 })
-    fireEvent.pointerUp(grabber, { clientY: 260, pointerId: 1 })
-    expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+  // Each drag moves its pointer slowly (half a second between samples), so only the distance
+  // decides; the flick is the next test. Event times come from the faked clock.
+  it("a slow drag down past 30% of its height dismisses it; a short one settles back", () => {
+    vi.useFakeTimers({ toFake: ["performance", "Date"] })
+    try {
+      const onOpenChange = vi.fn()
+      render(
+        <Sheet open onOpenChange={onOpenChange}>
+          <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
+        </Sheet>
+      )
+      const grabber = popup().querySelector('[data-slot="sheet-grabber"]') as HTMLElement
+      // jsdom has no layout: give the sheet a height, so 30% of it is 120.
+      Object.defineProperty(popup(), "offsetHeight", { configurable: true, value: 400 })
+      const drag = (to: number) => {
+        fireEvent.pointerDown(grabber, { clientY: 100, pointerId: 1 })
+        vi.advanceTimersByTime(500)
+        fireEvent.pointerMove(grabber, { clientY: to, pointerId: 1 })
+        expect(popup().getAttribute("data-release")).toBe("drag")
+        expect(popup().style.translate).toBe(`0 ${to - 100}px`)
+        vi.advanceTimersByTime(500)
+        fireEvent.pointerUp(grabber, { clientY: to, pointerId: 1 })
+      }
+      drag(200)
+      expect(onOpenChange).not.toHaveBeenCalled()
+      expect(popup().getAttribute("data-release")).toBe("settle")
+      expect(popup().style.translate).toBe("")
+      drag(260)
+      expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+      expect(popup().getAttribute("data-release")).toBe("dismiss")
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("a short flick down dismisses it, faster than a let-go; pulled up past open, it resists", () => {
+    vi.useFakeTimers({ toFake: ["performance", "Date"] })
+    try {
+      const onOpenChange = vi.fn()
+      render(
+        <Sheet open onOpenChange={onOpenChange}>
+          <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
+        </Sheet>
+      )
+      const grabber = popup().querySelector('[data-slot="sheet-grabber"]') as HTMLElement
+      Object.defineProperty(popup(), "offsetHeight", { configurable: true, value: 400 })
+      // Up 200px: the sheet moves up a little, never past 24px.
+      fireEvent.pointerDown(grabber, { clientY: 300, pointerId: 1 })
+      vi.advanceTimersByTime(300)
+      fireEvent.pointerMove(grabber, { clientY: 100, pointerId: 1 })
+      const up = Number.parseFloat(popup().style.translate.split(" ")[1]!)
+      expect(up).toBeLessThan(0)
+      expect(up).toBeGreaterThan(-24)
+      vi.advanceTimersByTime(300)
+      fireEvent.pointerUp(grabber, { clientY: 100, pointerId: 1 })
+      expect(onOpenChange).not.toHaveBeenCalled()
+      // Down 40px in 40ms: 1px per ms, a flick.
+      fireEvent.pointerDown(grabber, { clientY: 100, pointerId: 1 })
+      vi.advanceTimersByTime(40)
+      fireEvent.pointerMove(grabber, { clientY: 140, pointerId: 1 })
+      fireEvent.pointerUp(grabber, { clientY: 140, pointerId: 1 })
+      expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
+      expect(Number(popup().style.getPropertyValue("--motion-release-share"))).toBeCloseTo(0.5)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("hugs its content on a phone by default, or takes the whole screen", () => {
