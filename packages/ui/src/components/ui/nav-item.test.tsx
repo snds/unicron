@@ -25,7 +25,7 @@ describe("NavItem (Figma 15:487)", () => {
     expect(classesOf(link)).toEqual(expect.arrayContaining(["gap-2.5", "py-2", "pe-2.5", "rounded-sm"]))
     expect(link.className).toContain("ps-[calc(--spacing(2.5)")
     expect(classesOf(link.querySelector('[data-slot="nav-item-label"]')!)).toEqual(expect.arrayContaining(["type-label", "text-text-secondary", "truncate"]))
-    expect(classesOf(link.querySelector('[data-slot="nav-item-index"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-faint"]))
+    expect(classesOf(link.querySelector('[data-slot="nav-item-index"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
     expect(classesOf(link.querySelector('[data-slot="nav-mark"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
     expect(link.querySelector('[data-slot="icon"]')).toHaveAttribute("width", "20")
     // The icon takes the row's secondary ink.

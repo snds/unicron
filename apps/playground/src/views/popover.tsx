@@ -64,12 +64,12 @@ export default function PopoverView() {
         </Specimen>
       </div>
 
-      <Stage label="Over the menu scrim // the environment picker opens from its chip in place" width={720} height={420} app="warpcore">
+      <Stage label="Over the menu scrim, wide (420, as Figma draws it) // the environment picker opens from its chip in place" width={720} height={420} app="warpcore">
         {(container) => (
           <div className="absolute bottom-6 left-6">
             <Popover open modal={false}>
               <PopoverTrigger render={<FloatButton label="Environment" icon="laptop" size="l" />} />
-              <PopoverContent container={container} side="top" align="start" sideOffset={8} scrim>
+              <PopoverContent container={container} side="top" align="start" sideOffset={8} scrim width="wide">
                 <PopoverHeader overline="Environment // 03" title="Where it runs" />
                 <div className="flex flex-col">
                   <Choice name="sean-mbp" meta="This Mac" />

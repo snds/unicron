@@ -1,4 +1,4 @@
-// Banner: Figma's Banner (32:89), critical and info as drawn, warning and success from the existing roles, compact (contract 5.1b #27), dismiss. View: ?view=banner
+// Banner: Figma's Banner (32:89), critical and info as drawn, warning and success from the existing roles, compact (contract 5.1b #27), dismiss (never on critical, Unicron 62). View: ?view=banner
 import { useState, type ReactNode } from "react"
 import { Banner, Button } from "@unicron/ui"
 
@@ -47,7 +47,7 @@ export default function BannerView() {
         </div>
       </Specimen>
 
-      <Specimen label="Tones // info dismissable, warning, success" width="max-w-[534px]">
+      <Specimen label="Tones // info, success and warning can be dismissed; critical never can: it stays until fixed (Unicron 62)" width="max-w-[534px]">
         {web ? (
           <Banner
             tone="info"

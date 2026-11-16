@@ -1,8 +1,8 @@
-// Toasts in the frame (contract 5.1c C6): the frame tells the Toaster where the content is and what
-// its phone status strip means. No strip: the toast takes the strip's slot above the bottom row. A
-// strip without an action gives way for the toast's time. A strip with an action (undo send) is
-// never covered: toasts wait. A needs-you strip never gives way: the toast sits under the top row.
-// Desktop: the bottom left of the content, three at most. View: ?view=app-frame-toasts
+// Toasts in the frame (contract 5.1c C6, Unicron 1.1): the frame tells the Toaster where the content
+// is and what its phone status strip means. No strip: the toast takes the strip's slot above the
+// bottom row. Any strip that shows (offline, a needs-you request) stays shown, and the toast stacks
+// just above it (Vale 15, Synapse 10). A strip with an action (undo send) is never covered: toasts
+// wait. Desktop: the bottom left of the content, three at most. View: ?view=app-frame-toasts
 import { useEffect } from "react"
 import {
   AppFrameAccessory,
@@ -96,7 +96,7 @@ function Raise({ id, title, action = true }: { id: string; title: string; action
 export default function AppFrameToastsView() {
   return (
     <div className="flex flex-col gap-10 p-4 sm:p-6">
-      <Specimen label="Phone // a toast takes the status strip's slot, so the bottom never holds three bars">
+      <Specimen label="Phone // a toast takes the status strip's slot, or stacks above a strip that shows">
         <div className="flex flex-wrap gap-6">
           <FrameBox width={390} height={640} layout="phone" label="No strip // the toast in the strip's slot, above the bottom row">
             <Inbox />
@@ -104,9 +104,9 @@ export default function AppFrameToastsView() {
             <Raise id="toast-none" title="Archived Budget for audits" />
           </FrameBox>
 
-          <FrameBox width={390} height={640} layout="phone" label="Live strip, no action // it gives way for the toast's time, then comes back">
+          <FrameBox width={390} height={640} layout="phone" label="Offline strip // it stays shown: the toast stacks above it">
             <Inbox />
-            <AppFrameAccessory tone="live" meta="Syncing // Personal + Work" title="Checking 2 accounts" />
+            <AppFrameAccessory tone="neutral" meta="Offline // since 09:12" title="Changes send when you're back online" />
             <Chrome />
             <Raise id="toast-live" title="Moved 3 messages to Archive" />
           </FrameBox>
@@ -126,7 +126,7 @@ export default function AppFrameToastsView() {
             <Raise id="toast-wait" title="Archived Budget for audits" />
           </FrameBox>
 
-          <FrameBox width={390} height={640} layout="phone" label="Needs-you strip // it never gives way: the toast sits under the top row">
+          <FrameBox width={390} height={640} layout="phone" label="Needs-you strip // it stays shown: the toast stacks above it, never under the top row">
             <Inbox />
             <AppFrameAccessory tone="needs-you" meta="Sign-in request // 01" title="Chrome on Windows" action={{ label: "Review", onClick: () => {} }} />
             <Chrome />

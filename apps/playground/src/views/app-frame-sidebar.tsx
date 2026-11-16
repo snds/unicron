@@ -62,8 +62,16 @@ function Content() {
 
 const settings = <NavItem label="Settings" icon="settings" mark={{ square: true, label: "Update ready" }} href="#settings" />
 
+const WORKSPACES = [
+  { value: "personal", label: "Personal", detail: "sean-mbp // 145 skills" },
+  { value: "studio", label: "Studio", detail: "build-01 // 38 skills" },
+  { value: "client", label: "Client work", detail: "Cloud sandbox // 12 skills" },
+]
+
 export default function AppFrameSidebarView() {
   const [collapsed, setCollapsed] = useState(false)
+  const [workspace, setWorkspace] = useState("personal")
+  const at = WORKSPACES.findIndex((w) => w.value === workspace)
   return (
     <div className="flex flex-col gap-10 p-4 sm:p-6">
       <Specimen label="Vale // lockup, Compose, Search with its key, three sections, Settings pinned; the collapse control">
@@ -74,11 +82,22 @@ export default function AppFrameSidebarView() {
           <Content />
         </FrameBox>
       </Specimen>
-      <Specimen label="Synapse // the workspace switcher: overline, the open one's name, a chevron that opens the menu">
+      <Specimen label="Synapse // the workspace switcher: overline, the open one's name, a chevron that opens a menu of radio items; the arrow keys move, Enter or Space switches (Unicron 73)">
         <FrameBox width={1280} height={720} layout="expanded" label="Expanded, with the switcher">
           <AppFrameSidebar
             lockup={<AppLockup name="Synapse" />}
-            switcher={<AppFrameSwitcher overline="Workspace // 01 of 03" title="Personal" label="Switch workspace" />}
+            switcher={
+              <AppFrameSwitcher
+                overline={`Workspace // ${String(at + 1).padStart(2, "0")} of ${String(WORKSPACES.length).padStart(2, "0")}`}
+                title={WORKSPACES[at].label}
+                label="Switch workspace"
+                accountsLabel="Workspaces"
+                accounts={WORKSPACES}
+                value={workspace}
+                onValueChange={setWorkspace}
+                add={{ label: "Add a workspace…", onClick: () => {} }}
+              />
+            }
             action={{ label: "New skill", icon: "add" }}
             footer={<NavItem label="Settings" icon="settings" href="#settings" />}
             onCollapsedChange={() => {}}

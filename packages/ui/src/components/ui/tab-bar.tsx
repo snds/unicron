@@ -61,8 +61,32 @@ export type TabBarProps = Omit<React.ComponentProps<"div">, "onChange"> & {
    * `vertical` (short screens: a 48px column at the trailing edge, contract 5.1b #11).
    */
   orientation?: TabBarOrientation
-  /** The scrolled form: only the active tab, 48 wide (48 high when vertical). The frame's bottom row drives it unless this is set. */
+  /**
+   * The scrolled form: only the active tab, 48 wide (48 high when vertical). The frame's bottom row
+   * drives it unless this is set. Keyboard focus coming into a minimized bar expands it until focus
+   * leaves (Unicron 65), so every section is reachable and the arrow keys work.
+   */
   minimized?: boolean
+}
+
+/** The last input on the page was a key, not a press: watched once, for every tab bar. */
+let keyboardLast = false
+let watchingInput = false
+function watchInput(doc: Document) {
+  if (watchingInput) return
+  watchingInput = true
+  doc.addEventListener("keydown", () => (keyboardLast = true), true)
+  doc.addEventListener("pointerdown", () => (keyboardLast = false), true)
+}
+
+/** True when focus arrived by keyboard: the browser draws its ring there. A pointer's press does not count. */
+function focusedByKeyboard(el: Element): boolean {
+  if (keyboardLast) return true
+  try {
+    return el.matches(":focus-visible")
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -75,7 +99,7 @@ export type TabBarProps = Omit<React.ComponentProps<"div">, "onChange"> & {
  * - Slide along the bar to scrub: the active tab follows the finger and is picked on lift. The
  *   arrow keys do the same from the keyboard (Home, End too).
  * - `minimized` shrinks the bar to the active tab on `--motion-state`; under reduced motion it
- *   snaps.
+ *   snaps. Keyboard focus coming in expands it again until focus leaves, and the arrow keys work.
  * - Fewer than two sections: there is nothing to switch between, so it draws nothing.
  */
 function TabBar({
@@ -94,19 +118,46 @@ function TabBar({
   onPointerCancel,
   onClickCapture,
   onKeyDown,
+  onFocus,
+  onBlur,
   ...props
 }: TabBarProps) {
   // In the frame's bottom row the row says (scrolled, short screen); a prop set here wins.
   const placed = React.useContext(AppFrameTabBarContext)
   const orientation = orientationProp ?? placed?.orientation ?? "horizontal"
-  const minimized = minimizedProp ?? placed?.minimized ?? false
+  // Keyboard focus inside expands a minimized bar (Unicron 65).
+  const [keyboardInside, setKeyboardInside] = React.useState(false)
+  const minimizedAsked = minimizedProp ?? placed?.minimized ?? false
+  const minimized = minimizedAsked && !keyboardInside
   const ref = React.useRef<HTMLDivElement>(null)
+  // A vertical bar that cannot fit its tabs at 44 scrolls (Unicron 29): a slide along it then
+  // scrolls instead of scrubbing, and every tab keeps its full touch height.
+  const [overflows, setOverflows] = React.useState(false)
   const [scrub, setScrub] = React.useState<string | null>(null)
   const scrubRef = React.useRef<string | null>(null)
   const drag = React.useRef<{ id: number; x: number; y: number; active: boolean; slop: number } | null>(null)
   const swallowClick = React.useRef(false)
   const horizontal = orientation === "horizontal"
   const sections = React.Children.toArray(children).filter(React.isValidElement).length
+  const scrolls = !horizontal && overflows
+
+  React.useEffect(() => {
+    if (minimizedAsked && ref.current) watchInput(ref.current.ownerDocument)
+  }, [minimizedAsked])
+
+  React.useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || horizontal) {
+      setOverflows(false)
+      return
+    }
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    if (typeof ResizeObserver !== "function") return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [horizontal, sections])
 
   const setScrubValue = (next: string | null) => {
     scrubRef.current = next
@@ -173,6 +224,7 @@ function TabBar({
         data-orientation={orientation}
         data-navigation={navigation}
         data-minimized={minimized ? "" : undefined}
+        data-scrolls={scrolls ? "" : undefined}
         data-scrubbing={scrub !== null ? "" : undefined}
         role={navigation === "tabs" ? "tablist" : undefined}
         aria-label={label}
@@ -180,22 +232,23 @@ function TabBar({
         className={cn(
           // Figma 20:1657: raised surface, a 1px rule inside the box, 4px padding and gap, the 2px corner.
           "rule-box flex shrink-0 gap-1 rounded-sm bg-surface-raised p-1 select-none",
-          // The finger owns a slide along the bar; the page does not scroll or zoom from it.
-          "touch-none",
+          // The finger owns a slide along the bar; the page does not scroll or zoom from it. A vertical
+          // bar that scrolls hands the slide to its own scroll instead.
+          scrolls ? "touch-pan-y" : "touch-none",
           // Minimizing moves the bar's share of the row and the gaps on the state role.
           "transition-[flex-grow,flex-basis,gap] duration-(--motion-state) ease-(--motion-ease-move)",
           // Vertical (the short screen's trailing column): it is the one part of that column that
-          // gives way. Where four tabs at 40 do not fit (a phone on its side in a browser, 320
-          // tall), the tabs share what is left, down to 24 each, and the column's last button, the
-          // app's create, stays on screen.
-          horizontal ? "h-control min-w-0 grow basis-0 flex-row" : "w-control min-h-0 shrink flex-col",
+          // gives way. Where four tabs at 44 do not fit (a phone on its side in a browser, 320
+          // tall), the bar scrolls and every tab keeps its 44 (Unicron 29, 64), so the column's
+          // last button, the app's create, stays on screen and no tab drops under the touch floor.
+          horizontal ? "h-control min-w-0 grow basis-0 flex-row" : "no-scrollbar w-control min-h-0 shrink flex-col overflow-y-auto overscroll-contain",
           minimized && "gap-0 overflow-hidden",
           minimized && horizontal && "grow-0 basis-control",
           className
         )}
         onPointerDown={(event: React.PointerEvent<HTMLDivElement>) => {
           onPointerDown?.(event)
-          if (event.defaultPrevented || minimized || event.button !== 0) return
+          if (event.defaultPrevented || minimized || scrolls || event.button !== 0) return
           drag.current = {
             id: event.pointerId,
             x: event.clientX,
@@ -244,6 +297,15 @@ function TabBar({
           event.preventDefault()
           event.stopPropagation()
         }}
+        onFocus={(event: React.FocusEvent<HTMLDivElement>) => {
+          onFocus?.(event)
+          if (minimizedAsked && !keyboardInside && focusedByKeyboard(event.target)) setKeyboardInside(true)
+        }}
+        onBlur={(event: React.FocusEvent<HTMLDivElement>) => {
+          onBlur?.(event)
+          const next = event.relatedTarget as Node | null
+          if (keyboardInside && !(next && event.currentTarget.contains(next))) setKeyboardInside(false)
+        }}
         onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
           onKeyDown?.(event)
           if (event.defaultPrevented || minimized) return
@@ -278,7 +340,8 @@ export type TabBarItemProps = Omit<useRender.ComponentProps<"button">, "children
 
 /**
  * TabBarItem: one section in a `TabBar` (Figma 20:1656 "Dock Tab", icon only). The tabs share the
- * bar's width and fill its height (40); on a coarse pointer each takes a 44px touch. Active: the
+ * bar's width and fill its height (40); on a coarse pointer each takes a 44px touch. In a vertical
+ * bar each tab is 44 high (`size/touch-min`), and the bar scrolls when they do not fit. Active: the
  * soft primary tile, the icon in `primary-text` (as an active Rail Item). Resting: the icon in
  * label ink, the contract's washes under hover and press (§6).
  */
@@ -302,7 +365,8 @@ function TabBarItem({ value, icon, label, mark, render, className, onClick, ...p
           // Colours answer at once (fast); folding away when minimized moves on the state role.
           "[transition:color_var(--motion-fast)_var(--motion-ease),background-color_var(--motion-fast)_var(--motion-ease),flex-grow_var(--motion-state)_var(--motion-ease-move),height_var(--motion-state)_var(--motion-ease-move),opacity_var(--motion-state)_var(--motion-ease-move),visibility_var(--motion-state)]",
           "hover:bg-state-hover active:bg-state-pressed",
-          vertical ? "h-10 min-h-6 w-full" : "h-full grow basis-0",
+          // Vertical: 44 each, the touch floor (Unicron 64); the bar scrolls rather than squeeze them.
+          vertical ? "h-touch-min w-full shrink-0" : "h-full grow basis-0",
           active && "bg-primary-soft text-primary-text hover:bg-primary-soft active:bg-primary-soft",
           // Minimized: the other tabs fold away and leave the tab order.
           collapsed && (vertical ? "invisible h-0 opacity-0" : "invisible grow-0 opacity-0"),

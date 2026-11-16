@@ -6,6 +6,7 @@ import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva } from "class-variance-authority"
 
+import { countdownLeftWords, useCountdownAnnouncement } from "../../lib/countdown-announcement"
 import { formatCountdown } from "../../lib/format"
 import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
@@ -17,7 +18,12 @@ import { Progress, type ProgressTone } from "./progress"
 /**
  * `neutral`: a fact (offline, the place you are in). `live`: something running now (a task, a
  * sync). `needs-you`: something waits on the person (a sign-in request, a review); never
- * dismissable, never swiped away. `critical`: it stopped and the person can act (spend paused).
+ * dismissable, never swiped away.
+ *
+ * `critical` is deprecated since 1.1 and goes in 2.0 (Unicron 67): a status strip is never
+ * critical. Something broken that the person can fix is a critical `Banner` at the top of the
+ * section it is about (cross-app decisions §1, channel 4). It still draws as before, and a
+ * development build warns once.
  */
 export type AccessoryTone = "neutral" | "live" | "needs-you" | "critical"
 
@@ -50,7 +56,7 @@ const strip = cva(
         live: "rule-box bg-surface-raised",
         // No border on the yellow. `on-needs-you`: rings inside take the yellow's ink.
         "needs-you": "on-needs-you bg-needs-you-fill",
-        // Not drawn in Figma: the critical Banner's look at strip size (soft ground, critical edge).
+        // Deprecated (Unicron 67): the critical Banner's look at strip size. Use a critical Banner.
         critical: "bg-critical-soft inset-ring inset-ring-critical-fill",
       },
     },
@@ -151,7 +157,21 @@ export type AccessoryProps = Omit<React.ComponentProps<"div">, "title"> & {
    * AppFrame it goes to the frame's one polite region (contract 5.1c C7); alone, to the strip's own.
    */
   announce?: string
+  /**
+   * When the `countdown` is also said, in seconds left (WCAG 2.2.1: warn before time runs out).
+   * Each app sets its own: Warpcore `[300, 60]`, Synapse `[60, 30, 10]`. As the countdown reaches
+   * one, the strip says "<title>, 1 minute left" once, through the same region as `announce`.
+   * Default: none.
+   */
+  announceAt?: readonly number[]
 }
+
+function isDevelopment(): boolean {
+  const env = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env
+  return env?.NODE_ENV !== "production"
+}
+
+let warnedOfCriticalStrip = false
 
 /**
  * Accessory: the status strip (Figma 20:1713), 48 high, above the phone's bottom row. A live mark
@@ -172,6 +192,7 @@ function Accessory({
   dismissLabel = "Dismiss",
   progress,
   announce,
+  announceAt,
   className,
   onPointerDown,
   onClickCapture,
@@ -180,7 +201,19 @@ function Accessory({
   const descriptionId = React.useId()
   const swallowClick = React.useRef(false)
   // A strip that shows is news: said when it arrives and when it changes, once (C7).
-  const framed = useFrameAnnouncement(announce ?? (typeof title === "string" ? title : null), true)
+  const sentence = announce ?? (typeof title === "string" ? title : null)
+  const framed = useFrameAnnouncement(sentence, true)
+  // The countdown's scheduled warnings (Unicron 33): said once each, as the countdown reaches them.
+  const subject = typeof title === "string" ? title : null
+  const warning = useCountdownAnnouncement(countdown, announceAt, (left) => (subject ? `${subject}, ${countdownLeftWords(left)}` : countdownLeftWords(left)))
+  useFrameAnnouncement(warning, false)
+  React.useEffect(() => {
+    if (tone !== "critical" || warnedOfCriticalStrip || !isDevelopment()) return
+    warnedOfCriticalStrip = true
+    console.warn(
+      '@unicron/ui: Accessory tone="critical" is deprecated and goes in 2.0. A status strip is never critical: show something broken that the person can fix as a critical Banner at the top of its section.'
+    )
+  }, [tone])
   const swipe = onSwipeUp ?? onOpen
   const watchLift = useLift((dx, dy, el) => {
     const threshold = readLength(el, "--c-accessory-swipe-threshold", SWIPE_FALLBACK)
@@ -323,7 +356,7 @@ function Accessory({
       {/* Alone, the strip's own polite region: its news, said once, not each tick. In a frame, the frame's. */}
       {framed ? null : (
         <span data-slot="accessory-status" role="status" className="sr-only">
-          {announce ?? (typeof title === "string" ? title : null)}
+          {warning ?? sentence}
         </span>
       )}
     </div>

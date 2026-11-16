@@ -1,5 +1,7 @@
 // SecretField in the Field Row look (Figma 15:512) and the Text Field box (32:48), with the phone's
 // remote buttons (Lockdown 40:357). Each state is driven once on mount, so a screenshot shows it.
+// Inside an AppFrame a copy's "Copied. Clipboard clears in 30 seconds." and "Clipboard cleared."
+// go to the frame's one polite region (Unicron 33); here, outside one, the field says them itself.
 // View: ?view=secret-field
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import {

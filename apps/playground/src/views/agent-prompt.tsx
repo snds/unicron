@@ -1,7 +1,7 @@
 // Agent Prompt in the needs-you look (Figma 15:517's field), the safe answer solid and focused
 // (cross-app decisions §2). View: ?view=agent-prompt
 import { useState, type ReactNode } from "react"
-import { AgentPrompt, AGENT_PROMPT_REPLY, Button } from "@unicron/ui"
+import { AgentPrompt, AGENT_PROMPT_REPLY, Button, CodeBlock } from "@unicron/ui"
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -27,7 +27,7 @@ export default function AgentPromptView() {
 
   return (
     <div className="flex flex-col gap-10 p-6">
-      <Specimen label="Live, inline // keys by meaning: Y allows once, N denies, 3 always (a standing grant: only with focus in the prompt), whatever the order; keys are inert for half a second after it arrives; on a phone the options stay in place (Warpcore NA4, U-13)">
+      <Specimen label="Live, inline // the countdown says what happens at zero (DENIES IN 28:14, Unicron 92); warned at 5 minutes and 1 (Warpcore's marks, Unicron 33); keys by meaning: Y allows once, N denies, 3 always (a standing grant: only with focus in the prompt), whatever the order; keys are inert for half a second after it arrives; on a phone the options stay in place (Warpcore NA4, U-13)">
         <AgentPrompt
           key={round}
           kind="permission"
@@ -37,6 +37,7 @@ export default function AgentPromptView() {
           verified
           expiresAt={expiresAt}
           safeAnswer="deny"
+          announceAt={[300, 60]}
           onExpire={() => {}}
           options={TASK_OPTIONS}
           answer={answer}
@@ -67,6 +68,29 @@ export default function AgentPromptView() {
       <Specimen label="Keys follow the meaning, not the place // the same three options, Always first: 3 still answers Always, Y Allow once, N Deny">
         <AgentPrompt kind="permission" overline="Question" layout="inline" listen={false} autoFocus={false} options={[TASK_OPTIONS[2], TASK_OPTIONS[1], TASK_OPTIONS[0]]} onAnswer={() => {}}>
           Push the fix to snds/lockdown main?
+        </AgentPrompt>
+      </Specimen>
+
+      <Specimen label="What the call carries // its arguments between the question and the options, not capped; Synapse's marks 60, 30, 10 (Synapse 18)">
+        <AgentPrompt
+          kind="permission"
+          overline="Ask first // GitHub"
+          expiresAt={expiresAt}
+          safeAnswer="deny"
+          announceAt={[60, 30, 10]}
+          onExpire={() => {}}
+          listen={false}
+          autoFocus={false}
+          onAnswer={() => {}}
+          details={
+            <CodeBlock
+              label="Arguments"
+              language="json"
+              code={`{\n  "owner": "snds",\n  "repo": "synapse",\n  "title": "Fix the renamed harness path",\n  "head": "fix/harness-path",\n  "base": "main",\n  "draft": true\n}`}
+            />
+          }
+        >
+          create_pull_request on GitHub, as sean-work, the identity your rules chose.
         </AgentPrompt>
       </Specimen>
 

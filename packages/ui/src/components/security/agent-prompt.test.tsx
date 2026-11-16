@@ -23,6 +23,24 @@ const key = (k: string, target: Element = document.body) => {
 const raw = (k: string, target: Element = document.body) => fireEvent.keyDown(target, { key: k })
 
 describe("AgentPrompt", () => {
+  it("holds what the call carries between the question and the options, uncapped (Synapse 18)", () => {
+    render(
+      <AgentPrompt kind="permission" onAnswer={() => {}} details={<pre data-testid="args">{'{ "path": "src/", "recursive": true }'}</pre>}>
+        Read files in the workspace
+      </AgentPrompt>
+    )
+    const region = screen.getByRole("region")
+    const body = region.querySelector('[data-slot="agent-prompt-body"]') as HTMLElement
+    const details = region.querySelector('[data-slot="agent-prompt-details"]') as HTMLElement
+    const options = region.querySelector('[data-slot="agent-prompt-options"]') as HTMLElement
+    expect(details).toContainElement(screen.getByTestId("args"))
+    // In order: the question, then the arguments, then the choices.
+    expect(body.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(details.compareDocumentPosition(options) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // Not capped: no max height and no scroll of its own.
+    expect(details.className).not.toMatch(/max-h|overflow/)
+  })
+
   it("owns its title words, and is a region named by them", () => {
     render(<AgentPrompt kind="permission" onAnswer={() => {}}>Run pnpm install in the sandbox</AgentPrompt>)
     expect(screen.getByRole("region", { name: "Allow?" })).toHaveAttribute("data-kind", "permission")
@@ -186,19 +204,49 @@ describe("AgentPrompt", () => {
     afterEach(() => vi.useRealTimers())
     const T = 1_700_000_000_000
 
-    it("counts down to the safe answer: the time on screen, the safe answer in the name", () => {
+    it("counts down to the safe answer and says what happens at zero: `// DENIES IN 01:05` (Unicron 92)", () => {
       vi.useFakeTimers({ now: T })
-      render(<AgentPrompt kind="permission" expiresAt={T + 65_000} safeAnswer="deny" onAnswer={() => {}} />)
+      render(<AgentPrompt kind="permission" overline="Question" expiresAt={T + 65_000} safeAnswer="deny" onAnswer={() => {}} />)
       const timer = screen.getByRole("timer")
-      // Cross-app decisions §13: MM:SS with a leading zero.
-      expect(timer).toHaveTextContent("01:05")
-      expect(timer).toHaveAccessibleName("Deny in 01:05")
+      // Cross-app decisions §13: MM:SS with a leading zero. The overline's caps come from its type role.
+      expect(timer).toHaveTextContent("// Denies in 01:05")
+      expect(timer).toHaveAccessibleName("Denies in 01:05")
+      expect(timer.className).toContain("type-overline")
       act(() => vi.advanceTimersByTime(5_000))
-      expect(screen.getByRole("timer")).toHaveTextContent("01:00")
+      expect(screen.getByRole("timer")).toHaveTextContent("Denies in 01:00")
       // Under a minute: NN S.
       act(() => vi.advanceTimersByTime(15_000))
-      expect(screen.getByRole("timer")).toHaveTextContent("45 S")
-      expect(screen.getByRole("timer")).toHaveAccessibleName("Deny in 45 S")
+      expect(screen.getByRole("timer")).toHaveTextContent("Denies in 45 S")
+      expect(screen.getByRole("timer")).toHaveAccessibleName("Denies in 45 S")
+    })
+
+    it("names what the safe answer does whatever its word: Stop stops", () => {
+      vi.useFakeTimers({ now: T })
+      render(<AgentPrompt kind="continue" expiresAt={T + 30_000} safeAnswer="stop" onAnswer={() => {}} />)
+      expect(screen.getByRole("timer")).toHaveTextContent("Stops in 30 S")
+    })
+
+    it("warns at the app's marks, once each, never every tick (Unicron 33); 60 s by default", () => {
+      vi.useFakeTimers({ now: T })
+      const status = () => screen.getByRole("region").querySelector('[role="status"]') as HTMLElement
+      const { unmount } = render(<AgentPrompt kind="permission" expiresAt={T + 75_000} safeAnswer="deny" announceAt={[60, 30, 10]} onAnswer={() => {}} />)
+      act(() => vi.advanceTimersByTime(1_000))
+      expect(status()).toHaveTextContent("Waiting for you")
+      act(() => vi.advanceTimersByTime(14_000))
+      expect(status()).toHaveTextContent("1 minute left. Then it denies.")
+      act(() => vi.advanceTimersByTime(5_000))
+      expect(status()).toHaveTextContent("1 minute left. Then it denies.")
+      act(() => vi.advanceTimersByTime(25_000))
+      expect(status()).toHaveTextContent("30 seconds left. Then it denies.")
+      act(() => vi.advanceTimersByTime(20_000))
+      expect(status()).toHaveTextContent("10 seconds left. Then it denies.")
+      unmount()
+      // The default warns once, a minute before.
+      render(<AgentPrompt kind="permission" expiresAt={Date.now() + 65_000} safeAnswer="deny" onAnswer={() => {}} />)
+      act(() => vi.advanceTimersByTime(6_000))
+      expect(status()).toHaveTextContent("1 minute left. Then it denies.")
+      act(() => vi.advanceTimersByTime(40_000))
+      expect(status()).toHaveTextContent("1 minute left. Then it denies.")
     })
 
     it("answers itself with the safe answer, once, and marks it", () => {
@@ -225,6 +273,13 @@ describe("AgentPrompt", () => {
       act(() => vi.advanceTimersByTime(2_000))
       expect(onExpire).toHaveBeenCalledTimes(1)
       expect(onAnswer).not.toHaveBeenCalled()
+    })
+
+    it("uses the core's word once time runs out, in every app (Synapse 18)", () => {
+      vi.useFakeTimers({ now: T })
+      render(<AgentPrompt kind="permission" expiresAt={T + 1_000} safeAnswer="deny" onAnswer={() => {}} />)
+      act(() => vi.advanceTimersByTime(2_000))
+      expect(screen.getByRole("timer")).toHaveTextContent("// Timed out")
     })
 
     it("draws no timer without a safe answer, and none once answered", () => {

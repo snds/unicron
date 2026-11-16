@@ -401,7 +401,8 @@ function NavItem({
   // On the current tile everything is body ink, a critical item too: critical text on the soft
   // tile falls under the label floor, so there the glyph and the words in the name carry it.
   const ink = {
-    index: current ? "text-text-secondary" : "text-text-faint",
+    // A reading part, so the label ink, never the faint one (Unicron 25: faint is for disabled and decoration).
+    index: current ? "text-text-secondary" : "text-text-label",
     icon: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
     label: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
     count: current ? "text-text-body" : "text-text-label",

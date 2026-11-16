@@ -125,4 +125,21 @@ describe("Banner (Figma 32:89)", () => {
     await user.keyboard("{Enter}")
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
+
+  it("a critical banner cannot be dismissed: no close button even with onDismiss, and one warning in development (Unicron 62)", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const onDismiss = vi.fn()
+    const { rerender } = render(<Banner tone="critical" title="Sync failed" onDismiss={onDismiss} />)
+    expect(screen.queryByRole("button", { name: "Dismiss" })).toBeNull()
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][0])).toContain('tone="critical" cannot be dismissed')
+    rerender(<Banner tone="critical" title="Sync failed again" onDismiss={onDismiss} />)
+    expect(warn).toHaveBeenCalledTimes(1)
+    // The other tones keep their close button.
+    for (const tone of ["info", "success", "warning"] as const) {
+      rerender(<Banner tone={tone} title="Saved" onDismiss={onDismiss} />)
+      expect(screen.getByRole("button", { name: "Dismiss" })).toBeInTheDocument()
+    }
+    warn.mockRestore()
+  })
 })

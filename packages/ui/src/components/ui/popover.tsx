@@ -23,10 +23,18 @@ function PopoverClose({ ...props }: PopoverPrimitive.Close.Props) {
   return <PopoverPrimitive.Close data-slot="popover-close" {...props} />
 }
 
+/** How wide a popover is (Unicron 60): `default` 320 (`--c-popover-width`), `wide` 420 (`--c-popover-width-wide`, Figma's one drawn popover, Warpcore's). */
+export type PopoverWidth = "default" | "wide"
+
+const POPOVER_WIDTHS: Record<PopoverWidth, string> = {
+  default: "w-(--c-popover-width)",
+  wide: "w-(--c-popover-width-wide)",
+}
+
 /**
  * Solid and square, like every overlay: the raised surface, a 1px rule, the 2px corner, no shadow
- * and no blur. `--c-popover-width` sets its width; it never outgrows the space on screen, and
- * scrolls when it is taller than that space. `scrim` dims the page behind it with the menu scrim
+ * and no blur. `width` picks 320 (the default) or 420 (`wide`, as Figma draws Warpcore's environment
+ * picker); it never outgrows the space on screen, and scrolls when it is taller than that space. `scrim` dims the page behind it with the menu scrim
  * (--c-scrim-menu: 32% on graphite, the role's 64% on stone): an environment picker, a quick create.
  */
 /**
@@ -50,6 +58,7 @@ function PopoverContent({
   side = "bottom",
   sideOffset = 4,
   scrim = false,
+  width = "default",
   container,
   initialFocus,
   children,
@@ -61,6 +70,8 @@ function PopoverContent({
   > & {
     /** Dim the page behind with the menu scrim. Off by default. */
     scrim?: boolean
+    /** `default` (320) or `wide` (420). Most popovers need less than Figma's one drawn 420. */
+    width?: PopoverWidth
     /** Where the portal goes: `<body>` by default. */
     container?: PopoverPrimitive.Portal.Props["container"]
   }) {
@@ -84,10 +95,12 @@ function PopoverContent({
       >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
+          data-width={width}
           initialFocus={initialFocus ?? (() => firstControl(inner.current))}
           className={cn(
             "bg-surface-raised text-text-body type-body rule-box flex flex-col gap-4 rounded p-4 outline-hidden",
-            "w-(--c-popover-width) max-w-(--available-width) max-h-(--available-height) overflow-y-auto origin-(--transform-origin) z-50",
+            POPOVER_WIDTHS[width],
+            "max-w-(--available-width) max-h-(--available-height) overflow-y-auto origin-(--transform-origin) z-50",
             // Fades and moves 8px off its anchor: no zoom. 200ms in, 120ms out (motion-anchor).
             "motion-anchor",
             className

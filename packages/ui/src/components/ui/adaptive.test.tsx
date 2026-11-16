@@ -85,7 +85,8 @@ describe("AdaptiveDialog", () => {
     expect(sheet).toHaveAttribute("data-side", "bottom")
     expect(screen.getByText("New event // personal")).toHaveAttribute("data-slot", "sheet-overline")
     expect(document.querySelector('[data-slot="sheet-footer"]')).toContainElement(screen.getByRole("button", { name: "Save event" }))
-    expect(sheet.querySelector('[data-slot="sheet-grabber"]')).not.toBeNull()
+    // It does not drag, so it draws no grabber (Unicron 54).
+    expect(sheet.querySelector('[data-slot="sheet-grabber"]')).toBeNull()
   })
 
   it("presentation fixes the form whatever the screen", () => {

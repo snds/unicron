@@ -6,11 +6,21 @@ import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
+import { countdownLeftWords, useCountdownAnnouncement } from "../../lib/countdown-announcement"
 import { formatCountdown } from "../../lib/format"
 import { Icon, type IconName } from "../icon"
 import { AppFrameRailContext, useAppFrame, useFrameAnnouncement, type AppFrameBack } from "./app-frame-context"
 import { Button } from "./button"
-import { DropdownMenu, DropdownMenuTrigger } from "./dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./dropdown-menu"
 import { FloatButton } from "./float-button"
 import { Kbd } from "./kbd"
 import { Progress, type ProgressTone } from "./progress"
@@ -37,6 +47,9 @@ export interface AppFrameAction {
 function isAction(value: unknown): value is AppFrameAction {
   return typeof value === "object" && value !== null && !React.isValidElement(value) && "label" in value
 }
+
+/** How long after the keyboard's quick create a context-menu event counts as the same press, in ms. */
+const QUICK_CREATE_KEY_WINDOW = 1000
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────────────────────────── */
 
@@ -133,6 +146,20 @@ function AppFrameSidebar({
     return () => setSidebar(null)
   }, [frame.phone, collapsed, setSidebar])
   const drawerShows = medium && drawerOpen
+  // The primary's quick create from the keyboard. The key's own context-menu event that may follow
+  // (Windows raises it as the Menu key comes up) is the same press, so it is not run twice.
+  const keyedAt = React.useRef(-Infinity)
+  const quickCreateKey = (event: React.KeyboardEvent, act: AppFrameAction) => {
+    if (event.repeat || !(event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))) return
+    event.preventDefault()
+    keyedAt.current = event.timeStamp
+    act.onLongPress?.()
+  }
+  const quickCreateMenu = (event: React.MouseEvent, act: AppFrameAction) => {
+    event.preventDefault()
+    if (event.timeStamp - keyedAt.current < QUICK_CREATE_KEY_WINDOW) return
+    act.onLongPress?.()
+  }
   const expandButton = React.useRef<HTMLButtonElement>(null)
   const collapseButton = React.useRef<HTMLButtonElement>(null)
   const drawerRef = React.useRef<HTMLDivElement>(null)
@@ -219,7 +246,14 @@ function AppFrameSidebar({
         </div>
         {switcher}
         {isAction(action) ? (
-          <Button block onClick={action.onClick} onContextMenu={action.onLongPress ? (event) => (event.preventDefault(), action.onLongPress?.()) : undefined}>
+          <Button
+            block
+            onClick={action.onClick}
+            // Quick create: a right click, the context-menu key or Shift+F10 (Unicron 48), never Shift+Enter.
+            aria-keyshortcuts={action.onLongPress ? "Shift+F10 ContextMenu" : undefined}
+            onKeyDown={action.onLongPress ? (event) => quickCreateKey(event, action) : undefined}
+            onContextMenu={action.onLongPress ? (event) => quickCreateMenu(event, action) : undefined}
+          >
             {action.icon ? <Icon name={action.icon} size="sm" /> : null}
             {action.label}
           </Button>
@@ -374,17 +408,90 @@ export type AppFrameSwitcherProps = Omit<React.ComponentProps<"div">, "title"> &
   title: string
   /** The chevron's name: "Switch workspace". */
   label: string
-  /** The menu the chevron opens: a `DropdownMenuContent` with the accounts, ending "Add a workspace…" (decisions §7). */
+  /**
+   * The accounts (workspaces, vaults) to switch between. The chevron opens them as a menu of radio
+   * items (Unicron 73): the arrow keys only move between them, and Enter, Space or a click switches,
+   * so passing over an account never loads it. The open one is checked.
+   */
+  accounts?: readonly AppFrameSwitcherAccount[]
+  /** The open account's `value`. */
+  value?: string
+  /** Enter, Space or a click on another account. */
+  onValueChange?: (value: string) => void
+  /** The group's name for assistive tech, and the menu's overline ("Workspaces"). Default: `label`. */
+  accountsLabel?: string
+  /** The last item, after a hairline: "Add a workspace…" (decisions §7). */
+  add?: { label: string; onClick: () => void }
+  /** Or the whole menu: a `DropdownMenuContent` of your own. Wins over `accounts`. */
   menu?: React.ReactNode
   /** Or a press the app answers itself (a popover, a sheet). */
   onOpen?: () => void
 }
 
+/** One account in the switcher's menu. */
+export interface AppFrameSwitcherAccount {
+  value: string
+  label: string
+  /** A second line in the menu (an address, a plan). */
+  detail?: string
+}
+
 /**
  * AppFrameSwitcher: the sidebar's account, vault or workspace switcher (Synapse Desktop / 01): the
- * overline, the open one's name in the lead role (24/32, as drawn), and a chevron float button that opens the menu.
+ * overline, the open one's name in the lead role (24/32, as drawn), and a chevron float button that
+ * opens the menu. Pass `accounts` and the menu is drawn for you: a radio group where the arrow keys
+ * move and Enter or Space switches (Unicron 73), then "Add a …" after a hairline.
  */
-function AppFrameSwitcher({ overline, title, label, menu, onOpen, className, ...props }: AppFrameSwitcherProps) {
+function AppFrameSwitcher({
+  overline,
+  title,
+  label,
+  accounts,
+  value,
+  onValueChange,
+  accountsLabel,
+  add,
+  menu: menuProp,
+  onOpen,
+  className,
+  ...props
+}: AppFrameSwitcherProps) {
+  const menu =
+    menuProp ??
+    (accounts && accounts.length > 0 ? (
+      <DropdownMenuContent data-slot="app-frame-switcher-menu" width="auto">
+        <DropdownMenuRadioGroup
+          value={value}
+          onValueChange={(next: unknown) => {
+            if (typeof next === "string" && next !== value) onValueChange?.(next)
+          }}
+        >
+          {/* Inside the group it names it, for assistive tech too. */}
+          <DropdownMenuLabel>{accountsLabel ?? label}</DropdownMenuLabel>
+          {accounts.map((account) => (
+            <DropdownMenuRadioItem key={account.value} value={account.value} closeOnClick>
+              {account.detail ? (
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate">{account.label}</span>
+                  <span className="type-caption truncate text-text-secondary">{account.detail}</span>
+                </span>
+              ) : (
+                account.label
+              )}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        {add ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={add.onClick}>
+              <Icon name="add" />
+              {add.label}
+            </DropdownMenuItem>
+          </>
+        ) : null}
+      </DropdownMenuContent>
+    ) : undefined)
   const chevron = <FloatButton label={label} icon="chevron--down" onClick={onOpen} aria-haspopup={menu ? "menu" : undefined} />
   return (
     <div data-slot="app-frame-switcher" className={cn("flex min-w-0 flex-col", className)} {...props}>
@@ -462,6 +569,13 @@ export type StatusItemProps = Omit<React.ComponentProps<"div">, "children"> & {
    * or one with its own `announce`, is also said when it first shows.
    */
   announce?: string
+  /**
+   * When the `countdown` is also said, in seconds left (WCAG 2.2.1: warn before time runs out).
+   * Each app sets its own: Warpcore `[300, 60]`, Synapse `[60, 30, 10]`. As the countdown reaches
+   * one, the item says "<words>, 1 minute left" once, through the same region as `announce`.
+   * Default: none.
+   */
+  announceAt?: readonly number[]
 }
 
 /**
@@ -470,11 +584,14 @@ export type StatusItemProps = Omit<React.ComponentProps<"div">, "children"> & {
  * countdown, a segmented bar and a text action. The item itself can be a button or a link. Two at
  * most per line: the live one first, then the screen's own fact.
  */
-function StatusItem({ tone = "neutral", mark, text, short, countdown, progress, action, onClick, href, label, announce, className, ...props }: StatusItemProps) {
+function StatusItem({ tone = "neutral", mark, text, short, countdown, progress, action, onClick, href, label, announce, announceAt, className, ...props }: StatusItemProps) {
   const descriptionId = React.useId()
   const ink = STATUS_INK[tone]
   // One polite region per frame (C7): the frame says the sentence; outside a frame the item does.
   const framed = useFrameAnnouncement(announce ?? text, tone !== "neutral" || announce !== undefined)
+  // The countdown's scheduled warnings (Unicron 33), once each, through the same region.
+  const warning = useCountdownAnnouncement(countdown, announceAt, (left) => `${label ?? text}, ${countdownLeftWords(left)}`)
+  useFrameAnnouncement(warning, false)
 
   const body = (
     <>
@@ -533,7 +650,7 @@ function StatusItem({ tone = "neutral", mark, text, short, countdown, progress, 
       ) : null}
       {framed ? null : (
         <span data-slot="status-item-status" role="status" className="sr-only">
-          {announce ?? text}
+          {warning ?? announce ?? text}
         </span>
       )}
     </div>

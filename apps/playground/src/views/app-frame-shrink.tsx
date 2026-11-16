@@ -1,9 +1,11 @@
 // The list + detail shrink order (contract 5.1c C8, Synapse SNA4): when the content is narrower than
 // the list's least width, the gap and the detail's least width (320 + 24 + 480 = 824, knobs), the
 // sidebar shows as its rail first; narrower still, the detail is pushed over the list as at medium
-// width. The frame does it by itself: no media query here. View: ?view=app-frame-shrink
+// width. The frame does it by itself: no media query here. And from 1024 to 1099 the sidebar is its
+// rail on every screen, one with no detail too (Unicron 74). View: ?view=app-frame-shrink
 import { useState, type CSSProperties, type ReactNode } from "react"
 import {
+  AppFrameColumn,
   AppFrameDetail,
   AppFrameInset,
   AppFrameList,
@@ -92,6 +94,34 @@ function ShrinkBox({ width, label, knobs, start = "k14" }: { width: number; labe
   return knobs ? <div style={knobs}>{box}</div> : box
 }
 
+/** A screen with no list + detail (Synapse's overview): one column under the status line. */
+function Overview() {
+  return (
+    <FrameBox width={1060} height={480} label="1060, one column // the sidebar is its rail here too">
+      <AppFrameSidebar lockup={<AppLockup name="Synapse" />} action={{ label: "New skill", icon: "add" }}>
+        <NavSection title="Workspace" count={5}>
+          <NavItem label="Search" icon="search" mark={{ keys: "/" }} href="#search" />
+          <NavItem label="Overview" icon="dashboard" current href="#overview" />
+          <NavItem label="Harnesses" icon="bot" count={4} href="#harnesses" />
+          <NavItem label="Skills" icon="document" count={12} href="#skills" />
+          <NavItem label="Checks" icon="checkmark--outline" mark={{ count: 3, tone: "needs-you" }} href="#checks" />
+        </NavSection>
+      </AppFrameSidebar>
+      <AppFrameStatusLine crumbs={[{ label: "Personal", href: "#personal" }, { label: "Overview" }]}>
+        <StatusItem text="Checked // 09:16" />
+      </AppFrameStatusLine>
+      <AppFrameMain>
+        <AppFrameColumn aria-label="Overview">
+          <AppFramePageHead overline="Personal // 03 failing" title="Overview" size="sm" />
+          <Prose>
+            <p>Three checks are failing. The newest is a knowledge note that links to a renamed file.</p>
+          </Prose>
+        </AppFrameColumn>
+      </AppFrameMain>
+    </FrameBox>
+  )
+}
+
 export default function AppFrameShrinkView() {
   return (
     <div className="flex flex-col gap-10 p-4 sm:p-6">
@@ -107,6 +137,9 @@ export default function AppFrameShrinkView() {
           label="1050, the least detail at 640 // 930 < 320 + 24 + 640: pushed as at medium"
           knobs={{ "--c-app-frame-detail-min": "40rem" } as CSSProperties}
         />
+      </Specimen>
+      <Specimen label="1024 to 1099 // the sidebar is its rail on every screen, so it does not change width from one section to the next">
+        <Overview />
       </Specimen>
     </div>
   )
