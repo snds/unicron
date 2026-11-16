@@ -1,4 +1,4 @@
-# 08 · Motion
+# 09 · Motion
 
 How things move in Unicron, and why. The values are in [02 · Tokens → Motion](02-tokens.md#motion).
 The recipes are in [03 · Components → Motion recipes](03-components.md#motion-recipes). This page

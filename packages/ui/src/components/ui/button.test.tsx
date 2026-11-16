@@ -169,8 +169,8 @@ describe("Button focus and invalid edges", () => {
     for (const variant of VARIANTS.filter((v) => !v.startsWith("needs-you"))) expect(classesOf({ variant })).not.toContain("on-needs-you")
   })
 
-  it("an invalid button takes a 2px inside edge in the critical fill, as an invalid field does", () => {
-    expect(classesOf({})).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-critical-fill"]))
+  it("an invalid button takes a 2px inside edge in the invalid line role, as an invalid field does (Unicron 17)", () => {
+    expect(classesOf({})).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-(--line-invalid)"]))
   })
 
   it("no primitive draws the pre-1.0 invalid ring (nothing measures it any more)", () => {
@@ -195,10 +195,14 @@ describe("Button states", () => {
     expect(active.some((a) => !hover.includes(a))).toBe(true)
   })
 
-  it("solid kinds go to 90% under the pointer and 80% when pressed", () => {
-    expect(classesOf({})).toEqual(expect.arrayContaining(["hover:bg-primary/90", "active:bg-primary/80"]))
-    expect(classesOf({ variant: "destructive" })).toEqual(expect.arrayContaining(["hover:bg-critical-fill/90", "active:bg-critical-fill/80"]))
-    expect(classesOf({ variant: "needs-you" })).toEqual(expect.arrayContaining(["hover:bg-needs-you-on-fill/90", "active:bg-needs-you-on-fill/80"]))
+  it("solid kinds go to 90% under the pointer and 85% when pressed (Unicron 28: 80% put the label under Lc 75 on Vale and Lockdown stone)", () => {
+    expect(classesOf({})).toEqual(expect.arrayContaining(["hover:bg-primary/90", "active:bg-primary/85"]))
+    expect(classesOf({ variant: "destructive" })).toEqual(expect.arrayContaining(["hover:bg-critical-fill/90", "active:bg-critical-fill/85"]))
+    expect(classesOf({ variant: "ghost-destructive" })).toContain("active:bg-critical-fill/85")
+    expect(classesOf({ variant: "needs-you" })).toEqual(expect.arrayContaining(["hover:bg-needs-you-on-fill/90", "active:bg-needs-you-on-fill/85"]))
+    for (const variant of ["default", "destructive", "ghost-destructive", "needs-you"] as const) {
+      expect(classesOf({ variant }).some((c) => c.endsWith("/80"))).toBe(false)
+    }
   })
 
   it("transparent kinds take the hover and pressed washes", () => {

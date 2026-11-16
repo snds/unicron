@@ -4,6 +4,9 @@
 // thing. Specimens are plain boxes on purpose: a recipe is shown on its own, not on a component.
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import {
+  AppFrameList,
+  AppFrameMain,
+  AppFramePageHead,
   Button,
   CheckDraw,
   Checkbox,
@@ -48,6 +51,8 @@ import {
   SheetTitle,
   SheetTrigger,
   Switch,
+  TabBar,
+  TabBarItem,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -61,7 +66,70 @@ import {
   type SecretStrength,
 } from "@unicron/ui"
 
+import { frameMotionContracts, type FrameMotionContract } from "./motion-frame"
+import { FrameBox } from "./views/_frame-boxes"
+
 type Mode = "full" | "reduced"
+
+
+function TabBarMinimizeSpecimen() {
+  const [minimized, setMinimized] = useState(false)
+  const [value, setValue] = useState("inbox")
+  return (
+    <div className="flex w-full flex-col items-start gap-3">
+      <Button data-trigger size="sm" variant="outline" aria-pressed={minimized} onClick={() => setMinimized((m) => !m)}>
+        {minimized ? "Unfold" : "Minimize"}
+      </Button>
+      <div data-specimen className="flex w-full max-w-64">
+        <TabBar label="Sections" value={value} onValueChange={setValue} minimized={minimized}>
+          <TabBarItem value="inbox" icon="email" label="Inbox" />
+          <TabBarItem value="calendar" icon="calendar" label="Calendar" />
+          <TabBarItem value="notes" icon="notebook" label="Notes" />
+        </TabBar>
+      </div>
+    </div>
+  )
+}
+
+function PullReleaseSpecimen() {
+  const box = useRef<HTMLDivElement>(null)
+  // A pull past the line and a lift, as a finger would send it: the frame's own handler runs.
+  const pull = () => {
+    const list = box.current?.querySelector<HTMLElement>('[data-slot="app-frame-list"][data-pull-ready]')
+    if (!list) return
+    const at = list.getBoundingClientRect()
+    const x = at.left + at.width / 2
+    const y = at.top + 80
+    const send = (type: string, dy: number) =>
+      list.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 42, isPrimary: true, button: 0, pointerType: "touch", clientX: x, clientY: y + dy }))
+    send("pointerdown", 0)
+    send("pointermove", 12)
+    send("pointermove", 110)
+    // Lift a frame later, once the pulled place has been drawn, so the way back has a start.
+    requestAnimationFrame(() => requestAnimationFrame(() => send("pointerup", 110)))
+  }
+  return (
+    <div ref={box} className="flex w-full flex-col items-start gap-3">
+      <Button data-trigger size="sm" variant="outline" onClick={pull}>
+        Pull and let go
+      </Button>
+      <div data-specimen className="min-w-0 max-w-full">
+        <FrameBox width={280} height={200} layout="phone" label="A phone column">
+          <AppFrameMain>
+            <AppFrameList aria-label="Health" onRefresh={() => new Promise<void>((done) => setTimeout(done, 600))}>
+              <AppFramePageHead size="sm" overline="Health // 248 items" title="Health" />
+            </AppFrameList>
+          </AppFrameMain>
+        </FrameBox>
+      </div>
+    </div>
+  )
+}
+
+const FRAME_SPECIMENS: Record<FrameMotionContract["id"], () => ReactNode> = {
+  "tab-bar-minimize": () => <TabBarMinimizeSpecimen />,
+  "pull-release": () => <PullReleaseSpecimen />,
+}
 
 const DURATIONS = ["--motion-press", "--motion-fast", "--motion-base", "--motion-state", "--motion-move"] as const
 const CURVES = [
@@ -655,6 +723,30 @@ export function MotionView() {
           </div>
         </section>
       ))}
+      <section className="mb-8">
+        <h3 className="mb-3 text-sm font-medium">The frame</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          {frameMotionContracts.map((contract) => (
+            <article key={contract.id} data-frame-contract={contract.id} className="rounded-xl border p-4">
+              <header className="mb-3">
+                <h4 className="text-sm font-medium">{contract.title}</h4>
+                <p className="text-muted-foreground font-mono text-xs">{contract.recipe}</p>
+              </header>
+              <div className="mb-4 flex min-h-24 flex-wrap items-start gap-3">{FRAME_SPECIMENS[contract.id]()}</div>
+              <dl className="grid gap-1 text-xs">
+                <Fact term="Trigger">{contract.trigger}</Fact>
+                <Fact term="Moves">{contract.properties.join(", ")}</Fact>
+                <Fact term="Runs">
+                  up to <code>{contract.duration}</code> on {contract.easing.map((e) => e.replace("--motion-", "")).join(", ")}
+                </Fact>
+                <Fact term="Met">{contract.frequency}</Fact>
+                <Fact term="Interrupted">{contract.interrupted}</Fact>
+                <Fact term="Reduced">{contract.reduced}</Fact>
+              </dl>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

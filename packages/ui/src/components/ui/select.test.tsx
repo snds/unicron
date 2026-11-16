@@ -153,9 +153,9 @@ describe("Select", () => {
   it("carries aria-invalid onto the trigger, where the 2px critical border keys on it", () => {
     render(<Subject invalid />)
     expect(trigger()).toHaveAttribute("aria-invalid", "true")
-    // 1.0: Figma's error field (32:48): a 2px inside border in critical-fill, no outer ring.
+    // 1.0: Figma's error field (32:48): a 2px inside border, no outer ring; its colour is the invalid line role (Unicron 17).
     expect(trigger().className).toContain("aria-invalid:rule-box-emphasis")
-    expect(trigger().className).toContain("aria-invalid:[--rule-color:var(--critical-fill)]")
+    expect(trigger().className).toContain("aria-invalid:[--rule-color:var(--line-invalid)]")
   })
 
   it("renders a label outside a group without throwing", async () => {

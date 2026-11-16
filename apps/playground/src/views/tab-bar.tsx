@@ -13,9 +13,21 @@ function Specimen({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** Vale's four sections, as the phone frames draw them. */
-function ValeTabs({ value, onValueChange, minimized, onReselect }: { value: string; onValueChange: (v: string) => void; minimized?: boolean; onReselect?: (v: string) => void }) {
+function ValeTabs({
+  value,
+  onValueChange,
+  minimized,
+  onReselect,
+  orientation,
+}: {
+  value: string
+  onValueChange: (v: string) => void
+  minimized?: boolean
+  onReselect?: (v: string) => void
+  orientation?: "horizontal" | "vertical"
+}) {
   return (
-    <TabBar label="Sections" value={value} onValueChange={onValueChange} minimized={minimized} onReselect={onReselect}>
+    <TabBar label="Sections" value={value} onValueChange={onValueChange} minimized={minimized} onReselect={onReselect} orientation={orientation}>
       <TabBarItem value="mail" icon="email" label="Mail" />
       <TabBarItem value="calendar" icon="calendar" label="Calendar" />
       <TabBarItem value="contacts" icon="user--multiple" label="Contacts" />
@@ -60,7 +72,7 @@ export default function TabBarView() {
         </p>
       </Specimen>
 
-      <Specimen label="Scrolled // the bar shrinks to the active tab; the strip joins the row">
+      <Specimen label="Scrolled // the bar shrinks to the active tab; the strip joins the row; Tab into it and it expands, the arrow keys work (Unicron 65)">
         <div className="flex items-center gap-3">
           <Switch checked={scrolled} onCheckedChange={setScrolled} aria-label="Scrolled" />
           <span className="type-caption text-support-foreground">Scrolled</span>
@@ -73,7 +85,7 @@ export default function TabBarView() {
         </div>
       </Specimen>
 
-      <Specimen label="Short screen // the bar turned vertical in the trailing column">
+      <Specimen label="Short screen // the bar turned vertical in the trailing column, 44 tall tabs (Unicron 64)">
         <div className="flex flex-col items-start gap-2">
           <FloatButton label="Search" icon="search" size="l" />
           <TabBar label="Sections" orientation="vertical" value={short} onValueChange={setShort}>
@@ -82,6 +94,14 @@ export default function TabBarView() {
             <TabBarItem value="tasks" icon="task" label="Tasks" mark={{ count: 1, tone: "needs-you" }} />
           </TabBar>
           <FloatButton label="New task" icon="add" kind="primary" size="l" />
+        </div>
+      </Specimen>
+
+      <Specimen label="Too short for four // the vertical bar scrolls, every tab keeps 44, create stays on screen (Unicron 29)">
+        <div data-testid="short-column" className="flex h-64 flex-col items-start gap-2">
+          <FloatButton label="Search" icon="search" size="l" />
+          <ValeTabs value={vale} onValueChange={setVale} orientation="vertical" />
+          <FloatButton label="New message" icon="edit" kind="primary" size="l" />
         </div>
       </Specimen>
 

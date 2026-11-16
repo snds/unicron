@@ -16,7 +16,7 @@ apps build on: Vale, Warpcore, Lockdown and Synapse. Public, personal, Apache-2.
 
 Docs: [principles](docs/01-principles.md) · [tokens](docs/02-tokens.md) · [components](docs/03-components.md) ·
 [patterns](docs/04-patterns.md) · [consuming](docs/05-consuming.md) · [contributing and releasing](docs/06-contributing.md) ·
-[migrating to 1.0](docs/07-migrating-to-1.0.md) · [motion](docs/08-motion.md) · [DESIGN.md](DESIGN.md) (the look).
+[migrating to 1.0](docs/07-migrating-to-1.0.md) · [migrating to 1.1](docs/08-migrating-to-1.1.md) · [motion](docs/09-motion.md) · [DESIGN.md](DESIGN.md) (the look).
 
 ## Stack
 
@@ -97,7 +97,7 @@ borders, the 2px corner, the motion roles ([what a component needs](docs/06-cont
 
 ```
 packages/tokens/tokens/{global,semantic,component}.json   DTCG sources (the truth)
-packages/tokens/tokens/themes/<app>.json                  the 28 theme slots of one app
+apps/playground/src/app-themes/<app>.json                 the 28 theme slots of one app (an example; each app's own layer holds them)
 packages/tokens/tokens/type.json                          the 23 type roles
 packages/tokens/tokens/component/<area>.json              component knobs, one file per area
 packages/tokens/tokens/figma/theme-2026-11.json           a snapshot of Figma, for the parity check

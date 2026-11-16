@@ -10,14 +10,15 @@ import { cn } from "../../lib/utils"
 
 // Pressed is inverted ink: the ink as the fill, the ground as the label, as an active Filter Chip
 // and a current FloatButton are. It is never the identity colour, so a pressed tool never reads as
-// the screen's one primary action. Hover and pressed move the fill toward the ground (90%, 80%),
-// as every solid does. Unpressed, a toggle is a ghost button: ink, with the hover and pressed washes.
+// the screen's one primary action. Hover and pressed move the fill toward the ground (90%, 86%),
+// as a current FloatButton does: at 86% the label holds Lc 75 on graphite (Unicron 28).
+// Unpressed, a toggle is a ghost button: ink, with the hover and pressed washes.
 const PRESSED =
-  "aria-pressed:bg-foreground aria-pressed:text-background aria-pressed:hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] aria-pressed:active:bg-[color-mix(in_oklab,var(--foreground)_80%,var(--background))]"
+  "aria-pressed:bg-foreground aria-pressed:text-background aria-pressed:hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] aria-pressed:active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]"
 
 const toggleVariants = cva(
   cn(
-    "group/toggle inline-flex shrink-0 items-center justify-center gap-2 rounded-lg type-overline whitespace-nowrap text-foreground select-none hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "group/toggle inline-flex shrink-0 items-center justify-center gap-2 rounded-lg type-overline whitespace-nowrap text-foreground select-none hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-invalid:inset-ring-2 aria-invalid:inset-ring-line-invalid [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     PRESSED
   ),
   {

@@ -15,7 +15,9 @@ import { formatNavCount } from "./rail"
  * The title's size, from the frames:
  * `lg`: display (72/68), a desktop list or detail head (Warpcore Tasks, Lockdown's Steam). Its
  *   overline and meta line sit directly on the title's line box, with no gap, as drawn.
- * `md`: display/compact (48/48), every phone list and Vale's desktop lists. The default.
+ * `md`: display/compact (48/48), every phone list and Vale's desktop lists. The default. On a
+ *   phone its overline sits 4 above the title; in a desktop frame they touch, as Vale's desktop
+ *   lists draw them (Unicron 77).
  * `sm`: title (32/36), a two-word phone title or a detail head beside a pane.
  * `xs`: lead (24/32), a conversation's head, as Warpcore's chat workspace draws it (cw-01:
  *   "OPAQUE login" 24px medium, 4 under its overline).
@@ -44,7 +46,7 @@ export type PageHeadProps = Omit<React.ComponentProps<"div">, "title"> & {
   size?: PageHeadSize
   /**
    * How many, beside the title on its baseline. A number is written as cross-app decisions §13
-   * writes counts (`07`, `248`, `1,204`); a string is shown as given (`/012`). Folio ink and role;
+   * writes counts (`007`, `248`, `1,204`); a string is shown as given (`/012`). Folio ink and role;
    * at `lg` the code/display role, as Warpcore's desktop head draws it.
    */
   count?: number | string
@@ -252,7 +254,7 @@ function PageHead({
           head. At `lg` nothing: the desktop frames set the overline and the meta line directly on
           the display title's own line box (Lockdown Desktop / 01: overline at y 96, the title's
           68px line from 112, the meta line from 180). */}
-      <div data-slot="page-head-main" className={cn("relative flex min-w-0 grow flex-col", size === "lg" ? "gap-0" : "gap-1")}>
+      <div data-slot="page-head-main" className={cn("relative flex min-w-0 grow flex-col", size === "lg" ? "gap-0" : "gap-1", size === "md" && "in-data-[layout=expanded]:gap-0")}>
         {overline || switcher ? (
           <p data-slot="page-head-overline" className="flex min-w-0 items-center gap-1">
             {overline ? <span className="type-overline min-w-0 truncate text-text-label">{overline}</span> : null}

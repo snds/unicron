@@ -44,7 +44,7 @@ const NavSectionContext = React.createContext<NavSectionContextValue | null>(nul
 export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
   /** The group's name, in sentence case: the overline sets the capitals ("Mail // folders"). */
   title: string
-  /** How many, joined to the title as `// 04` (cross-app decisions §13). */
+  /** How many, joined to the title as `// 004` (cross-app decisions §13). */
   count?: number
   /** One small control beside the heading: a ghost icon Button ("New vault"). Hidden while collapsed. */
   action?: React.ReactNode
@@ -247,7 +247,7 @@ function treeLevel(el: HTMLElement): number {
 /** A calendar's, a note's or a persona's colour: one of the twelve swatch roles (contract 5.1b #55). */
 export type NavItemSwatch = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
-/** The swatch's fill: the one shared class map (Tile's), so a NavItem square and a CalendarEvent bar read the same role. */
+/** The swatch's fill: the one shared class map (Tile's), so a NavItem square and a Tile's swatch read the same role. */
 function swatchFill(swatch: NavItemSwatch): string {
   return swatchFillClasses[String(swatch).padStart(2, "0") as SwatchId]
 }
@@ -401,7 +401,8 @@ function NavItem({
   // On the current tile everything is body ink, a critical item too: critical text on the soft
   // tile falls under the label floor, so there the glyph and the words in the name carry it.
   const ink = {
-    index: current ? "text-text-secondary" : "text-text-faint",
+    // A reading part, so the label ink, never the faint one (Unicron 25: faint is for disabled and decoration).
+    index: current ? "text-text-secondary" : "text-text-label",
     icon: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
     label: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
     count: current ? "text-text-body" : "text-text-label",

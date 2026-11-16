@@ -37,6 +37,9 @@ Two tools come with the package:
 
 **Coming from 0.x?** Follow
 [Migrating to 1.0](https://github.com/snds/unicron/blob/main/docs/07-migrating-to-1.0.md).
+**Coming from 1.0?** Follow
+[Migrating to 1.1](https://github.com/snds/unicron/blob/main/docs/08-migrating-to-1.1.md): the app
+themes, `CalendarEvent` and 47 icons left the core.
 
 Docs: [components](https://github.com/snds/unicron/blob/main/docs/03-components.md) ·
 [consuming](https://github.com/snds/unicron/blob/main/docs/05-consuming.md) ·

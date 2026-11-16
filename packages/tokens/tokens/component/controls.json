@@ -15,12 +15,14 @@
     "primary": {
       "$type": "color",
       "$value": "{primary-fill}",
-      "$description": "tone=\"primary\", and a budget under its warning mark: a quantity that is not live. Figma: Warpcore's spend bar, Synapse's checks bar."
+      "$extensions": { "unicron.modes": { "dark": "{primary-text}" } },
+      "$description": "tone=\"primary\", and a budget under its warning mark: a quantity that is not live. Figma: Warpcore's spend bar, Synapse's checks bar. A cell is a mark with no words, so it holds Lc 30 against the track and the page: the identity fill on stone, the identity text colour on graphite, where the fill is too dark to show (Unicron 19)."
     },
     "critical": {
       "$type": "color",
       "$value": "{critical-fill}",
-      "$description": "tone=\"critical\": a countdown that is about to run out. Figma (Lockdown codes): the ticks near expiry."
+      "$extensions": { "unicron.modes": { "dark": "{critical-text}" } },
+      "$description": "tone=\"critical\": a countdown that is about to run out. Figma (Lockdown codes): the ticks near expiry. The critical fill on stone; the critical text colour on graphite, where the fill falls under Lc 30 against the dark surfaces (Unicron 19)."
     }
   },
   "checkbox": {

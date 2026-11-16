@@ -33,7 +33,7 @@ const banner = cva(
   {
     variants: {
       tone: {
-        critical: "bg-critical-soft inset-ring inset-ring-critical-fill",
+        critical: "bg-critical-soft inset-ring inset-ring-line-invalid",
         info: "bg-surface-raised rule-box",
         warning: "bg-surface-raised inset-ring inset-ring-warning",
         success: "bg-surface-raised inset-ring inset-ring-success",
@@ -69,16 +69,30 @@ export type BannerProps = Omit<React.ComponentProps<"div">, "title" | "role"> & 
   body?: React.ReactNode
   /** The one way to fix it: a `Button variant="secondary" size="sm"` ("Sign in", "Try again"). */
   action?: React.ReactNode
-  /** Show a close button that calls this. For news that can wait (decisions §1). */
+  /**
+   * Show a close button that calls this. For news that can wait (decisions §1): `info`, `success`
+   * and `warning` only. A `critical` banner stays until the problem is fixed, so it never draws the
+   * button, even when this is passed (a development build warns once).
+   */
   onDismiss?: () => void
   /** The close button's name. Default "Dismiss". */
   dismissLabel?: string
 }
 
+function isDevelopment(): boolean {
+  const env = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env
+  return env?.NODE_ENV !== "production"
+}
+
+let warnedOfCriticalDismiss = false
+
 /**
  * Banner: Figma's Banner. A message about the section it sits at the top of: an icon, a title, a
  * line of body, one action, and an optional close button. Critical is `role="alert"` (said at
  * once); the other tones are `role="status"` (said when the reader is free).
+ *
+ * A critical banner means something is broken, and hiding it hides the problem (Unicron 62): it has
+ * no close button. It goes away when the app clears the problem and stops rendering it.
  */
 function Banner({
   tone = "critical",
@@ -96,6 +110,14 @@ function Banner({
   const compact = size === "compact"
   const glyph = icon === undefined ? bannerIcons[tone] : icon
   const text = body ?? children
+  const dismissable = Boolean(onDismiss) && tone !== "critical"
+  React.useEffect(() => {
+    if (!onDismiss || tone !== "critical" || warnedOfCriticalDismiss || !isDevelopment()) return
+    warnedOfCriticalDismiss = true
+    console.warn(
+      '@unicron/ui: Banner tone="critical" cannot be dismissed, so its close button is not drawn. Clear the problem and stop rendering the banner instead, or use tone="info", "success" or "warning" for news that can wait.'
+    )
+  }, [onDismiss, tone])
   return (
     <div
       role={tone === "critical" ? "alert" : "status"}
@@ -142,7 +164,7 @@ function Banner({
           {action}
         </div>
       ) : null}
-      {onDismiss ? (
+      {dismissable ? (
         <Button variant="ghost" size="icon-sm" aria-label={dismissLabel} onClick={onDismiss}>
           <Icon name="close" />
         </Button>

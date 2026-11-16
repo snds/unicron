@@ -54,6 +54,14 @@ export default function TopTabsView() {
           <TopTab href="#tasks" index="03" label="Tasks" icon="task" current mark={{ count: 1, tone: "needs-you" }} />
         </TopTabs>
       </Specimen>
+
+      <Specimen label="Counts in the name // each link reads 'Requests, 2' (Lockdown 30); keep case for a name (Vale 8)">
+        <TopTabs label="Sharing">
+          <TopTab href="#requests" label="Requests" current mark={2} />
+          <TopTab href="#household" label="Household" mark={5} />
+          <TopTab href="#ana" label="Ana McKay" keepCase />
+        </TopTabs>
+      </Specimen>
     </div>
   )
 }

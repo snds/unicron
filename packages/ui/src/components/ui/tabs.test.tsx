@@ -40,15 +40,17 @@ describe("Tabs", () => {
   })
 
   // Figma 15:498 "Top Tab": overline labels in the label ink, ink once chosen, a 2px primary-fill
-  // indicator under the chosen one, the index in the faint ink.
-  it("line is Figma's Top Tab: overline, a 2px primary indicator, a faint index", () => {
+  // indicator under the chosen one. The index is read as part of the name, so it is the label ink,
+  // not the faint ink (Unicron 25: text-faint is for disabled controls and decoration only).
+  it("line is Figma's Top Tab: overline, a 2px primary indicator, an index in the label ink", () => {
     render(<Subject variant="line" />)
     const tab = screen.getByRole("tab", { name: /Characters/ })
-    for (const name of ["type-overline", "text-muted-foreground", "data-active:text-foreground", "after:bg-primary-fill", "group-data-horizontal/tabs:after:h-0.5"]) expect(tab.className).toContain(name)
+    for (const name of ["type-overline", "text-muted-foreground", "data-active:text-foreground", "after:bg-primary-mark", "group-data-horizontal/tabs:after:h-0.5"]) expect(tab.className).toContain(name)
     // The chosen tab's line is the list's one indicator, which slides from tab to tab.
     const line = screen.getByRole("tablist").querySelector('[data-slot="tabs-indicator"]')!
-    for (const name of ["motion-indicator", "bg-primary-fill", "group-data-horizontal/tabs:h-0.5", "group-data-horizontal/tabs:translate-x-(--active-tab-left)"]) expect(line.className).toContain(name)
-    expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).toContain("text-faint-foreground")
+    for (const name of ["motion-indicator", "bg-primary-mark", "group-data-horizontal/tabs:h-0.5", "group-data-horizontal/tabs:translate-x-(--active-tab-left)"]) expect(line.className).toContain(name)
+    expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).toContain("text-text-label")
+    expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).not.toMatch(/faint/)
   })
 
   // The default is a square segmented control: a hairline box, the chosen segment in inverted ink.
@@ -74,5 +76,46 @@ describe("Tabs", () => {
     const tab = screen.getByRole("tab", { name: /Characters/ })
     expect(tab.className).not.toContain("outline-none")
     expect(tab.className).not.toMatch(/focus-visible:ring/)
+  })
+
+  it("a count is drawn after the label and said in the tab's name, never hidden (Lockdown 30)", () => {
+    render(
+      <Tabs defaultValue="requests">
+        <TabsList variant="line" aria-label="Sharing">
+          <TabsTrigger value="requests" mark={2}>
+            Requests
+          </TabsTrigger>
+          <TabsTrigger value="shared" mark={{ count: 3, tone: "needs-you" }}>
+            Shared
+          </TabsTrigger>
+          <TabsTrigger value="people">People</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
+    const requests = screen.getByRole("tab", { name: "Requests, 2" })
+    const drawn = requests.querySelector('[data-slot="nav-mark"]')!
+    expect(drawn).toHaveTextContent("02")
+    expect(drawn.className).toContain("type-overline")
+    // The count takes the tab's own ink, so it reads on a chosen (inverted) segment too.
+    expect(drawn.className).toContain("text-inherit")
+    expect(screen.getByRole("tab", { name: "Shared, 3 waiting on you" })).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "People" }).querySelector('[data-slot="tabs-trigger-mark-words"]')).toBeNull()
+  })
+
+  it("keepCase keeps a person's name in its own case; other tabs keep the capitals (Vale 8)", () => {
+    render(
+      <Tabs defaultValue="ana">
+        <TabsList aria-label="Team">
+          <TabsTrigger value="ana" keepCase>
+            Ana McKay
+          </TabsTrigger>
+          <TabsTrigger value="all">All</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
+    const ana = screen.getByRole("tab", { name: "Ana McKay" })
+    expect(ana).toHaveClass("normal-case", "type-overline")
+    expect(ana).toHaveAttribute("data-keep-case")
+    expect(screen.getByRole("tab", { name: "All" })).not.toHaveClass("normal-case")
   })
 })

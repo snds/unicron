@@ -29,19 +29,19 @@ const variants = cva(
   // No border, and nothing about focus: the edge of an outlined kind is an inset ring, and the
   // focus ring is the stylesheet's one rule for every control (2px solid --ring, 2px clear of it).
   // A control opts out of that rule with outline-none; this one must not.
-  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg whitespace-nowrap select-none motion-push disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg whitespace-nowrap select-none motion-push disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         // Primary: the app's identity. One per screen.
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/85",
         // Secondary: transparent, a 1px ink edge, an ink label.
         secondary: cn(OUTLINE, WASH),
         // The same button under its older name.
         outline: cn(OUTLINE, WASH),
         // Text only. The same padding as the boxed kinds, so it lines up beside one.
         ghost: cn("text-foreground", WASH),
-        destructive: "bg-critical-fill text-critical-on-fill hover:bg-critical-fill/90 active:bg-critical-fill/80",
+        destructive: "bg-critical-fill text-critical-on-fill hover:bg-critical-fill/90 active:bg-critical-fill/85",
         // Pressed, the label takes the body ink, underlined: a press that differs from the hover and
         // reads on every ground. It used to dim to 80%, which fell under the label floor on every
         // graphite ground (Lc 43 to 45) and which no contrast recipe measured.
@@ -52,11 +52,11 @@ const variants = cva(
         // ink. Under the pointer it becomes the critical fill: a wash under critical ink falls
         // below the label floor on graphite (Lc 58.6), and the fill shows on any surface.
         "ghost-destructive":
-          "text-destructive hover:bg-critical-fill hover:text-critical-on-fill active:bg-critical-fill/80 active:text-critical-on-fill aria-expanded:bg-critical-fill aria-expanded:text-critical-on-fill",
+          "text-destructive hover:bg-critical-fill hover:text-critical-on-fill active:bg-critical-fill/85 active:text-critical-on-fill aria-expanded:bg-critical-fill aria-expanded:text-critical-on-fill",
         // The three kinds for the needs-you yellow, and only there. One solid action per block;
         // the second action is `needs-you-text`.
         "needs-you":
-          "on-needs-you bg-needs-you-on-fill text-needs-you-fill hover:bg-needs-you-on-fill/90 active:bg-needs-you-on-fill/80",
+          "on-needs-you bg-needs-you-on-fill text-needs-you-fill hover:bg-needs-you-on-fill/90 active:bg-needs-you-on-fill/85",
         "needs-you-outline": cn("inset-ring inset-ring-needs-you-on-fill text-needs-you-on-fill", WASH_ON_NEEDS_YOU),
         "needs-you-text": cn("text-needs-you-on-fill", WASH_ON_NEEDS_YOU),
       },

@@ -88,13 +88,11 @@ export type SheetHeight = "content" | "full"
 const SheetContentContext = React.createContext<{ showCloseButton: boolean; notice?: boolean }>({ showCloseButton: false })
 
 /**
- * Where the top-right buttons sit: 16 from the top; 20 under a grabber (8 + 4 + 8); and a notice
- * line's 48 lower when the sheet has one.
+ * Where the top-right buttons sit: 16 from the top; 20 under the adaptive sheet's grabber on a phone
+ * (8 + 4 + 8), the one sheet that drags (Unicron 54); and a notice line's 48 lower when the sheet has one.
  */
 function topRightClasses(notice: boolean | undefined) {
-  return notice
-    ? "top-[calc(var(--size-control)+var(--spacing)*4)] in-data-[side=bottom]:top-[calc(var(--size-control)+var(--spacing)*5)]"
-    : "top-4 in-data-[side=bottom]:top-5 in-data-[side=adaptive]:max-sm:top-5"
+  return notice ? "top-[calc(var(--size-control)+var(--spacing)*4)]" : "top-4 in-data-[side=adaptive]:max-sm:top-5"
 }
 
 /** The close button: a neutral FloatButton L at the header's top right (Figma 25. Sheet Header). */
@@ -110,9 +108,11 @@ function SheetCloseButton({ label, notice }: { label: string; notice?: boolean }
 type DragHandlers = Pick<React.ComponentProps<"div">, "onPointerDown" | "onPointerMove" | "onPointerUp" | "onPointerCancel">
 
 /**
- * The 36 x 4 bar at the top of a bottom sheet, in line-grid-dot (Figma 25. Sheet Header). Its box
- * reaches 8px above and below the bar, so a drag can start on it, but it takes only the bar's
- * height in the layout. Decoration for assistive tech: the close button and Escape close the sheet.
+ * The 36 x 4 bar at the top of the adaptive sheet on a phone, in line-grid-dot (Figma 25. Sheet
+ * Header). Only a sheet that can be dragged draws it (Unicron 54): a grabber that does not drag
+ * promises what it cannot do. Its box reaches 8px above and below the bar, so a drag can start on
+ * it, but it takes only the bar's height in the layout. Decoration for assistive tech: the close
+ * button and Escape close the sheet.
  */
 function SheetGrabber({ className, ...handlers }: DragHandlers & { className?: string }) {
   const draggable = Boolean(handlers.onPointerDown)
@@ -173,7 +173,7 @@ function SheetContent({
   /** Where the portal goes: `<body>` by default. */
   container?: SheetPrimitive.Portal.Props["container"]
   /**
-   * A line across the very top of the sheet, above its grabber and header: the compact needs-you
+   * A line across the very top of the sheet, above its header: the compact needs-you
    * line (`<NeedsYou size="compact" />`) when something with a time limit arrives while the sheet is
    * open (Lockdown LA8, contract 5.1c C19). The close button moves down under it.
    */
@@ -197,9 +197,10 @@ function SheetContent({
           // edge that faces the page, no shadow, no radius.
           "bg-surface-raised text-text-body type-body fixed z-50 flex flex-col gap-2 outline-none transition duration-(--motion-base) ease-move data-ending-style:opacity-0 data-starting-style:opacity-0",
           "data-[side=left]:pl-[env(safe-area-inset-left)] data-[side=right]:pr-[env(safe-area-inset-right)] data-[side=bottom]:px-[max(env(safe-area-inset-left),env(safe-area-inset-right))]",
-          // Bottom: a grabber 8 from the top, then the header 8 under it.
-          "data-[side=bottom]:rule-t data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:pt-2 data-[side=bottom]:pb-[env(safe-area-inset-bottom)] data-[side=bottom]:max-h-(--c-sheet-compact-height)",
-          // Sides and top: no grabber, the header 16 from the top.
+          // Bottom: no grabber (it cannot be dragged; only AdaptiveSheetContent's can, Unicron 54),
+          // so the header is 16 from the top, as on every other side.
+          "data-[side=bottom]:rule-t data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:pt-4 data-[side=bottom]:pb-[env(safe-area-inset-bottom)] data-[side=bottom]:max-h-(--c-sheet-compact-height)",
+          // Sides and top: the header 16 from the top.
           "data-[side=left]:rule-r data-[side=left]:top-(--c-dialog-titlebar-inset) data-[side=left]:bottom-0 data-[side=left]:left-0 data-[side=left]:w-3/4 data-[side=left]:pt-4",
           "data-[side=right]:rule-l data-[side=right]:top-(--c-dialog-titlebar-inset) data-[side=right]:bottom-0 data-[side=right]:right-0 data-[side=right]:w-3/4 data-[side=right]:pt-4",
           "data-[side=top]:rule-b data-[side=top]:inset-x-0 data-[side=top]:top-(--c-dialog-titlebar-inset) data-[side=top]:pt-4 data-[side=top]:pb-4",
@@ -208,7 +209,7 @@ function SheetContent({
           SHEET_SIZES[size],
           full &&
             // Top to bottom of the screen it is fixed to, below an app's title bar, clear of the status bar.
-            "data-[side=bottom]:max-h-none data-[side=bottom]:top-(--c-dialog-titlebar-inset) data-[side=bottom]:pt-[calc(env(safe-area-inset-top)+--spacing(2))]",
+            "data-[side=bottom]:max-h-none data-[side=bottom]:top-(--c-dialog-titlebar-inset) data-[side=bottom]:pt-[calc(env(safe-area-inset-top)+--spacing(4))]",
           className
         )}
         {...props}
@@ -216,11 +217,10 @@ function SheetContent({
         <SheetContentContext.Provider value={context}>
           {notice ? (
             // Flush with the sheet's top edge: it reaches up through the popup's top padding.
-            <div data-slot="sheet-notice" className="-mt-4 flex shrink-0 flex-col in-data-[side=bottom]:-mt-2">
+            <div data-slot="sheet-notice" className="-mt-4 flex shrink-0 flex-col">
               {notice}
             </div>
           ) : null}
-          {side === "bottom" && <SheetGrabber />}
           {/* Takes no layout (contents): there so focus can find the first control. */}
           <div ref={inner} data-slot="sheet-inner" className="contents">
             {children}
@@ -385,8 +385,8 @@ function AdaptiveSheetContent({
 
 /**
  * The top of a sheet (Figma 25. Sheet Header): a `SheetOverline` and a `SheetTitle` in the lead
- * role, beside the close button, 48 tall. The grabber above it belongs to the sheet, so it shows
- * on every bottom sheet, with this header or without it.
+ * role, beside the close button, 48 tall. The grabber above it belongs to the sheet, and only the
+ * adaptive sheet on a phone draws one, because only it drags (Unicron 54).
  */
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   const { showCloseButton } = React.useContext(SheetContentContext)

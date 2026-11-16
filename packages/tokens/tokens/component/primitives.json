@@ -1,7 +1,7 @@
 {
   "$description": "Tier 3 · Component knobs for the primitives area (packages/ui: text-field, input, select, tabs, toggle, item, avatar, initial-tile, empty, chip, chip-field, radio-group, progress, spinner, scroll-area, resizable-panes, toolbar, split-button), merged with component.json at build and emitted as --c-*. It adds knobs and re-declares none. Most sizes in this area sit on the 4px spacing scale and the size roles (a field's box is min-h-control with 12 / 16 padding, as Figma 32:48 draws it; an Initial Tile is 24, 40 or 64; a chip 24), so they need no knob.",
   "radio": {
-    "$description": "RadioGroup and RadioRow (radio-group.tsx), new in 1.0. Not drawn in Figma: the box is the Checkbox's 16px square on the 2px corner, and a choice is marked by an 8px ink square inside it, not a check, so a radio never reads as a checkbox.",
+    "$description": "RadioGroup and RadioRow (radio-group.tsx), new in 1.0. Since 1.1 the radio is round, the system's one round control (Unicron 41): a 16px circle, and a choice is marked by an 8px ink dot inside it, not a check, so a radio never reads as a checkbox. Not drawn in Figma yet.",
     "edge": {
       "$type": "color",
       "$value": "{text-label}",
@@ -10,7 +10,7 @@
     "mark": {
       "$type": "color",
       "$value": "{text-body}",
-      "$description": "The chosen radio: its edge and the square inside it. Ink, never the identity colour (a choice is not a selection)."
+      "$description": "The chosen radio: its edge and the dot inside it. Ink, never the identity colour (a choice is not a selection)."
     }
   },
   "progress": {

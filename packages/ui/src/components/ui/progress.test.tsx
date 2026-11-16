@@ -213,4 +213,20 @@ describe("Progress round 2 (contract 5.1b #29)", () => {
     expect(container.querySelector('[data-slot="progress-bar"]')).toBeNull()
     expect(container.querySelector('[data-slot="progress-tick"]')).toBeNull()
   })
+
+  it("segmented takes size 8 for Warpcore's Spend: cells 8 tall, still 2 apart; 4 stays the default (Unicron 49)", () => {
+    const { container, rerender } = render(<Progress variant="segmented" size={8} value={12} max={32} tone="budget" aria-label="Spend" />)
+    const track = () => classesOf(container.querySelector('[data-slot="progress-track"]')!)
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-size", "8")
+    expect(track()).toContain("h-2")
+    expect(track()).not.toContain("h-(--c-progress-height)")
+    expect(track()).toContain("group-data-[variant=segmented]/progress:gap-(--c-progress-segment-gap)")
+    rerender(<Progress variant="segmented" value={12} max={32} aria-label="Spend" />)
+    expect(screen.getByRole("progressbar")).toHaveAttribute("data-size", "4")
+    expect(track()).toContain("h-(--c-progress-height)")
+    // A plain bar has no size: it is always the knob's 4.
+    rerender(<Progress size={8} value={12} max={32} aria-label="Spend" />)
+    expect(screen.getByRole("progressbar")).not.toHaveAttribute("data-size")
+    expect(track()).toContain("h-(--c-progress-height)")
+  })
 })

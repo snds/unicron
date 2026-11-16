@@ -9,13 +9,13 @@ export default function ButtonGroupView() {
       <Specimen label="Outlined // one edge between">
         <ButtonGroup aria-label="Zoom">
           <Button variant="secondary" size="sm" aria-label="Zoom out">
-            <Icon name="zoom--out" />
+            <Icon name="subtract" />
           </Button>
           <Button variant="secondary" size="sm">
             Fit
           </Button>
           <Button variant="secondary" size="sm" aria-label="Zoom in">
-            <Icon name="zoom--in" />
+            <Icon name="add" />
           </Button>
         </ButtonGroup>
         <ButtonGroup aria-label="Reply">

@@ -3,9 +3,11 @@
 // they read the built CSS, not the JSON sources.
 //
 // The file has two axes (docs/02-tokens.md → Two axes):
-//   app     [data-theme="<app>"] re-declares the 28 theme slots (--g-theme-*); none = the defaults
+//   theme   the 28 theme slots (--g-theme-*) on :root hold the Unicron default. An app's theme is
+//           its own [data-theme="<app>"] block of the same slots, in the app's layer; the contrast
+//           tool lays one over the defaults (readTheme, below) to measure it.
 //   ground  `:root, .light, …` holds the stone (light) roles; `.dark, …` the graphite (dark) roles
-// A mode is one app on one ground, named as Figma names it: "vale / graphite".
+// A mode is one theme on one ground, named as Figma names it: "vale / graphite", "default / stone".
 
 import fs from "node:fs"
 import path from "node:path"
@@ -69,21 +71,66 @@ export function parseTokensCss(css = readBuiltCss()) {
 }
 
 /** The custom properties an element sees in one mode: `app` (or null for no data-theme) on `ground`. */
-export function modeVars(parsed, app, ground) {
-  if (app !== null && !parsed.themes[app]) throw new Error(`no [data-theme="${app}"] block in dist/tokens.css`)
+export function modeVars(parsed, app, ground, slots = null) {
+  if (app !== null && !slots && !parsed.themes[app]) throw new Error(`no [data-theme="${app}"] block in dist/tokens.css`)
   return new Map([
     ...parsed.root,
-    ...(app === null ? [] : parsed.themes[app]),
+    ...(app === null ? [] : (slots ?? parsed.themes[app])),
     ...parsed.light,
     ...(ground === "graphite" ? parsed.dark : []),
   ])
 }
 
-/** Every mode the file holds, in build order: [{ name: "vale / graphite", app, ground, vars }]. */
-export function allModes(parsed) {
-  return Object.keys(parsed.themes).flatMap((app) =>
-    GROUNDS.map((ground) => ({ name: `${app} / ${ground}`, app, ground, vars: modeVars(parsed, app, ground) }))
+/**
+ * The modes to measure, both grounds of each: the Unicron default (no data-theme) when `themes`
+ * is empty, otherwise each theme given ({ name, slots: Map of --g-theme-* → value }).
+ */
+export function allModes(parsed, themes = []) {
+  if (!themes.length) return GROUNDS.map((ground) => ({ name: `default / ${ground}`, app: null, ground, vars: modeVars(parsed, null, ground) }))
+  return themes.flatMap((theme) =>
+    GROUNDS.map((ground) => ({ name: `${theme.name} / ${ground}`, app: theme.name, ground, vars: modeVars(parsed, theme.name, ground, theme.slots) }))
   )
+}
+
+// ── An app's theme, read from its own file ───────────────────────────────────────────────────
+const SLOT = /^--g-theme-(graphite|stone)-([a-z-]+)$/
+
+/**
+ * An app's theme: a DTCG JSON file shaped like global.json's `theme` group
+ * ({ theme: { graphite: { ground: { $value } … }, stone: { … } } }), or a CSS file that declares the
+ * slots (`[data-theme="acme"] { --g-theme-graphite-ground: #…; … }`). Every one of `slotNames`
+ * must be there, and nothing else that looks like a slot. Returns { name, slots, file }.
+ */
+export function readTheme(file, slotNames) {
+  const text = fs.readFileSync(file, "utf8")
+  const base = path.basename(file).replace(/\.(json|css)$/, "")
+  const slots = new Map()
+  let name = base
+  if (file.endsWith(".json")) {
+    const json = JSON.parse(text)
+    name = json.$extensions?.["unicron.app"]?.name ?? base
+    for (const ground of GROUNDS) {
+      for (const [slot, token] of Object.entries(json.theme?.[ground] ?? {})) {
+        if (slot.startsWith("$")) continue
+        slots.set(`--g-theme-${ground}-${slot}`, String(token?.$value ?? token))
+      }
+    }
+  } else if (file.endsWith(".css")) {
+    const bare = text.replace(/\/\*[\s\S]*?\*\//g, "")
+    name = /\[data-theme="([\w-]+)"\]/.exec(bare)?.[1] ?? base
+    for (const m of bare.matchAll(/(--g-theme-[\w-]+)\s*:\s*([^;]+);/g)) slots.set(m[1], m[2].trim())
+  } else {
+    throw new Error(`${file}: a theme is a .json or a .css file`)
+  }
+  const missing = slotNames.filter((n) => !slots.has(n))
+  const extra = [...slots.keys()].filter((n) => !slotNames.includes(n) || !SLOT.test(n))
+  if (missing.length) throw new Error(`${file}: missing theme slots: ${missing.join(", ")}`)
+  if (extra.length) throw new Error(`${file}: not theme slots: ${extra.join(", ")}`)
+  for (const [n, v] of slots) {
+    if (/var\(|\{/.test(v)) throw new Error(`${file} ${n}: a theme slot holds a raw colour, not a reference (${v})`)
+  }
+  // Keep the core's slot order, so a theme reads the same however its file is laid out.
+  return { name, file, slots: new Map(slotNames.map((n) => [n, slots.get(n)])) }
 }
 
 /** `var(--a)` chains → a literal CSS value, in one mode's variables. */

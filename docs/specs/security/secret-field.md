@@ -133,6 +133,7 @@ Tier 3 under `secret-field`:
 
 - Read value: `role="textbox" aria-readonly`, focusable, named "Password, hidden" while masked. When revealed its name is the value spelled per character with case and symbol names ("capital t, r, 4, dash"); it is **not** announced automatically.
 - Live region (`secretFieldAnnouncements`): "Password shown. Hides in 30 seconds." · "Password shown. Hides in 20 seconds, or when you select Hide." (`shownUntilHidden`: a hold that went through a gate) · "Copied. Clipboard clears in 30 seconds." · "Clipboard cleared." · "Confirm it's you to show this." · "Confirm it's you to copy this."
+- Inside an `AppFrame` (1.1, Unicron 33), the copy countdown's two sentences ("Copied. Clipboard clears in 30 seconds." and "Clipboard cleared.") go to the frame's one polite region, so they never talk over a status line or a strip. The field's own region keeps the rest.
 - Reveal button named "Hold to show Password" · "Show Password" · "Hide Password". A gated field is never "Hold to show". `hold`: Space held reveals, release hides, Enter does nothing, a bare click never reveals. `toggle`: Space or Enter toggles; `aria-pressed` reflects state.
 - Copy: Enter on the button, or Cmd/Ctrl+C anywhere in the control runs the same timed copy; the value is `user-select: none`.
 - Edit mode: ordinary input semantics (a textarea with `multiline`, so Enter is a new line); `required` sets `aria-required`; the meter is `aria-describedby` with sr-only "Strength: " before the word.

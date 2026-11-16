@@ -236,11 +236,55 @@ describe("ListRow (Figma 9:181)", () => {
 })
 
 describe("formatListCount (decisions §13)", () => {
-  it("two digits, three from 100, a comma from 1,000", () => {
-    expect(formatListCount(0)).toBe("00")
-    expect(formatListCount(7)).toBe("07")
-    expect(formatListCount(12)).toBe("12")
+  it("three digits, as every Figma sidebar draws them, a comma from 1,000 (Unicron 13)", () => {
+    expect(formatListCount(0)).toBe("000")
+    expect(formatListCount(7)).toBe("007")
+    expect(formatListCount(12)).toBe("012")
     expect(formatListCount(146)).toBe("146")
     expect(formatListCount(1204)).toBe("1,204")
+  })
+
+  it("a status mark: a glyph in its tone where the words would be, its word said with the row, never drawn (Warpcore 18)", () => {
+    const { container } = render(
+      <ListRow
+        size="compact"
+        title="Promote the staging build"
+        href="#chat-14"
+        statusMark={{ icon: "time", label: "Waiting on you", tone: "needs-you" }}
+      />
+    )
+    const link = screen.getByRole("link", { name: "Promote the staging build" })
+    // The word is the description, not the name, and it is not drawn.
+    expect(link).toHaveAccessibleDescription("Waiting on you")
+    const mark = slot(container, "list-row-status-mark")!
+    expect(mark).toHaveAttribute("data-tone", "needs-you")
+    expect(mark.querySelector('[data-icon-name="time"]')).toHaveAttribute("aria-hidden", "true")
+    expect(mark.querySelector('[data-icon-name="time"]')).toHaveAttribute("width", "16")
+    expect(screen.getByText("Waiting on you")).toHaveClass("sr-only")
+    expect(mark.querySelector(".bg-needs-you-fill")).not.toBeNull()
+    // It takes the place of the status words.
+    expect(slot(container, "list-row-status")).toBeNull()
+  })
+
+  it("a status mark's tones: label ink, live, critical", () => {
+    const { container } = render(
+      <>
+        <ListRow title="Draft the brief" statusMark={{ icon: "pending", label: "Queued" }} />
+        <ListRow title="Run the suite" statusMark={{ icon: "renew", label: "Running", tone: "live" }} />
+        <ListRow title="Deploy" statusMark={{ icon: "warning", label: "Failed", tone: "critical" }} />
+      </>
+    )
+    const marks = [...container.querySelectorAll('[data-slot="list-row-status-mark"] > span:first-child')]
+    expect(marks.map((m) => m.className)).toEqual([
+      expect.stringContaining("text-muted-foreground"),
+      expect.stringContaining("text-secondary-live"),
+      expect.stringContaining("text-critical-text"),
+    ])
+  })
+
+  it("Shift+Enter does not open the row's menu: the menu keys are Shift+F10 and the Menu key (Unicron 48)", () => {
+    render(<ListRow {...TASK} href="#sea-51" menu={<DropdownMenuItem>Open chat</DropdownMenuItem>} />)
+    fireEvent.keyDown(screen.getByRole("link", { name: TASK.title }), { key: "Enter", shiftKey: true })
+    expect(screen.queryByRole("menu")).toBeNull()
   })
 })

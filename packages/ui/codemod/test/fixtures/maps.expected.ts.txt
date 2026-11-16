@@ -30,7 +30,7 @@ export const SCREENS: ReadonlyArray<Screen> = [
 ]
 const METHODS: Record<string, [IconName, string]> = {
   password: ["password", "password"],
-  code: ["time", "one-time code"],
+  code: ["timer", "one-time code"],
 }
 
 export const NAV: { id: string; label: string; icon: IconName }[] = [

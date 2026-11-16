@@ -40,7 +40,7 @@ export default function FloatButtonView() {
         <FloatButton label="Approve" icon="checkmark" kind="primary" size="l" extended />
         <FloatButton label="Share" icon="share" kind="primary" size="l" extended />
         <FloatButton label="Reject" icon="close" size="l" extended />
-        <FloatButton label="Stop" icon="stop" size="m" extended />
+        <FloatButton label="Stop" icon="stop--filled" size="m" extended />
       </Specimen>
 
       <Specimen label="Mark // the nav items' mark: the update square on Settings, open comments, a filter on">
@@ -62,7 +62,7 @@ export default function FloatButtonView() {
         <FloatButton label="Close" icon="close" size="l" />
       </Specimen>
 
-      <Specimen label="Phone bottom row // search left, create right; hold create, or press Shift+Enter on it">
+      <Specimen label="Phone bottom row // search left, create right; hold create, or press Shift+F10 or the menu key on it">
         <div className="flex w-full max-w-sm items-center justify-between gap-2">
           <FloatButton label="Search" icon="search" size="l" onClick={() => setLast("Search")} />
           <p className="type-caption min-w-0 flex-1 truncate text-center" aria-live="polite">

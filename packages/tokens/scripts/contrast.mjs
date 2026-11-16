@@ -1,6 +1,20 @@
 #!/usr/bin/env node
-// Contrast gate: every pair the system paints, judged by what it is for, in all 8 modes
-// (4 apps × 2 grounds). APCA first, WCAG 2 for borders and rings (docs/02-tokens.md → Contrast).
+// Contrast gate: every pair the system paints, judged by what it is for, on both grounds.
+// APCA first, WCAG 2 for borders and rings (docs/02-tokens.md → Contrast).
+//
+// Two ways to run it:
+//   - with no theme, it measures Unicron's own default theme (graphite and stone). That is the
+//     core gate in `pnpm test`.
+//   - with themes, it measures each one: the tool an app runs on its own theme (Unicron 1). The
+//     package's bin is `unicron-contrast`:
+//
+//       unicron-contrast src/theme.json --exceptions src/theme.exceptions.json
+//       unicron-contrast src/theme.css
+//       unicron-contrast src/themes/          every <app>.json in it, with <app>.exceptions.json
+//
+//     A theme is the 28 slots (--g-theme-*), as a JSON file shaped like global.json's `theme`
+//     group, or as CSS (`[data-theme="acme"] { --g-theme-graphite-ground: #…; … }`). The tool lays
+//     the slots over the core's built roles and knobs, so it measures what the app's pages draw.
 //
 // The method is Emphasis Engine's (snds/emphasis-engine, docs/architecture.md): measure outcomes,
 // not variables. A recipe is a pair as a component paints it, through its own opacity modifiers
@@ -8,26 +22,31 @@
 // floor.
 //
 // What it reads: dist/tokens.css (run scripts/build.mjs first; `pnpm test` does). For each mode
-// it takes the variables a browser would see (the app's theme slots, then the ground's roles) and
+// it takes the variables a browser would see (the theme's slots, then the ground's roles) and
 // follows var() chains across all three tiers, so the numbers are the ones a browser renders.
 //
-// Figma is the source of truth for the theme values. A Figma value that misses a floor is not
-// changed here and not hidden: it is listed by name under "Exceptions" with what it measures,
-// reported and not gated, for Sean to decide. Everything else is gated. An exception that starts
-// passing fails the run, so the list cannot go stale.
+// A miss is never hidden. It is gated, or it is a named exception with its reason, reported and
+// not gated. The core's own list (EXCEPTIONS below, and each recipe file's `exceptions`) holds
+// only misses that are not a theme's: values every theme shares (the critical and needs-you
+// colours). An app's misses are in the exceptions file it passes. An exception that starts
+// passing fails the run, so no list can go stale.
 //
 // Recipes: the core table below, plus every file in scripts/recipes/*.mjs (one per component
 // area; see scripts/recipes/README.md).
 //
 // Colour math is in scripts/lib/color.mjs. APCA Lc comes from the reference `apca-w3` package
-// (devDependency; licensed for checking web content). Nothing from it is copied here.
+// (licensed for checking web content). Nothing from it is copied here.
 //
 // Run: pnpm --filter @unicron/tokens contrast · exit 1 on any miss that is not a named exception.
-//   --rows[=text]         also print one row per recipe and mode (drawn colours, WCAG, APCA),
-//                         for every recipe or only those whose id contains `text`
-//   --print-exceptions    print every miss as an exception entry, to paste and then justify
-//   --write-docs          write the short table of exceptions into docs/02-tokens.md (every run
-//                         checks that table against its own numbers, and fails when it differs)
+//   <theme.json|theme.css|dir> …   measure these themes instead of the default
+//   --exceptions <file.json>       an exceptions file ({ "app"?, "exceptions": [{ id, modes, reason }] });
+//                                  repeat it for several. With "app", it applies to that theme only.
+//   --rows[=text]                  also print one row per recipe and mode (drawn colours, WCAG,
+//                                  APCA), for every recipe or only those whose id contains `text`
+//   --print-exceptions             print every miss as an exception entry, to paste and then justify
+//   --write-docs                   write the short table of the core's exceptions into
+//                                  docs/02-tokens.md (a default run checks that table against its
+//                                  own numbers, and fails when it differs)
 
 import fs from "node:fs"
 import path from "node:path"
@@ -35,12 +54,20 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { APCAcontrast, sRGBtoY } from "apca-w3"
 
 import { composite, difference, hex, oklabL, parseColor, to8, toSrgb, wcagRatio } from "./lib/color.mjs"
-import { allModes, modeVars, parseTokensCss, resolveValue } from "./lib/css.mjs"
+import { allModes, parseTokensCss, readTheme, resolveValue } from "./lib/css.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const args = process.argv.slice(2)
 const rowsArg = args.find((a) => a === "--rows" || a.startsWith("--rows="))
 const printExceptions = args.includes("--print-exceptions")
+const exceptionFiles = []
+const themeArgs = []
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--exceptions") {
+    if (!args[i + 1]) throw new Error("--exceptions needs a file")
+    exceptionFiles.push(path.resolve(args[++i]))
+  } else if (!args[i].startsWith("--")) themeArgs.push(path.resolve(args[i]))
+}
 
 // ── Floors, by element kind ──────────────────────────────────────────────────────────────────
 // The text floors are the direction's (design-direction-2026-11 §2, APCA 0.0.98G): the Figma
@@ -51,7 +78,14 @@ const KINDS = {
   "text-label": { metric: "lc", min: 60, rule: "labels and coloured text" },
   "text-display": { metric: "lc", min: 45, rule: "large display, 36px and up" },
   "on-fill": { metric: "lc", min: 75, rule: "text on a fill" },
-  solid: { metric: "lc", min: 30, rule: "a solid against what it sits on" },
+  // A solid with no words on it (a progress cell, a dot, an edge, a tab indicator) has only its
+  // lightness to show it, so it holds Lc 30 (WCAG 1.4.11). A fill that holds a label (a button)
+  // is found by its label, which is gated as on-fill; the fill itself is reported (Unicron 19).
+  solid: { metric: "lc", min: 30, rule: "a mark with no words against what it sits on" },
+  // Text under 16px where an app holds it to APCA Lc 75 and WCAG 4.5:1 (the small-* inks; Synapse 1).
+  "text-small": { metric: "lc", min: 75, ratioMin: 4.5, rule: "small text, Lc 75 and 4.5:1" },
+  // A coloured ink used as small text where WCAG 1.4.3's 4.5:1 is the rule (the warning ink; Warpcore 2).
+  "text-aa": { metric: "ratio", min: 4.5, rule: "small coloured text, 4.5:1 (WCAG 1.4.3)" },
   // Non-text keeps the WCAG 1.4.11 ratio: APCA has no calibrated target for thin lines and rings.
   focus: { metric: "ratio", min: 3, rule: "a focus ring or focus border, 3:1 (WCAG 1.4.11)" },
   "border-error": { metric: "ratio", min: 3, rule: "an error border, 3:1 (WCAG 1.4.11)" },
@@ -59,8 +93,9 @@ const KINDS = {
   // does: an unchecked checkbox. WCAG 1.4.11 holds it to 3:1, as a focus or error border.
   "control-edge": { metric: "ratio", min: 3, rule: "the edge that alone shows a control, 3:1 (WCAG 1.4.11)" },
   // Reported, not gated.
-  "text-faint": { metric: "lc" }, // the direction sets no target for the faintest ink
-  "border-rest": { metric: "ratio" }, // a field's resting border is a hairline (contract §9.4)
+  fill: { metric: "lc" }, // a fill that holds a label: the label carries it (Unicron 19)
+  "text-faint": { metric: "lc" }, // disabled words and decoration only, which WCAG exempts (Unicron 25)
+  "border-rest": { metric: "ratio" }, // a 1px edge that is decoration: a button's edge, a hairline box
   "border-decorative": { metric: "dL" },
   state: { metric: "dL" },
   surface: { metric: "dL" },
@@ -113,9 +148,20 @@ const CORE = [
   { id: "primary-display-ground", source: "text-primary-display on the ground, 36px and up", kind: "text-display", paint: r("primary-display"), over: GROUND },
   { id: "primary-display-raised", source: "text-primary-display on bg-surface-raised, 36px and up", kind: "text-display", paint: r("primary-display"), over: RAISED },
   { id: "primary-on-fill", source: "the primary button: bg-primary-fill text-primary-on-fill", kind: "on-fill", paint: r("primary-on-fill"), over: [r("primary-fill")] },
-  { id: "primary-fill-ground", source: "bg-primary-fill on the ground: the primary button, the create button, a switch that is on", kind: "solid", paint: r("primary-fill"), over: GROUND },
-  { id: "primary-fill-raised", source: "bg-primary-fill on bg-surface-raised: the tab indicator, the selected-row edge", kind: "solid", paint: r("primary-fill"), over: RAISED },
-  { id: "primary-edge-soft", source: "the 2px primary-fill edge of a selected row, against bg-primary-soft", kind: "solid", paint: r("primary-fill"), over: SOFT },
+  { id: "primary-button-ground", source: "bg-primary-fill on the ground: the primary button, the create button (a fill that holds a label)", kind: "fill", paint: r("primary-fill"), over: GROUND },
+  { id: "primary-button-raised", source: "bg-primary-fill on bg-surface-raised: the primary button in a dialog (a fill that holds a label)", kind: "fill", paint: r("primary-fill"), over: RAISED },
+  // The identity as a mark with no words draws primary-mark: the fill on stone, the identity text
+  // colour on graphite (Unicron 19).
+  { id: "primary-mark-ground", source: "bg-primary-mark on the ground: the tab indicator, an edge, a progress cell", kind: "solid", paint: r("primary-mark"), over: GROUND },
+  { id: "primary-mark-raised", source: "bg-primary-mark on bg-surface-raised: the tab indicator, the selected-row edge in a panel", kind: "solid", paint: r("primary-mark"), over: RAISED },
+  { id: "primary-edge-soft", source: "the 2px primary-mark edge of a selected row, against bg-primary-soft", kind: "solid", paint: r("primary-mark"), over: SOFT },
+
+  // Small-text inks (Synapse 1): Lc 75 and 4.5:1 on the ground, a raised surface and both washes.
+  ...[["label", "small-label"], ["primary", "small-primary"], ["critical", "small-critical"], ["live", "small-live"]].flatMap(([name, role]) =>
+    [["ground", GROUND], ["raised", RAISED], ["soft", SOFT], ["critical-soft", [r("critical-soft")]]].map(([on, stack]) => ({
+      id: `small-${name}-${on}`, source: `text-${role} (under 16px) on ${on === "ground" ? "the ground" : on === "raised" ? "bg-surface-raised" : `bg-${on === "soft" ? "primary-soft" : "critical-soft"}`}`, kind: "text-small", paint: r(role), over: stack,
+    }))
+  ),
 
   // Live activity
   { id: "live-ground", source: "text-secondary-live on the ground: live status text", kind: "text-label", paint: r("secondary-live"), over: GROUND },
@@ -136,17 +182,21 @@ const CORE = [
   { id: "critical-text-ground", source: "text-critical-text on the ground: a field's error line", kind: "text-label", paint: r("critical-text"), over: GROUND },
   { id: "critical-text-raised", source: "text-critical-text on bg-surface-raised", kind: "text-label", paint: r("critical-text"), over: RAISED },
   { id: "critical-text-soft", source: "a critical banner's icon: text-critical-text on bg-critical-soft", kind: "text-label", paint: r("critical-text"), over: [r("critical-soft")] },
-  { id: "critical-fill-ground", source: "bg-critical-fill on the ground", kind: "solid", paint: r("critical-fill"), over: GROUND },
-  { id: "critical-fill-raised", source: "bg-critical-fill on bg-surface-raised", kind: "solid", paint: r("critical-fill"), over: RAISED },
+  { id: "critical-fill-ground", source: "bg-critical-fill on the ground: the destructive button (a fill that holds a label)", kind: "fill", paint: r("critical-fill"), over: GROUND },
+  { id: "critical-fill-raised", source: "bg-critical-fill on bg-surface-raised: the destructive button in a dialog", kind: "fill", paint: r("critical-fill"), over: RAISED },
+  // A critical edge with no words of its own (a Banner's, a Badge's, an Accessory's, a File Chip's)
+  // draws line-invalid, which is the critical text colour on graphite (Unicron 17 and 19).
+  { id: "critical-edge-ground", source: "a critical edge: inset-ring-line-invalid on the ground", kind: "solid", paint: r("line-invalid"), over: GROUND },
+  { id: "critical-edge-raised", source: "a critical edge: inset-ring-line-invalid on bg-surface-raised", kind: "solid", paint: r("line-invalid"), over: RAISED },
 
-  // Focus and error borders hold 3:1 against both sides of the edge. A field's resting border is
-  // a hairline: reported, not gated (contract §9.4).
-  { id: "field-focus-raised", source: "a text field's focus border: 2px primary-fill, against its bg-surface-raised box", kind: "focus", paint: r("primary-fill"), over: RAISED },
-  { id: "field-focus-ground", source: "a text field's focus border, against the ground outside it", kind: "focus", paint: r("primary-fill"), over: GROUND },
-  { id: "field-error-raised", source: "an invalid field's border: 2px critical-fill, against its bg-surface-raised box", kind: "border-error", paint: r("critical-fill"), over: RAISED },
-  { id: "field-error-ground", source: "an invalid field's border, against the ground outside it", kind: "border-error", paint: r("critical-fill"), over: GROUND },
-  { id: "field-rest-raised", source: "a field's resting border: 1px line-rule, against its bg-surface-raised box", kind: "border-rest", paint: r("line-rule"), over: RAISED },
-  { id: "field-rest-ground", source: "a field's resting border, against the ground outside it", kind: "border-rest", paint: r("line-rule"), over: GROUND },
+  // Focus, error and resting borders hold 3:1 against both sides of the edge (WCAG 1.4.11):
+  // line-focus and line-invalid (Unicron 17), and the 1px line-field (Unicron 18).
+  { id: "field-focus-raised", source: "a text field's focus border: 2px line-focus, against its bg-surface-raised box", kind: "focus", paint: r("line-focus"), over: RAISED },
+  { id: "field-focus-ground", source: "a text field's focus border, against the ground outside it", kind: "focus", paint: r("line-focus"), over: GROUND },
+  { id: "field-error-raised", source: "an invalid field's border: 2px line-invalid, against its bg-surface-raised box", kind: "border-error", paint: r("line-invalid"), over: RAISED },
+  { id: "field-error-ground", source: "an invalid field's border, against the ground outside it", kind: "border-error", paint: r("line-invalid"), over: GROUND },
+  { id: "field-rest-raised", source: "a field's resting border: 1px line-field (--input), against its bg-surface-raised box", kind: "control-edge", paint: r("line-field"), over: RAISED },
+  { id: "field-rest-ground", source: "a field's resting border, against the ground outside it", kind: "control-edge", paint: r("line-field"), over: GROUND },
   { id: "ring-ground", source: "focus-visible: a solid 2px outline in --ring, on the ground", kind: "focus", paint: r("ring"), over: GROUND },
   { id: "ring-raised", source: "focus-visible outline on bg-surface-raised", kind: "focus", paint: r("ring"), over: RAISED },
   { id: "ring-soft", source: "focus-visible outline beside a selected row (bg-primary-soft)", kind: "focus", paint: r("ring"), over: SOFT },
@@ -175,15 +225,16 @@ const CORE = [
     id: `${level}-accent`, source: `text-text-${level} on a highlighted menu or list item (bg-accent)`, kind, paint: r(`text-${level}`), over: [r("accent")],
   })),
   { id: "critical-text-accent", source: "text-destructive on a highlighted menu item (bg-accent)", kind: "text-label", paint: r("critical-text"), over: [r("accent")] },
-  // A solid shows hover as itself at 90% over what is behind it, and pressed at 80%.
+  // A solid shows hover as itself at 90% over what is behind it, and pressed at 85% (80% before
+  // 1.1; Unicron 28).
   ...BASES.flatMap(([base, stack]) =>
-    [["hover", 0.9], ["pressed", 0.8]].flatMap(([state, alpha]) => [
-      { id: `primary-on-fill-${state}-${base}`, source: `the primary button, ${state}: bg-primary-fill/${alpha * 100} over ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "on-fill", paint: r("primary-on-fill"), over: [...stack, r("primary-fill", alpha)] },
-      { id: `critical-on-fill-${state}-${base}`, source: `the destructive button, ${state}: bg-critical-fill/${alpha * 100} over ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "on-fill", paint: r("critical-on-fill"), over: [...stack, r("critical-fill", alpha)] },
+    [["hover", 0.9], ["pressed", 0.85]].flatMap(([state, alpha]) => [
+      { id: `primary-on-fill-${state}-${base}`, source: `the primary button, ${state}: bg-primary-fill/${Math.round(alpha * 100)} over ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "on-fill", paint: r("primary-on-fill"), over: [...stack, r("primary-fill", alpha)] },
+      { id: `critical-on-fill-${state}-${base}`, source: `the destructive button, ${state}: bg-critical-fill/${Math.round(alpha * 100)} over ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "on-fill", paint: r("critical-on-fill"), over: [...stack, r("critical-fill", alpha)] },
     ])
   ),
-  ...[["hover", 0.9], ["pressed", 0.8]].map(([state, alpha]) => ({
-    id: `needs-you-button-${state}`, source: `the solid needs-you button, ${state}: bg-needs-you-on-fill/${alpha * 100} over the yellow block`, kind: "on-fill", paint: r("needs-you-fill"), over: [r("needs-you-fill"), r("needs-you-on-fill", alpha)],
+  ...[["hover", 0.9], ["pressed", 0.85]].map(([state, alpha]) => ({
+    id: `needs-you-button-${state}`, source: `the solid needs-you button, ${state}: bg-needs-you-on-fill/${Math.round(alpha * 100)} over the yellow block`, kind: "on-fill", paint: r("needs-you-fill"), over: [r("needs-you-fill"), r("needs-you-on-fill", alpha)],
   })),
   // Diffs (contract §1.4; cross-app decisions §11): a line's text, with its + or − mark, on the
   // added wash (neutral, 8% of the ink in the ground) and the removed wash (critical-soft).
@@ -232,6 +283,11 @@ const CORE = [
     })),
     { id: `${fill}-on-soft`, source: `bg-${fill} in a selected row (bg-primary-soft)`, kind: "solid", paint: r(fill), over: SOFT },
   ]),
+  // The warning ink as small text on stone (a status line's warning word, a budget's mark): WCAG
+  // 1.4.3's 4.5:1, which apps hold small text to (Warpcore 2).
+  ...BASES.map(([base, stack]) => ({
+    id: `warning-ink-${base}`, source: `text-warning, small, on ${base === "ground" ? "the ground" : "bg-surface-raised"} (stone)`, kind: "text-aa", modes: ["stone"], paint: r("warning"), over: stack,
+  })),
   // The inverted surface (CrownJewel): the ground's colour as ink on the ink's colour.
   { id: "protected-fg", source: "bg-protected text-protected-foreground", kind: "on-fill", paint: r("protected-foreground"), over: [r("protected")] },
   // Progress fills that are not the live one (live-progress, above), on the empty part of the bar.
@@ -259,19 +315,23 @@ const CORE = [
 // they share. The coded gap stands in for the drawn one; apps check the levels as drawn.
 const LEVEL_GAP = 10
 const LEVEL_PAIRS = ["ground", "raised", "soft"].flatMap((s) => [[`body-${s}`, `secondary-${s}`], [`secondary-${s}`, `label-${s}`]])
+// The small label ink stays under secondary on the ground and a raised surface (Synapse 1): its
+// gap may be nothing (on stone the apps leave it no room: see small-label), never below zero.
+const ORDER_PAIRS = ["ground", "raised"].map((s) => [`secondary-${s}`, `small-label-${s}`])
 
 // ── Must differ (reported, not gated) ────────────────────────────────────────────────────────
-// Two watch items from the decision record: Lockdown's green can read as "success", and Synapse's
-// magenta sits close to critical red. Each row measures how far apart the two colours are.
+// An identity must not pass for a status: a green identity can read as "success", a red or
+// magenta one as "critical" (the decision record's watch items for Lockdown and Synapse). Each row
+// measures how far apart the two colours are, in every mode the run measures.
 const MUST_DIFFER = [
-  { app: "lockdown", a: "primary-fill", b: "success", why: "the identity green beside the success fill" },
-  { app: "lockdown", a: "primary-text", b: "success-foreground", why: "the identity as text beside success text" },
-  { app: "lockdown", a: "primary-soft", b: "success-surface", why: "a selected row beside a success wash" },
-  { app: "synapse", a: "primary-fill", b: "critical-fill", why: "the identity magenta beside the critical fill" },
-  { app: "synapse", a: "primary-text", b: "critical-text", why: "the identity as text beside error text" },
-  { app: "synapse", a: "primary-soft", b: "critical-soft", why: "a selected row beside a critical banner" },
-  { app: "synapse", a: "primary-fill", b: "critical-soft", why: "the selected-row edge on a critical wash" },
-  { app: "synapse", a: "primary-soft", b: "critical-fill", why: "a critical edge or button on a selected row" },
+  { a: "primary-fill", b: "success", why: "the identity beside the success fill" },
+  { a: "primary-text", b: "success-foreground", why: "the identity as text beside success text" },
+  { a: "primary-soft", b: "success-surface", why: "a selected row beside a success wash" },
+  { a: "primary-fill", b: "critical-fill", why: "the identity beside the critical fill" },
+  { a: "primary-text", b: "critical-text", why: "the identity as text beside error text" },
+  { a: "primary-soft", b: "critical-soft", why: "a selected row beside a critical banner" },
+  { a: "primary-fill", b: "critical-soft", why: "the selected-row edge on a critical wash" },
+  { a: "primary-soft", b: "critical-fill", why: "a critical edge or button on a selected row" },
 ]
 // A reading aid, not a floor. ΔEOK is the distance between two colours in OKLab, where about 0.02
 // is the least difference an eye picks up side by side. Under 0.05 two colours read as the same
@@ -280,82 +340,22 @@ const SAME = 0.05
 const CLOSE = 0.15
 
 // ── Exceptions (reported, not gated) ─────────────────────────────────────────────────────────
-// A Figma value under its floor. The value is Figma's and stays as it is; the miss is listed with
-// what it measures. `modes` is "all", a ground ("graphite", "stone"), or mode names. The list
-// must match the misses exactly: an entry that no longer misses fails the run.
-const FIGMA = "Figma value, flagged for Sean"
-const ON_STATE = "Figma value under a contract state (§6), flagged for Sean"
-const BY_CONTRACT = "Figma value in a contract role (§1.4), flagged for Sean"
-const g = (app) => `${app} / graphite`
-const st = (app) => `${app} / stone`
+// The core's own list: misses in the default theme that are not the theme's, so every theme has
+// them. `modes` is "all", a ground ("graphite", "stone"), or mode names. The list must match the
+// default run's misses exactly: an entry that no longer misses fails the run. An app's theme
+// lists its own misses in the exceptions file it passes.
+const SHARED_CRITICAL = "Figma's critical colours, which every theme shares: critical-text was solved to Lc 60 on the graphite ground with no room, and black ink tops out at Lc 88.6 on the stone critical-soft; flagged for Sean"
+const SHARED_YELLOW = "Figma's needs-you yellow, which every theme shares: on stone it is as light as the surfaces and differs from them by hue alone, so it always pairs with a shape or its ink edge; flagged for Sean"
 const EXCEPTIONS = [
-  // Figma solved each text role against the ground, with no room to spare (on the graphite
-  // ground, label measures Lc 60.4 to 60.7). On any surface nearer the text's own lightness it
-  // lands just under.
-  { id: "label-raised", modes: "graphite", reason: FIGMA },
-  { id: "label-soft", modes: "all", reason: FIGMA },
-  { id: "body-soft", modes: "stone", reason: FIGMA },
-  { id: "body-critical-soft", modes: "stone", reason: FIGMA },
-  { id: "primary-text-raised", modes: [g("warpcore"), g("synapse")], reason: FIGMA },
-  { id: "primary-text-soft", modes: ["graphite", st("lockdown")], reason: FIGMA },
-  { id: "primary-display-raised", modes: [g("vale"), g("lockdown"), g("synapse")], reason: FIGMA },
-  { id: "live-raised", modes: [g("vale"), g("lockdown")], reason: FIGMA },
-  { id: "live-soft", modes: ["graphite", st("warpcore"), st("synapse")], reason: FIGMA },
-  { id: "critical-text-raised", modes: "graphite", reason: FIGMA },
-  { id: "critical-text-soft", modes: "graphite", reason: FIGMA },
-  // In stone, body and secondary text sit Lc 9.6 to 9.8 apart, a little under the 10 that keeps
-  // two levels reading as two.
-  { id: "gap:body-ground/secondary-ground", modes: "stone", reason: FIGMA },
-  { id: "gap:body-raised/secondary-raised", modes: "stone", reason: FIGMA },
-  { id: "gap:body-soft/secondary-soft", modes: "stone", reason: FIGMA },
-  // The solid fills are mid-lightness (OKLCH L about 52 in graphite), so against the graphite
-  // surfaces they measure Lc 19 to 27, under the Lc 30 a solid needs to show by lightness alone.
-  { id: "primary-fill-ground", modes: "graphite", reason: FIGMA },
-  { id: "primary-fill-raised", modes: "graphite", reason: FIGMA },
-  { id: "primary-edge-soft", modes: "graphite", reason: FIGMA },
-  { id: "critical-fill-ground", modes: "graphite", reason: FIGMA },
-  { id: "critical-fill-raised", modes: "graphite", reason: FIGMA },
-  // The yellow is as light as the stone surfaces: it differs from them by hue, not lightness.
-  { id: "needs-you-fill-ground", modes: "stone", reason: FIGMA },
-  { id: "needs-you-fill-raised", modes: "stone", reason: FIGMA },
-  // The same fills as 2px borders: a field's focus border (primary-fill) and its error border
-  // (critical-fill) are under 3:1 against the graphite surfaces.
-  { id: "field-focus-raised", modes: [g("warpcore"), g("vale"), g("synapse")], reason: FIGMA },
-  { id: "field-focus-ground", modes: [g("warpcore"), g("synapse")], reason: FIGMA },
-  { id: "field-error-raised", modes: "graphite", reason: FIGMA },
-  { id: "field-error-ground", modes: "graphite", reason: FIGMA },
-
-  // The contract's states (§6, a proposal for Sean): a hover or pressed wash of the ink, the opaque
-  // highlight fill, a solid at 80% when pressed. Each moves the surface towards the text, and the
-  // Figma values have no room for that.
-  { id: "body-ground-hover", modes: "stone", reason: ON_STATE },
-  { id: "label-ground-hover", modes: "graphite", reason: ON_STATE },
-  { id: "body-ground-pressed", modes: "stone", reason: ON_STATE },
-  { id: "secondary-ground-pressed", modes: "stone", reason: ON_STATE },
-  { id: "label-ground-pressed", modes: "all", reason: ON_STATE },
-  { id: "label-raised-hover", modes: "graphite", reason: ON_STATE },
-  { id: "body-raised-pressed", modes: "stone", reason: ON_STATE },
-  { id: "secondary-raised-pressed", modes: "graphite", reason: ON_STATE },
-  { id: "label-raised-pressed", modes: ["graphite", st("warpcore")], reason: ON_STATE },
-  { id: "body-soft-hover", modes: "stone", reason: ON_STATE },
-  { id: "secondary-soft-hover", modes: ["stone", g("vale"), g("lockdown")], reason: ON_STATE },
-  { id: "label-soft-hover", modes: "all", reason: ON_STATE },
-  { id: "body-accent", modes: "stone", reason: ON_STATE },
-  { id: "label-accent", modes: "graphite", reason: ON_STATE },
-  { id: "critical-text-accent", modes: "graphite", reason: ON_STATE },
-  { id: "primary-on-fill-pressed-ground", modes: [st("lockdown")], reason: ON_STATE },
-  { id: "primary-on-fill-pressed-raised", modes: [st("vale"), st("lockdown")], reason: ON_STATE },
-
-  // Contract §1.4 points `attention` at the yellow on both grounds, and makes the running wash
-  // 14% of the live colour in the ground.
-  { id: "attention-on-soft", modes: "stone", reason: BY_CONTRACT },
-  { id: "attention-on-surface", modes: "stone", reason: BY_CONTRACT },
-  { id: "running-text-surface", modes: "all", reason: BY_CONTRACT },
-  // Diffs: the added wash is the contract's neutral wash (§1.4, 8% of the ink in the ground), so
-  // body text on it lands where it does on a hover wash. The removed wash is Figma's critical-soft,
-  // the critical Banner's own pair (body-critical-soft, above).
-  { id: "body-diff-added", modes: "stone", reason: BY_CONTRACT },
-  { id: "body-diff-removed", modes: "stone", reason: FIGMA },
+  { id: "critical-text-raised", modes: "graphite", reason: SHARED_CRITICAL },
+  { id: "critical-text-soft", modes: "graphite", reason: SHARED_CRITICAL },
+  { id: "critical-text-accent", modes: "graphite", reason: SHARED_CRITICAL },
+  { id: "body-critical-soft", modes: "stone", reason: SHARED_CRITICAL },
+  { id: "body-diff-removed", modes: "stone", reason: SHARED_CRITICAL },
+  { id: "needs-you-fill-ground", modes: "stone", reason: SHARED_YELLOW },
+  { id: "needs-you-fill-raised", modes: "stone", reason: SHARED_YELLOW },
+  { id: "attention-on-soft", modes: "stone", reason: SHARED_YELLOW },
+  { id: "attention-on-surface", modes: "stone", reason: SHARED_YELLOW },
 ]
 
 // ── Recipe files, one per component area ─────────────────────────────────────────────────────
@@ -375,16 +375,58 @@ for (const file of recipeFiles) {
   for (const e of mod.exceptions ?? mod.EXCEPTIONS ?? []) ALL_EXCEPTIONS.push({ ...e, id: `${area}:${e.id}`, area })
 }
 
-// ── Modes ────────────────────────────────────────────────────────────────────────────────────
+// ── Modes: the default theme, or the themes given ────────────────────────────────────────────
 const parsed = parseTokensCss()
-const MODES = allModes(parsed)
-if (MODES.length !== 8) throw new Error(`expected 8 modes (4 apps × 2 grounds) in dist/tokens.css, found ${MODES.length}`)
-// No data-theme attribute has to be a mode too: the defaults. Legacy, unthemed recipes run there.
-const DEFAULTS = ["graphite", "stone"].map((ground) => ({ name: `default / ${ground}`, app: null, ground, vars: modeVars(parsed, null, ground) }))
+const slotNames = [...parsed.root.keys()].filter((n) => n.startsWith("--g-theme-"))
+if (slotNames.length !== 28) throw new Error(`expected the 28 theme slots on :root in dist/tokens.css, found ${slotNames.length}`)
+const themes = []
+for (const arg of themeArgs) {
+  if (fs.statSync(arg).isDirectory()) {
+    // A folder: every <app>.json in it that holds a `theme` group, with <app>.exceptions.json beside
+    // it when there is one. A <app>.css beside it must declare the same slots.
+    // In the order each file asks for ($extensions["unicron.app"].order), then by name.
+    const files = fs.readdirSync(arg).filter((f) => f.endsWith(".json") && !f.endsWith(".exceptions.json"))
+      .map((f) => ({ f, json: JSON.parse(fs.readFileSync(path.join(arg, f), "utf8")) }))
+      .filter(({ json }) => json.theme)
+      .sort((a, b) => (a.json.$extensions?.["unicron.app"]?.order ?? Infinity) - (b.json.$extensions?.["unicron.app"]?.order ?? Infinity) || a.f.localeCompare(b.f))
+    for (const { f: file } of files) {
+      const full = path.join(arg, file)
+      const theme = readTheme(full, slotNames)
+      themes.push(theme)
+      const sheet = full.replace(/\.json$/, ".css")
+      if (fs.existsSync(sheet)) {
+        const css = readTheme(sheet, slotNames)
+        for (const [n, v] of theme.slots) {
+          if (css.slots.get(n).toUpperCase() !== v.toUpperCase()) throw new Error(`${path.basename(sheet)} ${n} is ${css.slots.get(n)}, but ${file} says ${v}: the two must agree`)
+        }
+        if (css.name !== theme.name) throw new Error(`${path.basename(sheet)} themes [data-theme="${css.name}"], but ${file} is "${theme.name}"`)
+      }
+      const own = full.replace(/\.json$/, ".exceptions.json")
+      if (fs.existsSync(own) && !exceptionFiles.includes(own)) exceptionFiles.push(own)
+    }
+  } else themes.push(readTheme(arg, slotNames))
+}
+if (themeArgs.length && !themes.length) throw new Error(`no theme found in ${themeArgs.join(", ")}`)
+const CORE_RUN = themes.length === 0
+const MODES = allModes(parsed, themes)
+// Legacy, unthemed recipes run on the defaults only.
+const DEFAULTS = allModes(parsed)
 const short = (mode) => (mode.app ?? "default").slice(0, 2) + "/" + mode.ground[0]
 
+// An app's own exceptions. Its ids are written in full, as a run prints them ("controls:btn-ink").
+for (const file of exceptionFiles) {
+  const json = JSON.parse(fs.readFileSync(file, "utf8"))
+  const list = Array.isArray(json) ? json : json.exceptions
+  if (!Array.isArray(list)) throw new Error(`${file}: expected { "app"?, "exceptions": [{ id, modes, reason }] }`)
+  for (const e of list) ALL_EXCEPTIONS.push({ ...e, area: "app", app: json.app ?? null, file: path.basename(file) })
+}
+
 /** Which modes a recipe or an exception names: "all", a ground, an app, "light"/"dark", or mode names. */
-function modeFilter(spec) {
+function modeFilter(spec, app = null) {
+  if (app) {
+    const inner = modeFilter(spec)
+    return (mode) => mode.app === app && inner(mode)
+  }
   if (spec === undefined || spec === "all") return () => true
   const list = (Array.isArray(spec) ? spec : [spec]).map((s) => String(s).trim())
   const ground = { light: "stone", dark: "graphite" }
@@ -483,7 +525,7 @@ for (const rec of RECIPES) {
     const value = kind.metric === "lc" ? lc : kind.metric === "ratio" ? ratio : dL
     rows.push({
       id: rec.id, area: rec.area, mode, kind: kindName, metric: kind.metric, value, floor,
-      meets: floor === null || value >= floor,
+      meets: floor === null || (value >= floor && (kind.ratioMin === undefined || ratio >= kind.ratioMin)),
       paint: label(paint), on: over.map(label).join(" > "),
       fgHex: hex(drawn), bgHex: hex(bg), lc, ratio, dL,
       note: [rec.source, p.clipped || under.clipped ? "gamut-clamped" : null].filter(Boolean).join("; "),
@@ -505,22 +547,38 @@ for (const [hi, lo] of LEVEL_PAIRS) {
   }
 }
 
+for (const [hi, lo] of ORDER_PAIRS) {
+  for (const mode of MODES) {
+    const a = rows.find((row) => row.mode === mode && row.id === hi)
+    const b = rows.find((row) => row.mode === mode && row.id === lo)
+    if (!a || !b) throw new Error(`order: ${mode.name} ${hi} or ${lo} isn't measured`)
+    const gap = a.lc - b.lc
+    rows.push({
+      id: `order:${hi}/${lo}`, area: "core", mode, kind: "level-order", metric: "gap", value: gap, floor: 0, meets: gap >= -0.05,
+      paint: hi, on: lo, lc: gap, ratio: 0, note: `Lc ${a.lc.toFixed(1)} over Lc ${b.lc.toFixed(1)}`,
+    })
+  }
+}
+
 // ── Exceptions against the misses ────────────────────────────────────────────────────────────
 for (const row of rows) {
   if (row.floor === null) row.status = "info"
   else if (row.meets) row.status = "pass"
   else {
-    const exception = ALL_EXCEPTIONS.find((e) => e.id === row.id && modeFilter(e.modes)(row.mode))
+    const exception = ALL_EXCEPTIONS.find((e) => e.id === row.id && modeFilter(e.modes, e.app)(row.mode))
     row.status = exception ? "exception" : "FAIL"
     row.reason = exception?.reason
   }
 }
 for (const e of ALL_EXCEPTIONS) {
   if (!e.reason) errors.push(`exception "${e.id}" has no reason`)
-  const covered = rows.filter((row) => row.id === e.id && modeFilter(e.modes)(row.mode))
-  if (!covered.length) errors.push(`exception "${e.id}" names no measured recipe and mode`)
+  // The core's own list is checked on the core run; an app's list on the run that passes it.
+  if ((e.area === "app") === CORE_RUN) continue
+  const where = e.file ? ` (${e.file})` : ""
+  const covered = rows.filter((row) => row.id === e.id && modeFilter(e.modes, e.app)(row.mode))
+  if (!covered.length) errors.push(`exception "${e.id}"${where} names no measured recipe and mode`)
   for (const row of covered) {
-    if (row.meets) errors.push(`exception "${e.id}" in ${row.mode.name} now clears its floor (${fmt(row)} against ${floorText(row)}): remove it from the list`)
+    if (row.meets) errors.push(`exception "${e.id}"${where} in ${row.mode.name} now clears its floor (${fmt(row)} against ${floorText(row)}): remove it from the list`)
   }
 }
 
@@ -528,12 +586,12 @@ for (const e of ALL_EXCEPTIONS) {
 function fmt(row) {
   if (row.metric === "ratio") return `${row.value.toFixed(2)}:1`
   if (row.metric === "dL") return `ΔL ${row.value.toFixed(3)}`
-  return `Lc ${row.value.toFixed(1)}`
+  return `Lc ${row.value.toFixed(1)}${KINDS[row.kind]?.ratioMin ? ` and ${row.ratio.toFixed(2)}:1` : ""}`
 }
 function floorText(row) {
   if (row.floor === null) return "—"
   if (row.metric === "ratio") return `${row.floor}:1`
-  return `Lc ${row.floor}`
+  return `Lc ${row.floor}${KINDS[row.kind]?.ratioMin ? ` and ${KINDS[row.kind].ratioMin}:1` : ""}`
 }
 const pad = (s, n, right = false) => (right ? String(s).padStart(n) : String(s).padEnd(n))
 const cell = (row) => {
@@ -607,26 +665,15 @@ if (excepted.length) {
 // stale. Each excepted recipe belongs to one row; a new exception needs a row, and a row whose
 // recipes all pass again has to go.
 const SUMMARY = [
-  { what: "`text-label` on `surface-raised` (a field's placeholder)", ids: ["label-raised"] },
-  { what: "`text-label`, `primary-text`, `secondary-live` on `primary-soft`", ids: ["label-soft", "primary-text-soft", "live-soft"] },
-  { what: "`text-body` on `primary-soft` and on `critical-soft` (a selected row; a critical banner or badge; a removed diff line)", ids: ["body-soft", "body-critical-soft", "controls:badge-critical", "body-diff-removed"] },
-  { what: "`primary-text`, `secondary-live`, `critical-text` on `surface-raised`", ids: ["primary-text-raised", "live-raised", "critical-text-raised"] },
-  { what: "`critical-text` on `critical-soft`", ids: ["critical-text-soft"] },
-  { what: "`primary-display` on `surface-raised`", ids: ["primary-display-raised"] },
-  { what: "body over secondary text", ids: ["gap:body-ground/secondary-ground", "gap:body-raised/secondary-raised", "gap:body-soft/secondary-soft"] },
-  { what: "`primary-fill` and `critical-fill` as solids, progress cells included", ids: ["primary-fill-ground", "primary-fill-raised", "primary-edge-soft", "critical-fill-ground", "critical-fill-raised", "controls:progress-primary-track", "controls:progress-primary-page", "controls:progress-critical-track", "controls:progress-critical-page"] },
-  { what: "the same fills as a 2px focus or error edge (a field; an invalid button, switch or checkbox)", ids: ["field-focus-raised", "field-focus-ground", "field-error-raised", "field-error-ground", "controls:ctl-invalid-page", "controls:ctl-invalid-raised"] },
+  { what: "`critical-text` on `surface-raised`, on `critical-soft`, on `accent` and under a hover or pressed wash (graphite)", ids: ["critical-text-raised", "critical-text-soft", "critical-text-accent", "data-b:critical-text-ground-hover", "data-b:critical-text-ground-pressed"] },
+  { what: "`text-body` on `critical-soft` (a critical banner or badge, a removed diff line), and under a button's wash there", ids: ["body-critical-soft", "body-diff-removed", "controls:badge-critical", "data-b:body-critical-soft-hover", "data-b:body-critical-soft-pressed"] },
   { what: "`needs-you-fill` as a solid, and so `attention` as a mark", ids: ["needs-you-fill-ground", "needs-you-fill-raised", "attention-on-soft", "attention-on-surface"] },
-  { what: "text on a hover or pressed wash, and on `accent` (rows, menu items, buttons, a float button, a select trigger)", ids: ["body-ground-hover", "label-ground-hover", "body-ground-pressed", "secondary-ground-pressed", "label-ground-pressed", "label-raised-hover", "body-raised-pressed", "secondary-raised-pressed", "label-raised-pressed", "body-soft-hover", "secondary-soft-hover", "label-soft-hover", "body-accent", "label-accent", "critical-text-accent", "controls:btn-ink-hover-page", "controls:btn-ink-press-page", "controls:btn-ink-press-raised", "controls:float-glyph-hover", "controls:float-glyph-press", "data-b:live-ground-hover", "data-b:live-ground-pressed", "data-b:live-raised-hover", "data-b:live-raised-pressed", "data-b:critical-text-ground-hover", "data-b:critical-text-ground-pressed", "data-b:primary-display-ground-hover", "data-b:primary-display-ground-pressed", "data-b:body-critical-soft-hover", "data-b:body-critical-soft-pressed", "data-b:body-soft-pressed", "data-b:secondary-soft-pressed", "data-b:label-soft-pressed"] },
-  { what: "`text-body` on `diff-added`, the neutral wash", ids: ["body-diff-added"] },
-  { what: "the label on a pressed solid (80%): a primary button, the create float button", ids: ["primary-on-fill-pressed-ground", "primary-on-fill-pressed-raised", "controls:btn-primary-press-page", "controls:btn-primary-press-raised", "controls:float-primary-press"] },
-  { what: "the current (inverted) float button, pressed (80%)", ids: ["controls:float-current-press"] },
-  { what: "`running-foreground` on `running-surface`", ids: ["running-text-surface"] },
+  { what: "`text-body` on a selected row (`primary-soft`) under the pressed wash", ids: ["data-b:body-soft-pressed"] },
 ]
 const DOCS = path.join(here, "..", "..", "..", "docs", "02-tokens.md")
 const DOCS_START = "<!-- contrast:exceptions start · written by `node scripts/contrast.mjs --write-docs` (packages/tokens); do not edit by hand -->"
 const DOCS_END = "<!-- contrast:exceptions end -->"
-{
+if (CORE_RUN) {
   const exceptedIds = new Set(excepted.map((row) => row.id))
   const grouped = new Map()
   for (const group of SUMMARY) {
@@ -698,7 +745,7 @@ console.log(`\nMust differ (reported, not gated): how far two colours that must 
   const h = `${pad("mode", 20)} ${pad("pair", 40)} ${pad("a", 8)} ${pad("b", 8)} ${pad("ΔEOK", 6, true)} ${pad("ΔL", 6, true)} ${pad("Δhue", 6, true)}  ${pad("", 6)} what`
   console.log(`${h}\n${"-".repeat(h.length)}`)
   for (const pair of MUST_DIFFER) {
-    for (const mode of MODES.filter((m) => m.app === pair.app)) {
+    for (const mode of MODES) {
       const a = to8(flatten([paintOf(pair.a)], mode).rgb)
       const b = to8(flatten([paintOf(pair.b)], mode).rgb)
       const d = difference(a, b)
@@ -711,14 +758,23 @@ console.log(`\nMust differ (reported, not gated): how far two colours that must 
 if (printExceptions) {
   console.log("\n// Misses, as exception entries (justify each before keeping it):")
   const missed = rows.filter((row) => row.floor !== null && !row.meets)
-  for (const id of new Set(missed.map((row) => row.id))) {
-    const modes = missed.filter((row) => row.id === id).map((row) => row.mode)
-    const all = (ground) => MODES.filter((m) => m.ground === ground).every((m) => modes.includes(m))
-    const names = modes.length === MODES.length ? `"all"` : JSON.stringify([
-      ...["graphite", "stone"].filter(all),
-      ...modes.filter((m) => !all(m.ground)).map((m) => m.name),
-    ])
-    console.log(`  { id: ${JSON.stringify(id)}, modes: ${names}, reason: FIGMA },`)
+  // In an app's run, the misses the core's own list already names are not the app's to list.
+  const coreNamed = (row) => ALL_EXCEPTIONS.some((e) => e.area !== "app" && e.id === row.id && modeFilter(e.modes)(row.mode))
+  const groups = CORE_RUN ? [[null, MODES]] : themes.map((t) => [t.name, MODES.filter((m) => m.app === t.name)])
+  for (const [app, modesOf] of groups) {
+    const mine = missed.filter((row) => modesOf.includes(row.mode) && (CORE_RUN || !coreNamed(row)))
+    if (app) console.log(`// ${app}: { "app": ${JSON.stringify(app)}, "exceptions": [`)
+    for (const id of new Set(mine.map((row) => row.id))) {
+      const modes = mine.filter((row) => row.id === id).map((row) => row.mode)
+      const all = (ground) => modesOf.filter((m) => m.ground === ground).every((m) => modes.includes(m))
+      const names = modes.length === modesOf.length ? `"all"` : JSON.stringify([
+        ...["graphite", "stone"].filter(all),
+        ...modes.filter((m) => !all(m.ground)).map((m) => m.name),
+      ])
+      if (CORE_RUN) console.log(`  { id: ${JSON.stringify(id)}, modes: ${names}, reason: FIGMA },`)
+      else console.log(`    { "id": ${JSON.stringify(id)}, "modes": ${names}, "reason": "…" },`)
+    }
+    if (app) console.log("  ] }")
   }
 }
 
@@ -731,6 +787,6 @@ if (errors.length) {
   process.exit(1)
 }
 console.log(
-  `\n✓ contrast: ${gated.length - excepted.length} gated measures clear their floor in ${MODES.length} modes` +
+  `\n✓ contrast${CORE_RUN ? " (the Unicron default theme)" : ` (${themes.map((t) => t.name).join(", ")})`}: ${gated.length - excepted.length} gated measures clear their floor in ${MODES.length} modes` +
     ` (${excepted.length} named exceptions reported, ${rows.length - gated.length} measures reported only)`
 )

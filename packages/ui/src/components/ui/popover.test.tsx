@@ -62,6 +62,23 @@ describe("Popover", () => {
     expect(cls).not.toContain("w-72")
   })
 
+  it("takes the wide width, 420, on request (Unicron 60); 320 stays the default", async () => {
+    render(
+      <Popover defaultOpen>
+        <PopoverTrigger>Environment</PopoverTrigger>
+        <PopoverContent width="wide">
+          <PopoverHeader overline="Environment // 03" title="Where it runs" />
+        </PopoverContent>
+      </Popover>
+    )
+    const content = document.querySelector('[data-slot="popover-content"]') as HTMLElement
+    expect(content).toHaveAttribute("data-width", "wide")
+    const cls = content.className.split(" ")
+    expect(cls).toContain("w-(--c-popover-width-wide)")
+    expect(cls).not.toContain("w-(--c-popover-width)")
+    expect(cls).toContain("max-w-(--available-width)")
+  })
+
   it("closes on Escape and returns focus to the trigger", async () => {
     render(<Subject />)
     const trigger = screen.getByRole("button", { name: "Model details" })

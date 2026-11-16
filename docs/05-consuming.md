@@ -77,8 +77,11 @@ entry (adjust the relative path to your CSS file).
 
 **A page with no Tailwind** (an extension's in-page frame) links `@unicron/tokens/plain.css`
 instead. It is the same custom properties, flat: use the roles by name
-(`var(--surface-raised)`), and load the fonts from the page's own origin. `class="system"` on its
-root follows the browser's light or dark setting ([02 · Tokens → Plain CSS](02-tokens.md#plain-css-for-a-page-with-no-tailwind)).
+(`var(--surface-raised)`), link your theme's own sheet after it, and load the fonts from the
+page's own origin. Since 1.1 a root with no ground class follows the browser's light or dark
+setting; `class="stone"` or `class="graphite"` forces one ([02 · Tokens → Plain CSS](02-tokens.md#plain-css-for-a-page-with-no-tailwind)).
+A frame that set `class="system"` keeps working; one that relied on no class meaning stone adds
+`class="stone"`.
 
 ### A smaller stylesheet
 
@@ -159,16 +162,63 @@ components. Never edit the core semantic tier to add a role.
 - **A role that differs by ground** swaps on the core's own two ground selectors. Copy them from
   the example as they are. A plain `.dark` would leave a `data-theme` box inside a dark page on
   the light values.
-- **An app outside the four** can bring its own theme: declare all 28 theme slots under its own
-  `[data-theme="…"]`. Unicron's contrast gate does not measure a theme it does not ship, so
-  measure yours.
+- **Your theme lives here too.** See the next section.
+
+## 3a. Declare your app's theme
+
+Since 1.1 the core ships no app's theme (Unicron 1): it ships one generic default, and each app
+declares its own. Your theme is the **28 theme slots**, 14 per ground, as raw colours, under your
+own `data-theme` (the first block of the example layer):
+
+```css
+[data-theme="vale"] {
+  --g-theme-graphite-ground: #161A1C;
+  --g-theme-graphite-raised: #1E2224;
+  /* … all 14 graphite slots, then all 14 stone slots … */
+  --g-theme-stone-live: #397059;
+}
+```
+
+- **The slots.** Per ground: `ground`, `raised`, `rule`, `grid-dot`, `faint`, `label`,
+  `secondary`, `body`, `primary-fill`, `primary-on-fill`, `primary-text`, `primary-soft`,
+  `primary-display`, `live`. The full names are in `@unicron/tokens`'s `dist/tokens.json`
+  (`themeSlots`); what each one is for is in [02 · Tokens → Theme slots](02-tokens.md#theme-slots-tier-1).
+  Declare all 28: a slot you leave out shows Unicron's default.
+- **Switch it on in the HTML**, once: `<html data-theme="vale">`. Every core role, knob and
+  component follows; nothing else changes.
+- **Keep a copy as JSON if you like** (the shape of `global.json`'s `theme` group, with each
+  slot's Figma id in its `$description`): the contrast tool reads either. The playground's copies
+  of the four apps' themes are examples: `apps/playground/src/app-themes/<app>.json` and `.css`.
+- **Run the contrast tool in CI.** `@unicron/tokens` ships `unicron-contrast`. It lays your slots
+  over the core's built roles and knobs and measures every pair the components paint, on
+  graphite and stone, against the same floors as the core:
+
+  ```sh
+  pnpm exec unicron-contrast src/app-extension.css --exceptions src/contrast-exceptions.json
+  ```
+
+  It fails on any pair under its floor that your exceptions file does not name, and on any
+  named exception that now passes, so the list cannot go stale. Start with
+  `--print-exceptions`, which prints your misses as entries to paste, then write each one's
+  reason (or fix the colour):
+
+  ```json
+  { "app": "vale", "exceptions": [
+    { "id": "label-raised", "modes": ["graphite"], "reason": "Figma value, solved to the ground with no room; flagged" }
+  ] }
+  ```
+
+  `modes` is `"all"`, `"graphite"`, `"stone"`, or mode names (`"vale / stone"`). Misses every
+  theme shares (Unicron's critical and needs-you colours) are the core's, already named.
+  Add it to your `check` script, beside your other gates.
 
 ## 4. Switch themes
 
 There are two axes, both on `<html>` (or any subtree root):
 
-- **Your app**: `data-theme="warpcore" | "vale" | "lockdown" | "synapse"`. It picks the app's
-  identity colour and tinted neutrals. Set it once; with no attribute you get warpcore's values.
+- **Your app's theme**: `data-theme="<app>"`, the name your layer declares
+  ([3a](#3a-declare-your-apps-theme)). It picks your identity colour and neutrals. Set it once;
+  with no attribute you get Unicron's own default theme (before 1.1 it was Warpcore's values).
 - **The ground**: the `dark` class is graphite, `light` (or no class) is stone.
 
 ```html

@@ -1,16 +1,16 @@
-// Foundations (?view=foundations): what every component is built from. Color roles, the 23 type
+// Foundations (?view=foundations): what every component is built from. Color roles, the 24 type
 // roles, spacing, radius, strokes, sizes, and the stylesheet's rule, scrim, focus and touch-target
 // utilities.
 //
 // Every reading on this page is measured from the page itself, not typed in: a swatch prints the
 // color the browser resolved, a specimen prints its own computed font, a box prints its own size.
-// So the page is true in each of the eight theme modes, and a token that did not arrive shows as
+// So the page is true in every theme on both grounds, and a token that did not arrive shows as
 // "not set". The focus ring and the touch target only show on a keyboard or a touch screen; the
 // browser checks in tests/foundations.spec.ts measure those, and read the same parts as this
 // page, by their data attributes.
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
 
-import { useAddress } from "../address"
+import { THEME_NAMES, useAddress } from "../address"
 
 // ── measuring ──────────────────────────────────────────────────────────────────────────────────
 
@@ -142,6 +142,9 @@ const COLOR_GROUPS: { title: string; roles: [role: string, paint: string][] }[] 
     roles: [
       ["line-rule", "bg-line-rule"],
       ["line-grid-dot", "bg-line-grid-dot"],
+      ["line-field", "bg-line-field"],
+      ["line-focus", "bg-line-focus"],
+      ["line-invalid", "bg-line-invalid"],
     ],
   },
   {
@@ -154,6 +157,15 @@ const COLOR_GROUPS: { title: string; roles: [role: string, paint: string][] }[] 
     ],
   },
   {
+    title: "Small text // Lc 75 and 4.5:1, under 16px",
+    roles: [
+      ["small-label", "bg-small-label"],
+      ["small-primary", "bg-small-primary"],
+      ["small-critical", "bg-small-critical"],
+      ["small-live", "bg-small-live"],
+    ],
+  },
+  {
     title: "Primary // the app's identity",
     roles: [
       ["primary-fill", "bg-primary-fill"],
@@ -161,6 +173,7 @@ const COLOR_GROUPS: { title: string; roles: [role: string, paint: string][] }[] 
       ["primary-text", "bg-primary-text"],
       ["primary-soft", "bg-primary-soft"],
       ["primary-display", "bg-primary-display"],
+      ["primary-mark", "bg-primary-mark"],
     ],
   },
   {
@@ -283,7 +296,8 @@ function Colors() {
 
 // ── type ───────────────────────────────────────────────────────────────────────────────────────
 
-// The text is what the Figma file shows in each role. The app's name and initial follow the theme.
+// The text is what the Figma file shows in each role (mono-row, new in 1.1, shows a Lockdown row's
+// own words). The app's name and initial follow the theme.
 const TYPE_ROLES: { role: string; paint: string; sample: string | ((app: string) => string) }[] = [
   { role: "display", paint: "type-display", sample: "Inbox" },
   { role: "display-compact", paint: "type-display-compact", sample: "Today" },
@@ -300,6 +314,7 @@ const TYPE_ROLES: { role: string; paint: string; sample: string | ((app: string)
   { role: "overline", paint: "type-overline", sample: "Inbox // 012 unread" },
   { role: "folio", paint: "type-folio", sample: "012" },
   { role: "meta", paint: "type-meta", sample: "PDF // Pine Hollow booking.pdf // 84 KB" },
+  { role: "mono-row", paint: "type-mono-row", sample: "mira.chen // fastmail.com" },
   { role: "code-inline", paint: "type-code-inline", sample: "mira.chen@fastmail.com" },
   { role: "code-display", paint: "type-code-display", sample: "R7K2N" },
   { role: "number-hero", paint: "type-number-hero", sample: "94" },
@@ -517,11 +532,11 @@ const RULES: { name: string; paint: string; on?: boolean }[] = [
   { name: "rule-t rule-b", paint: "rule-t rule-b" },
   { name: "rule-box", paint: "rule-box" },
   { name: "rule-box-emphasis", paint: "rule-box-emphasis" },
-  { name: "rule-box-emphasis // --rule-color", paint: "rule-box-emphasis [--rule-color:var(--critical-fill)]" },
+  { name: "rule-box-emphasis // --rule-color", paint: "rule-box-emphasis [--rule-color:var(--line-invalid)]" },
   { name: "edge-l", paint: "edge-l bg-primary-soft" },
   { name: "rule-b edge-l", paint: "rule-b edge-l bg-primary-soft" },
   { name: "rule-b // + a ring on a state", paint: "rule-b data-[state=on]:ring-1 data-[state=on]:ring-primary-fill", on: true },
-  { name: "rule-box // + an invalid edge", paint: "rule-box data-[state=on]:inset-ring-2 data-[state=on]:inset-ring-critical-fill", on: true },
+  { name: "rule-box // + an invalid edge", paint: "rule-box data-[state=on]:inset-ring-2 data-[state=on]:inset-ring-line-invalid", on: true },
   { name: "edge-l // + a ring under the pointer", paint: "edge-l bg-primary-soft hover:ring-1 hover:ring-primary-fill" },
 ]
 
@@ -632,13 +647,11 @@ function Layers() {
 
 // ── the view ───────────────────────────────────────────────────────────────────────────────────
 
-const APP_NAMES: Record<string, string> = { warpcore: "Warpcore", vale: "Vale", lockdown: "Lockdown", synapse: "Synapse" }
-
 export default function FoundationsView() {
   const tick = useReadingTick()
   const { theme } = useAddress()
-  // With no ?theme= the tokens show their default mode, which is Warpcore's.
-  const app = APP_NAMES[theme ?? "warpcore"]!
+  // With no ?theme= the tokens show Unicron's own default theme.
+  const app = THEME_NAMES[theme ?? "default"]
   return (
     <Reading.Provider value={tick}>
       <div data-slot="foundations" className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">

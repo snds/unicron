@@ -1,4 +1,4 @@
-// Owned component (not generated): one choice of several, as square radios, and as rows of a choice with a sentence.
+// Owned component (not generated): one choice of several, as round radios, and as rows of a choice with a sentence.
 // Promoted from: Seeded in snds/unicron (2026-11 design direction, contract 5.1b #23: Vale settings and questions, Lockdown "Keep which?", Synapse merge choices; no Figma frame; no app PR, no DSA record)
 "use client"
 
@@ -23,22 +23,23 @@ function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
 }
 
 /**
- * One radio: the Checkbox's 16px square on the 2px corner, raised, with a 1px edge in the label ink
- * (`--c-radio-edge`, held to 3:1: it is all that shows an empty radio). Chosen, the edge turns to
- * ink and an 8px ink square sits in the middle: a radio shows a square inside, a checkbox a check,
- * so the two never read alike. 44px to a finger (`hit-area`).
+ * One radio: a 16px circle, raised, with a 1px edge in the label ink (`--c-radio-edge`, held to
+ * 3:1: it is all that shows an empty radio). Chosen, the edge turns to ink and an 8px ink dot sits
+ * in the middle. It is the system's one round control (Unicron 41): every other corner is 2px, so
+ * an empty radio never looks like an empty checkbox, and a person can tell "one of these" from
+ * "any of these" before choosing. 44px to a finger (`hit-area`).
  */
 function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {
   return (
     <RadioPrimitive.Root
       data-slot="radio-group-item"
       className={cn(
-        "peer group/radio hit-area inline-flex size-4 shrink-0 items-center justify-center rounded-lg bg-surface-raised rule-box transition-[background-color,box-shadow] [--line-rule:var(--c-radio-edge)] hover:bg-accent data-checked:[--line-rule:var(--c-radio-mark)] aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill data-disabled:pointer-events-none data-disabled:opacity-50",
+        "peer group/radio hit-area inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-surface-raised rule-box transition-[background-color,box-shadow] [--line-rule:var(--c-radio-edge)] hover:bg-accent data-checked:[--line-rule:var(--c-radio-mark)] aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) data-disabled:pointer-events-none data-disabled:opacity-50",
         className
       )}
       {...props}
     >
-      <RadioPrimitive.Indicator data-slot="radio-group-indicator" className="size-2 bg-(--c-radio-mark) data-unchecked:hidden" />
+      <RadioPrimitive.Indicator data-slot="radio-group-indicator" className="size-2 rounded-full bg-(--c-radio-mark) data-unchecked:hidden" />
     </RadioPrimitive.Root>
   )
 }

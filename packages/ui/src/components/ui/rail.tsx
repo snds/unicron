@@ -23,7 +23,7 @@ export type NavMarkTone = "neutral" | "needs-you"
  * `TopTab`, `RailItem`, `NavItem` and `FloatButton`:
  *
  * - a number, or `{ count }`: how many (unread, items, waiting). Drawn as cross-app decisions §13
- *   writes counts: `07`, `12`, `248`, `1,204`; at an icon's corner it stops at `99+`.
+ *   writes counts: `007`, `012`, `248`, `1,204`; at an icon's corner `07`, stopping at `99+`.
  * - `{ square: true, label }`: something with no number (an update is ready). `label` says what.
  * - `{ keys }`: the key that reaches the place ("/" on Search, contract 5.1c C2), drawn as a `Kbd`
  *   after a label, or in the host's tooltip where the mark would sit on an icon. It is said through
@@ -54,8 +54,8 @@ export interface NavMarkResolved {
 }
 
 /**
- * A count the way cross-app decisions §13 writes one: two digits (`07`), three from 100 (`248`),
- * a comma from 1,000 (`1,204`). `cap` stops at `99+`, for a mark at an icon's corner.
+ * A count the way cross-app decisions §13 writes one: three digits (`007`, `012`, `248`), a comma
+ * from 1,000 (`1,204`). `cap` is for a mark at an icon's corner: two digits (`07`), stopping at `99+`.
  */
 export function formatNavCount(count: number, { cap = false }: { cap?: boolean } = {}): string {
   return formatCount(count, { cap })

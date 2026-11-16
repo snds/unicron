@@ -81,6 +81,8 @@ export function loadMap(extraFile) {
   const extra = extraFile ? JSON.parse(fs.readFileSync(extraFile, "utf8")) : {}
   const map = {}
   for (const source of [shipped, extra]) for (const [key, value] of Object.entries(source)) if (!key.startsWith("_")) map[key] = value
+  // Names an app's spec wrote that Carbon spells another way (`link--off` → `unlink`).
+  for (const [key, value] of Object.entries(shipped._aliases ?? {})) if (!(key in map)) map[key] = value
   const carbonNames = new Set(shipped._curated ?? [])
   for (const value of Object.values(map)) if (value) carbonNames.add(value)
   // Material names that are also Carbon names with a different drawing: the type checker accepts

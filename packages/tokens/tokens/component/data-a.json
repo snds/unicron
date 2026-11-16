@@ -18,6 +18,14 @@
       "$description": "The unread mark of the message layout: a square in text-body, its bottom on the baseline. Figma: 6 × 6."
     }
   },
+  "progress": {
+    "$description": "Progress sizes added in 1.1 beside the knobs in component.json (height 4px), controls.json and primitives.json.",
+    "height-large": {
+      "$type": "dimension",
+      "$value": "0.5rem",
+      "$description": "The large segmented bar: 8px tall, as Warpcore's Spend frames draw it (Unicron 49). The default stays --c-progress-height, 4px. The 2px gap between cells is the same."
+    }
+  },
   "swipe-action": {
     "$description": "SwipeAction (Figma 25:2042 \"13. Swipe Action\"): one action tile behind a swiped row.",
     "width": {

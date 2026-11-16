@@ -14,6 +14,13 @@ describe("Chip", () => {
 
   // The controls hand-off: the remove was Button size icon-xs (32) inside a 28px chip. It is now the
   // chip's own height, a 24px square, and widens to 44 on a coarse pointer.
+  it("keeps a person's name in its own case with no option: caption, never the overline's capitals (Vale 8)", () => {
+    render(<Chip variant="outline">Joris van der Berg</Chip>)
+    const chip = screen.getByText("Joris van der Berg")
+    expect(chip.className).toContain("type-caption")
+    expect(chip.className).not.toMatch(/type-overline|uppercase/)
+  })
+
   it("its remove is a named 24px square, 44 to a finger, and removes", async () => {
     const onRemove = vi.fn()
     render(

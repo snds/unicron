@@ -27,7 +27,7 @@ describe("FilterChip (Figma 15:503)", () => {
         All
       </FilterChip>
     )
-    const chip = screen.getByRole("button", { name: "All 12", pressed: false })
+    const chip = screen.getByRole("button", { name: "All 012", pressed: false })
     await userEvent.click(chip)
     expect(chip).toHaveAttribute("aria-pressed", "true")
     expect(onActiveChange).toHaveBeenLastCalledWith(true)
@@ -49,10 +49,10 @@ describe("FilterChipGroup", () => {
   it("single is a radio group: one checked, one Tab stop", async () => {
     render(<Tasks />)
     expect(screen.getByRole("radiogroup", { name: "Show tasks" })).toBeInTheDocument()
-    const all = screen.getByRole("radio", { name: "All 12" })
+    const all = screen.getByRole("radio", { name: "All 012" })
     expect(all).toHaveAttribute("aria-checked", "true")
     expect(all).toHaveAttribute("tabindex", "0")
-    expect(screen.getByRole("radio", { name: "Running 03" })).toHaveAttribute("tabindex", "-1")
+    expect(screen.getByRole("radio", { name: "Running 003" })).toHaveAttribute("tabindex", "-1")
     await userEvent.tab()
     expect(all).toHaveFocus()
   })
@@ -60,30 +60,30 @@ describe("FilterChipGroup", () => {
   it("arrow keys move and choose, skip a disabled chip, wrap, and Home and End go to the ends", async () => {
     const onValueChange = vi.fn()
     render(<Tasks onValueChange={onValueChange} />)
-    screen.getByRole("radio", { name: "All 12" }).focus()
+    screen.getByRole("radio", { name: "All 012" }).focus()
     await userEvent.keyboard("{ArrowRight}")
-    const running = screen.getByRole("radio", { name: "Running 03" })
+    const running = screen.getByRole("radio", { name: "Running 003" })
     expect(running).toHaveFocus()
     expect(running).toHaveAttribute("aria-checked", "true")
     expect(onValueChange).toHaveBeenLastCalledWith("running")
     await userEvent.keyboard("{ArrowRight}")
-    expect(screen.getByRole("radio", { name: "Done 08" })).toHaveFocus()
+    expect(screen.getByRole("radio", { name: "Done 008" })).toHaveFocus()
     await userEvent.keyboard("{ArrowDown}")
-    expect(screen.getByRole("radio", { name: "All 12" })).toHaveFocus()
+    expect(screen.getByRole("radio", { name: "All 012" })).toHaveFocus()
     await userEvent.keyboard("{ArrowLeft}")
-    expect(screen.getByRole("radio", { name: "Done 08" })).toHaveFocus()
+    expect(screen.getByRole("radio", { name: "Done 008" })).toHaveFocus()
     await userEvent.keyboard("{Home}")
-    expect(screen.getByRole("radio", { name: "All 12" })).toHaveAttribute("aria-checked", "true")
+    expect(screen.getByRole("radio", { name: "All 012" })).toHaveAttribute("aria-checked", "true")
     await userEvent.keyboard("{End}")
-    expect(screen.getByRole("radio", { name: "Done 08" })).toHaveAttribute("aria-checked", "true")
+    expect(screen.getByRole("radio", { name: "Done 008" })).toHaveAttribute("aria-checked", "true")
   })
 
   it("a click chooses; choosing the checked chip again changes nothing", async () => {
     const onValueChange = vi.fn()
     render(<Tasks onValueChange={onValueChange} />)
-    await userEvent.click(screen.getByRole("radio", { name: "All 12" }))
+    await userEvent.click(screen.getByRole("radio", { name: "All 012" }))
     expect(onValueChange).not.toHaveBeenCalled()
-    await userEvent.click(screen.getByRole("radio", { name: "Done 08" }))
+    await userEvent.click(screen.getByRole("radio", { name: "Done 008" }))
     expect(onValueChange).toHaveBeenLastCalledWith("done")
   })
 
@@ -144,8 +144,9 @@ describe("FilterChip kinds: a trigger and a plain button (contract 5.1c C13, War
     expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("aria-hidden", "true")
     expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("width", "16")
     const cls = chip.className.split(/\s+/)
-    // The off look, with the chevron 4 after the words; open, it keeps the pressed wash.
-    expect(cls).toEqual(expect.arrayContaining(["text-muted-foreground", "gap-1", "aria-expanded:bg-state-pressed"]))
+    // The off look, with the chevron 4 after the words; open, it draws inverted ink (Unicron 50).
+    expect(cls).toEqual(expect.arrayContaining(["text-muted-foreground", "gap-1", "aria-expanded:bg-foreground", "aria-expanded:text-background"]))
+    expect(cls).not.toContain("aria-expanded:bg-state-pressed")
     expect(cls).not.toContain("bg-foreground")
     await userEvent.click(chip)
     await userEvent.click(chip)
@@ -219,5 +220,44 @@ describe("FilterChip kinds: a trigger and a plain button (contract 5.1c C13, War
     expect(ref.current).toBe(chip)
     expect(chip).toHaveAttribute("aria-haspopup", "menu")
     expect(chip).toHaveAttribute("aria-expanded", "true")
+  })
+
+  it("open, a trigger draws inverted, keeps aria-expanded, and is still not on (Unicron 50)", () => {
+    render(
+      <FilterChip kind="trigger" aria-haspopup="menu" aria-expanded={true}>
+        General
+      </FilterChip>
+    )
+    const chip = screen.getByRole("button", { name: "General" })
+    expect(chip).toHaveAttribute("aria-expanded", "true")
+    expect(chip).not.toHaveAttribute("aria-pressed")
+    expect(chip).not.toHaveAttribute("data-active")
+    const cls = chip.className.split(/\s+/)
+    expect(cls).toEqual(
+      expect.arrayContaining([
+        "aria-expanded:bg-foreground",
+        "aria-expanded:text-background",
+        "aria-expanded:active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]",
+      ])
+    )
+  })
+})
+
+describe("FilterChip keepCase (Vale 8)", () => {
+  it("keeps a person's name in its own case; a plain label still takes capitals", () => {
+    render(
+      <>
+        <FilterChip keepCase count={3}>Ana McKay</FilterChip>
+        <FilterChip>All</FilterChip>
+      </>
+    )
+    const name = screen.getByRole("button", { name: /^Ana McKay / })
+    expect(name).toHaveAttribute("data-keep-case")
+    expect(name.querySelector('[data-slot="filter-chip-label"]')).toHaveClass("normal-case")
+    // The role is the same: only the case is kept.
+    expect(name).toHaveClass("type-overline")
+    const plain = screen.getByRole("button", { name: "All" })
+    expect(plain).not.toHaveAttribute("data-keep-case")
+    expect(plain.querySelector('[data-slot="filter-chip-label"]')).not.toHaveClass("normal-case")
   })
 })

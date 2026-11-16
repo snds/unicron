@@ -1,6 +1,8 @@
 // Sheet, as Figma draws it (32:122 Sheet Header; Lockdown 11, Vale 05): a bottom sheet on the
-// raised surface with the grabber, the Sheet Header and its close, two heights; the side panel of
-// AdaptiveSheetContent on a desktop. View: ?view=sheet
+// raised surface, the Sheet Header and its close, two heights; the side panel of
+// AdaptiveSheetContent on a desktop. A plain bottom sheet cannot be dragged, so it draws no
+// grabber (Unicron 54); only AdaptiveSheetContent on a phone, which drags down to close, draws
+// one (open this view at a phone's width to see it). View: ?view=sheet
 import {
   AdaptiveSheetContent,
   Button,

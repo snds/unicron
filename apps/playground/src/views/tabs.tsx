@@ -26,9 +26,9 @@ export default function TabsView() {
               <Icon name="chat" />
               Messages
             </TabsTrigger>
-            <TabsTrigger value="comments">
+            <TabsTrigger value="comments" mark={3}>
               <Icon name="edit" />
-              Comments 03
+              Comments
             </TabsTrigger>
             <TabsTrigger value="files" disabled>
               <Icon name="attachment" />
@@ -52,6 +52,44 @@ export default function TabsView() {
             <TabsTrigger value="day">Day</TabsTrigger>
             <TabsTrigger value="week">Week</TabsTrigger>
             <TabsTrigger value="month">Month</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </Specimen>
+
+      <Specimen label="Counts said in the name // 'Requests, 2' (Lockdown 30)" column>
+        <Tabs defaultValue="requests">
+          <TabsList variant="line" aria-label="Sharing">
+            <TabsTrigger value="requests" mark={2}>
+              Requests
+            </TabsTrigger>
+            <TabsTrigger value="shared" mark={{ count: 1, tone: "needs-you" }}>
+              Shared with you
+            </TabsTrigger>
+            <TabsTrigger value="household">Household</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Tabs defaultValue="open">
+          <TabsList aria-label="Requests">
+            <TabsTrigger value="open" mark={2}>
+              Open
+            </TabsTrigger>
+            <TabsTrigger value="done" mark={14}>
+              Done
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </Specimen>
+
+      <Specimen label="Keep case // a person's name keeps its own case (Vale 8)" column>
+        <Tabs defaultValue="ana">
+          <TabsList variant="line" aria-label="Team">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="ana" keepCase>
+              Ana McKay
+            </TabsTrigger>
+            <TabsTrigger value="joris" keepCase>
+              Joris van der Berg
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </Specimen>

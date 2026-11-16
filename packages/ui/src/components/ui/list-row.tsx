@@ -10,7 +10,7 @@ import { cva } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
 import { formatCount } from "../../lib/format"
-import { Icon } from "../icon"
+import { Icon, type IconName } from "../icon"
 import { Button } from "./button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from "./dropdown-menu"
 import { Progress, type ProgressTone } from "./progress"
@@ -20,6 +20,30 @@ export type ListRowLayout = "inline" | "message"
 export type ListRowTone = "neutral" | "live"
 export type ListRowMetaStyle = "label" | "plain"
 export type ListRowSize = "default" | "compact"
+export type ListRowStatusMarkTone = "neutral" | "live" | "needs-you" | "critical"
+
+/**
+ * A status shown as a mark instead of words, for a narrow column (Warpcore's 270px chat list): a
+ * 16px glyph in the tone's ink, with its word said as part of the row's description.
+ */
+export interface ListRowStatusMark {
+  /** The glyph (Carbon name). Pick one whose meaning holds without the word. */
+  icon: IconName
+  /** The status word ("Waiting on you", "Running"): what a screen reader says, never drawn. */
+  label: string
+  /**
+   * `neutral` label ink, `live` the live ink, `critical` the critical text, `needs-you` the glyph on
+   * a yellow tile in its own ink (the yellow alone barely shows on stone, so it is a shape too).
+   */
+  tone?: ListRowStatusMarkTone
+}
+
+const STATUS_MARK_TONE: Record<ListRowStatusMarkTone, string> = {
+  neutral: "text-muted-foreground",
+  live: "text-secondary-live",
+  critical: "text-critical-text",
+  "needs-you": "on-needs-you rounded-sm bg-needs-you-fill px-0.5 text-needs-you-on-fill",
+}
 
 /** A row's progress: a share from 0 to 1, or a value between `min` and `max` (a count of 32, steps of 7). */
 export interface ListRowProgress {
@@ -33,8 +57,8 @@ export interface ListRowProgress {
 }
 
 /**
- * A count as decisions §13 writes it: two digits (`07`), three from 100 (`146`), a comma from
- * 1,000 (`1,204`). Shared by the data parts that show a count (SectionHeader, FilterChip, ListRow).
+ * A count as decisions §13 writes it: three digits (`007`, `012`, `146`), a comma from 1,000
+ * (`1,204`) (Unicron 13). Shared by the data parts that show a count (SectionHeader, FilterChip, ListRow).
  */
 export function formatListCount(count: number): string {
   return formatCount(count)
@@ -145,6 +169,12 @@ export type ListRowProps = Omit<React.HTMLAttributes<HTMLElement>, "title" | "on
   metaStyle?: ListRowMetaStyle
   /** The status words, right, in overline caps ("Queued"); in the live ink when `tone="live"`. */
   status?: React.ReactNode
+  /**
+   * The status as a mark, for a narrow column where words would push the title onto two lines
+   * (Warpcore 18): `{ icon, label, tone }`. The glyph is drawn where the words would be; `label` is
+   * said with the row (its description), not drawn. It takes the place of `status`.
+   */
+  statusMark?: ListRowStatusMark
   /** A status Badge, after the status words. */
   badge?: React.ReactNode
   /** A line of detail under the meta (a search snippet, a description): caption role, two lines at most. */
@@ -211,6 +241,7 @@ function ListRow({
   meta,
   metaStyle = "label",
   status,
+  statusMark,
   badge,
   detail,
   progress,
@@ -258,7 +289,7 @@ function ListRow({
   const describedBy = (
     message
       ? [has(time) ? ids.time : null, has(preview) ? ids.preview : null, has(disabledReason) ? ids.reason : null]
-      : [has(meta) ? ids.meta : null, has(status) ? ids.status : null, has(detail) ? ids.detail : null, has(disabledReason) ? ids.reason : null]
+      : [has(meta) ? ids.meta : null, has(status) || statusMark ? ids.status : null, has(detail) ? ids.detail : null, has(disabledReason) ? ids.reason : null]
   )
     .filter(Boolean)
     .join(" ")
@@ -484,7 +515,7 @@ function ListRow({
     </div>
   )
 
-  const words = has(status) || has(badge)
+  const words = has(status) || Boolean(statusMark) || has(badge)
   const controls = has(action) || hasMenu
   // Inline rows keep their trailing parts together. With a mouse they sit on one line (the menu
   // over the status, or after the action). On touch the words stay on the title line and the
@@ -497,7 +528,19 @@ function ListRow({
       >
         {words ? (
           <span data-slot="list-row-words" className={cn("flex items-baseline gap-3", underMenu)}>
-            {has(status) ? (
+            {statusMark ? (
+              <span
+                id={ids.status}
+                data-slot="list-row-status-mark"
+                data-tone={statusMark.tone ?? "neutral"}
+                className={cn(ON_LINE, lineBox)}
+              >
+                <span className={cn("inline-flex items-center", STATUS_MARK_TONE[statusMark.tone ?? "neutral"])}>
+                  <Icon name={statusMark.icon} size="sm" />
+                </span>
+                <span className="sr-only">{statusMark.label}</span>
+              </span>
+            ) : has(status) ? (
               <span
                 id={ids.status}
                 data-slot="list-row-status"

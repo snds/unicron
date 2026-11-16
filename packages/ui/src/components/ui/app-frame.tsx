@@ -5,7 +5,7 @@
 import * as React from "react"
 import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
-import { DETAIL_MIN_WIDTH, useViewport } from "../use-viewport"
+import { DETAIL_MIN_WIDTH, sidebarRailAt, useViewport } from "../use-viewport"
 import {
   AppFrameAnnounceContext,
   AppFrameContext,
@@ -29,6 +29,27 @@ import { FloatButton } from "./float-button"
 import { PageHead, type PageHeadProps } from "./page-head"
 import { ResizableHandle, ResizablePane, ResizablePanes, useResizablePanesLayout } from "./resizable-panes"
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "./sheet"
+
+function isDevelopment(): boolean {
+  const env = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env
+  return env?.NODE_ENV !== "production"
+}
+
+let warnedOfNoTheme = false
+
+/**
+ * Unicron 4: with no `data-theme` on the root (or on a box around the frame), the tokens fall back
+ * to the core's generic default theme. That keeps a production page whole, but in an app it is
+ * almost always a missing attribute, so a development build says so once.
+ */
+function warnOfNoTheme(el: HTMLElement) {
+  if (warnedOfNoTheme || !isDevelopment()) return
+  if (el.ownerDocument.documentElement.hasAttribute("data-theme") || el.closest("[data-theme]")) return
+  warnedOfNoTheme = true
+  console.warn(
+    '@unicron/ui: no data-theme is set on the root (<html data-theme="…">), so the core\'s generic default theme is in use. Set your app\'s theme: see docs/05-consuming.md (Themes).'
+  )
+}
 
 /* ── AppFrame ────────────────────────────────────────────────────────────────────────────────── */
 
@@ -103,6 +124,8 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
         : SHRINK_FALLBACK,
     [box]
   )
+  // 1024 to 1099 the sidebar is its rail on every screen, list + detail or not (Unicron 74).
+  const railBand = layout === "expanded" && sidebarRailAt(viewport.width)
   const shrink =
     layout === "expanded" && parts.list > 0 && parts.detail > 0
       ? shrinkFor({
@@ -164,6 +187,10 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
     }, 0)
   }, [])
 
+  React.useEffect(() => {
+    if (box) warnOfNoTheme(box)
+  }, [box])
+
   const keyboardOpen = !contained && viewport.keyboardOpen
   const tight = !contained && viewport.room !== "full"
 
@@ -198,7 +225,7 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       focus,
       setClearance,
       shrink,
-      sidebarRail: shrink !== "none",
+      sidebarRail: shrink !== "none" || railBand,
       setSidebar,
       registerSplitPart,
       strip,
@@ -226,6 +253,7 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       focus,
       setClearance,
       shrink,
+      railBand,
       setSidebar,
       registerSplitPart,
       strip,
@@ -238,11 +266,17 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
 
   // Where a toast goes (C6), measured off the frame's own box, so a contained frame (which is the
   // containing block of its fixed descendants) places its toasts inside itself:
-  // - phone: 16 from the sides, as wide as the strip, the bottom just above the bottom row's bar
-  //   (the strip's slot), or 16 from the foot with no row; the top just under the top row;
+  // - phone: 16 from the sides, as wide as the strip. The bottom is just above a strip that shows
+  //   over the bottom row (a needs-you strip, offline: Synapse 10, Vale 15), which stays shown; with
+  //   none, just above the bottom row's bar (the strip's slot), or 16 from the foot with no row.
+  //   The top just under the top row.
   // - desktop: the bottom left of the content, 24 above the screen's foot.
   React.useLayoutEffect(() => {
     if (!box) return
+    const standingStrip = () =>
+      Array.from(box.querySelectorAll<HTMLElement>('[data-slot="app-frame-strip"] > [data-slot="accessory"]')).find(
+        (el) => el.getBoundingClientRect().height > 0
+      ) ?? null
     const measure = () => {
       const frameBox = box.getBoundingClientRect()
       const inset = readLength(box, "--c-toaster-offset-compact", 16)
@@ -250,11 +284,13 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       if (phone) {
         const top = box.querySelector('[data-slot="app-frame-top-row"]')?.getBoundingClientRect()
         const bar = bottomBar?.isConnected ? bottomBar.getBoundingClientRect() : null
+        const standing = standingStrip()?.getBoundingClientRect() ?? null
         const gap = readLength(box, "--c-toaster-gap", 8)
+        const floor = standing ?? (bar && bar.height > 0 ? bar : null)
         next = {
           left: inset,
           width: Math.max(0, frameBox.width - 2 * inset),
-          bottom: bar && bar.height > 0 ? frameBox.bottom - bar.top + gap : inset,
+          bottom: floor ? frameBox.bottom - floor.top + gap : inset,
           top: top && top.height > 0 ? top.bottom - frameBox.top : inset,
         }
       } else {
@@ -279,8 +315,10 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
     observer.observe(box)
     if (bottomBar) observer.observe(bottomBar)
     if (mainArea) observer.observe(mainArea)
+    const standing = phone ? standingStrip() : null
+    if (standing) observer.observe(standing)
     return () => observer.disconnect()
-  }, [box, phone, bottomBar, mainArea, clearance, minimized, layout])
+  }, [box, phone, bottomBar, mainArea, clearance, minimized, layout, strip])
 
   return (
     <div
@@ -344,8 +382,9 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
             // The short screen's trailing column (Warpcore U-03): the top row's buttons at the top,
             // the bottom row's search, tab bar and create at the foot. 16 from each edge. The column
             // has a floor: its buttons never shrink, and where the height cannot hold everything
-            // (four tabs need 380) the foot gives way through its tab bar, whose tabs share what is
-            // left. So create, the app's primary action, is always on screen.
+            // (four 44px tabs need about 400) the foot gives way through its tab bar, which scrolls
+            // and keeps every tab at 44 (Unicron 29). So create, the app's primary action, is
+            // always on screen.
             <div
               data-slot="app-frame-rail"
               className={cn(

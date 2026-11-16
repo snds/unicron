@@ -14,11 +14,13 @@ export const progressBudgetThresholds = { warning: 0.7, over: 0.9 } as const
 export const progressDefaultSegments = 32
 
 export type ProgressVariant = "bar" | "segmented"
+/** A segmented bar's height in px: 4 (the default, a row's bar) or 8 (Warpcore's Spend). */
+export type ProgressSize = 4 | 8
 export type ProgressTone = "default" | "neutral" | "primary" | "live" | "warning" | "critical" | "budget"
 
 type ProgressProps = ProgressPrimitive.Root.Props & {
   /**
-   * `bar`: a continuous fill. `segmented`: a row of equal cells, 4px tall and 2px apart, lit from
+   * `bar`: a continuous fill. `segmented`: a row of equal cells, 4px (or 8px: `size`) tall and 2px apart, lit from
    * the start by the share of `value` between `min` and `max`.
    */
   variant?: ProgressVariant
@@ -40,6 +42,11 @@ type ProgressProps = ProgressPrimitive.Root.Props & {
    * step count (`segments={7} max={7}`). The direction uses 3 to 64.
    */
   segments?: number
+  /**
+   * Segmented only: the cells' height, 4 (the default, as in a List Row) or 8 (Warpcore's Spend
+   * frames draw the bar 8 tall). The gap between cells stays 2. A plain bar is always 4.
+   */
+  size?: ProgressSize
   /**
    * A mark across the bar at this value (between `min` and `max`, like `value`): a 2px ink tick,
    * taller than the bar, for a limit that matters (Warpcore's spend bar warns at 80%). It is
@@ -82,12 +89,15 @@ function Progress({
   variant = "bar",
   tone = "default",
   segments = progressDefaultSegments,
+  size = 4,
   tick,
   ...props
 }: ProgressProps) {
   const level = tone === "budget" ? budgetLevel(value, min, max) : undefined
+  const tall = variant === "segmented" && size === 8
   const track = (
-    <ProgressTrack>
+    // 8 is two steps of the 4px spacing scale; 4 is the bar's own knob (--c-progress-height).
+    <ProgressTrack className={tall ? "h-2" : undefined}>
       {variant === "segmented" ? (
         <ProgressSegments value={value} min={min} max={max} segments={segments} />
       ) : (
@@ -103,6 +113,7 @@ function Progress({
       data-slot="progress"
       data-variant={variant}
       data-tone={tone}
+      data-size={variant === "segmented" ? (tall ? 8 : 4) : undefined}
       data-fill={fillOf(variant, tone)}
       data-level={level}
       className={cn("group/progress flex flex-wrap gap-x-3 gap-y-1", className)}

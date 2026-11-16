@@ -95,7 +95,7 @@ describe("Switch (Figma 32:53, Toggle)", () => {
     expect(track).toContain("hit-area")
     expect(track.some((c) => /(^|:)outline-(none|hidden)$/.test(c) || c.startsWith("focus-visible:"))).toBe(false)
     // Invalid: a 2px inside edge in the critical fill, as an invalid field has.
-    expect(track).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-critical-fill"]))
+    expect(track).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-(--line-invalid)"]))
   })
 
   it("size=\"sm\" is still accepted and draws the one size", () => {
