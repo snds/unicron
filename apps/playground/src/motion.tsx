@@ -33,6 +33,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
   Progress,
+  RollingNumber,
   SecretField,
   AdaptiveSheetContent,
   Select,
@@ -49,6 +50,7 @@ import {
   Tabs,
   TabsList,
   TabsTrigger,
+  toast,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -227,6 +229,21 @@ function ProgressSpecimen() {
         {value === 20 ? "To 80%" : "To 20%"}
       </Button>
       <Progress value={value} aria-label="Sync" className="w-48" />
+    </>
+  )
+}
+
+function RollingNumberSpecimen() {
+  const [count, setCount] = useState(1289)
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setCount((n) => n + 13)}>
+        Add 13
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => setCount((n) => n - 13)}>
+        Take 13
+      </Button>
+      <RollingNumber value={count} locales="en-US" className="font-mono text-2xl" />
     </>
   )
 }
@@ -501,6 +518,17 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
     </Collapsible>
   ),
   progress: () => <ProgressSpecimen />,
+  toast: () => (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => toast("Sent", { description: "To Ana, 2 attachments" })}>
+        Send
+      </Button>
+      <Button data-dismiss variant="ghost" size="sm" onClick={() => toast.dismiss()}>
+        Dismiss all
+      </Button>
+    </>
+  ),
+  "rolling-number": () => <RollingNumberSpecimen />,
   sheet: () => (
     <Sheet>
       <SheetTrigger data-trigger render={<Button variant="outline" size="sm" />}>

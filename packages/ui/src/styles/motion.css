@@ -15,6 +15,7 @@
  *   motion-collapse                 a panel opening by height
  *   motion-stagger                  children entering in turn
  *   motion-draw                     a stroke drawing itself (a check)
+ *   motion-roll-in, motion-roll-out a changed character rolling to its new value (RollingNumber)
  *   data-shake                      a refusal: three swings that die away (lib/motion → useShake)
  *   data-release                    a dragged surface let go: settles back on the firm spring, or
  *                                   carries on out, faster for a flick (lib/motion → drag-release)
@@ -286,6 +287,28 @@
     animation: motion-draw var(--motion-base) var(--motion-ease-enter) backwards;
   }
 
+  /* ── roll ──────────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * A changed character of a number: the new one rises into place as the old one rises out (both
+   * fall instead when the value went down: data-direction="down" on an ancestor). The old one's
+   * resting style is gone (moved out, transparent), so with no animation at all it is not seen.
+   */
+  .motion-roll-in,
+  .motion-roll-out {
+    --motion-roll-way: 1;
+  }
+  [data-direction="down"] :is(.motion-roll-in, .motion-roll-out) {
+    --motion-roll-way: -1;
+  }
+  .motion-roll-in {
+    animation: motion-roll-in var(--motion-state) var(--motion-ease-move) backwards;
+  }
+  .motion-roll-out {
+    translate: 0 calc(var(--motion-roll-way) * -100%);
+    opacity: 0;
+    animation: motion-roll-out var(--motion-state) var(--motion-ease-move);
+  }
+
   /* ── shake ─────────────────────────────────────────────────────────────────────────────────── */
   /* Two names for one animation: useShake flips between them, which restarts it on every refusal. */
   [data-shake="a"] {
@@ -314,6 +337,18 @@
 @keyframes motion-appear {
   from {
     opacity: 0;
+  }
+}
+@keyframes motion-roll-in {
+  from {
+    translate: 0 calc(var(--motion-roll-way) * 100%);
+    opacity: 0;
+  }
+}
+@keyframes motion-roll-out {
+  from {
+    translate: 0 0;
+    opacity: 1;
   }
 }
 @keyframes motion-draw {
@@ -406,6 +441,8 @@
   }
   .motion-stagger > *,
   .motion-draw,
+  .motion-roll-in,
+  .motion-roll-out,
   [data-shake] {
     animation: none;
   }
@@ -449,6 +486,8 @@
   }
   .motion-stagger > *,
   .motion-draw,
+  .motion-roll-in,
+  .motion-roll-out,
   [data-shake] {
     animation: none;
   }

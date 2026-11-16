@@ -1060,14 +1060,21 @@ html:has([data-slot="app-frame"]) body {
 }
 
 /*
- * Toasts on the motion roles. sonner's own stylesheet enters and leaves in 400ms on plain `ease`;
- * these selectors are one step more specific than sonner's, so they win wherever its styles load.
+ * Toasts on the motion roles. sonner's own stylesheet enters in 400ms on plain `ease` and moves a
+ * removed toast behind the front one for 500ms, past the ceiling. A toast arrives and restacks on
+ * --motion-base and the enter curve, and leaves on --motion-fast and the exit curve.
+ * sonner's most specific rule (a removed toast behind the front one) has five attributes; the
+ * repeated attribute here makes these six and seven, so they win wherever its styles load.
  */
 :root [data-sonner-toaster][data-sonner-toaster],
-[data-sonner-toaster] [data-sonner-toast],
+[data-sonner-toaster] [data-sonner-toast][data-sonner-toast][data-sonner-toast][data-sonner-toast][data-sonner-toast],
 [data-sonner-toaster] [data-sonner-toast] > * {
   transition-duration: var(--motion-base);
-  transition-timing-function: var(--motion-ease);
+  transition-timing-function: var(--motion-ease-enter);
+}
+[data-sonner-toaster] [data-sonner-toast][data-sonner-toast][data-sonner-toast][data-sonner-toast][data-sonner-toast][data-removed="true"] {
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--motion-ease-exit);
 }
 
 /*

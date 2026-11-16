@@ -118,6 +118,7 @@ was restyled; [07 · Migrating to 1.0](07-migrating-to-1.0.md) lists what change
 | `sonner` | `Toaster`, `toast` (`toast.success`, `.info`, `.warning`, `.error`, `.dismiss`; options `description`, `action`, `takeFocus`, `returnFocus`, `tone`, `duration`), `toastDurations`, `ToastOptions`, `ToastAction` | Feedback | a copy of sonner with no style tag (`vendor/sonner.js`) |
 | `status-orb` | `StatusOrb` (ten states, told apart by shape and motion as well as colour), `statusOrbCopy`, `statusOrbStates` | Feedback · Agent | span + Icon + Tooltip |
 | `indicator` | `IndicatorMark`, `indicatorCopy`, `indicatorLabel`, `indicatorCount`, `indicatorsOf`, `indicatorOnControl`, types `Indicator`, `IndicatorProp` (the `indicator` prop on Button, IconButton, ToggleGroupItem and Item: unread or attention, a square or a count, the words in the name) | Feedback | span |
+| `rolling-number` | `RollingNumber` (`value`, `format`: `Intl.NumberFormatOptions`, `locales`). Changed characters roll to the new value, up when it grew and down when it shrank; the rest hold still; read once as text | Feedback | span + `motion-roll-in`, `motion-roll-out` |
 | `run-trace` | `RunTrace` (an agent run: open on the current step while live, one line when done; `marks` between steps; step detail in a popover, a sheet on a phone), `runTraceCopy`, `formatRunDuration`, types `RunStep`, `RunStepState`, `RunMark` | Feedback · Agent | Collapsible + StatusOrb + IconButton + Popover / AdaptiveSheetContent |
 | `check-draw` | `CheckDraw` (a check mark that draws itself once; decorative) | Feedback | an SVG path |
 | `update-status` | `UpdateStatusRow`, `AutoCheckSwitch`, `updateLine`, `canCheckForUpdates`, `updateWords`, types `UpdateStatus`, `UpdateState`, `UpdateChannel`, `UpdateWords` | Feedback · Settings | the Field Row look; ToggleRow |
@@ -696,6 +697,7 @@ A primitive never writes its own duration or curve. It picks a recipe from
 | stagger | `motion-stagger` on the parent | a list appearing for the first time | children rise 4px, `--motion-stagger` apart, capped at `--motion-stagger-max` steps | every row is there at once |
 | draw | `motion-draw` (`CheckDraw`) | a success mark | a stroke draws in `--motion-base` | the mark is simply there |
 | shake | `data-shake` (`useShake`) | a refusal | three swings that die away, `--motion-state` | no movement; the error colour and text carry it |
+| roll | `motion-roll-in`, `motion-roll-out` (`RollingNumber`) | a changed character of a number | the new one rises in as the old one rises out (falls, with `data-direction="down"`), `--motion-state`, move curve | the new value at once |
 | release | `data-release="drag"`, `"settle"`, `"dismiss"` (lib/motion → drag-release) | a dragged surface let go | none while dragging; back on the firm spring; out on the exit curve in `--motion-base` × `--motion-release-share` (0.5 for a fast flick, 1 for a let-go) | the drag still follows the finger; let go, it is back or gone at once |
 
 - **Overlays on recipes, in the 1.0 look** (fade, or fade and a step; no zoom, no blur):
@@ -726,6 +728,10 @@ A primitive never writes its own duration or curve. It picks a recipe from
   use the same ones. It stays on Base UI's Dialog: Base UI's Drawer would change the root every app
   writes (`<Sheet>`), a breaking change for one gesture. Revisit when a second system part needs
   snap points.
+- **Toasts and numbers.** A toast arrives and restacks on `--motion-base` and the enter curve, and
+  leaves on `--motion-fast` and the exit curve, in every one of sonner's states (its own stylesheet
+  took 500ms for a toast leaving behind the front one, past the ceiling). An undo toast is a toast
+  with an action. `RollingNumber` rolls only the characters that changed, on `--motion-state`.
 - **Lockdown's feedback, in the 1.0 look** (words, not icons): the clipboard countdown's words on
   SecretField and CodeDisplay ("Clears in 28 s", "Cleared") fade in over 120ms when they appear and
   when the phase changes, and hold still as the seconds tick. A SecretField's value fades in where

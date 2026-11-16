@@ -388,6 +388,33 @@ export const motionContracts = [
     reducedProperties: ["opacity"],
     surfaces: ['[data-slot="sheet-content"]'],
   },
+  {
+    id: "toast",
+    recipe: "sonner's own motion, on the roles (index.css → Toasts)",
+    trigger: "a toast arrives, the stack moves up for it, or it is dismissed",
+    properties: ["transform", "opacity", "height", "box-shadow"],
+    duration: "--motion-base",
+    easing: ["--motion-ease-enter", "--motion-ease-exit"],
+    frequency: "occasional",
+    interrupted: "Transitions: a new toast mid-entrance restacks the others from where they are. A swipe follows the finger.",
+    reduced: "It fades in place; a swipe still works.",
+    reducedProperties: ["opacity"],
+    exception: "sonner moves the stack by height as toasts come and go; it is its own engine, kept on the roles and inside the ceiling.",
+    surfaces: ['[data-sonner-toast]'],
+  },
+  {
+    id: "rolling-number",
+    recipe: "motion-roll-in, motion-roll-out (RollingNumber)",
+    trigger: "the value changes: each changed character rolls, up when it grew and down when it shrank",
+    properties: ["translate", "opacity"],
+    duration: "--motion-state",
+    easing: ["--motion-ease-move"],
+    frequency: "occasional",
+    interrupted: "Changed again mid-roll, the changed characters start a new roll from the newest value.",
+    reduced: "The new value is there at once.",
+    reducedProperties: [],
+    surfaces: ['[data-contract="rolling-number"] [data-slot="rolling-number"]'],
+  },
 ] as const satisfies readonly MotionContract[]
 
 export type MotionContractId = (typeof motionContracts)[number]["id"]

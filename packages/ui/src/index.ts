@@ -127,6 +127,7 @@ export {
   type RailItemState,
 } from "./components/ui/rail"
 export * from "./components/ui/resizable-panes"
+export * from "./components/ui/rolling-number"
 export * from "./components/ui/run-trace"
 export * from "./components/ui/scroll-area"
 export * from "./components/ui/section-header"

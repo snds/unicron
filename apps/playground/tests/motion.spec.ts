@@ -465,3 +465,18 @@ test.describe("sheet drag", () => {
     expect(await offset(sheet)).toBe(0)
   })
 })
+
+// ── toasts ─────────────────────────────────────────────────────────────────────────────────────
+// sonner moves a dismissed toast for 500ms by its own stylesheet; on the roles it leaves within
+// --motion-fast, whichever of sonner's states it is in.
+test("toast: leaves on --motion-fast", async ({ page }) => {
+  const contract = motionContracts.find((c) => c.id === "toast")! as MotionContract
+  await open(page, contract)
+  await release(page)
+  await card(page, contract).locator("[data-dismiss]").click()
+  await page.waitForFunction(() => document.querySelector('[data-sonner-toast][data-removed="true"]') !== null)
+  const leaving = await freeze(page, contract)
+  expect(leaving.length, "the toast did not animate on the way out").toBeGreaterThan(0)
+  expectWithinContract(leaving, contract, contract.properties, await roleMs(page, "--motion-fast"))
+  await release(page)
+})
