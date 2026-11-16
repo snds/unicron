@@ -485,7 +485,8 @@ scrim is never opaque and never blurred: no `backdrop-blur` anywhere.
 
 ## Motion
 
-Semantic roles carry motion; components use these, never a raw duration or curve.
+Semantic roles carry motion; components use these, never a raw duration or curve. How the parts
+use them, the rules, and how to add a motion: [09 · Motion](09-motion.md).
 
 **Durations**
 
@@ -549,8 +550,9 @@ CSS and can start from the finger's release speed.
 `--motion-ease` (`--default-transition-duration`, `--default-transition-timing-function`), so a bare
 `transition-colors` is on the system. The curves and the two springs are utilities: `ease-standard`,
 `ease-enter`, `ease-exit`, `ease-move`, `ease-emphasis`, `ease-spring-settle`, `ease-spring-firm`.
-A duration is written `duration-(--motion-state)`. Toasts are moved onto `--motion-base` from
-`@unicron/ui`'s stylesheet, since sonner's own runs 400ms on plain `ease`.
+A duration is written `duration-(--motion-state)`. Toasts are moved onto `--motion-base` (arriving) and
+`--motion-fast` (leaving) from `@unicron/ui`'s stylesheet, since sonner's own runs 400 to 500ms on
+plain `ease`.
 
 **Rules.** No motion literals in a primitive: `pnpm lint:tokens` refuses a raw duration, a generic
 or hand-written curve, a tier 1 motion variable and `transition-all` in `packages/ui/src`

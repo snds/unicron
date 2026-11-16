@@ -275,8 +275,8 @@ function TruncatedText({ children: text, lines = 1, cut = "end", side = "top", r
             className={cn(
               "bg-text-body text-surface-ground type-caption z-50 block rounded px-2 py-1 text-start whitespace-normal wrap-break-word",
               "w-max min-w-[min(var(--c-truncated-text-min-width),var(--available-width,100vw))] max-w-[min(var(--c-truncated-text-max-width),var(--available-width,100vw))]",
-              // Fades in place: no zoom, no slide.
-              "data-open:animate-in data-open:fade-in-0 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-closed:animate-out data-closed:fade-out-0 duration-(--motion-fast) ease-(--motion-ease)"
+              // Fades in place, as a tooltip does: no zoom, no slide (motion-fade-fast, both ways).
+              "motion-fade motion-fade-fast"
             )}
           >
             {text}

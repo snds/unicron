@@ -120,6 +120,29 @@ For scale: 0.24 measured 157 kB / 25.5 kB for the first row. 1.0 adds four theme
 arrive in a `<style>` tag, uncounted). An app that held its initial CSS to 25 kB on 0.24 has to
 set that budget again on purpose: the lean entry gets a whole app to about 33 kB, not to 25.
 
+### Expressive motion (opt-in)
+
+The default motion is mechanical. An app that wants livelier moments somewhere imports a second
+stylesheet after the first, and marks where it applies:
+
+```css
+@import "@unicron/ui/styles";
+@import "@unicron/ui/styles/motion-expressive.css";
+```
+
+```html
+<html data-motion="expressive">            <!-- the whole app, overlays included -->
+<section data-motion="expressive">…</section> <!-- or one screen: a success page -->
+```
+
+Inside that box a pressed button scales instead of moving 1px (and comes back without a bounce:
+nothing met many times a minute bounces), a dialog arrives from
+0.96 on the emphasis curve, and `motion-burst` on a success mark pops it in with a ring that grows
+and fades. Overlays render in a portal under `<body>`, so they follow only a box on `<html>` or
+`<body>`. Without the attribute the file does nothing. Under reduced motion, and in a
+`data-motion="reduced"` or `"off"` box, the mechanical recipe applies instead. There are no
+per-component variants: the choice is the app's, made once, in one place.
+
 ## 3. Add your app-extension token layer
 
 Copy `@unicron/tokens/examples/app-extension.css` as a starting point. Put roles only your app

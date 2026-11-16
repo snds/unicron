@@ -9,6 +9,10 @@ import {
   AppFramePageHead,
   Button,
   CheckDraw,
+  Checkbox,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,6 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Icon,
   Kbd,
   motionContracts,
   Popover,
@@ -31,14 +36,27 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
+  Progress,
+  RollingNumber,
   SecretField,
+  AdaptiveSheetContent,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Sheet,
+  SheetBody,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  Switch,
   TabBar,
   TabBarItem,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  toast,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -230,6 +248,104 @@ function PressSpecimen() {
     >
       Press and hold
     </div>
+  )
+}
+
+function PushSpecimen() {
+  return (
+    <div
+      data-specimen
+      role="button"
+      tabIndex={0}
+      className="motion-push bg-primary text-primary-foreground type-overline inline-flex h-8 cursor-default items-center rounded-lg px-3 select-none"
+    >
+      Press and hold
+    </div>
+  )
+}
+
+const MARKS = [
+  { x: 0, width: 48 },
+  { x: 64, width: 80 },
+  { x: 160, width: 32 },
+]
+
+/** A bare mark that moves between three places; Tabs shows the same recipe on the real thing. */
+function IndicatorSpecimen() {
+  const [at, setAt] = useState(0)
+  const mark = MARKS[at]!
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setAt((n) => (n + 1) % MARKS.length)}>
+        Next
+      </Button>
+      <div className="relative h-4 w-48">
+        <div
+          data-specimen
+          className="motion-indicator bg-primary-fill absolute bottom-0 left-0 h-0.5"
+          style={{ translate: `${mark.x}px 0`, width: mark.width }}
+        />
+      </div>
+    </>
+  )
+}
+
+function ProgressSpecimen() {
+  const [value, setValue] = useState(20)
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setValue((v) => (v === 20 ? 80 : 20))}>
+        {value === 20 ? "To 80%" : "To 20%"}
+      </Button>
+      <Progress value={value} aria-label="Sync" className="w-48" />
+    </>
+  )
+}
+
+function RollingNumberSpecimen() {
+  const [count, setCount] = useState(1289)
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setCount((n) => n + 13)}>
+        Add 13
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => setCount((n) => n - 13)}>
+        Take 13
+      </Button>
+      <RollingNumber value={count} locales="en-US" className="font-mono text-2xl" />
+    </>
+  )
+}
+
+function ExpressivePressSpecimen() {
+  return (
+    <div data-motion="expressive">
+      <div
+        data-specimen
+        role="button"
+        tabIndex={0}
+        className="motion-push bg-primary text-primary-foreground type-overline inline-flex h-8 cursor-default items-center rounded-lg px-3 select-none"
+      >
+        Press and hold
+      </div>
+    </div>
+  )
+}
+
+function BurstSpecimen() {
+  const [run, setRun] = useState(0)
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setRun((n) => n + 1)}>
+        Replay
+      </Button>
+      <div data-motion="expressive" className="flex items-center gap-2 text-sm">
+        <span key={run} data-specimen className="motion-burst text-success-foreground inline-flex size-6 items-center justify-center text-xl">
+          <Icon name="checkmark" />
+        </span>
+        Paired
+      </div>
+    </>
   )
 }
 
@@ -474,6 +590,8 @@ function StrengthSpecimen() {
 
 const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   press: () => <PressSpecimen />,
+  push: () => <PushSpecimen />,
+  indicator: () => <IndicatorSpecimen />,
   pop: () => <ToggleSpecimen className="motion-pop" label="A small surface" />,
   slide: () => <ToggleSpecimen className="motion-slide motion-slide-from-bottom" label="From the bottom edge" clip />,
   collapse: () => <CollapseSpecimen />,
@@ -490,6 +608,57 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   "copy-words": () => <SecretFieldSpecimen press="copy" label="Copy" />,
   reveal: () => <SecretFieldSpecimen press="reveal" label="Show" />,
   strength: () => <StrengthSpecimen />,
+  collapsible: () => (
+    <Collapsible className="w-56">
+      <CollapsibleTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Three steps
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <p className="bg-muted mt-2 p-2 text-sm">Two passed, and one was skipped because its input had not changed.</p>
+      </CollapsibleContent>
+    </Collapsible>
+  ),
+  progress: () => <ProgressSpecimen />,
+  toast: () => (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => toast("Sent", { description: "To Ana, 2 attachments" })}>
+        Send
+      </Button>
+      <Button data-dismiss variant="ghost" size="sm" onClick={() => toast.dismiss()}>
+        Dismiss all
+      </Button>
+    </>
+  ),
+  "rolling-number": () => <RollingNumberSpecimen />,
+  "expressive-press": () => <ExpressivePressSpecimen />,
+  burst: () => <BurstSpecimen />,
+  sheet: () => (
+    <Sheet>
+      <SheetTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Open sheet
+      </SheetTrigger>
+      <AdaptiveSheetContent>
+        <SheetHeader>
+          <SheetTitle>Sign-in request</SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <p>On a phone, drag the bar at the top: down to let it go, up and it resists.</p>
+        </SheetBody>
+      </AdaptiveSheetContent>
+    </Sheet>
+  ),
+  "button-press": () => <Button data-trigger>Hold to send</Button>,
+  switch: () => <Switch data-trigger aria-label="Lock after 5 minutes" />,
+  checkbox: () => <Checkbox data-trigger aria-label="Remember this device" />,
+  tabs: () => (
+    <Tabs defaultValue="all">
+      <TabsList variant="line">
+        <TabsTrigger value="all">All</TabsTrigger>
+        <TabsTrigger data-trigger value="unread">Unread</TabsTrigger>
+        <TabsTrigger value="flagged">Flagged</TabsTrigger>
+      </TabsList>
+    </Tabs>
+  ),
 }
 
 function Fact({ term, children }: { term: string; children: ReactNode }) {

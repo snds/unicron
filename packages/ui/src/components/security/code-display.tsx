@@ -530,7 +530,8 @@ export function CodeDisplay({
         codeType,
         expectedDigits === 8 && "[font-feature-settings:'zero']",
         expiring && "contrast-more:underline forced-colors:underline",
-        rolling && "animate-in fade-in-0 motion-reduce:animate-none"
+        // The next code fades in where the last one was (motion-appear), over the rollover knob.
+        rolling && "motion-appear"
       )}
       style={rolling ? { animationDuration: "var(--c-code-rollover-duration)" } : undefined}
     >

@@ -16,7 +16,7 @@ apps build on: Vale, Warpcore, Lockdown and Synapse. Public, personal, Apache-2.
 
 Docs: [principles](docs/01-principles.md) · [tokens](docs/02-tokens.md) · [components](docs/03-components.md) ·
 [patterns](docs/04-patterns.md) · [consuming](docs/05-consuming.md) · [contributing and releasing](docs/06-contributing.md) ·
-[migrating to 1.0](docs/07-migrating-to-1.0.md) · [migrating to 1.1](docs/08-migrating-to-1.1.md) · [DESIGN.md](DESIGN.md) (the look).
+[migrating to 1.0](docs/07-migrating-to-1.0.md) · [migrating to 1.1](docs/08-migrating-to-1.1.md) · [motion](docs/09-motion.md) · [DESIGN.md](DESIGN.md) (the look).
 
 ## Stack
 

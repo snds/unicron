@@ -117,6 +117,7 @@ was restyled; [07 · Migrating to 1.0](07-migrating-to-1.0.md) lists what change
 | `sonner` | `Toaster`, `toast` (`toast.success`, `.info`, `.warning`, `.error`, `.dismiss`; options `description`, `action`, `takeFocus`, `returnFocus`, `tone`, `duration`), `toastDurations`, `ToastOptions`, `ToastAction` | Feedback | a copy of sonner with no style tag (`vendor/sonner.js`) |
 | `status-orb` | `StatusOrb` (ten states, told apart by shape and motion as well as colour), `statusOrbCopy`, `statusOrbStates` | Feedback · Agent | span + Icon + Tooltip |
 | `indicator` | `IndicatorMark`, `indicatorCopy`, `indicatorLabel`, `indicatorCount`, `indicatorsOf`, `indicatorOnControl`, types `Indicator`, `IndicatorProp` (the `indicator` prop on Button, IconButton, ToggleGroupItem and Item: unread or attention, a square or a count, the words in the name) | Feedback | span |
+| `rolling-number` | `RollingNumber` (`value`, `format`: `Intl.NumberFormatOptions`, `locales`). Changed characters roll to the new value, up when it grew and down when it shrank; the rest hold still; read once as text | Feedback | span + `motion-roll-in`, `motion-roll-out` |
 | `run-trace` | `RunTrace` (an agent run: open on the current step while live, one line when done; `marks` between steps; step detail in a popover, a sheet on a phone), `runTraceCopy`, `formatRunDuration`, types `RunStep`, `RunStepState`, `RunMark` | Feedback · Agent | Collapsible + StatusOrb + IconButton + Popover / AdaptiveSheetContent |
 | `check-draw` | `CheckDraw` (a check mark that draws itself once; decorative) | Feedback | an SVG path |
 | `update-status` | `UpdateStatusRow`, `AutoCheckSwitch`, `updateLine`, `canCheckForUpdates`, `updateWords`, types `UpdateStatus`, `UpdateState`, `UpdateChannel`, `UpdateWords` | Feedback · Settings | the Field Row look; ToggleRow |
@@ -782,13 +783,16 @@ const watch = useBuildWatch(buildWatch) // { current, latest, ready, needed, che
 
 ## Motion recipes
 
-A primitive never writes its own duration or curve. It picks a recipe from
+The rules and the whole picture are in [09 · Motion](09-motion.md). A primitive never writes its
+own duration or curve. It picks a recipe from
 `packages/ui/src/styles/motion.css`, and each recipe is built only from the motion roles
 ([tokens → Motion](02-tokens.md#motion)).
 
 | Recipe | Class or attribute | For | Runs | Under reduced motion |
 |---|---|---|---|---|
-| press | `motion-press`, `motion-press-sm` | a control going down under a press | scale to `--motion-press-depth` in `--motion-press`; back in `--motion-fast` | no scale; colour still changes |
+| push | `motion-push` | the 1.0 press: a control pressed 1px into the page (Button, IconButton, a lone Toggle) | translate 1px down in `--motion-press`; back in `--motion-fast`. A popup trigger (`aria-haspopup`) does not move | no movement; colour still changes |
+| press | `motion-press`, `motion-press-sm` | a control shrinking under a press. Not used by a core part: it is for the expressive stylesheet | scale to `--motion-press-depth` in `--motion-press`; back in `--motion-fast` | no scale; colour still changes |
+| indicator | `motion-indicator` | a mark that slides to the chosen item (the line Tabs' one indicator) | translate, and the mark's length, `--motion-base`, move curve | the mark is under the new item at once |
 | pop | `motion-pop` | a small surface arriving from its anchor | opacity and scale from 0.96, `--motion-base` in, `--motion-fast` out | fades in place |
 | fade | `motion-fade` (+ `motion-fade-fast`) | a surface that appears where it is: a dialog, a tooltip, the dim behind a layer | opacity, `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways | the same |
 | anchor | `motion-anchor` (+ `motion-anchor-fast`) | a surface that opens off its trigger: a popover, a menu, a select's list | opacity, and 8px away from the trigger on the side Base UI places it (`data-side`); `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways and still when opened or closed from the keyboard | fades in place |
@@ -799,6 +803,8 @@ A primitive never writes its own duration or curve. It picks a recipe from
 | stagger | `motion-stagger` on the parent | a list appearing for the first time | children rise 4px, `--motion-stagger` apart, capped at `--motion-stagger-max` steps | every row is there at once |
 | draw | `motion-draw` (`CheckDraw`) | a success mark | a stroke draws in `--motion-base` | the mark is simply there |
 | shake | `data-shake` (`useShake`) | a refusal | three swings that die away, `--motion-state` | no movement; the error colour and text carry it |
+| roll | `motion-roll-in`, `motion-roll-out` (`RollingNumber`) | a changed character of a number | the new one rises in as the old one rises out (falls, with `data-direction="down"`), `--motion-state`, move curve | the new value at once |
+| release | `data-release="drag"`, `"settle"`, `"dismiss"` (lib/motion → drag-release) | a dragged surface let go | none while dragging; back on the firm spring; out on the exit curve in `--motion-base` × `--motion-release-share` (0.5 for a fast flick, 1 for a let-go) | the drag still follows the finger; let go, it is back or gone at once |
 
 - **Overlays on recipes, in the 1.0 look** (fade, or fade and a step; no zoom, no blur):
   Dialog and its dim fade in place, 200ms in and 120ms out. Popover is the anchor recipe, 200ms
@@ -806,6 +812,37 @@ A primitive never writes its own duration or curve. It picks a recipe from
   DropdownMenu and Select use the short anchor: 120ms both ways, and still when opened or closed
   from the keyboard. Each has a contract and browser checks, including one that it never zooms
   or blurs on the way in.
+- **Selection, in the 1.0 look** (mechanical, no zoom): a Button, an IconButton and a lone Toggle
+  press 1px into the page (`motion-push`); a menu or popover trigger does not move, and the items of
+  a joined ToggleGroup change colour only, so they stay in line. The Switch knob slides on
+  `--motion-fast`. A Checkbox's mark fades in and out on `--motion-fast` rather than drawing: it is
+  a state, met many times a minute. The line Tabs have one indicator that slides to the chosen tab
+  on `--motion-base`; a segmented list fills the chosen segment in place. Each has a contract and
+  browser checks.
+- **Panels and measures.** CollapsibleContent (and RunTrace's steps) opens by height on the
+  collapse recipe, `--motion-state`; its chevron turns on `--motion-fast`. A Progress bar's fill
+  is the full track scaled from its start edge, so a new value moves it on transform, not width
+  (`--motion-base`, move curve); `ProgressIndicator` used on its own keeps Base UI's width unless
+  given `share`. StatusOrb's needs-you ping is a copy of its ring that grows and fades (scale and
+  opacity), no longer an animated shadow; under reduced motion the copy is not drawn.
+- **The phone sheet's drag.** AdaptiveSheetContent's grabber drags the sheet 1:1 down; pulled up
+  past open it resists and stops after 24px (`rubberBand`). Let go, it reads the speed of the last
+  100ms: past 30% of its height, or flicked faster than 0.5px per ms, it carries on out, faster for
+  a faster flick; otherwise it settles back on the firm spring. Grabbed again while settling, it
+  carries on from where it is. The rules are pure functions in `@unicron/ui/motion`
+  (`releaseVelocity`, `shouldDismiss`, `releaseShare`), so an app's own gesture (a swipe row) can
+  use the same ones. It stays on Base UI's Dialog: Base UI's Drawer would change the root every app
+  writes (`<Sheet>`), a breaking change for one gesture. Revisit when a second system part needs
+  snap points.
+- **Toasts and numbers.** A toast arrives and restacks on `--motion-base` and the enter curve, and
+  leaves on `--motion-fast` and the exit curve, in every one of sonner's states (its own stylesheet
+  took 500ms for a toast leaving behind the front one, past the ceiling). An undo toast is a toast
+  with an action. `RollingNumber` rolls only the characters that changed, on `--motion-state`.
+- **Expressive, by choice.** `@unicron/ui/styles/motion-expressive.css` plus `data-motion="expressive"`
+  re-points the push to a scale (no bounce: a button is met too often), brings a dialog in from
+  0.96 on the emphasis curve, and adds `motion-burst` for a success mark, on the pop spring ([consuming → expressive
+  motion](05-consuming.md#expressive-motion-opt-in)). It is the one place the pop spring is read.
+  No ripple: it needs the pointer's position and adds nothing the burst does not.
 - **Lockdown's feedback, in the 1.0 look** (words, not icons): the clipboard countdown's words on
   SecretField and CodeDisplay ("Clears in 28 s", "Cleared") fade in over 120ms when they appear and
   when the phase changes, and hold still as the seconds tick. A SecretField's value fades in where
@@ -818,9 +855,10 @@ A primitive never writes its own duration or curve. It picks a recipe from
 - **Entrances and exits are transitions.** pop, slide, collapse, fade and anchor read Base UI's `data-starting-style`
   and `data-ending-style` (and `@starting-style` for a plain mount), so closing mid-open turns round
   from where it is. Nothing restarts.
-- **Two exceptions to "transform and opacity".** collapse animates height, because the content below
-  has to move with the panel. draw animates a stroke offset, because that is the only way to draw a
-  line. Each is written into its contract.
+- **Three exceptions to "transform and opacity".** collapse animates height, because the content
+  below has to move with the panel. draw animates a stroke offset, because that is the only way to
+  draw a line. indicator changes the mark's length with the item it marks; the mark is placed
+  absolutely and is 2px thick, so nothing reflows. Each is written into its contract.
 - **Contracts are data.** `motionContracts` (`@unicron/ui/motion`) lists, for each recipe, its
   trigger, the properties it may animate, its duration role, how often it is met, what happens when
   it is interrupted, and what is left under reduced motion. The playground's Motion view

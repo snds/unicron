@@ -2,7 +2,9 @@
  * Motion primitives: named recipes built only from the motion roles (docs/02-tokens.md → Motion).
  * A component picks a recipe by class; it never writes its own duration or curve.
  *
- *   motion-press, motion-press-sm   a control going down under a press
+ *   motion-push                     a control pressed into the page: 1px down (the 1.0 press)
+ *   motion-press, motion-press-sm   a control shrinking under a press (expressive; not the default)
+ *   motion-indicator                a mark that slides to the chosen item (a tab's line)
  *   motion-pop                      a small surface arriving from its anchor and leaving faster
  *   motion-fade (+ -fast)           a surface that fades in place: a dialog, a tooltip, a backdrop
  *   motion-anchor (+ -fast)         a surface that fades and moves a step off its anchor: a popover,
@@ -13,7 +15,10 @@
  *   motion-collapse                 a panel opening by height
  *   motion-stagger                  children entering in turn
  *   motion-draw                     a stroke drawing itself (a check)
+ *   motion-roll-in, motion-roll-out a changed character rolling to its new value (RollingNumber)
  *   data-shake                      a refusal: three swings that die away (lib/motion → useShake)
+ *   data-release                    a dragged surface let go: settles back on the firm spring, or
+ *                                   carries on out, faster for a flick (lib/motion → drag-release)
  *
  * Entrances and exits read Base UI's `data-starting-style` / `data-ending-style`, so they are
  * transitions: closed mid-open, they turn round from where they are. `@starting-style` gives the
@@ -40,6 +45,35 @@
   .motion-press-sm:active:not(:disabled, [aria-disabled="true"]) {
     scale: var(--motion-press-depth-small);
     transition-duration: var(--motion-press);
+  }
+
+  /* ── push ──────────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * The 1.0 press: the control goes 1px down while held, quickly, and comes back a little slower.
+   * Mechanical, with no zoom. A control that opens a popup (aria-haspopup) does not move: its
+   * popup is placed against it.
+   */
+  .motion-push {
+    --motion-push-depth: 1px;
+    transition-property: color, background-color, border-color, box-shadow, translate;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease);
+  }
+  .motion-push:active:not(:disabled, [aria-disabled="true"], [aria-haspopup]) {
+    translate: 0 var(--motion-push-depth);
+    transition-duration: var(--motion-press);
+  }
+
+  /* ── indicator ─────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * A mark that follows the chosen item (Base UI's Tabs.Indicator sets --active-tab-*). It moves
+   * on translate; its length changes too (width or height), which is a stated exception: the mark
+   * is absolutely placed, so nothing around it reflows, and it is a 2px bar.
+   */
+  .motion-indicator {
+    transition-property: translate, width, height;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-move);
   }
 
   /* ── pop ───────────────────────────────────────────────────────────────────────────────────── */
@@ -253,6 +287,28 @@
     animation: motion-draw var(--motion-base) var(--motion-ease-enter) backwards;
   }
 
+  /* ── roll ──────────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * A changed character of a number: the new one rises into place as the old one rises out (both
+   * fall instead when the value went down: data-direction="down" on an ancestor). The old one's
+   * resting style is gone (moved out, transparent), so with no animation at all it is not seen.
+   */
+  .motion-roll-in,
+  .motion-roll-out {
+    --motion-roll-way: 1;
+  }
+  [data-direction="down"] :is(.motion-roll-in, .motion-roll-out) {
+    --motion-roll-way: -1;
+  }
+  .motion-roll-in {
+    animation: motion-roll-in var(--motion-state) var(--motion-ease-move) backwards;
+  }
+  .motion-roll-out {
+    translate: 0 calc(var(--motion-roll-way) * -100%);
+    opacity: 0;
+    animation: motion-roll-out var(--motion-state) var(--motion-ease-move);
+  }
+
   /* ── shake ─────────────────────────────────────────────────────────────────────────────────── */
   /* Two names for one animation: useShake flips between them, which restarts it on every refusal. */
   [data-shake="a"] {
@@ -283,6 +339,18 @@
     opacity: 0;
   }
 }
+@keyframes motion-roll-in {
+  from {
+    translate: 0 calc(var(--motion-roll-way) * 100%);
+    opacity: 0;
+  }
+}
+@keyframes motion-roll-out {
+  from {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
 @keyframes motion-draw {
   from {
     stroke-dashoffset: 1;
@@ -311,6 +379,32 @@
   }
 }
 
+
+/*
+ * Release, unlayered: a dragged surface's own transition (a utility on the popup) must give way
+ * while it is held and let go, so these sit above the layers. See the recipe list at the top.
+ */
+/* ── release ───────────────────────────────────────────────────────────────────────────────── */
+/*
+ * A surface the pointer is dragging follows it 1:1, with no transition (data-release="drag").
+ * Let go short of dismissal, it settles back on the firm spring (under 3% overshoot, so no
+ * visible bounce). Let go past it, or flicked, it carries on out on the exit curve, in a share
+ * of --motion-base that shrinks as the flick gets faster (--motion-release-share, 0.5 to 1).
+ */
+[data-release="drag"] {
+  transition-property: none;
+}
+[data-release="settle"] {
+  transition-property: translate;
+  transition-duration: var(--motion-spring-firm-duration);
+  transition-timing-function: var(--motion-spring-firm);
+}
+[data-release="dismiss"] {
+  transition-property: translate, opacity;
+  transition-duration: calc(var(--motion-base) * var(--motion-release-share, 1));
+  transition-timing-function: var(--motion-ease-exit);
+}
+
 /*
  * Reduced motion, per recipe. The system-wide layer in index.css already limits every transition
  * to colour and opacity; these remove what would otherwise jump or still play. Nothing is lost: a
@@ -319,6 +413,9 @@
  * Unlayered, so they win over the recipes above.
  */
 @media (prefers-reduced-motion: reduce) {
+  .motion-push:active {
+    translate: none;
+  }
   .motion-press:active,
   .motion-press-sm:active,
   .motion-pop[data-starting-style],
@@ -344,14 +441,26 @@
   }
   .motion-stagger > *,
   .motion-draw,
+  .motion-roll-in,
+  .motion-roll-out,
   [data-shake] {
     animation: none;
   }
   .motion-fill-in-turn > * {
     transition-delay: initial;
+  }
+  /* Let go, a dragged surface is at its end at once: back in place, or gone (it still fades). */
+  [data-release="settle"] {
+    transition-property: none;
+  }
+  [data-release="dismiss"] {
+    transition-property: opacity;
   }
 }
 [data-motion="reduced"] {
+  .motion-push:active {
+    translate: none;
+  }
   .motion-press:active,
   .motion-press-sm:active,
   .motion-pop[data-starting-style],
@@ -377,10 +486,19 @@
   }
   .motion-stagger > *,
   .motion-draw,
+  .motion-roll-in,
+  .motion-roll-out,
   [data-shake] {
     animation: none;
   }
   .motion-fill-in-turn > * {
     transition-delay: initial;
+  }
+  /* Let go, a dragged surface is at its end at once: back in place, or gone (it still fades). */
+  [data-release="settle"] {
+    transition-property: none;
+  }
+  [data-release="dismiss"] {
+    transition-property: opacity;
   }
 }

@@ -2,6 +2,15 @@
 export { useMediaQuery, useReducedMotion } from "./use-reduced-motion"
 export { useShake, type Shake } from "./use-shake"
 export { rubberBand } from "./rubber-band"
+export {
+  DISMISS_SHARE,
+  FLICK_SPEED,
+  RELEASE_WINDOW_MS,
+  releaseShare,
+  releaseVelocity,
+  shouldDismiss,
+  type DragSample,
+} from "./drag-release"
 export { withViewTransition } from "./view-transition"
 export {
   motionContracts,

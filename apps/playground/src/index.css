@@ -1,4 +1,6 @@
 @import "@unicron/ui/styles";
+/* The opt-in expressive layer, so the Motion view can show it inside a data-motion="expressive" box. */
+@import "@unicron/ui/styles/motion-expressive.css";
 
 /*
  * The four apps' themes (Unicron 1.1: each app declares its own; none lives in the core). These

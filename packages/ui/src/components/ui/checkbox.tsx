@@ -30,7 +30,11 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator data-slot="checkbox-indicator" className="grid place-content-center text-current">
+      <CheckboxPrimitive.Indicator
+        data-slot="checkbox-indicator"
+        // The mark fades in when checked and out when cleared, short both ways (motion-fade-fast).
+        className="motion-fade motion-fade-fast grid place-content-center text-current"
+      >
         <svg
           data-slot="checkbox-mark"
           aria-hidden="true"

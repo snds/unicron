@@ -29,6 +29,17 @@ describe("Progress", () => {
     expect(classesOf(container.querySelector('[data-slot="progress-value"]')!)).toContain("type-meta")
   })
 
+  it("a bar's fill grows on transform: the full track, scaled from the start edge", () => {
+    const { container, rerender } = render(<Progress value={25} aria-label="Sync" />)
+    const fill = container.querySelector<HTMLElement>('[data-slot="progress-indicator"]')!
+    expect(fill.style.width).toBe("100%")
+    expect(fill.style.scale).toBe("0.25 1")
+    expect(classesOf(fill)).toEqual(expect.arrayContaining(["transition-[scale,background-color]", "origin-left", "rtl:origin-right", "duration-(--motion-base)"]))
+    expect(classesOf(fill)).not.toContain("transition-[width,background-color]")
+    rerender(<Progress value={150} aria-label="Sync" />)
+    expect(fill.style.scale).toBe("1 1")
+  })
+
   it("a bar is square, sizes from its knob, takes the bar's fill knob, then success once complete", () => {
     const { container, rerender } = render(<Progress value={50} aria-label="Sync" />)
     const track = container.querySelector('[data-slot="progress-track"]')!

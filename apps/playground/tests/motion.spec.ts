@@ -15,13 +15,21 @@ import { frameMotionContracts } from "../src/motion-frame"
 
 const CEILING_MS = 400
 /** Contracts that open and close, so they have an exit and can be reversed mid-way. */
-const TOGGLES = new Set(["pop", "slide", "collapse", "fade", "anchor", "dialog", "popover", "tooltip", "menu", "select"])
+const TOGGLES = new Set(["pop", "slide", "collapse", "fade", "anchor", "dialog", "popover", "tooltip", "menu", "select", "collapsible", "sheet"])
+/** Components closed by their own trigger, not by a click outside. */
+const SELF_CLOSING = new Set(["collapsible"])
+/** Where scale is the value itself (a Progress fill), not a zoom. */
+const SCALE_IS_VALUE = new Set(["progress"])
 /** Lists opened and closed many times a day: from the keyboard they do not animate at all. */
 const KEYBOARD_INSTANT = new Set(["menu", "select"])
 /**
  * Under reduced motion the system still lets colour fade (index.css → reduced motion): a colour
  * change moves nothing. So a colour may animate there whatever the recipe; anything else may not.
  */
+/** Contracts started by holding a control down, not by a click. */
+const HOLD = new Set(["press", "push", "button-press", "expressive-press"])
+/** Of those, the ones that press in by translate rather than by scale. */
+const PUSH = new Set(["push", "button-press", "expressive-press"])
 const COLOUR_ONLY = ["color", "background-color", "border-color", "outline-color", "text-decoration-color", "fill", "stroke"]
 
 interface Seen {
@@ -104,8 +112,8 @@ function surface(page: Page, contract: MotionContract): Locator {
 async function open(page: Page, contract: MotionContract) {
   const box = card(page, contract)
   await box.scrollIntoViewIfNeeded()
-  if (contract.id === "press") {
-    await box.locator("[data-specimen]").hover()
+  if (HOLD.has(contract.id)) {
+    await (contract.surfaces ? box.locator("[data-trigger]") : box.locator("[data-specimen]")).hover()
     await page.mouse.down()
   } else if (contract.id === "tooltip") {
     await box.locator("[data-trigger]").hover()
@@ -134,8 +142,14 @@ async function entered(page: Page, contract: MotionContract) {
 /** Send it away again, still with the pointer. */
 async function close(page: Page, contract: MotionContract) {
   if (contract.id === "tooltip") await page.mouse.move(2, 2)
-  else if (contract.surfaces) await page.mouse.click(2, 2)
+  else if (contract.surfaces && !SELF_CLOSING.has(contract.id)) await page.mouse.click(2, 2)
   else await card(page, contract).locator("[data-trigger]").click()
+  // Base UI marks a closing panel (data-ending-style) a frame after the click: wait for it to move.
+  if (SELF_CLOSING.has(contract.id)) {
+    await page
+      .waitForFunction((selector) => [...document.querySelectorAll(selector)].some((el) => el.getAnimations({ subtree: true }).length > 0), roots(contract), { timeout: 1500 })
+      .catch(() => {})
+  }
 }
 
 function expectWithinContract(seen: Seen[], contract: MotionContract, allowed: readonly string[], limitMs: number) {
@@ -201,7 +215,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
         await testInfo.attach(`${contract.id} ${name}`, { path: file, contentType: "image/png" })
       }
       await release(page)
-      if (contract.id === "press") await page.mouse.up()
+      if (HOLD.has(contract.id)) await page.mouse.up()
 
       if (TOGGLES.has(contract.id)) {
         await close(page, contract)
@@ -220,14 +234,16 @@ for (const contract of motionContracts as readonly MotionContract[]) {
         expect([...contract.reducedProperties, ...COLOUR_ONLY], `${contract.id} still animates ${property} under reduced motion`).toContain(property)
       }
       await release(page)
-      if (contract.id === "press") {
-        // Held down and reduced: the control keeps its size.
-        expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
+      if (HOLD.has(contract.id)) {
+        // Held down and reduced: the control keeps its size and its place.
+        const held = await surface(page, contract).evaluate((el) => ({ scale: getComputedStyle(el).scale, translate: getComputedStyle(el).translate }))
+        expect(held.scale).toBe("none")
+        if (PUSH.has(contract.id)) expect(held.translate).toBe("none")
         await page.mouse.up()
       } else {
         // The end state is there all the same: nothing is lost with the movement.
         await expect(surface(page, contract)).toBeVisible()
-        expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
+        if (!SCALE_IS_VALUE.has(contract.id)) expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
       }
     })
 
@@ -241,7 +257,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
           expect([...contract.reducedProperties, ...COLOUR_ONLY], `${contract.id} still animates ${property} in a reduced box`).toContain(property)
         }
         await release(page)
-        if (contract.id === "press") await page.mouse.up()
+        if (HOLD.has(contract.id)) await page.mouse.up()
       })
     }
 
@@ -277,7 +293,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
             scale: getComputedStyle(el).scale,
             blur: getComputedStyle(el).backdropFilter,
           }))
-          expect(look.scale, `${contract.id} scale at ${share}`).toBe("none")
+          if (!SCALE_IS_VALUE.has(contract.id)) expect(look.scale, `${contract.id} scale at ${share}`).toBe("none")
           expect(look.blur, `${contract.id} backdrop filter at ${share}`).toBe("none")
         }
         await release(page)
@@ -343,6 +359,150 @@ test("no loop runs under reduced motion, or in a data-motion=reduced box, a vari
   await open()
   await page.evaluate(() => document.body.setAttribute("data-motion", "reduced"))
   expect(await loops(), "loops still running in a data-motion=reduced box").toEqual([])
+})
+
+// ── StatusOrb ──────────────────────────────────────────────────────────────────────────────────
+// The needs-you ping is a copy of the ring that grows and fades: transform and opacity only, never
+// an animated shadow. Under reduced motion the copy is not drawn at all.
+test("status orb: the needs-you ping grows on scale and fades, and is gone under reduced motion", async ({ page }) => {
+  const pings = () =>
+    page.evaluate(() =>
+      document
+        .getAnimations()
+        .filter((a) => a instanceof CSSAnimation && a.animationName === "status-orb-ping")
+        .map((a) => ({
+          target: (a.effect as KeyframeEffect).pseudoElement,
+          properties: [...new Set((a.effect as KeyframeEffect).getKeyframes().flatMap((f) => Object.keys(f)))].filter(
+            (k) => !["offset", "computedOffset", "easing", "composite"].includes(k)
+          ),
+        }))
+    )
+  await page.goto("/?view=status-orb&chrome=0")
+  await expect(page.locator('[data-slot="status-orb"][data-state="needs-you"]').first()).toBeVisible()
+  const running = await pings()
+  expect(running.length, "no needs-you ping is running").toBeGreaterThan(0)
+  for (const ping of running) {
+    expect(ping.target).toBe("::after")
+    expect(ping.properties.sort()).toEqual(["opacity", "scale"])
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.goto("/?view=status-orb&chrome=0")
+  await expect(page.locator('[data-slot="status-orb"][data-state="needs-you"]').first()).toBeVisible()
+  expect(await pings(), "the ping still runs under reduced motion").toEqual([])
+})
+
+// ── the phone sheet's drag ─────────────────────────────────────────────────────────────────────
+// On a phone the sheet follows the grabber 1:1 down and resists up; let go short, it settles back
+// on the firm spring; flicked, it goes, faster than a let-go.
+test.describe("sheet drag", () => {
+  test.use({ viewport: { width: 375, height: 812 } })
+
+  async function openSheet(page: Page) {
+    const sheet = page.locator('[data-slot="sheet-content"]')
+    await card(page, motionContracts.find((c) => c.id === "sheet")! as MotionContract).locator("[data-trigger]").click()
+    await sheet.waitFor()
+    await expect(sheet).not.toHaveAttribute("data-starting-style", /.*/)
+    await release(page)
+    const bar = await sheet.locator('[data-slot="sheet-grabber"]').boundingBox()
+    return { sheet, x: bar!.x + bar!.width / 2, y: bar!.y + bar!.height / 2 }
+  }
+  const offset = (sheet: Locator) => sheet.evaluate((el) => Number.parseFloat(getComputedStyle(el).translate.split(" ")[1] ?? "0") || 0)
+  const transitions = (sheet: Locator) =>
+    sheet.evaluate((el) =>
+      el.getAnimations().map((a) => ({
+        property: (a as CSSTransition).transitionProperty,
+        duration: Number(a.effect!.getComputedTiming().duration),
+      }))
+    )
+
+  test("pulled up past open it resists; let go, it settles back on the firm spring", async ({ page }) => {
+    const { sheet, x, y } = await openSheet(page)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y - 200, { steps: 8 })
+    const up = await offset(sheet)
+    expect(up).toBeLessThan(0)
+    expect(up).toBeGreaterThan(-24)
+    await expect(sheet).toHaveAttribute("data-release", "drag")
+    // Hold still a moment, so the release is a let-go, not a flick.
+    await page.waitForTimeout(150)
+    await page.mouse.up()
+    await expect(sheet).toHaveAttribute("data-release", "settle")
+    const settle = await transitions(sheet)
+    expect(settle.map((t) => t.property)).toEqual(["translate"])
+    expect(settle[0]!.duration).toBe(await roleMs(page, "--motion-spring-firm-duration"))
+    await release(page)
+    expect(await offset(sheet)).toBe(0)
+  })
+
+  test("a short slow drag down settles back; a short flick down dismisses it, in under --motion-base", async ({ page }) => {
+    const { sheet, x, y } = await openSheet(page)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    for (const step of [10, 20, 30, 40]) {
+      await page.mouse.move(x, y + step)
+      await page.waitForTimeout(150)
+    }
+    expect(await offset(sheet)).toBeCloseTo(40, 0)
+    await page.mouse.up()
+    await expect(sheet).toHaveAttribute("data-release", "settle")
+    await release(page)
+    await expect(sheet).toBeVisible()
+
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x, y + 40, { steps: 2 })
+    await page.mouse.up()
+    await expect(sheet).toHaveAttribute("data-release", "dismiss")
+    const out = await transitions(sheet)
+    expect(out.map((t) => t.property)).toContain("translate")
+    for (const t of out) expect(t.duration).toBeLessThan(await roleMs(page, "--motion-base"))
+    await release(page)
+    await expect(sheet).toBeHidden()
+  })
+
+  test("under reduced motion the drag still follows the finger, and the release is instant", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const { sheet, x, y } = await openSheet(page)
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    for (const step of [15, 30]) {
+      await page.mouse.move(x, y + step)
+      await page.waitForTimeout(150)
+    }
+    expect(await offset(sheet)).toBeCloseTo(30, 0)
+    await page.mouse.up()
+    expect((await transitions(sheet)).filter((t) => t.property === "translate")).toEqual([])
+    expect(await offset(sheet)).toBe(0)
+  })
+})
+
+// ── toasts ─────────────────────────────────────────────────────────────────────────────────────
+// sonner moves a dismissed toast for 500ms by its own stylesheet; on the roles it leaves within
+// --motion-fast, whichever of sonner's states it is in.
+test("toast: leaves on --motion-fast", async ({ page }) => {
+  const contract = motionContracts.find((c) => c.id === "toast")! as MotionContract
+  await open(page, contract)
+  await release(page)
+  await card(page, contract).locator("[data-dismiss]").click()
+  await page.waitForFunction(() => document.querySelector('[data-sonner-toast][data-removed="true"]') !== null)
+  const leaving = await freeze(page, contract)
+  expect(leaving.length, "the toast did not animate on the way out").toBeGreaterThan(0)
+  expectWithinContract(leaving, contract, contract.properties, await roleMs(page, "--motion-fast"))
+  await release(page)
+})
+
+// ── the expressive layer on an overlay ─────────────────────────────────────────────────────────
+// With data-motion="expressive" on <html>, a dialog arrives from 0.96 on the emphasis curve; without
+// it (every other check here), the dialog only fades.
+test("expressive: a dialog under an expressive <html> scales in as it fades, within the ceiling", async ({ page }) => {
+  const contract = motionContracts.find((c) => c.id === "dialog")! as MotionContract
+  await page.evaluate(() => document.documentElement.setAttribute("data-motion", "expressive"))
+  await open(page, contract)
+  const seen = await freeze(page, contract)
+  expect(seen.map((s) => s.property)).toContain("scale")
+  expectWithinContract(seen, contract, ["opacity", "scale"], CEILING_MS)
+  await release(page)
 })
 
 // ── the frame's own moving parts (Unicron 112) ──────────────────────────────────────────────────
