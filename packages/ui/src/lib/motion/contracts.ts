@@ -348,6 +348,33 @@ export const motionContracts = [
     exception: "The line's width follows the tab it marks. It is placed absolutely, so nothing reflows, and it is 2px tall.",
     surfaces: ['[data-contract="tabs"] [data-slot="tabs-indicator"]'],
   },
+  {
+    id: "collapsible",
+    recipe: "motion-collapse (CollapsibleContent; RunTrace's steps)",
+    trigger: "the trigger opens or closes the panel; its chevron (RunTrace) turns on --motion-fast",
+    properties: ["height", "opacity"],
+    duration: "--motion-state",
+    easing: ["--motion-ease-move"],
+    frequency: "occasional",
+    interrupted: "A transition: toggled mid-way, it turns round from the current height.",
+    reduced: "Height changes at once; the content fades.",
+    reducedProperties: ["opacity"],
+    exception: "Height, not transform: the content below has to move with the panel.",
+    surfaces: ['[data-contract="collapsible"] [data-slot="collapsible-content"]'],
+  },
+  {
+    id: "progress",
+    recipe: "the fill's own transition (scale from the start edge, --motion-base)",
+    trigger: "the value changes",
+    properties: ["scale", "background-color"],
+    duration: "--motion-base",
+    easing: ["--motion-ease-move"],
+    frequency: "occasional",
+    interrupted: "A transition: a new value mid-way retargets from where the fill is.",
+    reduced: "The fill is at the new value at once; its colour still changes.",
+    reducedProperties: ["background-color"],
+    surfaces: ['[data-contract="progress"] [data-slot="progress-indicator"]'],
+  },
 ] as const satisfies readonly MotionContract[]
 
 export type MotionContractId = (typeof motionContracts)[number]["id"]

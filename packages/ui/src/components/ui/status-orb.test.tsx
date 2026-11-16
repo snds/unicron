@@ -83,12 +83,17 @@ describe("StatusOrb", () => {
   it("tells states apart by shape and motion: a breathing halo, a turning ring with a gap, a pulsing ring, a hollow dot", () => {
     expect(css).toMatch(/\[data-state="thinking"\] > \[data-slot="status-orb-halo"\] \{[^}]*animation: status-orb-breathe var\(--motion-pulse\)/)
     expect(css).toMatch(/\[data-state="working"\] > \[data-slot="status-orb-halo"\] \{[^}]*border-top-color: transparent;[^}]*animation: spin var\(--motion-spin\)/)
-    expect(css).toMatch(/\[data-state="needs-you"\] > \[data-slot="status-orb-halo"\] \{[^}]*animation: status-orb-ping var\(--motion-pulse\)/)
+    expect(css).toMatch(/\[data-state="needs-you"\] > \[data-slot="status-orb-halo"\]::after \{[^}]*animation: status-orb-ping var\(--motion-pulse\)/)
+    // The ping grows on transform and fades; it never animates a shadow (that repaints each frame).
+    const ping = css.slice(css.indexOf("@keyframes status-orb-ping"), css.indexOf("\n}\n", css.indexOf("@keyframes status-orb-ping")))
+    expect(ping).toMatch(/scale: 1\.67;\s*opacity: 0;/)
+    expect(ping).not.toContain("box-shadow")
     expect(css).toMatch(/\[data-state="offline"\] > \[data-slot="status-orb-dot"\] \{[^}]*background: transparent;/)
   })
 
   it("holds still under reduced motion, with a dashed ring for working", () => {
     expect(reduced).toMatch(/\[data-slot="status-orb-halo"\] \{\s*animation: none;/)
+    expect(reduced).toMatch(/\[data-slot="status-orb-halo"\]::after \{\s*display: none;/)
     expect(reduced).toMatch(/\[data-state="working"\] > \[data-slot="status-orb-halo"\] \{\s*border-style: dashed;/)
   })
 })

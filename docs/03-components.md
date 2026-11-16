@@ -710,6 +710,12 @@ A primitive never writes its own duration or curve. It picks a recipe from
   a state, met many times a minute. The line Tabs have one indicator that slides to the chosen tab
   on `--motion-base`; a segmented list fills the chosen segment in place. Each has a contract and
   browser checks.
+- **Panels and measures.** CollapsibleContent (and RunTrace's steps) opens by height on the
+  collapse recipe, `--motion-state`; its chevron turns on `--motion-fast`. A Progress bar's fill
+  is the full track scaled from its start edge, so a new value moves it on transform, not width
+  (`--motion-base`, move curve); `ProgressIndicator` used on its own keeps Base UI's width unless
+  given `share`. StatusOrb's needs-you ping is a copy of its ring that grows and fades (scale and
+  opacity), no longer an animated shadow; under reduced motion the copy is not drawn.
 - **Lockdown's feedback, in the 1.0 look** (words, not icons): the clipboard countdown's words on
   SecretField and CodeDisplay ("Clears in 28 s", "Cleared") fade in over 120ms when they appear and
   when the phase changes, and hold still as the seconds tick. A SecretField's value fades in where

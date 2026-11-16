@@ -91,7 +91,7 @@ function Progress({
       {variant === "segmented" ? (
         <ProgressSegments value={value} min={min} max={max} segments={segments} />
       ) : (
-        <ProgressIndicator />
+        <ProgressIndicator share={value === null || max <= min ? undefined : Math.min(1, Math.max(0, (value - min) / (max - min)))} />
       )}
     </ProgressTrack>
   )
@@ -145,13 +145,31 @@ function ProgressTrack({ className, ...props }: ProgressPrimitive.Track.Props) {
 
 function ProgressIndicator({
   className,
+  style,
+  share,
   ...props
-}: ProgressPrimitive.Indicator.Props) {
+}: ProgressPrimitive.Indicator.Props & {
+  /**
+   * The filled share, 0 to 1. Given (Progress gives it), the fill is the full track scaled along
+   * its length from the start edge, so a new value moves it on transform, not on width. Left out,
+   * Base UI sets the width as before.
+   */
+  share?: number
+}) {
+  const scaled = share !== undefined && typeof style !== "function"
   return (
     <ProgressPrimitive.Indicator
       data-slot="progress-indicator"
-      // Base UI sets the width; it moves at --motion-base, and only its colour moves under reduced motion.
-      className={cn("h-full transition-[width,background-color] duration-(--motion-base)", fill, className)}
+      data-scaled={scaled ? "" : undefined}
+      // It grows on --motion-base, move curve; under reduced motion it is at the new value at once
+      // and only its colour moves.
+      className={cn(
+        "h-full duration-(--motion-base) ease-(--motion-ease-move)",
+        scaled ? "transition-[scale,background-color] origin-left rtl:origin-right" : "transition-[width,background-color]",
+        fill,
+        className
+      )}
+      style={scaled ? { ...style, width: "100%", scale: `${share} 1` } : style}
       {...props}
     />
   )

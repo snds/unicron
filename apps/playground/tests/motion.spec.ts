@@ -14,7 +14,11 @@ import { motionContracts, type MotionContract } from "../../../packages/ui/src/l
 
 const CEILING_MS = 400
 /** Contracts that open and close, so they have an exit and can be reversed mid-way. */
-const TOGGLES = new Set(["pop", "slide", "collapse", "fade", "anchor", "dialog", "popover", "tooltip", "menu", "select"])
+const TOGGLES = new Set(["pop", "slide", "collapse", "fade", "anchor", "dialog", "popover", "tooltip", "menu", "select", "collapsible"])
+/** Components closed by their own trigger, not by a click outside. */
+const SELF_CLOSING = new Set(["collapsible"])
+/** Where scale is the value itself (a Progress fill), not a zoom. */
+const SCALE_IS_VALUE = new Set(["progress"])
 /** Lists opened and closed many times a day: from the keyboard they do not animate at all. */
 const KEYBOARD_INSTANT = new Set(["menu", "select"])
 /**
@@ -137,8 +141,14 @@ async function entered(page: Page, contract: MotionContract) {
 /** Send it away again, still with the pointer. */
 async function close(page: Page, contract: MotionContract) {
   if (contract.id === "tooltip") await page.mouse.move(2, 2)
-  else if (contract.surfaces) await page.mouse.click(2, 2)
+  else if (contract.surfaces && !SELF_CLOSING.has(contract.id)) await page.mouse.click(2, 2)
   else await card(page, contract).locator("[data-trigger]").click()
+  // Base UI marks a closing panel (data-ending-style) a frame after the click: wait for it to move.
+  if (SELF_CLOSING.has(contract.id)) {
+    await page
+      .waitForFunction((selector) => [...document.querySelectorAll(selector)].some((el) => el.getAnimations({ subtree: true }).length > 0), roots(contract), { timeout: 1500 })
+      .catch(() => {})
+  }
 }
 
 function expectWithinContract(seen: Seen[], contract: MotionContract, allowed: readonly string[], limitMs: number) {
@@ -222,7 +232,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
       } else {
         // The end state is there all the same: nothing is lost with the movement.
         await expect(surface(page, contract)).toBeVisible()
-        expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
+        if (!SCALE_IS_VALUE.has(contract.id)) expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
       }
     })
 
@@ -272,7 +282,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
             scale: getComputedStyle(el).scale,
             blur: getComputedStyle(el).backdropFilter,
           }))
-          expect(look.scale, `${contract.id} scale at ${share}`).toBe("none")
+          if (!SCALE_IS_VALUE.has(contract.id)) expect(look.scale, `${contract.id} scale at ${share}`).toBe("none")
           expect(look.blur, `${contract.id} backdrop filter at ${share}`).toBe("none")
         }
         await release(page)
@@ -338,4 +348,34 @@ test("no loop runs under reduced motion, or in a data-motion=reduced box, a vari
   await open()
   await page.evaluate(() => document.body.setAttribute("data-motion", "reduced"))
   expect(await loops(), "loops still running in a data-motion=reduced box").toEqual([])
+})
+
+// ── StatusOrb ──────────────────────────────────────────────────────────────────────────────────
+// The needs-you ping is a copy of the ring that grows and fades: transform and opacity only, never
+// an animated shadow. Under reduced motion the copy is not drawn at all.
+test("status orb: the needs-you ping grows on scale and fades, and is gone under reduced motion", async ({ page }) => {
+  const pings = () =>
+    page.evaluate(() =>
+      document
+        .getAnimations()
+        .filter((a) => a instanceof CSSAnimation && a.animationName === "status-orb-ping")
+        .map((a) => ({
+          target: (a.effect as KeyframeEffect).pseudoElement,
+          properties: [...new Set((a.effect as KeyframeEffect).getKeyframes().flatMap((f) => Object.keys(f)))].filter(
+            (k) => !["offset", "computedOffset", "easing", "composite"].includes(k)
+          ),
+        }))
+    )
+  await page.goto("/?view=status-orb&chrome=0")
+  await expect(page.locator('[data-slot="status-orb"][data-state="needs-you"]').first()).toBeVisible()
+  const running = await pings()
+  expect(running.length, "no needs-you ping is running").toBeGreaterThan(0)
+  for (const ping of running) {
+    expect(ping.target).toBe("::after")
+    expect(ping.properties.sort()).toEqual(["opacity", "scale"])
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.goto("/?view=status-orb&chrome=0")
+  await expect(page.locator('[data-slot="status-orb"][data-state="needs-you"]').first()).toBeVisible()
+  expect(await pings(), "the ping still runs under reduced motion").toEqual([])
 })

@@ -7,6 +7,9 @@ import {
   Button,
   CheckDraw,
   Checkbox,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,6 +32,7 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
+  Progress,
   SecretField,
   Select,
   SelectContent,
@@ -205,6 +209,18 @@ function IndicatorSpecimen() {
           style={{ translate: `${mark.x}px 0`, width: mark.width }}
         />
       </div>
+    </>
+  )
+}
+
+function ProgressSpecimen() {
+  const [value, setValue] = useState(20)
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setValue((v) => (v === 20 ? 80 : 20))}>
+        {value === 20 ? "To 80%" : "To 20%"}
+      </Button>
+      <Progress value={value} aria-label="Sync" className="w-48" />
     </>
   )
 }
@@ -468,6 +484,17 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   "copy-words": () => <SecretFieldSpecimen press="copy" label="Copy" />,
   reveal: () => <SecretFieldSpecimen press="reveal" label="Show" />,
   strength: () => <StrengthSpecimen />,
+  collapsible: () => (
+    <Collapsible className="w-56">
+      <CollapsibleTrigger data-trigger render={<Button variant="outline" size="sm" />}>
+        Three steps
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <p className="bg-muted mt-2 p-2 text-sm">Two passed, and one was skipped because its input had not changed.</p>
+      </CollapsibleContent>
+    </Collapsible>
+  ),
+  progress: () => <ProgressSpecimen />,
   "button-press": () => <Button data-trigger>Hold to send</Button>,
   switch: () => <Switch data-trigger aria-label="Lock after 5 minutes" />,
   checkbox: () => <Checkbox data-trigger aria-label="Remember this device" />,
