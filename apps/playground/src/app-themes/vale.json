@@ -1,5 +1,5 @@
 {
-  "$description": "Tier 1 · App theme: Vale (Japanese indigo 228, live fog teal 165). The 28 theme slots, 14 per ground: Figma's `vale / graphite` and `vale / stone` modes of `Unicron / Theme`, each hex copied exactly from the primitive the role aliases. Emitted in dist/tokens.css as `[data-theme=\"vale\"] { --g-theme-… }`. Raw hex only, and only these slots: a change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
+  "$description": "App theme (an example app layer, a fixture of the playground and the contrast tool): Vale (Japanese indigo 228, live fog teal 165). The 28 theme slots, 14 per ground: Figma's `vale / graphite` and `vale / stone` modes of `Unicron / Theme`, each hex copied exactly from the primitive the role aliases. Since Unicron 1.1 an app's theme lives in the app: this file and vale.css beside it are the playground's copy of the theme Vale declares, so the theme switcher can show it and `unicron-contrast` measures it (its exceptions: vale.exceptions.json). Raw hex only, and only the 28 slots; a change is a change in Figma first (scripts/figma-parity.mjs holds this file to the Figma read-out).",
   "$extensions": {
     "unicron.app": { "name": "vale", "order": 2, "figmaModes": { "graphite": "vale / graphite", "stone": "vale / stone" } }
   },

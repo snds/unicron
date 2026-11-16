@@ -59,6 +59,11 @@
       "$type": "dimension",
       "$value": "20rem",
       "$description": "PopoverContent's width: 320, so a PopoverHeader's overline, title and 44px close fit beside each other. It never outgrows the space on screen. Re-declared from component.json, where it was 18rem."
+    },
+    "width-wide": {
+      "$type": "dimension",
+      "$value": "26.25rem",
+      "$description": "The wide popover: 420, the one Figma draws for Warpcore (Unicron 60). The default stays 320. It never outgrows the space on screen either."
     }
   },
   "tooltip": {

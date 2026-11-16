@@ -1,11 +1,14 @@
 // The foundations, measured in a real browser on the playground's Foundations view: the theme's two
-// axes reach the pixels, every color role resolves, the 23 type roles draw the Figma text styles,
+// axes reach the pixels, every color role resolves, the 24 type roles draw the Figma text styles,
 // rules add no height, scrims are never opaque, and the focus ring and touch target are the sizes
 // the system promises.
 //
 // The numbers below are the Figma file's (Unicron explorations, `Unicron / Theme` and
 // `Unicron Type/`), not the tokens': this file checks that the tokens, the stylesheet's utilities
-// and Tailwind's theme map agree with the design, end to end.
+// and Tailwind's theme map agree with the design, end to end. Since 1.1 the four apps' themes are
+// the apps' own (Unicron 1); the playground loads its copies of them, so they still reach the
+// pixels here. With no data-theme the page shows Unicron's own default theme (not in Figma yet:
+// its numbers are the tokens', global.json → theme).
 import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const APPS = ["warpcore", "vale", "lockdown", "synapse"] as const
@@ -21,6 +24,11 @@ const MODES: Record<string, Record<string, string>> = {
   "lockdown/stone": { "surface-ground": "#EDF1EE", "primary-fill": "#007625", "secondary-live": "#296898", "text-body": "#141715" },
   "synapse/graphite": { "surface-ground": "#1C181A", "primary-fill": "#B90D75", "secondary-live": "#31C8C9", "text-body": "#F3EFF0" },
   "synapse/stone": { "surface-ground": "#F4EEF0", "primary-fill": "#AB006A", "secondary-live": "#007778", "text-body": "#181516" },
+}
+/** Unicron's own default theme, no data-theme (Unicron 1). */
+const DEFAULT: Record<(typeof GROUNDS)[number], Record<string, string>> = {
+  graphite: { "surface-ground": "#181A1B", "primary-fill": "#4778B5", "secondary-live": "#57D4D4", "text-body": "#F2F4F6" },
+  stone: { "surface-ground": "#F3F4F6", "primary-fill": "#255B9C", "secondary-live": "#007176", "text-body": "#050607" },
 }
 /** The same in every app: one set per ground, and the yellow that never changes. */
 const SHARED: Record<(typeof GROUNDS)[number], Record<string, string>> = {
@@ -45,6 +53,8 @@ const TYPE: Record<string, [family: "Geist" | "Geist Mono", weight: number, size
   overline: ["Geist Mono", 500, 11, 16, 0.04],
   folio: ["Geist Mono", 500, 12, 20, 0],
   meta: ["Geist Mono", 400, 12, 20, 0],
+  // Not in Figma yet (Lockdown 4, 1.1): Sean adds `Unicron Type/mono/row`.
+  "mono-row": ["Geist Mono", 400, 13, 20, 0],
   "code-inline": ["Geist Mono", 400, 15, 20, 0],
   "code-display": ["Geist Mono", 500, 36, 40, 0.12],
   "number-hero": ["Geist", 700, 168, 148, -0.05],
@@ -57,7 +67,7 @@ const TYPE: Record<string, [family: "Geist" | "Geist Mono", weight: number, size
 /** Number roles and mono roles line their figures up. */
 // The mono roles. The three sans number roles (hero, metric, index) are proportional, as Figma
 // draws them (a Metric's "145" is 71px wide with a plain 1), and the else branch below holds that.
-const TABULAR = ["overline", "folio", "meta", "code-inline", "code-display", "number-count"]
+const TABULAR = ["overline", "folio", "meta", "mono-row", "code-inline", "code-display", "number-count"]
 /** Names from before 1.0, and the role each now draws. */
 const KEPT = { "page-title": "title", "section-title": "subtitle", "group-title": "label", support: "caption" }
 
@@ -132,15 +142,33 @@ for (const app of APPS) {
   }
 }
 
-test("with no data-theme the tokens show Warpcore, on both grounds", async ({ page }) => {
+test("with no data-theme the tokens show Unicron's own default theme, on both grounds", async ({ page }) => {
   for (const ground of GROUNDS) {
     await page.goto(`/?view=foundations&ground=${ground}&chrome=0`)
     await expect(page.locator('[data-slot="playground-view"]')).toHaveAttribute("data-view-state", "ready")
     await expect(page.locator("html")).not.toHaveAttribute("data-theme")
-    for (const [role, value] of Object.entries(MODES[`warpcore/${ground}`]!)) {
+    for (const [role, value] of Object.entries({ ...DEFAULT[ground], ...SHARED[ground] })) {
       await expect(reading(swatch(page, role)), `${role} on ${ground}`).toHaveText(value)
     }
   }
+})
+
+test("the split view shows the view on both grounds side by side (Unicron 113)", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(`/?view=foundations&theme=vale&split=1&chrome=0`)
+  await expect(page.locator('[data-slot="playground-view"]')).toHaveAttribute("data-view-state", "ready")
+  const halves = page.locator('[data-slot="playground-split"] > [data-ground]')
+  await expect(halves).toHaveCount(2)
+  for (const [i, ground] of GROUNDS.entries()) {
+    const half = halves.nth(i)
+    await expect(half).toHaveAttribute("data-ground", ground)
+    const ink = half.locator('[data-swatch="surface-ground"] [data-reading]').first()
+    await expect(ink, `surface-ground in the ${ground} half`).toHaveText(MODES[`vale/${ground}`]!["surface-ground"]!)
+  }
+  // Side by side: the stone half starts where the graphite half ends.
+  const [left, right] = await halves.evaluateAll((all) => all.map((el) => el.getBoundingClientRect().toJSON() as DOMRect))
+  expect(Math.round(right!.left)).toBe(Math.round(left!.right))
+  expect(Math.round(right!.top)).toBe(Math.round(left!.top))
 })
 
 test("every color role resolves, on both grounds", async ({ page }) => {
@@ -361,8 +389,13 @@ test("a rule never adds height, and is never a border", async ({ page }) => {
 test("each rule draws its own line, in its own color", async ({ page }) => {
   await open(page, "vale", "stone")
   const rule = await roleColor(page, "line-rule")
+  // On stone the focus border and the selected edge are the identity fill, and an error edge the
+  // critical fill (line-focus, primary-mark, line-invalid; Unicron 17 and 19).
   const primary = await roleColor(page, "primary-fill")
   const critical = await roleColor(page, "critical-fill")
+  expect(await roleColor(page, "line-focus")).toBe(primary)
+  expect(await roleColor(page, "primary-mark")).toBe(primary)
+  expect(await roleColor(page, "line-invalid")).toBe(critical)
   const shadow = (name: string) => page.locator(`[data-rule="${name}"] > :first-child`).evaluate((el) => getComputedStyle(el).boxShadow)
 
   expect(await shadow("rule-t")).toContain(`${rule} 0px 1px 0px 0px inset`)
@@ -408,6 +441,19 @@ test("each rule draws its own line, in its own color", async ({ page }) => {
   })
   expect(leaked).toContain("0px -1px 0px 0px inset")
   expect(leaked).not.toContain("0px 1px 0px 0px inset")
+})
+
+test("on graphite the focus border, the selected edge and an error edge take the text colours (Unicron 17 and 19)", async ({ page }) => {
+  await open(page, "vale", "graphite")
+  const text = await roleColor(page, "primary-text")
+  const critical = await roleColor(page, "critical-text")
+  expect(await roleColor(page, "line-focus")).toBe(text)
+  expect(await roleColor(page, "primary-mark")).toBe(text)
+  expect(await roleColor(page, "line-invalid")).toBe(critical)
+  const shadow = (name: string) => page.locator(`[data-rule="${name}"] > :first-child`).evaluate((el) => getComputedStyle(el).boxShadow)
+  expect(await shadow("rule-box-emphasis")).toContain(`${text} 0px 0px 0px 2px inset`)
+  expect(await shadow("rule-box-emphasis // --rule-color")).toContain(`${critical} 0px 0px 0px 2px inset`)
+  expect(await shadow("edge-l")).toContain(`${text} 2px 0px 0px 0px inset`)
 })
 
 // ── scrim ──────────────────────────────────────────────────────────────────────────────────────
@@ -527,3 +573,24 @@ test("with a mouse the control is only as large as it is drawn", async ({ page }
   await open(page, "warpcore", "graphite")
   expect(await page.locator("[data-touch]").evaluate((el) => getComputedStyle(el, "::before").content)).toBe("none")
 })
+
+// ── plain.css ──────────────────────────────────────────────────────────────────────────────────
+// Each frame on the Plain CSS view allows only style-src 'self' and links plain.css (and an app's
+// own theme sheet). With no class its root follows the browser (Unicron 14); `graphite` and `stone`
+// force a ground. Every colour in each frame must equal the page's own tokens.css in that mode.
+for (const scheme of ["light", "dark"] as const) {
+  test(`plain.css: every frame loads under style-src 'self' and equals tokens.css (browser prefers ${scheme})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme })
+    await page.goto(`/?view=plain-css&chrome=0`)
+    await expect(page.locator('[data-slot="playground-view"]')).toHaveAttribute("data-view-state", "ready")
+    const frames = page.locator("[data-plain-frame]")
+    await expect(frames).toHaveCount(11)
+    for (const frame of await frames.all()) {
+      await expect(frame, (await frame.getAttribute("data-plain-frame")) ?? "").toHaveAttribute("data-equal", "true")
+    }
+    // The frame with no class took the ground the browser asks for.
+    const followed = await page.locator('[data-plain-frame^="default / no class"] [data-chip="--surface-ground"]').evaluate((el) => getComputedStyle(el).backgroundColor)
+    const forced = await page.locator(`[data-plain-frame="default / ${scheme === "dark" ? "graphite" : "stone"}"] [data-chip="--surface-ground"]`).evaluate((el) => getComputedStyle(el).backgroundColor)
+    expect(followed).toBe(forced)
+  })
+}

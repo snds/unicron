@@ -28,6 +28,19 @@ describe("Metric (Figma 15:513)", () => {
     expect(classesOf(part("metric-delta"))).toEqual(expect.arrayContaining(["type-overline", "text-muted-foreground"]))
   })
 
+  it("a still number keeps proportional figures; live turns them tabular, in both sizes (Unicron 11)", () => {
+    const { rerender } = render(<Metric label="Spend today" value="$3.40" />)
+    expect(classesOf(part("metric-value"))).not.toContain("type-number-tabular")
+    expect(part("metric")).not.toHaveAttribute("data-live")
+    rerender(<Metric label="Spend today" value="$3.40" live />)
+    expect(classesOf(part("metric-value"))).toEqual(expect.arrayContaining(["type-number-metric", "type-number-tabular"]))
+    expect(part("metric")).toHaveAttribute("data-live")
+    rerender(<Metric label="Spend today" value="$3.40" size="hero" live />)
+    expect(classesOf(part("metric-value"))).toEqual(expect.arrayContaining(["type-number-hero", "type-number-tabular"]))
+    rerender(<Metric label="Spend today" value="$3.40" size="hero" />)
+    expect(classesOf(part("metric-value"))).not.toContain("type-number-tabular")
+  })
+
   it("delta tones: up and down add a named caret and body ink; live takes the live ink", () => {
     const { rerender } = render(<Metric label="Tasks run" value="38" delta="+6 this week" tone="up" />)
     expect(screen.getByRole("img", { name: "Up" })).toHaveAttribute("data-icon-name", "caret--up")

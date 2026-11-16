@@ -27,10 +27,10 @@ const UTILITIES = ["rule-t", "rule-r", "rule-b", "rule-l", "rule-box", "rule-box
 
 describe("edge-t and edge-b", () => {
   it("draw the 2px primary edge along the top and the bottom, as an inset shadow", () => {
-    expect(utility("edge-t")).toContain("--rule-edge-t: inset 0 var(--stroke-emphasis) 0 0 var(--edge-color, var(--primary-fill));")
-    expect(utility("edge-b")).toContain("--rule-edge-b: inset 0 calc(var(--stroke-emphasis) * -1) 0 0 var(--edge-color, var(--primary-fill));")
+    expect(utility("edge-t")).toContain("--rule-edge-t: inset 0 var(--stroke-emphasis) 0 0 var(--edge-color, var(--primary-mark));")
+    expect(utility("edge-b")).toContain("--rule-edge-b: inset 0 calc(var(--stroke-emphasis) * -1) 0 0 var(--edge-color, var(--primary-mark));")
     // edge-l is unchanged: the same colour rule on the left.
-    expect(utility("edge-l")).toContain("--rule-edge: inset var(--stroke-emphasis) 0 0 0 var(--edge-color, var(--primary-fill));")
+    expect(utility("edge-l")).toContain("--rule-edge: inset var(--stroke-emphasis) 0 0 0 var(--edge-color, var(--primary-mark));")
   })
 
   it("never draw a border, so they add no height", () => {

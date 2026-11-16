@@ -1,0 +1,11 @@
+@unicron/tokens
+Copyright 2026 Sean Sands
+
+Portions derived from snds/mailbird, Apache-2.0, and shadcn/ui, MIT: the shadcn/ui
+token contract (background, foreground, card, popover, primary, secondary, muted,
+accent, destructive, border, input, ring, radius and the sidebar roles) that the
+semantic tier keeps as aliases, and the token set Mailbird started from.
+
+The contrast tool (scripts/contrast.mjs, the bin unicron-contrast) measures APCA
+contrast with apca-w3 (https://github.com/Myndex/apca-w3), which is installed as a
+package and is not redistributed here.

@@ -1,7 +1,7 @@
 {
   "name": "@unicron/tokens",
   "version": "1.0.0",
-  "description": "unicron design tokens: DTCG JSON source, three tiers (global → semantic → component), four app themes on two grounds, built to CSS custom properties and a Tailwind v4 theme map.",
+  "description": "unicron design tokens: DTCG JSON source, three tiers (global → semantic → component), one generic default theme on two grounds, built to CSS custom properties and a Tailwind v4 theme map; and the contrast tool an app runs on its own theme.",
   "license": "Apache-2.0",
   "author": "Sean Sands",
   "homepage": "https://github.com/snds/unicron/tree/main/packages/tokens#readme",
@@ -14,9 +14,12 @@
   "keywords": ["design-tokens", "dtcg", "tailwindcss", "shadcn", "design-system"],
   "type": "module",
   "sideEffects": ["**/*.css"],
-  "files": ["dist", "tokens", "src", "examples", "README.md", "LICENSE"],
+  "files": ["dist", "tokens", "src", "examples", "scripts/contrast.mjs", "scripts/lib", "scripts/recipes", "README.md", "LICENSE", "NOTICE"],
   "publishConfig": {
     "access": "public"
+  },
+  "bin": {
+    "unicron-contrast": "./scripts/contrast.mjs"
   },
   "exports": {
     ".": "./dist/tokens.json",
@@ -36,12 +39,13 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "lint": "node scripts/lint.mjs",
-    "test": "node scripts/build.mjs && node scripts/check.mjs && node scripts/figma-parity.mjs && node scripts/contrast.mjs",
+    "test": "node scripts/build.mjs && node scripts/check.mjs && node scripts/figma-parity.mjs && node scripts/contrast.mjs && node scripts/contrast.mjs examples/app-extension.css && node scripts/contrast.mjs ../../apps/playground/src/app-themes",
     "contrast": "node scripts/contrast.mjs",
     "parity": "node scripts/figma-parity.mjs",
-    "typecheck": "node scripts/syntax.mjs"
+    "typecheck": "node scripts/syntax.mjs",
+    "contrast:fixtures": "node scripts/contrast.mjs ../../apps/playground/src/app-themes"
   },
-  "devDependencies": {
+  "dependencies": {
     "apca-w3": "^0.1.9"
   }
 }
