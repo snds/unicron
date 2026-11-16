@@ -10,8 +10,9 @@
  * or one screen (a success page) and nowhere else. Without the attribute this file does nothing.
  *
  * It re-points recipes, it adds no props:
- *   - motion-push presses by scale and comes back on the pop spring (about 20% overshoot of a 4%
- *     press: lively, under a pixel on a 40px button).
+ *   - motion-push presses by scale (to --motion-press-depth) instead of moving 1px. It comes back
+ *     on the standard curve, with no spring: a button is met many times a minute, and nothing met
+ *     that often bounces, expressive or not.
  *   - a dialog's popup arrives from 0.96 on the emphasis curve (it overshoots slightly).
  *   - motion-burst: a success mark pops in on the pop spring as a ring grows from it and fades.
  *
@@ -31,8 +32,8 @@
   /* ── press ─────────────────────────────────────────────────────────────────────────────────── */
   [data-motion="expressive"] .motion-push:not([data-motion="reduced"] *, [data-motion="off"] *) {
     transition-property: color, background-color, border-color, box-shadow, scale;
-    transition-duration: var(--motion-spring-pop-duration);
-    transition-timing-function: var(--motion-spring-pop);
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease);
   }
   [data-motion="expressive"]
     .motion-push:not([data-motion="reduced"] *, [data-motion="off"] *):active:not(:disabled, [aria-disabled="true"], [aria-haspopup]) {

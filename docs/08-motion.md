@@ -63,8 +63,9 @@ Parts not in this table have no motion of their own beyond a hover or press colo
 
 - **Expressive moments.** Import `@unicron/ui/styles/motion-expressive.css` and put
   `data-motion="expressive"` where it should apply ([05 · Consuming → expressive
-  motion](05-consuming.md#expressive-motion-opt-in)). A press scales and springs back, a dialog
-  arrives on the emphasis curve, and `motion-burst` pops in a success mark.
+  motion](05-consuming.md#expressive-motion-opt-in)). A press scales instead of moving (still no
+  bounce), a dialog arrives on the emphasis curve, and `motion-burst` pops in a success mark on the
+  pop spring.
 - **A gesture of your own** (a swipe row, a card thrown away). Use the same rules the sheet uses:
   `releaseVelocity(samples)` for the speed of the last 100ms, `shouldDismiss({ offset, size,
   velocity })` for whether it goes, `releaseShare(velocity)` for how much of the exit's duration a

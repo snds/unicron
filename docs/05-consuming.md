@@ -132,7 +132,8 @@ stylesheet after the first, and marks where it applies:
 <section data-motion="expressive">…</section> <!-- or one screen: a success page -->
 ```
 
-Inside that box a pressed button scales and springs back (the pop spring), a dialog arrives from
+Inside that box a pressed button scales instead of moving 1px (and comes back without a bounce:
+nothing met many times a minute bounces), a dialog arrives from
 0.96 on the emphasis curve, and `motion-burst` on a success mark pops it in with a ring that grows
 and fades. Overlays render in a portal under `<body>`, so they follow only a box on `<html>` or
 `<body>`. Without the attribute the file does nothing. Under reduced motion, and in a
