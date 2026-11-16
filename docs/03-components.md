@@ -683,7 +683,9 @@ A primitive never writes its own duration or curve. It picks a recipe from
 
 | Recipe | Class or attribute | For | Runs | Under reduced motion |
 |---|---|---|---|---|
-| press | `motion-press`, `motion-press-sm` | a control going down under a press | scale to `--motion-press-depth` in `--motion-press`; back in `--motion-fast` | no scale; colour still changes |
+| push | `motion-push` | the 1.0 press: a control pressed 1px into the page (Button, IconButton, a lone Toggle) | translate 1px down in `--motion-press`; back in `--motion-fast`. A popup trigger (`aria-haspopup`) does not move | no movement; colour still changes |
+| press | `motion-press`, `motion-press-sm` | a control shrinking under a press. Not used by a core part: it is for the expressive stylesheet | scale to `--motion-press-depth` in `--motion-press`; back in `--motion-fast` | no scale; colour still changes |
+| indicator | `motion-indicator` | a mark that slides to the chosen item (the line Tabs' one indicator) | translate, and the mark's length, `--motion-base`, move curve | the mark is under the new item at once |
 | pop | `motion-pop` | a small surface arriving from its anchor | opacity and scale from 0.96, `--motion-base` in, `--motion-fast` out | fades in place |
 | fade | `motion-fade` (+ `motion-fade-fast`) | a surface that appears where it is: a dialog, a tooltip, the dim behind a layer | opacity, `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways | the same |
 | anchor | `motion-anchor` (+ `motion-anchor-fast`) | a surface that opens off its trigger: a popover, a menu, a select's list | opacity, and 8px away from the trigger on the side Base UI places it (`data-side`); `--motion-base` in, `--motion-fast` out; `-fast` is `--motion-fast` both ways and still when opened or closed from the keyboard | fades in place |
@@ -701,6 +703,13 @@ A primitive never writes its own duration or curve. It picks a recipe from
   DropdownMenu and Select use the short anchor: 120ms both ways, and still when opened or closed
   from the keyboard. Each has a contract and browser checks, including one that it never zooms
   or blurs on the way in.
+- **Selection, in the 1.0 look** (mechanical, no zoom): a Button, an IconButton and a lone Toggle
+  press 1px into the page (`motion-push`); a menu or popover trigger does not move, and the items of
+  a joined ToggleGroup change colour only, so they stay in line. The Switch knob slides on
+  `--motion-fast`. A Checkbox's mark fades in and out on `--motion-fast` rather than drawing: it is
+  a state, met many times a minute. The line Tabs have one indicator that slides to the chosen tab
+  on `--motion-base`; a segmented list fills the chosen segment in place. Each has a contract and
+  browser checks.
 - **Lockdown's feedback, in the 1.0 look** (words, not icons): the clipboard countdown's words on
   SecretField and CodeDisplay ("Clears in 28 s", "Cleared") fade in over 120ms when they appear and
   when the phase changes, and hold still as the seconds tick. A SecretField's value fades in where
@@ -713,9 +722,10 @@ A primitive never writes its own duration or curve. It picks a recipe from
 - **Entrances and exits are transitions.** pop, slide, collapse, fade and anchor read Base UI's `data-starting-style`
   and `data-ending-style` (and `@starting-style` for a plain mount), so closing mid-open turns round
   from where it is. Nothing restarts.
-- **Two exceptions to "transform and opacity".** collapse animates height, because the content below
-  has to move with the panel. draw animates a stroke offset, because that is the only way to draw a
-  line. Each is written into its contract.
+- **Three exceptions to "transform and opacity".** collapse animates height, because the content
+  below has to move with the panel. draw animates a stroke offset, because that is the only way to
+  draw a line. indicator changes the mark's length with the item it marks; the mark is placed
+  absolutely and is 2px thick, so nothing reflows. Each is written into its contract.
 - **Contracts are data.** `motionContracts` (`@unicron/ui/motion`) lists, for each recipe, its
   trigger, the properties it may animate, its duration role, how often it is met, what happens when
   it is interrupted, and what is left under reduced motion. The playground's Motion view

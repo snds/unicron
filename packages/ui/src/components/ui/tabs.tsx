@@ -49,6 +49,7 @@ function TabsList({
   className,
   variant = "default",
   size = "default",
+  children,
   ...props
 }: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
   return (
@@ -56,9 +57,20 @@ function TabsList({
       data-slot="tabs-list"
       data-variant={variant}
       data-size={size}
-      className={cn(tabsListVariants({ variant, size }), className)}
+      className={cn("relative", tabsListVariants({ variant, size }), className)}
       {...props}
-    />
+    >
+      {children}
+      {variant === "line" ? (
+        // One 2px line for the whole list, under the chosen tab. Base UI measures the tab
+        // (--active-tab-*); the line slides there on --motion-base (motion-indicator), and under
+        // reduced motion it moves at once.
+        <TabsPrimitive.Indicator
+          data-slot="tabs-indicator"
+          className="motion-indicator pointer-events-none absolute bg-primary-fill group-data-horizontal/tabs:bottom-0 group-data-horizontal/tabs:left-0 group-data-horizontal/tabs:h-0.5 group-data-horizontal/tabs:w-(--active-tab-width) group-data-horizontal/tabs:translate-x-(--active-tab-left) group-data-vertical/tabs:top-0 group-data-vertical/tabs:left-0 group-data-vertical/tabs:w-0.5 group-data-vertical/tabs:h-(--active-tab-height) group-data-vertical/tabs:translate-y-(--active-tab-top)"
+        />
+      ) : null}
+    </TabsPrimitive.List>
   )
 }
 
@@ -70,10 +82,11 @@ const TRIGGER = cn(
   // Segmented: each segment fills the list's height inside its 2px; the chosen one is inverted ink.
   "group-data-[variant=default]/tabs-list:h-full group-data-[variant=default]/tabs-list:flex-1 group-data-[variant=default]/tabs-list:rounded-lg group-data-[variant=default]/tabs-list:px-3 group-data-[variant=default]/tabs-list:not-data-active:hover:bg-state-hover group-data-[variant=default]/tabs-list:data-active:bg-foreground group-data-[variant=default]/tabs-list:data-active:text-background",
   // Line: Figma's Top Tab. The label row, 6px, the 2px indicator: label 16px from the top of a
-  // 40px tab, the indicator on its bottom edge. Under the pointer the indicator shows faintly.
+  // 40px tab, the indicator on its bottom edge. The chosen tab's line is the list's one indicator
+// (TabsList), which slides; a tab under the pointer shows its own line faintly (::after).
   "group-data-[variant=line]/tabs-list:h-full group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:pt-4 group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:pb-2 group-data-horizontal/tabs:group-data-[variant=line]/tabs-list:items-start",
   "group-data-vertical/tabs:group-data-[variant=line]/tabs-list:h-10 group-data-vertical/tabs:group-data-[variant=line]/tabs-list:justify-start group-data-vertical/tabs:group-data-[variant=line]/tabs-list:pl-3",
-  "after:absolute after:bg-primary-fill after:opacity-0 after:transition-opacity group-data-[variant=default]/tabs-list:after:hidden group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-0 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:left-0 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100 group-data-[variant=line]/tabs-list:not-data-active:hover:after:opacity-40"
+  "after:absolute after:bg-primary-fill after:opacity-0 after:transition-opacity group-data-[variant=default]/tabs-list:after:hidden group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-0 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:left-0 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:not-data-active:hover:after:opacity-40"
 )
 
 /** One tab. `index` is Figma's folio before the label ("03"), in the faint ink. */

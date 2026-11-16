@@ -217,10 +217,11 @@ describe("Button states", () => {
     expect(classesOf({})).toEqual(expect.arrayContaining(["disabled:pointer-events-none", "disabled:opacity-50"]))
   })
 
-  it("transitions on the motion roles, not transition-all on Tailwind's curve", () => {
+  it("presses with the motion-push recipe (1px down, on the motion roles), not transition-all", () => {
     const classes = classesOf({})
     expect(classes).not.toContain("transition-all")
-    expect(classes.some((c) => c.startsWith("transition-["))).toBe(true)
+    expect(classes).toContain("motion-push")
+    expect(classes.some((c) => c.includes("translate-y"))).toBe(false)
   })
 })
 

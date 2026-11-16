@@ -21,6 +21,10 @@ const KEYBOARD_INSTANT = new Set(["menu", "select"])
  * Under reduced motion the system still lets colour fade (index.css → reduced motion): a colour
  * change moves nothing. So a colour may animate there whatever the recipe; anything else may not.
  */
+/** Contracts started by holding a control down, not by a click. */
+const HOLD = new Set(["press", "push", "button-press"])
+/** Of those, the ones that press in by translate rather than by scale. */
+const PUSH = new Set(["push", "button-press"])
 const COLOUR_ONLY = ["color", "background-color", "border-color", "outline-color", "text-decoration-color", "fill", "stroke"]
 
 interface Seen {
@@ -103,8 +107,8 @@ function surface(page: Page, contract: MotionContract): Locator {
 async function open(page: Page, contract: MotionContract) {
   const box = card(page, contract)
   await box.scrollIntoViewIfNeeded()
-  if (contract.id === "press") {
-    await box.locator("[data-specimen]").hover()
+  if (HOLD.has(contract.id)) {
+    await (contract.surfaces ? box.locator("[data-trigger]") : box.locator("[data-specimen]")).hover()
     await page.mouse.down()
   } else if (contract.id === "tooltip") {
     await box.locator("[data-trigger]").hover()
@@ -190,7 +194,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
         await testInfo.attach(`${contract.id} ${name}`, { path: file, contentType: "image/png" })
       }
       await release(page)
-      if (contract.id === "press") await page.mouse.up()
+      if (HOLD.has(contract.id)) await page.mouse.up()
 
       if (TOGGLES.has(contract.id)) {
         await close(page, contract)
@@ -209,9 +213,11 @@ for (const contract of motionContracts as readonly MotionContract[]) {
         expect([...contract.reducedProperties, ...COLOUR_ONLY], `${contract.id} still animates ${property} under reduced motion`).toContain(property)
       }
       await release(page)
-      if (contract.id === "press") {
-        // Held down and reduced: the control keeps its size.
-        expect(await surface(page, contract).evaluate((el) => getComputedStyle(el).scale)).toBe("none")
+      if (HOLD.has(contract.id)) {
+        // Held down and reduced: the control keeps its size and its place.
+        const held = await surface(page, contract).evaluate((el) => ({ scale: getComputedStyle(el).scale, translate: getComputedStyle(el).translate }))
+        expect(held.scale).toBe("none")
+        if (PUSH.has(contract.id)) expect(held.translate).toBe("none")
         await page.mouse.up()
       } else {
         // The end state is there all the same: nothing is lost with the movement.
@@ -230,7 +236,7 @@ for (const contract of motionContracts as readonly MotionContract[]) {
           expect([...contract.reducedProperties, ...COLOUR_ONLY], `${contract.id} still animates ${property} in a reduced box`).toContain(property)
         }
         await release(page)
-        if (contract.id === "press") await page.mouse.up()
+        if (HOLD.has(contract.id)) await page.mouse.up()
       })
     }
 

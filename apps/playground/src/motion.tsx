@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import {
   Button,
   CheckDraw,
+  Checkbox,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -34,6 +35,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -162,6 +167,45 @@ function PressSpecimen() {
     >
       Press and hold
     </div>
+  )
+}
+
+function PushSpecimen() {
+  return (
+    <div
+      data-specimen
+      role="button"
+      tabIndex={0}
+      className="motion-push bg-primary text-primary-foreground type-overline inline-flex h-8 cursor-default items-center rounded-lg px-3 select-none"
+    >
+      Press and hold
+    </div>
+  )
+}
+
+const MARKS = [
+  { x: 0, width: 48 },
+  { x: 64, width: 80 },
+  { x: 160, width: 32 },
+]
+
+/** A bare mark that moves between three places; Tabs shows the same recipe on the real thing. */
+function IndicatorSpecimen() {
+  const [at, setAt] = useState(0)
+  const mark = MARKS[at]!
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setAt((n) => (n + 1) % MARKS.length)}>
+        Next
+      </Button>
+      <div className="relative h-4 w-48">
+        <div
+          data-specimen
+          className="motion-indicator bg-primary-fill absolute bottom-0 left-0 h-0.5"
+          style={{ translate: `${mark.x}px 0`, width: mark.width }}
+        />
+      </div>
+    </>
   )
 }
 
@@ -406,6 +450,8 @@ function StrengthSpecimen() {
 
 const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   press: () => <PressSpecimen />,
+  push: () => <PushSpecimen />,
+  indicator: () => <IndicatorSpecimen />,
   pop: () => <ToggleSpecimen className="motion-pop" label="A small surface" />,
   slide: () => <ToggleSpecimen className="motion-slide motion-slide-from-bottom" label="From the bottom edge" clip />,
   collapse: () => <CollapseSpecimen />,
@@ -422,6 +468,18 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
   "copy-words": () => <SecretFieldSpecimen press="copy" label="Copy" />,
   reveal: () => <SecretFieldSpecimen press="reveal" label="Show" />,
   strength: () => <StrengthSpecimen />,
+  "button-press": () => <Button data-trigger>Hold to send</Button>,
+  switch: () => <Switch data-trigger aria-label="Lock after 5 minutes" />,
+  checkbox: () => <Checkbox data-trigger aria-label="Remember this device" />,
+  tabs: () => (
+    <Tabs defaultValue="all">
+      <TabsList variant="line">
+        <TabsTrigger value="all">All</TabsTrigger>
+        <TabsTrigger data-trigger value="unread">Unread</TabsTrigger>
+        <TabsTrigger value="flagged">Flagged</TabsTrigger>
+      </TabsList>
+    </Tabs>
+  ),
 }
 
 function Fact({ term, children }: { term: string; children: ReactNode }) {

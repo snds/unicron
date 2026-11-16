@@ -44,7 +44,10 @@ describe("Tabs", () => {
   it("line is Figma's Top Tab: overline, a 2px primary indicator, a faint index", () => {
     render(<Subject variant="line" />)
     const tab = screen.getByRole("tab", { name: /Characters/ })
-    for (const name of ["type-overline", "text-muted-foreground", "data-active:text-foreground", "after:bg-primary-fill", "group-data-horizontal/tabs:after:h-0.5", "group-data-[variant=line]/tabs-list:data-active:after:opacity-100"]) expect(tab.className).toContain(name)
+    for (const name of ["type-overline", "text-muted-foreground", "data-active:text-foreground", "after:bg-primary-fill", "group-data-horizontal/tabs:after:h-0.5"]) expect(tab.className).toContain(name)
+    // The chosen tab's line is the list's one indicator, which slides from tab to tab.
+    const line = screen.getByRole("tablist").querySelector('[data-slot="tabs-indicator"]')!
+    for (const name of ["motion-indicator", "bg-primary-fill", "group-data-horizontal/tabs:h-0.5", "group-data-horizontal/tabs:translate-x-(--active-tab-left)"]) expect(line.className).toContain(name)
     expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).toContain("text-faint-foreground")
   })
 
@@ -57,6 +60,8 @@ describe("Tabs", () => {
     expect(tab.className).toContain("group-data-[variant=default]/tabs-list:data-active:bg-foreground")
     expect(tab.className).toContain("group-data-[variant=default]/tabs-list:data-active:text-background")
     expect(tab.className).not.toMatch(/bg-primary(\s|$)/)
+    // The chosen segment is filled in place; nothing slides in a segmented list.
+    expect(list.querySelector('[data-slot="tabs-indicator"]')).toBeNull()
   })
 
   it("a tab under 44px takes the 44px touch target", () => {

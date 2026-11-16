@@ -2,7 +2,9 @@
  * Motion primitives: named recipes built only from the motion roles (docs/02-tokens.md → Motion).
  * A component picks a recipe by class; it never writes its own duration or curve.
  *
- *   motion-press, motion-press-sm   a control going down under a press
+ *   motion-push                     a control pressed into the page: 1px down (the 1.0 press)
+ *   motion-press, motion-press-sm   a control shrinking under a press (expressive; not the default)
+ *   motion-indicator                a mark that slides to the chosen item (a tab's line)
  *   motion-pop                      a small surface arriving from its anchor and leaving faster
  *   motion-fade (+ -fast)           a surface that fades in place: a dialog, a tooltip, a backdrop
  *   motion-anchor (+ -fast)         a surface that fades and moves a step off its anchor: a popover,
@@ -40,6 +42,35 @@
   .motion-press-sm:active:not(:disabled, [aria-disabled="true"]) {
     scale: var(--motion-press-depth-small);
     transition-duration: var(--motion-press);
+  }
+
+  /* ── push ──────────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * The 1.0 press: the control goes 1px down while held, quickly, and comes back a little slower.
+   * Mechanical, with no zoom. A control that opens a popup (aria-haspopup) does not move: its
+   * popup is placed against it.
+   */
+  .motion-push {
+    --motion-push-depth: 1px;
+    transition-property: color, background-color, border-color, box-shadow, translate;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease);
+  }
+  .motion-push:active:not(:disabled, [aria-disabled="true"], [aria-haspopup]) {
+    translate: 0 var(--motion-push-depth);
+    transition-duration: var(--motion-press);
+  }
+
+  /* ── indicator ─────────────────────────────────────────────────────────────────────────────── */
+  /*
+   * A mark that follows the chosen item (Base UI's Tabs.Indicator sets --active-tab-*). It moves
+   * on translate; its length changes too (width or height), which is a stated exception: the mark
+   * is absolutely placed, so nothing around it reflows, and it is a 2px bar.
+   */
+  .motion-indicator {
+    transition-property: translate, width, height;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-ease-move);
   }
 
   /* ── pop ───────────────────────────────────────────────────────────────────────────────────── */
@@ -319,6 +350,9 @@
  * Unlayered, so they win over the recipes above.
  */
 @media (prefers-reduced-motion: reduce) {
+  .motion-push:active {
+    translate: none;
+  }
   .motion-press:active,
   .motion-press-sm:active,
   .motion-pop[data-starting-style],
@@ -352,6 +386,9 @@
   }
 }
 [data-motion="reduced"] {
+  .motion-push:active {
+    translate: none;
+  }
   .motion-press:active,
   .motion-press-sm:active,
   .motion-pop[data-starting-style],

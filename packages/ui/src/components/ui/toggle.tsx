@@ -17,7 +17,7 @@ const PRESSED =
 
 const toggleVariants = cva(
   cn(
-    "group/toggle inline-flex shrink-0 items-center justify-center gap-2 rounded-lg type-overline whitespace-nowrap text-foreground transition-[color,background-color,box-shadow] select-none hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "group/toggle inline-flex shrink-0 items-center justify-center gap-2 rounded-lg type-overline whitespace-nowrap text-foreground select-none hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-invalid:inset-ring-2 aria-invalid:inset-ring-critical-fill [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     PRESSED
   ),
   {
@@ -48,7 +48,9 @@ function Toggle({
   size = "default",
   ...props
 }: TogglePrimitive.Props & VariantProps<typeof toggleVariants>) {
-  return <TogglePrimitive data-slot="toggle" className={cn(toggleVariants({ variant, size, className }))} {...props} />
+  // A toggle on its own is pressed into the page like a button (motion-push). The variants carry no
+  // transition, so each user names its own: a joined group's items change colour only.
+  return <TogglePrimitive data-slot="toggle" className={cn("motion-push", toggleVariants({ variant, size, className }))} {...props} />
 }
 
 export { Toggle, toggleVariants }
