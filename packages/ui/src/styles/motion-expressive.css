@@ -1,0 +1,92 @@
+/*
+ * @unicron/ui expressive motion: an opt-in second stylesheet. The default look is mechanical
+ * (DESIGN.md → Motion); an app that wants more, somewhere, imports this after the main stylesheet:
+ *
+ *   @import "@unicron/ui/styles";
+ *   @import "@unicron/ui/styles/motion-expressive.css";
+ *
+ * and puts `data-motion="expressive"` on the part that should move this way: <html> for the whole
+ * app (overlays render in a portal under <body>, so they follow only a scope on <html> or <body>),
+ * or one screen (a success page) and nowhere else. Without the attribute this file does nothing.
+ *
+ * It re-points recipes, it adds no props:
+ *   - motion-push presses by scale and comes back on the pop spring (about 20% overshoot of a 4%
+ *     press: lively, under a pixel on a 40px button).
+ *   - a dialog's popup arrives from 0.96 on the emphasis curve (it overshoots slightly).
+ *   - motion-burst: a success mark pops in on the pop spring as a ring grows from it and fades.
+ *
+ * Every rule stands down under reduced motion, in a data-motion="reduced" box and in a
+ * data-motion="off" one: the mechanical recipe (or nothing) applies there instead.
+ *
+ * spring.pop is the one tier 1 value read here. It has no tier 2 role, so the core cannot reach
+ * it (scripts/check.mjs); this file names it once, as a role scoped to the expressive box, and the
+ * token lint allows --g-spring-pop in this file only.
+ */
+[data-motion="expressive"] {
+  --motion-spring-pop: var(--g-spring-pop);
+  --motion-spring-pop-duration: var(--g-spring-pop-duration);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ── press ─────────────────────────────────────────────────────────────────────────────────── */
+  [data-motion="expressive"] .motion-push:not([data-motion="reduced"] *, [data-motion="off"] *) {
+    transition-property: color, background-color, border-color, box-shadow, scale;
+    transition-duration: var(--motion-spring-pop-duration);
+    transition-timing-function: var(--motion-spring-pop);
+  }
+  [data-motion="expressive"]
+    .motion-push:not([data-motion="reduced"] *, [data-motion="off"] *):active:not(:disabled, [aria-disabled="true"], [aria-haspopup]) {
+    translate: none;
+    scale: var(--motion-press-depth);
+    transition-duration: var(--motion-press);
+    transition-timing-function: var(--motion-ease);
+  }
+
+  /* ── dialog ────────────────────────────────────────────────────────────────────────────────── */
+  [data-motion="expressive"] [data-slot="dialog-content"].motion-fade:not([data-motion="reduced"] *, [data-motion="off"] *) {
+    transition-property: opacity, scale;
+    transition-timing-function: var(--motion-ease-emphasis);
+    @starting-style {
+      scale: 0.96;
+    }
+  }
+  [data-motion="expressive"] [data-slot="dialog-content"].motion-fade:not([data-motion="reduced"] *, [data-motion="off"] *):is([data-starting-style], [data-ending-style]) {
+    scale: 0.96;
+  }
+  [data-motion="expressive"] [data-slot="dialog-content"].motion-fade:not([data-motion="reduced"] *, [data-motion="off"] *)[data-ending-style] {
+    transition-timing-function: var(--motion-ease-exit);
+  }
+
+  /* ── burst ─────────────────────────────────────────────────────────────────────────────────── */
+  /* On a success mark, mounted when the success happens. Rare by contract: once per success. */
+  [data-motion="expressive"] .motion-burst:not([data-motion="reduced"] *, [data-motion="off"] *) {
+    position: relative;
+    animation: motion-burst-in var(--motion-spring-pop-duration) var(--motion-spring-pop) backwards;
+  }
+  [data-motion="expressive"] .motion-burst:not([data-motion="reduced"] *, [data-motion="off"] *)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: var(--stroke-emphasis) solid currentColor;
+    opacity: 0;
+    pointer-events: none;
+    animation: motion-burst-ring var(--motion-move) var(--motion-ease-exit);
+  }
+}
+
+@keyframes motion-burst-in {
+  from {
+    scale: 0.6;
+    opacity: 0;
+  }
+}
+@keyframes motion-burst-ring {
+  from {
+    scale: 1;
+    opacity: 0.6;
+  }
+  to {
+    scale: 1.8;
+    opacity: 0;
+  }
+}

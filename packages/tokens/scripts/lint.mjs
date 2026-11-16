@@ -261,6 +261,9 @@ const MOTION_RULES = [
 ]
 const TIMED_DECLARATION = /(?:transition|animation)(?:-duration|-delay)?["']?\s*:/i
 const RAW_TIME = /(?<![\w.(-])\d*\.?\d+m?s\b/g
+// The expressive stylesheet is the one place spring.pop is read: it has no tier 2 role, so the
+// core cannot reach it (check.mjs), and this file scopes it to a data-motion="expressive" box.
+const POP_ALLOWED = new Set([path.join("packages", "ui", "src", "styles", "motion-expressive.css")])
 let motionFiles = 0
 for (const file of files) {
   if (/\.test\.tsx?$/.test(file) || file.includes(`${path.sep}test${path.sep}`)) continue
@@ -268,7 +271,10 @@ for (const file of files) {
   const rel = path.relative(repoRoot, file)
   fs.readFileSync(file, "utf8").split("\n").forEach((line, i) => {
     for (const [pattern, why] of MOTION_RULES) {
-      for (const hit of line.match(pattern) ?? []) fail(`${rel}:${i + 1}`, `motion literal ${hit} — ${why}`)
+      for (const hit of line.match(pattern) ?? []) {
+        if (POP_ALLOWED.has(rel) && /^--g-spring-pop(?:-duration)?$/.test(hit)) continue
+        fail(`${rel}:${i + 1}`, `motion literal ${hit} — ${why}`)
+      }
     }
     if (TIMED_DECLARATION.test(line)) {
       for (const hit of line.match(RAW_TIME) ?? []) fail(`${rel}:${i + 1}`, `motion literal ${hit} in a transition or animation; use a --motion-* role`)

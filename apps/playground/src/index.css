@@ -1,4 +1,6 @@
 @import "@unicron/ui/styles";
+/* The opt-in expressive layer, so the Motion view can show it inside a data-motion="expressive" box. */
+@import "@unicron/ui/styles/motion-expressive.css";
 
 /*
  * The Motion view's "10× slow" switch: the same roles, ten times longer, so a recipe can be

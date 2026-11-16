@@ -26,9 +26,9 @@ const KEYBOARD_INSTANT = new Set(["menu", "select"])
  * change moves nothing. So a colour may animate there whatever the recipe; anything else may not.
  */
 /** Contracts started by holding a control down, not by a click. */
-const HOLD = new Set(["press", "push", "button-press"])
+const HOLD = new Set(["press", "push", "button-press", "expressive-press"])
 /** Of those, the ones that press in by translate rather than by scale. */
-const PUSH = new Set(["push", "button-press"])
+const PUSH = new Set(["push", "button-press", "expressive-press"])
 const COLOUR_ONLY = ["color", "background-color", "border-color", "outline-color", "text-decoration-color", "fill", "stroke"]
 
 interface Seen {
@@ -478,5 +478,18 @@ test("toast: leaves on --motion-fast", async ({ page }) => {
   const leaving = await freeze(page, contract)
   expect(leaving.length, "the toast did not animate on the way out").toBeGreaterThan(0)
   expectWithinContract(leaving, contract, contract.properties, await roleMs(page, "--motion-fast"))
+  await release(page)
+})
+
+// ── the expressive layer on an overlay ─────────────────────────────────────────────────────────
+// With data-motion="expressive" on <html>, a dialog arrives from 0.96 on the emphasis curve; without
+// it (every other check here), the dialog only fades.
+test("expressive: a dialog under an expressive <html> scales in as it fades, within the ceiling", async ({ page }) => {
+  const contract = motionContracts.find((c) => c.id === "dialog")! as MotionContract
+  await page.evaluate(() => document.documentElement.setAttribute("data-motion", "expressive"))
+  await open(page, contract)
+  const seen = await freeze(page, contract)
+  expect(seen.map((s) => s.property)).toContain("scale")
+  expectWithinContract(seen, contract, ["opacity", "scale"], CEILING_MS)
   await release(page)
 })

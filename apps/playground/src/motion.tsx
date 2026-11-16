@@ -24,6 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Icon,
   Kbd,
   motionContracts,
   Popover,
@@ -244,6 +245,38 @@ function RollingNumberSpecimen() {
         Take 13
       </Button>
       <RollingNumber value={count} locales="en-US" className="font-mono text-2xl" />
+    </>
+  )
+}
+
+function ExpressivePressSpecimen() {
+  return (
+    <div data-motion="expressive">
+      <div
+        data-specimen
+        role="button"
+        tabIndex={0}
+        className="motion-push bg-primary text-primary-foreground type-overline inline-flex h-8 cursor-default items-center rounded-lg px-3 select-none"
+      >
+        Press and hold
+      </div>
+    </div>
+  )
+}
+
+function BurstSpecimen() {
+  const [run, setRun] = useState(0)
+  return (
+    <>
+      <Button data-trigger variant="outline" size="sm" onClick={() => setRun((n) => n + 1)}>
+        Replay
+      </Button>
+      <div data-motion="expressive" className="flex items-center gap-2 text-sm">
+        <span key={run} data-specimen className="motion-burst text-success-foreground inline-flex size-6 items-center justify-center text-xl">
+          <Icon name="checkmark" />
+        </span>
+        Paired
+      </div>
     </>
   )
 }
@@ -529,6 +562,8 @@ const SPECIMENS: Record<MotionContractId, () => ReactNode> = {
     </>
   ),
   "rolling-number": () => <RollingNumberSpecimen />,
+  "expressive-press": () => <ExpressivePressSpecimen />,
+  burst: () => <BurstSpecimen />,
   sheet: () => (
     <Sheet>
       <SheetTrigger data-trigger render={<Button variant="outline" size="sm" />}>

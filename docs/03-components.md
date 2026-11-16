@@ -732,6 +732,11 @@ A primitive never writes its own duration or curve. It picks a recipe from
   leaves on `--motion-fast` and the exit curve, in every one of sonner's states (its own stylesheet
   took 500ms for a toast leaving behind the front one, past the ceiling). An undo toast is a toast
   with an action. `RollingNumber` rolls only the characters that changed, on `--motion-state`.
+- **Expressive, by choice.** `@unicron/ui/styles/motion-expressive.css` plus `data-motion="expressive"`
+  re-points the push to a scale on the pop spring, brings a dialog in from 0.96 on the emphasis
+  curve, and adds `motion-burst` for a success mark ([consuming → expressive
+  motion](05-consuming.md#expressive-motion-opt-in)). It is the one place the pop spring is read.
+  No ripple: it needs the pointer's position and adds nothing the burst does not.
 - **Lockdown's feedback, in the 1.0 look** (words, not icons): the clipboard countdown's words on
   SecretField and CodeDisplay ("Clears in 28 s", "Cleared") fade in over 120ms when they appear and
   when the phase changes, and hold still as the seconds tick. A SecretField's value fades in where

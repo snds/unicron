@@ -415,6 +415,30 @@ export const motionContracts = [
     reducedProperties: [],
     surfaces: ['[data-contract="rolling-number"] [data-slot="rolling-number"]'],
   },
+  {
+    id: "expressive-press",
+    recipe: "motion-push inside data-motion=\"expressive\" (styles/motion-expressive.css)",
+    trigger: "a control held down, in an expressive box",
+    properties: ["scale", ...COLOURS],
+    duration: "--motion-move",
+    easing: ["--motion-ease", "--motion-spring-pop"],
+    frequency: "frequent",
+    interrupted: "A transition: released mid-press, it springs back from where it is.",
+    reduced: "The mechanical press, without its movement: colour only.",
+    reducedProperties: COLOURS,
+  },
+  {
+    id: "burst",
+    recipe: "motion-burst inside data-motion=\"expressive\" (styles/motion-expressive.css)",
+    trigger: "a success mark is mounted (sent, paired, saved)",
+    properties: ["scale", "opacity"],
+    duration: "--motion-move",
+    easing: ["--motion-spring-pop", "--motion-ease-exit"],
+    frequency: "rare",
+    interrupted: "Runs once on mount. Mounted again, it bursts again.",
+    reduced: "The mark is simply there.",
+    reducedProperties: [],
+  },
 ] as const satisfies readonly MotionContract[]
 
 export type MotionContractId = (typeof motionContracts)[number]["id"]
