@@ -236,10 +236,10 @@ describe("ListRow (Figma 9:181)", () => {
 })
 
 describe("formatListCount (decisions §13)", () => {
-  it("two digits, three from 100, a comma from 1,000", () => {
-    expect(formatListCount(0)).toBe("00")
-    expect(formatListCount(7)).toBe("07")
-    expect(formatListCount(12)).toBe("12")
+  it("three digits, as every Figma sidebar draws them, a comma from 1,000 (Unicron 13)", () => {
+    expect(formatListCount(0)).toBe("000")
+    expect(formatListCount(7)).toBe("007")
+    expect(formatListCount(12)).toBe("012")
     expect(formatListCount(146)).toBe("146")
     expect(formatListCount(1204)).toBe("1,204")
   })

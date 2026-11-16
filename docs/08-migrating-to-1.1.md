@@ -129,6 +129,22 @@ yourself (Vale 6). If a test of yours pins a count, it now reads `012`.
 - **A critical `Banner` cannot be dismissed**, even with `onDismiss`.
 - **`plain.css` follows the browser** with no class on the root. Add `class="stone"` to keep stone.
 - **No `data-theme` is no longer Warpcore**: see [Themes leave the core](#themes-leave-the-core).
+- **A long press from the keyboard is Shift+F10** (or the context-menu key, or a right click), no
+  longer Shift+Enter, which makes a new line in a field. `floatButtonLongPressKeys` is
+  `"Shift+F10 ContextMenu"`.
+- **A radio is round**: a 16px circle with an 8px dot, the one round control.
+- **An empty Composer's Send is dimmed to 50%**, still `aria-disabled` and in the tab order.
+- **Only the sheet that drags has a grabber** (`AdaptiveSheetContent` on a phone).
+- **From 1024 to 1099 the sidebar is its rail on every screen.**
+
+**Point your own borders and marks at the new roles** (nothing goes silent; these measure right):
+a field's resting border `--input` / `line-field`; focus and error borders `line-focus` /
+`line-invalid` (not `primary-fill` / `critical-fill`); a selected edge, tab indicator or progress
+cell `primary-mark`; reading text in `text-faint` moves to `text-label`.
+
+**Deprecated, removed in 2.0**: `--g-neutral-*`, `--g-white-alpha-*` and the accent ramps
+`--g-blue-*`, `--g-coral-*`, `--g-green-*`, `--g-amber-*`, `--g-red-*`. They keep their names and
+values through 1.x; alias a role, a status role or a swatch instead.
 
 Each package's `CHANGELOG.md` lists every new prop and changed behaviour of 1.1.
 

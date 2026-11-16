@@ -44,7 +44,7 @@ export type PageHeadProps = Omit<React.ComponentProps<"div">, "title"> & {
   size?: PageHeadSize
   /**
    * How many, beside the title on its baseline. A number is written as cross-app decisions §13
-   * writes counts (`07`, `248`, `1,204`); a string is shown as given (`/012`). Folio ink and role;
+   * writes counts (`007`, `248`, `1,204`); a string is shown as given (`/012`). Folio ink and role;
    * at `lg` the code/display role, as Warpcore's desktop head draws it.
    */
   count?: number | string

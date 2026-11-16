@@ -37,7 +37,7 @@ const header = cva(
 export type SectionHeaderProps = Omit<React.ComponentProps<"div">, "title" | "children"> & {
   /** The overline: a section's name ("Mail // folders", "A – P"). Type it in sentence case. */
   title: React.ReactNode
-  /** After the title, in the meta role. A number is written as decisions §13 says (`02`, `146`, `1,204`). */
+  /** After the title, in the meta role. A number is written as decisions §13 says (`002`, `146`, `1,204`). */
   count?: number | React.ReactNode
   /** The heading level the title is (`h2` by default). */
   level?: SectionHeaderLevel

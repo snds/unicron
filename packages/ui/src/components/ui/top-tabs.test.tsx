@@ -93,7 +93,7 @@ describe("TopTabs and TopTab (Figma 15:498)", () => {
       </TopTabs>
     )
     const requests = screen.getByRole("link", { name: "Requests, 2" })
-    expect(within(requests).getByText("02")).toHaveAttribute("aria-hidden", "true")
+    expect(within(requests).getByText("002")).toHaveAttribute("aria-hidden", "true")
     expect(screen.getByRole("link", { name: "People" })).toBeInTheDocument()
   })
 
