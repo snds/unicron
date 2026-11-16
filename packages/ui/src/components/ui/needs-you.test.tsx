@@ -134,6 +134,24 @@ describe("NeedsYou size=\"compact\" (contract 5.1c C19, Lockdown LA8)", () => {
     expect(within(line).getAllByRole("button").map((b) => b.textContent)).toEqual(["Review"])
   })
 
+  it("its action is 40 high, 44 on a coarse pointer, whatever size the Button asks for (Unicron 88)", () => {
+    render(<Line />)
+    const actions = document.querySelector('[data-size="compact"] [data-slot="needs-you-actions"]') as HTMLElement
+    expect(classesOf(actions)).toEqual(expect.arrayContaining(["[&>[data-slot=button]]:h-10", "pointer-coarse:[&>[data-slot=button]]:h-touch-min"]))
+    expect(actions.firstElementChild).toHaveAttribute("data-slot", "button")
+  })
+
+  it("is said each time it appears, not once a session (Unicron 88)", async () => {
+    const { unmount } = render(<Line />)
+    await act(async () => {})
+    expect(document.querySelector('[data-slot="needs-you-announcer"]')).toHaveTextContent("Sign-in request // 01:40 left")
+    unmount()
+    expect(document.querySelector('[data-slot="needs-you-announcer"]')).toBeNull()
+    render(<Line title="Sign-in request // 01:20 left" />)
+    await act(async () => {})
+    expect(document.querySelector('[data-slot="needs-you-announcer"]')).toHaveTextContent("Sign-in request // 01:20 left")
+  })
+
   it("holds no body, no text actions and nothing else", () => {
     render(
       <Line body="Chrome on Linux wants to sign in." secondaryAction={<Button variant="needs-you-text">Decline</Button>}>
@@ -221,9 +239,11 @@ describe("NeedsYou size=\"compact\" (contract 5.1c C19, Lockdown LA8)", () => {
     await waitFor(() => expect(blocks()[0]).toHaveAttribute("data-covered"))
     const notice = document.querySelector('[data-slot="sheet-notice"]') as HTMLElement
     expect(notice).toContainElement(document.querySelector('[data-size="compact"]') as HTMLElement)
-    // Before the grabber, flush with the sheet's top; the close button moves under it.
-    expect(notice.compareDocumentPosition(document.querySelector('[data-slot="sheet-grabber"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(document.querySelector('[data-slot="sheet-close-anchor"]')!.className).toContain("in-data-[side=bottom]:top-[calc(var(--size-control)+var(--spacing)*5)]")
+    // First in the sheet, flush with its top, before the header (a plain bottom sheet has no
+    // grabber, Unicron 54); the close button moves under it.
+    expect(notice.compareDocumentPosition(document.querySelector('[data-slot="sheet-header"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(document.querySelector('[data-slot="sheet-grabber"]')).toBeNull()
+    expect(document.querySelector('[data-slot="sheet-close-anchor"]')!.className).toContain("top-[calc(var(--size-control)+var(--spacing)*4)]")
     unmount()
     render(
       <>

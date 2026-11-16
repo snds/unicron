@@ -164,21 +164,73 @@ describe("TabBar (Figma 20:1657)", () => {
     expect(onChange).not.toHaveBeenCalled()
   })
 
-  it("vertical: a 48px column of 40px tabs, the arrow keys go up and down", async () => {
+  it("vertical: a 48px column of 44px tabs (the touch floor), the arrow keys go up and down (Unicron 64)", async () => {
     const user = userEvent.setup()
     render(<Vale orientation="vertical" />)
     const bar = screen.getByRole("tablist")
     expect(bar).toHaveAttribute("aria-orientation", "vertical")
     expect(classesOf(bar)).toEqual(expect.arrayContaining(["w-control", "flex-col"]))
-    expect(classesOf(screen.getByRole("tab", { name: "Notes" }))).toEqual(expect.arrayContaining(["h-10", "w-full"]))
-    // It is the part of the short screen's column that gives way: the bar may shrink, and its tabs
-    // share what is left, down to 24 each, so the create button under it stays on screen.
-    expect(classesOf(bar)).toEqual(expect.arrayContaining(["min-h-0", "shrink"]))
+    const notes = screen.getByRole("tab", { name: "Notes" })
+    expect(classesOf(notes)).toEqual(expect.arrayContaining(["h-touch-min", "w-full", "shrink-0"]))
+    expect(classesOf(notes)).not.toContain("h-10")
+    expect(classesOf(notes)).not.toContain("min-h-6")
+    // It is the part of the short screen's column that gives way: the bar may shrink, and then it
+    // scrolls, so the create button under it stays on screen and no tab drops under 44 (Unicron 29).
+    expect(classesOf(bar)).toEqual(expect.arrayContaining(["min-h-0", "shrink", "overflow-y-auto", "no-scrollbar"]))
     expect(classesOf(bar)).not.toContain("shrink-0")
-    expect(classesOf(screen.getByRole("tab", { name: "Notes" }))).toEqual(expect.arrayContaining(["min-h-6", "shrink"]))
     await user.tab()
     await user.keyboard("{ArrowDown}")
     expect(screen.getByRole("tab", { name: "Calendar", selected: true })).toHaveFocus()
+  })
+
+  it("vertical and too short: the bar scrolls, and a slide along it scrolls instead of scrubbing (Unicron 29)", () => {
+    const onChange = vi.fn()
+    // jsdom lays nothing out: four 44px tabs (+ padding) in a 120px column.
+    const height = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollHeight")
+    const client = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientHeight")
+    Object.defineProperty(HTMLElement.prototype, "scrollHeight", { configurable: true, get() { return this.dataset.slot === "tab-bar" ? 196 : 0 } })
+    Object.defineProperty(HTMLElement.prototype, "clientHeight", { configurable: true, get() { return this.dataset.slot === "tab-bar" ? 120 : 0 } })
+    try {
+      render(<Vale orientation="vertical" onChange={onChange} />)
+      const bar = screen.getByRole("tablist")
+      expect(bar).toHaveAttribute("data-scrolls")
+      expect(classesOf(bar)).toContain("touch-pan-y")
+      expect(classesOf(bar)).not.toContain("touch-none")
+      fireEvent.pointerDown(bar, { button: 0, pointerId: 1, clientX: 600, clientY: 20 })
+      fireEvent.pointerMove(bar, { pointerId: 1, clientX: 600, clientY: 110 })
+      expect(bar).not.toHaveAttribute("data-scrubbing")
+      fireEvent.pointerUp(bar, { pointerId: 1, clientX: 600, clientY: 110 })
+      expect(onChange).not.toHaveBeenCalled()
+    } finally {
+      if (height) Object.defineProperty(HTMLElement.prototype, "scrollHeight", height)
+      if (client) Object.defineProperty(HTMLElement.prototype, "clientHeight", client)
+    }
+  })
+
+  it("minimized: keyboard focus coming in expands the bar, and the arrow keys work again (Unicron 65)", async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(
+      <>
+        <button type="button">Search</button>
+        <Vale start="calendar" minimized onChange={onChange} />
+        <button type="button">Create</button>
+      </>
+    )
+    const bar = screen.getByRole("tablist", { hidden: true })
+    expect(bar).toHaveAttribute("data-minimized")
+    await user.tab()
+    await user.tab()
+    expect(screen.getByRole("tab", { name: "Calendar" })).toHaveFocus()
+    expect(bar).not.toHaveAttribute("data-minimized")
+    expect(screen.getAllByRole("tab").filter((el) => el.hasAttribute("data-collapsed"))).toHaveLength(0)
+    await user.keyboard("{ArrowRight}")
+    expect(onChange).toHaveBeenCalledWith("contacts")
+    expect(screen.getByRole("tab", { name: "Contacts", selected: true })).toHaveFocus()
+    // Focus leaves: it minimizes again.
+    await user.tab()
+    expect(screen.getByRole("button", { name: "Create" })).toHaveFocus()
+    expect(bar).toHaveAttribute("data-minimized")
   })
 
   it("draws nothing with fewer than two sections", () => {

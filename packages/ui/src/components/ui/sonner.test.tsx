@@ -168,12 +168,12 @@ describe("toast()", () => {
 })
 
 describe("the phone's status-strip slot (contract 5.1c C6)", () => {
-  it("places a toast by the strip's state: the slot, under the top row, or waiting; content on a desktop", () => {
+  it("places a toast by the strip's state: the slot, above the strip, or waiting; content on a desktop; never under the top row", () => {
     expect(toastPlacementFor(false, "needs-you")).toBe("content")
     expect(toastPlacementFor(true, "none")).toBe("strip")
-    expect(toastPlacementFor(true, "live")).toBe("strip")
+    expect(toastPlacementFor(true, "live")).toBe("above-strip")
     expect(toastPlacementFor(true, "live-action")).toBe("wait")
-    expect(toastPlacementFor(true, "needs-you")).toBe("top")
+    expect(toastPlacementFor(true, "needs-you")).toBe("above-strip")
     // A strip's state from its tone and its action: critical is held like needs-you.
     expect(stripStateFor("live", true)).toBe("live-action")
     expect(stripStateFor("live", false)).toBe("live")
@@ -227,25 +227,42 @@ describe("the phone's status-strip slot (contract 5.1c C6)", () => {
     expect(frame()).not.toHaveAttribute("data-strip")
   })
 
-  it("a live strip without an action gives way for the toast's time, then comes back", async () => {
+  it("a live strip without an action (offline, a sync) stays shown while the toast shows (Vale 15)", async () => {
     render(<Phone strip="syncing" />)
     expect(frame()).toHaveAttribute("data-strip", "live")
-    expect(accessory()).not.toHaveAttribute("data-yield")
     act(() => {
       toast("Archived Budget for audits")
     })
     await settle()
     expect(list()).toHaveAttribute("data-y-position", "bottom")
-    expect(accessory()).toHaveAttribute("data-yield")
-    expect(accessory()).toHaveClass("invisible")
-    expect(accessory()).toHaveAttribute("aria-hidden", "true")
-    act(() => {
-      toast.dismiss()
-    })
-    await settle()
-    await settle()
     expect(accessory()).not.toHaveAttribute("data-yield")
     expect(accessory()).not.toHaveClass("invisible")
+    expect(accessory()).not.toHaveAttribute("aria-hidden")
+    expect(accessory()).not.toHaveAttribute("inert")
+  })
+
+  it("the toast stacks just above a strip that shows, measured from the strip's top (Synapse 10, Vale 15)", async () => {
+    const box = (top: number, height: number) =>
+      ({ top, bottom: top + height, left: 0, right: 390, width: 390, height, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
+    const proto = HTMLElement.prototype
+    const real = proto.getBoundingClientRect
+    proto.getBoundingClientRect = function (this: HTMLElement) {
+      const slot = this.getAttribute("data-slot")
+      if (slot === "app-frame") return box(0, 844)
+      if (slot === "app-frame-bottom-row-bar") return box(780, 48)
+      if (slot === "accessory") return box(724, 48)
+      return real.call(this)
+    }
+    try {
+      const { unmount } = render(<Phone strip="sign-in" />)
+      // 844 - 724 + the 8 gap: just above the strip, not above the row's bar (844 - 780 + 8 = 72).
+      expect(frame().style.getPropertyValue("--frame-toast-bottom")).toBe("128px")
+      unmount()
+      render(<Phone strip="none" />)
+      expect(frame().style.getPropertyValue("--frame-toast-bottom")).toBe("72px")
+    } finally {
+      proto.getBoundingClientRect = real
+    }
   })
 
   it("a live strip with an action (undo send) is never covered: the toast waits until it ends", async () => {
@@ -277,7 +294,7 @@ describe("the phone's status-strip slot (contract 5.1c C6)", () => {
     expect(list()).toHaveAttribute("data-y-position", "bottom")
   })
 
-  it("toasts already up when an undo-send strip arrives move under the top row; none covers it", async () => {
+  it("toasts already up when an undo-send strip arrives stay at the bottom, above it; none covers it", async () => {
     function Later() {
       const [sending, setSending] = useState(false)
       return (
@@ -297,19 +314,19 @@ describe("the phone's status-strip slot (contract 5.1c C6)", () => {
     expect(list()).toHaveAttribute("data-y-position", "bottom")
     fireEvent.click(screen.getByRole("button", { name: "Send" }))
     await settle()
-    expect(list()).toHaveAttribute("data-y-position", "top")
+    expect(list()).toHaveAttribute("data-y-position", "bottom")
   })
 
-  it("a needs-you strip never gives way: the toast sits under the top row", async () => {
+  it("a needs-you strip stays shown: the toast stacks above it, never under the top row (Synapse 10)", async () => {
     render(<Phone strip="sign-in" />)
     expect(frame()).toHaveAttribute("data-strip", "needs-you")
     act(() => {
       toast("Copied the password for Steam")
     })
     await settle()
-    expect(list()).toHaveAttribute("data-y-position", "top")
+    expect(list()).toHaveAttribute("data-y-position", "bottom")
     expect(accessory()).not.toHaveAttribute("data-yield")
-    expect(frame().style.getPropertyValue("--frame-toast-top")).toMatch(/px$/)
+    expect(accessory()).not.toHaveClass("invisible")
   })
 
   it("one toast at a time on a phone, so the bottom never holds three bars; the rest wait and come in order", async () => {
@@ -343,23 +360,22 @@ describe("the phone's status-strip slot (contract 5.1c C6)", () => {
     expect(waitingToasts()).toBe(0)
   })
 
-  it("a strip that gave way stays away while the next toast takes the slot", async () => {
+  it("a strip stays shown through a queue of toasts, one after another above it", async () => {
     render(<Phone strip="syncing" />)
     const ids: (string | number)[] = []
     act(() => {
       ids.push(toast("Archived Budget for audits"), toast("Saved Steam"))
     })
     await settle()
-    expect(accessory()).toHaveAttribute("data-yield")
+    expect(accessory()).not.toHaveAttribute("data-yield")
     act(() => {
       toast.dismiss(ids[0])
     })
-    // Never back between the two: the strip yields until the queue is empty.
     for (let i = 0; i < 6; i++) {
       await act(async () => {
         await new Promise((r) => setTimeout(r, 60))
       })
-      expect(accessory()).toHaveAttribute("data-yield")
+      expect(accessory()).not.toHaveClass("invisible")
     }
     expect(screen.getByText("Saved Steam")).toBeInTheDocument()
   })

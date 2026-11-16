@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { classifyViewport, detailPlacementFor, viewportWidthFor, type Viewport, type ViewportReading } from "./use-viewport"
+import { SIDEBAR_RAIL_BELOW, classifyViewport, detailPlacementFor, sidebarRailAt, viewportWidthFor, type Viewport, type ViewportReading } from "./use-viewport"
 
 const reading = (width: number, height: number, more: Partial<ViewportReading> = {}): ViewportReading => ({
   width,
@@ -170,5 +170,16 @@ describe("a keyboard", () => {
 describe("a fold", () => {
   it("passes through what the device reports", () => {
     expect(at(669, 867, null, { fold: { kind: "book", sizes: [330, 330] } }).fold).toEqual({ kind: "book", sizes: [330, 330] })
+  })
+})
+
+describe("the sidebar's rail band (Unicron 74)", () => {
+  it("is 1024 to 1099: the expanded width, under 1100", () => {
+    expect(SIDEBAR_RAIL_BELOW).toBe(1100)
+    expect(sidebarRailAt(1023)).toBe(false)
+    expect(sidebarRailAt(1024)).toBe(true)
+    expect(sidebarRailAt(1099)).toBe(true)
+    expect(sidebarRailAt(1100)).toBe(false)
+    expect(sidebarRailAt(1440)).toBe(false)
   })
 })

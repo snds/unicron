@@ -252,11 +252,11 @@ function warnOfSecondCopy() {
  *
  * - Desktop: the bottom left of the content, three at most, in a column.
  * - Phone: the status strip's slot, just above the bottom row, as wide as the strip, one toast at a
- *   time, so the bottom never holds three bars: a second toast waits until the first leaves, and
- *   they come in the order they were raised. A strip with an action (undo send) is never covered: new toasts wait
- *   until it ends, and toasts already up move under the top row. A strip without an action gives
- *   way for the toast's time, then comes back (the frame hides it meanwhile). A needs-you strip
- *   never gives way: toasts sit under the top row instead.
+ *   time: a second toast waits until the first leaves, and they come in the order they were raised.
+ *   A strip that shows (a needs-you request, offline, a sync) stays shown, and the toast stacks just
+ *   above it (Synapse 10, Vale 15), never under the top row, where it covered the page head and the
+ *   switcher. A strip with an action (undo send) is never covered: new toasts wait until it ends,
+ *   and toasts already up move above it.
  *
  * Outside a frame toasts sit --c-toaster-offset from the window's corner (--c-toaster-offset-compact
  * on a phone).
@@ -326,7 +326,7 @@ const Toaster = ({ className, style, toastOptions, id, ...props }: ToasterProps)
 
   React.useEffect(warnOfSecondCopy, [])
 
-  // The frame hides a strip without an action while toasts take its slot.
+  // The frame hears that toasts show (the strip itself stays shown since 1.1; the toast stacks above it).
   const setToastShowing = frame?.setToastShowing
   React.useLayoutEffect(() => {
     if (!setToastShowing) return
@@ -334,14 +334,11 @@ const Toaster = ({ className, style, toastOptions, id, ...props }: ToasterProps)
   }, [showing, setToastShowing])
   React.useEffect(() => () => setToastShowing?.(false), [setToastShowing])
 
-  // Under the top row for a needs-you strip, and for toasts already up when a held strip arrives.
-  const top = placement === "top" || (held && showing)
-
   return (
     <Sonner
       id={id}
       theme={theme as ToasterProps["theme"]}
-      position={top ? "top-left" : "bottom-left"}
+      position="bottom-left"
       visibleToasts={phone ? toasterVisibleToastsPhone : toasterVisibleToasts}
       duration={toastDurations.plain}
       gap={gap}

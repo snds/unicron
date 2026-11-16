@@ -686,10 +686,20 @@ describe("list + detail shrink order (contract 5.1c C8)", () => {
     expect(screen.getByRole("dialog", { name: "Places" })).toBeInTheDocument()
   })
 
-  it("a screen with no detail keeps the full sidebar at the same width", () => {
-    setViewport(1050, 800)
+  it("1024 to 1099 the sidebar is its rail on every screen, a screen with no detail too (Unicron 74)", () => {
+    for (const width of [1024, 1050, 1099]) {
+      setViewport(width, 800)
+      const { unmount } = render(<Screen detail={false} />)
+      expect(frame()).not.toHaveAttribute("data-shrink")
+      expect(sidebar()).toHaveAttribute("data-state", "rail")
+      // Expanding lays the full sidebar over the content as a drawer, as at medium width.
+      fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }))
+      expect(screen.getByRole("dialog", { name: "Places" })).toBeInTheDocument()
+      unmount()
+    }
+    // From 1100 a screen with no detail has the full sidebar again.
+    setViewport(1100, 800)
     render(<Screen detail={false} />)
-    expect(frame()).not.toHaveAttribute("data-shrink")
     expect(sidebar()).toHaveAttribute("data-state", "expanded")
   })
 
@@ -759,5 +769,65 @@ describe("one polite region per frame (contract 5.1c C7)", () => {
     rerender(<Line left={0} announce="Sent." />)
     await tick()
     expect(region).toHaveTextContent("Sent.")
+  })
+})
+
+describe("the missing-theme warning (Unicron 4)", () => {
+  // A fresh copy of the module each time, so its say-it-once flag starts clear.
+  async function freshFrame() {
+    vi.resetModules()
+    return (await import("./app-frame")).AppFrame
+  }
+
+  it("says once, in development, that the core's generic default theme is in use, pointing at the docs", async () => {
+    const Frame = await freshFrame()
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      document.documentElement.removeAttribute("data-theme")
+      const { unmount } = render(<Frame contained>Inbox</Frame>)
+      const said = warn.mock.calls.map((call) => String(call[0])).filter((text) => text.includes("data-theme"))
+      expect(said).toHaveLength(1)
+      expect(said[0]).toContain("generic default theme")
+      expect(said[0]).toContain("docs/05-consuming.md")
+      unmount()
+      render(<Frame contained>Inbox</Frame>)
+      expect(warn.mock.calls.filter((call) => String(call[0]).includes("data-theme"))).toHaveLength(1)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  it("says nothing when the root, or a box around the frame, names a theme", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      let Frame = await freshFrame()
+      document.documentElement.setAttribute("data-theme", "vale")
+      const { unmount } = render(<Frame contained>Inbox</Frame>)
+      unmount()
+      document.documentElement.removeAttribute("data-theme")
+      Frame = await freshFrame()
+      render(
+        <div data-theme="warpcore">
+          <Frame contained>Tasks</Frame>
+        </div>
+      )
+      expect(warn.mock.calls.filter((call) => String(call[0]).includes("data-theme"))).toHaveLength(0)
+    } finally {
+      warn.mockRestore()
+      document.documentElement.removeAttribute("data-theme")
+    }
+  })
+
+  it("says nothing in a production build", async () => {
+    const Frame = await freshFrame()
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    vi.stubEnv("NODE_ENV", "production")
+    try {
+      render(<Frame contained>Inbox</Frame>)
+      expect(warn.mock.calls.filter((call) => String(call[0]).includes("data-theme"))).toHaveLength(0)
+    } finally {
+      vi.unstubAllEnvs()
+      warn.mockRestore()
+    }
   })
 })

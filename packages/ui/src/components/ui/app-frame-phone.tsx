@@ -409,9 +409,9 @@ export type AppFrameAccessoryProps = AccessoryProps & {
  * while a keyboard is up, and on a desktop it draws nothing: live status there is the status
  * line's `StatusItem`. One strip at a time: the app picks it by its priority.
  *
- * Toasts (contract 5.1c C6) take this slot too, and the strip says what it means for them: one
- * with an action (undo send) is never covered, so toasts wait; one without gives way for the
- * toast's time; a needs-you (or critical) strip never gives way, so the toast sits under the top row.
+ * Toasts (contract 5.1c C6) take this slot when it is empty, and the strip says what it means for
+ * them: one with an action (undo send) is never covered, so toasts wait; any other strip (needs-you,
+ * offline, a sync) stays shown, and the toast stacks just above it (Synapse 10, Vale 15).
  */
 function AppFrameAccessory({ scrolledOnly = false, compact, className, ...props }: AppFrameAccessoryProps) {
   const frame = useAppFrame()
@@ -434,19 +434,8 @@ function AppFrameAccessory({ scrolledOnly = false, compact, className, ...props 
 
   if (!shows) return null
 
-  // A strip with no action gives way while a toast takes its slot, then comes back (C6). In the
-  // row it is out of the slot's way, so it stays.
-  const yields = state === "live" && frame.toastShowing && !inRow
-  const strip = (
-    <Accessory
-      compact={compact ?? inRow}
-      className={cn(className, yields && "invisible")}
-      data-yield={yields ? "" : undefined}
-      aria-hidden={yields || undefined}
-      inert={yields || undefined}
-      {...props}
-    />
-  )
+  // The strip stays shown while a toast shows: the toast stacks above it (C6, Vale 15).
+  const strip = <Accessory compact={compact ?? inRow} className={className} {...props} />
   if (slots) {
     const target = inRow ? slots.inside : slots.above
     return target ? createPortal(strip, target) : null

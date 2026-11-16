@@ -166,10 +166,11 @@ describe("SheetHeaderActions", () => {
     const actions = screen.getByTestId("actions")
     expect(actions.getAttribute("data-slot")).toBe("sheet-header-actions")
     const cls = actions.className.split(" ")
-    // 16 + the 48 close + 8 from the right; the close's own top (16, or 20 under a grabber).
-    expect(cls).toEqual(expect.arrayContaining(["top-4", "right-18", "in-data-[side=bottom]:top-5"]))
+    // 16 + the 48 close + 8 from the right; the close's own top (16, or 20 under the adaptive sheet's grabber).
+    expect(cls).toEqual(expect.arrayContaining(["top-4", "right-18", "in-data-[side=adaptive]:max-sm:top-5"]))
+    expect(cls).not.toContain("in-data-[side=bottom]:top-5")
     const anchor = (document.querySelector('[data-slot="sheet-close"]') as HTMLElement).parentElement as HTMLElement
-    expect(anchor.className.split(" ")).toEqual(expect.arrayContaining(["top-4", "right-4", "in-data-[side=bottom]:top-5"]))
+    expect(anchor.className.split(" ")).toEqual(expect.arrayContaining(["top-4", "right-4", "in-data-[side=adaptive]:max-sm:top-5"]))
     expect((document.querySelector('[data-slot="sheet-header"]') as HTMLElement).className).toContain(
       "in-[[data-slot=sheet-content]:has([data-slot=sheet-header-actions])]:pr-33"
     )
@@ -259,14 +260,27 @@ describe("Sheet in the 2026-11 look (Figma 32:122 Sheet Header; Vale 05, Lockdow
     expect(overlay().className.split(" ")).toContain("scrim-sheet")
   })
 
-  it("a bottom sheet draws the 36 x 4 grabber in line-grid-dot, hidden from assistive tech, 8 from the top", () => {
+  it("a plain bottom sheet cannot be dragged, so it draws no grabber; its header is 16 from the top (Unicron 54)", () => {
     render(<Review />)
+    expect(popup().querySelector('[data-slot="sheet-grabber"]')).toBeNull()
+    const cls = popup().className.split(" ")
+    expect(cls).toContain("data-[side=bottom]:pt-4")
+    expect(cls).not.toContain("data-[side=bottom]:pt-2")
+    const anchor = document.querySelector('[data-slot="sheet-close-anchor"]') as HTMLElement
+    expect(anchor.className.split(" ")).toContain("top-4")
+    expect(anchor.className.split(" ")).not.toContain("in-data-[side=bottom]:top-5")
+  })
+
+  it("the adaptive sheet, the one that drags, draws the 36 x 4 grabber in line-grid-dot, hidden from assistive tech", () => {
+    render(
+      <Sheet open>
+        <AdaptiveSheetContent>{header}</AdaptiveSheetContent>
+      </Sheet>
+    )
     const grabber = popup().querySelector('[data-slot="sheet-grabber"]') as HTMLElement
     expect(grabber).toHaveAttribute("aria-hidden")
+    expect(grabber).toHaveAttribute("data-draggable")
     expect((grabber.firstElementChild as HTMLElement).className.split(" ")).toEqual(expect.arrayContaining(["h-1", "w-9", "bg-(--c-sheet-handle)"]))
-    expect(popup().className.split(" ")).toContain("data-[side=bottom]:pt-2")
-    // It is decoration here: only AdaptiveSheetContent drags.
-    expect(grabber).not.toHaveAttribute("data-draggable")
   })
 
   it("a side sheet has no grabber", () => {
@@ -430,7 +444,8 @@ describe("SheetContent notice (contract 5.1c C19)", () => {
     )
     const notice = document.querySelector('[data-slot="sheet-notice"]') as HTMLElement
     expect(notice).toContainElement(screen.getByTestId("line"))
-    expect(notice.className.split(" ")).toEqual(expect.arrayContaining(["-mt-4", "in-data-[side=bottom]:-mt-2", "shrink-0"]))
+    expect(notice.className.split(" ")).toEqual(expect.arrayContaining(["-mt-4", "shrink-0"]))
+    expect(notice.className.split(" ")).not.toContain("in-data-[side=bottom]:-mt-2")
     const anchor = document.querySelector('[data-slot="sheet-close-anchor"]') as HTMLElement
     expect(anchor.className).toContain("top-[calc(var(--size-control)+var(--spacing)*4)]")
     expect(anchor.className.split(" ")).not.toContain("top-4")
@@ -449,7 +464,7 @@ describe("SheetContent notice (contract 5.1c C19)", () => {
     )
     expect(document.querySelector('[data-slot="sheet-notice"]')).toBeNull()
     expect((document.querySelector('[data-slot="sheet-close-anchor"]') as HTMLElement).className.split(" ")).toEqual(
-      expect.arrayContaining(["top-4", "in-data-[side=bottom]:top-5"])
+      expect.arrayContaining(["top-4", "in-data-[side=adaptive]:max-sm:top-5"])
     )
   })
 })

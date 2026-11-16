@@ -97,7 +97,10 @@ export type NeedsYouProps = Omit<React.ComponentProps<"section">, "title"> & {
   more?: number
   /** One sentence on what it is, in body/strong ("Claude Code changed 6 files."). */
   body?: React.ReactNode
-  /** The one solid action: a `Button variant="needs-you"` (size `sm` in the compact line). */
+  /**
+   * The one solid action: a `Button variant="needs-you"`. In the compact line the line sets its
+   * height: 40, and 44 on a coarse pointer (Unicron 88), whatever size the Button asks for.
+   */
   action?: React.ReactNode
   /** The second action, text only: a `Button variant="needs-you-text"`. */
   secondaryAction?: React.ReactNode
@@ -200,8 +203,9 @@ function NeedsYouBlock({
 
 /**
  * The compact line: 48 tall, the yellow, the title (one line, cut with an ellipsis, the whole of
- * it read) and one solid action. It is the layer's needs-you while it shows; it registers with its
- * scope so the full block behind the scrim hides.
+ * it read) and one solid action, 40 high (44 on a coarse pointer: the touch floor, Unicron 88). It
+ * is the layer's needs-you while it shows; it registers with its scope so the full block behind
+ * the scrim hides. Like the block, it is said to a screen reader each time it appears.
  */
 function NeedsYouCompact({
   title,
@@ -245,7 +249,11 @@ function NeedsYouCompact({
         ) : null}
       </p>
       {action ? (
-        <div data-slot="needs-you-actions" className="flex shrink-0 items-center">
+        <div
+          data-slot="needs-you-actions"
+          // The action is 40 high, 44 on touch: a thing that needs a person gets a full-size target.
+          className="flex shrink-0 items-center [&>[data-slot=button]]:h-10 pointer-coarse:[&>[data-slot=button]]:h-touch-min"
+        >
           {action}
         </div>
       ) : null}

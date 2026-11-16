@@ -12,12 +12,14 @@ import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 
 import { cn } from "../../lib/utils"
+import { countdownLeftWords, useCountdownAnnouncement } from "../../lib/countdown-announcement"
 import { formatCountdown } from "../../lib/format"
 import { Icon, type IconName } from "../icon"
 import { useViewport } from "../use-viewport"
 import { Button } from "../ui/button"
 import { Kbd } from "../ui/kbd"
 import { AdaptiveSheetContent, Sheet, SheetHeader, SheetTitle } from "../ui/sheet"
+import { useFrameAnnouncement } from "../ui/app-frame-context"
 import { Spinner } from "../ui/spinner"
 import { TextField } from "../ui/text-field"
 import { readSecondsToken } from "./copy-countdown"
@@ -78,10 +80,32 @@ export const agentPromptCopy: Record<AgentPromptKind, { title: string; icon: Ico
 /** The answer id a typed reply arrives as: `onAnswer("reply", text)`, and `answer="reply"` once sent. */
 export const AGENT_PROMPT_REPLY = "reply"
 
+/**
+ * What the safe answer does, said of the prompt: "Deny" → "Denies", "Stop" → "Stops". Only the
+ * first word changes ("Deny all" → "Denies all").
+ */
+function safeAnswerDoes(answer: string): string {
+  const [first = "", ...rest] = answer.trim().split(/\s+/)
+  let verb: string
+  if (/[^aeiou]y$/i.test(first)) verb = `${first.slice(0, -1)}ies`
+  else if (/(s|sh|ch|x|z)$/i.test(first)) verb = `${first}es`
+  else verb = `${first}s`
+  return [verb, ...rest].join(" ")
+}
+
 /** Words for the deadline, the reply field and sending. */
 export const agentPromptStateCopy = {
-  /** The timer's name: "Deny in 04:59". The visible text is only the time. */
-  safeIn: (answer: string, time: string) => `${answer} in ${time}`,
+  /**
+   * The countdown, on screen and as the timer's name: what happens at zero, then the time
+   * ("Denies in 28:14", written `QUESTION // DENIES IN 28:14` in the overline; Unicron 92).
+   */
+  safeIn: (answer: string, time: string) => `${safeAnswerDoes(answer)} in ${time}`,
+  /**
+   * Said as the countdown reaches one of `announceAt`: "1 minute left. Then it denies." Once each,
+   * never every tick (WCAG 2.2.1, Unicron 33).
+   */
+  timeLeft: (answer: string, secondsLeft: number) => `${countdownLeftWords(secondsLeft)}. Then it ${safeAnswerDoes(answer).toLowerCase()}.`,
+  /** The core's word once time has run out, in every app (Synapse 18: no app's own "Out of time"). */
   timedOut: "Timed out",
   replyLabel: "Your answer",
   send: "Send",
@@ -180,6 +204,12 @@ export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, 
   kind: AgentPromptKind
   /** What the agent wants to do or know: "Run pnpm install in the sandbox". Six lines, then it scrolls. */
   children?: React.ReactNode
+  /**
+   * What the call carries, between the question and the options, read before the choices (Synapse
+   * 18): a `CodeBlock` of its arguments. Not capped: it is as tall as it is (a long block scrolls
+   * inside itself). In the phone's sheet too.
+   */
+  details?: React.ReactNode
   /** Defaults to the kind's own (Deny / Allow once, Stop / Continue). A choice needs its own. */
   options?: readonly AgentPromptOption[]
   /**
@@ -207,6 +237,13 @@ export interface AgentPromptProps extends Omit<React.ComponentProps<"section">, 
   safeAnswer?: string
   /** Time ran out. Default: `onAnswer(safeAnswer)`. A host whose server answers on its own passes a no-op. */
   onExpire?: () => void
+  /**
+   * When the countdown is also said, in seconds left (WCAG 2.2.1: warn before time runs out, Unicron
+   * 33). Each app sets its own: Warpcore `[300, 60]`, Synapse `[60, 30, 10]`. Default `[60]`. Said
+   * once each ("1 minute left. Then it denies."), through the frame's one polite region inside an
+   * AppFrame, else the prompt's own.
+   */
+  announceAt?: readonly number[]
   /**
    * False for an older prompt still on screen; only listening prompts take keys. Default true.
    * It is also the off switch for the single-key answers (WCAG 2.1.4): with `listen={false}` no
@@ -250,9 +287,12 @@ export type AgentPromptPlacement = "adaptive" | "inline"
  * with a hairline) and marks the answer. On a phone the options open in a bottom sheet, or stay in
  * place with `layout="inline"`.
  */
+const DEFAULT_ANNOUNCE_AT: readonly number[] = [60]
+
 export function AgentPrompt({
   kind,
   children,
+  details,
   options: optionsProp,
   overline,
   more,
@@ -265,6 +305,7 @@ export function AgentPrompt({
   expiresAt,
   safeAnswer,
   onExpire,
+  announceAt = DEFAULT_ANNOUNCE_AT,
   listen = true,
   autoFocus = true,
   sendLabel = agentPromptStateCopy.send,
@@ -380,17 +421,20 @@ export function AgentPrompt({
   }, [waiting])
 
   const safeLabel = options.find((o) => o.id === safeAnswer)?.label
+  // The countdown's warnings (Unicron 33): once each, as it reaches the app's marks.
+  const counting = deadline !== undefined && safeLabel !== undefined && waiting && !expired
+  const warning = useCountdownAnnouncement(counting ? (left ?? 0) / 1000 : undefined, announceAt, (s) =>
+    agentPromptStateCopy.timeLeft(safeLabel ?? "", s)
+  )
+  const framed = useFrameAnnouncement(warning, false)
   const ink = asking ? "text-needs-you-on-fill" : "text-text-label"
+  // What happens at zero, then the time: `// DENIES IN 28:14` (Unicron 92).
+  const timerWords = expired ? agentPromptStateCopy.timedOut : safeLabel ? agentPromptStateCopy.safeIn(safeLabel, formatPromptCountdown(left ?? 0)) : ""
   const timer =
     deadline !== undefined && safeLabel && (waiting || expired) ? (
-      <span
-        role="timer"
-        data-slot="agent-prompt-timer"
-        aria-label={expired ? agentPromptStateCopy.timedOut : agentPromptStateCopy.safeIn(safeLabel, formatPromptCountdown(left ?? 0))}
-        className={cn("type-overline", ink)}
-      >
+      <span role="timer" data-slot="agent-prompt-timer" aria-label={timerWords} className={cn("type-overline", ink)}>
         {"// "}
-        {expired ? agentPromptStateCopy.timedOut : formatPromptCountdown(left ?? 0)}
+        {timerWords}
       </span>
     ) : null
   const optionsFor = (onYellow: boolean, inline: boolean) =>
@@ -469,6 +513,12 @@ export function AgentPrompt({
           {children}
         </div>
       ) : null}
+      {details ? (
+        // Not capped (Synapse 18): what the call carries is read whole before the choices.
+        <div data-slot="agent-prompt-details" className="flex min-w-0 flex-col">
+          {details}
+        </div>
+      ) : null}
       {inSheet && waiting ? (
         <>
           <Button variant="needs-you" className="self-start" onClick={() => setSheetOpen(true)}>
@@ -481,6 +531,11 @@ export function AgentPrompt({
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4 pb-4">
                 {children ? <div className="type-body break-words">{children}</div> : null}
+                {details ? (
+                  <div data-slot="agent-prompt-details" className="flex min-w-0 flex-col">
+                    {details}
+                  </div>
+                ) : null}
                 {choices(false)}
               </div>
             </AdaptiveSheetContent>
@@ -490,7 +545,7 @@ export function AgentPrompt({
         choices(asking)
       )}
       <span role="status" className="sr-only">
-        {waiting ? announce : ""}
+        {waiting ? (!framed && warning ? warning : announce) : ""}
       </span>
     </section>
   )
