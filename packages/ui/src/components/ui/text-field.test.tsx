@@ -42,7 +42,10 @@ describe("TextField", () => {
     expect(screen.queryByText("Used for replies from this account.")).toBeNull()
     expect(screen.getByRole("alert")).toHaveTextContent("That isn't an address.")
     expect(root(field)).toHaveAttribute("data-invalid")
-    expect(box(field).className).toContain("has-[[aria-invalid=true]]:[--rule-color:var(--critical-fill)]")
+    expect(box(field).className).toContain("has-[[aria-invalid=true]]:[--rule-color:var(--line-invalid)]")
+    // Unicron 17: focus and invalid borders are the line roles, never the fills (2.59:1 to 2.97:1 on graphite).
+    expect(box(field).className).toContain("focus-within:[--rule-color:var(--line-focus)]")
+    expect(box(field).className).not.toMatch(/critical-fill|primary-fill/)
     expect(screen.getByText("Email").className).toContain("group-data-invalid/text-field:text-critical-text")
   })
 

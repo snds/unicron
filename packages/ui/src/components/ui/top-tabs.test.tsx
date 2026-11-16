@@ -51,7 +51,7 @@ describe("TopTabs and TopTab (Figma 15:498)", () => {
     const tasks = screen.getByRole("link", { name: "Tasks, 1 waiting on you" })
     expect(tasks.querySelector('[data-slot="top-tab-label"]')!.className).toContain("text-text-body")
     const indicator = tasks.querySelector('[data-slot="top-tab-indicator"]')!
-    expect(indicator.className).toContain("bg-primary-fill")
+    expect(indicator.className).toContain("bg-primary-mark")
     expect(indicator.className).not.toMatch(/rounded/)
     expect(tasks.querySelector('[data-slot="nav-mark"]')!.className).toContain("bg-needs-you-fill")
   })
@@ -83,5 +83,28 @@ describe("TopTabs and TopTab (Figma 15:498)", () => {
   it("takes a router link as render", () => {
     render(<TopTab render={<a href="/spend" data-router="" />} label="Spend" />)
     expect(screen.getByRole("link", { name: "Spend" })).toHaveAttribute("data-router")
+  })
+
+  it("a count joins the link's name, as Lockdown's sharing tabs read it ('Requests, 2'); the drawn number is not read twice (Lockdown 30)", () => {
+    render(
+      <TopTabs label="Sharing">
+        <TopTab href="/requests" label="Requests" mark={2} current />
+        <TopTab href="/people" label="People" />
+      </TopTabs>
+    )
+    const requests = screen.getByRole("link", { name: "Requests, 2" })
+    expect(within(requests).getByText("002")).toHaveAttribute("aria-hidden", "true")
+    expect(screen.getByRole("link", { name: "People" })).toBeInTheDocument()
+  })
+
+  it("keepCase keeps a person's name in its own case (Vale 8)", () => {
+    render(
+      <TopTabs label="Team">
+        <TopTab href="/ana" label="Ana McKay" keepCase />
+        <TopTab href="/all" label="All" />
+      </TopTabs>
+    )
+    expect(within(screen.getByRole("link", { name: "Ana McKay" })).getByText("Ana McKay")).toHaveClass("normal-case", "type-overline")
+    expect(within(screen.getByRole("link", { name: "All" })).getByText("All")).not.toHaveClass("normal-case")
   })
 })

@@ -24,9 +24,10 @@
 //       A component knob for a corner (a dimension whose last name part is `radius`: `x-radius`
 //       or `x.radius`) is the one 2px corner: it must be the bare reference `{radius}`, so no
 //       component draws a rounder part.
-//   (t) Theme files (tokens/themes/<app>.json) hold the theme slots of global.json, all of them
-//       and nothing else: a raw six-digit hex each, with the Figma variable id in `$description`.
-//       The defaults in global.json follow the same rule.
+//   (t) The theme slots in global.json (Unicron's default theme, 28 of them): a raw six-digit hex
+//       each, with where it came from in `$description`: the Figma variable id, or, until Figma
+//       has a Default mode, the words "Not in Figma yet" and the OKLCH it was solved as. No app's
+//       theme lives in the core (Unicron 1): tokens/themes/ must not exist.
 //   (y) Type roles (tokens/type.json) are typography composites: the family is a `{font.*}`
 //       reference; size and line height are px, the line height a multiple of 4; letter spacing
 //       is em; the weight is one of the four the fonts ship.
@@ -175,36 +176,25 @@ for (const tier of tiers) {
   }
 }
 
-// ── (t) theme files ───────────────────────────────────────────────────────────────────────────
-// The app axis is tier 1: raw values, one per Figma primitive. A slot is a six-digit hex, written
-// as Figma writes it, and says which Figma variable it came from.
+// ── (t) theme slots ───────────────────────────────────────────────────────────────────────────
+// The theme axis is tier 1: raw values, one per Figma primitive. A slot is a six-digit hex, written
+// as Figma writes it, and says where it came from.
 const HEX = /^#[0-9A-F]{6}$/
-const FIGMA_ID = /VariableID:\d+:\d+/
 function checkSlot(file, dotted, token) {
   if (token.$type !== "color") fail(`${file} ${dotted}`, `a theme slot is a colour, got $type ${JSON.stringify(token.$type)}`)
   if (typeof token.$value !== "string" || !HEX.test(token.$value)) {
     fail(`${file} ${dotted}`, `a theme slot is a raw six-digit hex in capitals, as Figma writes it; got ${JSON.stringify(token.$value)}`)
   }
-  if (!FIGMA_ID.test(token.$description ?? "")) fail(`${file} ${dotted}`, "$description must name the Figma variable the value came from (VariableID:…)")
+  const said = token.$description ?? ""
+  if (!/VariableID:\d+:\d+/.test(said) && !(/Not in Figma yet/.test(said) && /oklch\(/.test(said))) {
+    fail(`${file} ${dotted}`, "$description must name the Figma variable the value came from (VariableID:…), or say \"Not in Figma yet\" with the oklch() it was solved as")
+  }
 }
 const defaultSlots = tiers[0].tokens.filter((t) => t.path[0] === "theme")
 const slotPaths = defaultSlots.map((t) => t.path.join("."))
+if (slotPaths.length !== 28) fail("global.json theme", `expected the 28 theme slots, found ${slotPaths.length}`)
 for (const { path: p, token } of defaultSlots) checkSlot("global.json", p.join("."), token)
-const themeFiles = jsonFiles(path.join(tokensRoot, "tokens", "themes"))
-if (!themeFiles.length) fail("tokens/themes", "no app theme files found")
-for (const file of themeFiles) {
-  const json = readTokens(file)
-  const app = path.basename(file, ".json")
-  if (json.$extensions?.["unicron.app"]?.name !== app) fail(file, `$extensions["unicron.app"].name must be "${app}", the file's own name`)
-  const slots = flatten(json)
-  const paths = slots.map((t) => t.path.join("."))
-  for (const missing of slotPaths.filter((q) => !paths.includes(q))) fail(file, `missing theme slot ${missing}`)
-  for (const { path: q, token } of slots) {
-    const dotted = q.join(".")
-    if (!slotPaths.includes(dotted)) fail(`${file} ${dotted}`, "not a theme slot of global.json; a theme file holds the slots and nothing else")
-    else checkSlot(file, dotted, token)
-  }
-}
+if (fs.existsSync(path.join(tokensRoot, "tokens", "themes"))) fail("tokens/themes", "no app's theme lives in the core (Unicron 1): an app declares its 28 slots in its own layer")
 
 // ── (y) type roles ────────────────────────────────────────────────────────────────────────────
 const TYPE_KEYS = ["fontFamily", "fontWeight", "fontSize", "lineHeight", "letterSpacing"]
@@ -294,7 +284,13 @@ const CLASS_RULES = [
   [/(?<![\w-])(?:inset-)?shadow-(?!none(?![\w-])|\[inset_)[\w[(][^\s"'`]*/g, "a shadow; surfaces are solid with a 1px rule (shadow-none and a token-built shadow-[inset_…] stroke are fine)"],
 ]
 // `rounded-full` by name: file, how many times, and why it is round.
-const ROUND_ALLOWED = []
+const ROUND_ALLOWED = [
+  {
+    file: "packages/ui/src/components/ui/radio-group.tsx",
+    count: 2,
+    why: "the radio and its dot: the one round control (Unicron 41), so one choice of many never looks like a checkbox",
+  },
+]
 const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
 // An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not
 // inside var(…) or --spacing(…).
@@ -343,6 +339,6 @@ if (errors.length) {
 }
 console.log(
   `✓ token lint: ${checked} tier-2/3 tokens alias lower tiers (${TIERS[2].files.length} component file${TIERS[2].files.length === 1 ? "" : "s"}); ` +
-    `${themeFiles.length} theme files hold the ${slotPaths.length} slots; ${typeTokens.length} type roles; ` +
+    `the default theme holds the ${slotPaths.length} slots, and no app's theme is in the core; ${typeTokens.length} type roles; ` +
     `${files.length} files in packages/ui/src carry no colour literals, ${motionFiles} carry no motion literals, ${classFiles} carry no raw values in their classes`
 )

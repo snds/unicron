@@ -47,7 +47,7 @@ const tile = cva(
       },
       interactive: {
         // Opaque hover and press, as on any raised control (contract §6.1).
-        true: "text-left hover:bg-accent active:bg-[color-mix(in_oklab,var(--text-body)_10%,var(--surface-raised))]",
+        true: "text-left hover:bg-accent active:bg-[color-mix(in_oklab,var(--text-body)_6%,var(--surface-raised))]",
         false: "",
       },
       // Selected: the 2px box in the primary fill, never a solid fill (rules 2.5.3).

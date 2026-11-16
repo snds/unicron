@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 import type * as React from "react"
 
 import { AdaptiveMenuItem } from "../ui/adaptive"
+import { AppFrameAnnounceContext } from "../ui/app-frame-context"
 import { CrownJewelSurface } from "./crown-jewel"
 import {
   SecretField,
@@ -194,6 +195,26 @@ describe("SecretField read mode: the value never sits in the DOM while masked", 
 })
 
 describe("SecretField copy: through the host, with a countdown and a conditional clear", () => {
+  it("inside an AppFrame says the copy's countdown through the frame's one region, not its own (Unicron 33)", async () => {
+    const said: string[] = []
+    const host = fakeHost()
+    render(
+      <AppFrameAnnounceContext.Provider value={(message) => said.push(message)}>
+        <SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={host} />
+      </AppFrameAnnounceContext.Provider>
+    )
+    fireEvent.click(copyButton())
+    await untilCalled(host.copy)
+    await settle()
+    expect(said).toEqual([secretFieldAnnouncements.copied(30)])
+    expect(screen.getByRole("status")).not.toHaveTextContent(secretFieldAnnouncements.copied(30))
+    await advance(30_000)
+    await untilCalled(host.clear)
+    await settle()
+    expect(said).toEqual([secretFieldAnnouncements.copied(30), secretFieldAnnouncements.cleared])
+    expect(screen.getByRole("status")).not.toHaveTextContent(secretFieldAnnouncements.cleared)
+  })
+
   it("hands the bytes to the host, counts down, and clears only when the clipboard still holds our value", async () => {
     const clipboardHolds = vi.fn((_hash: string) => Promise.resolve(true))
     const host = fakeHost({ clipboardHolds })
@@ -798,7 +819,7 @@ describe("SecretField 1.0: edit mode in the Text Field box", () => {
     expect(box).toHaveClass("bg-surface-raised", "rule-box", "focus-within:rule-box-emphasis", "min-h-control")
     rerender(<SecretField mode="edit" label="Password" value="" onChange={() => {}} error="That isn't the master password." />)
     expect(box).toHaveClass("rule-box-emphasis")
-    expect(box.className).toContain("[--rule-color:var(--critical-fill)]")
+    expect(box.className).toContain("[--rule-color:var(--line-invalid)]")
     expect(screen.getByRole("alert")).toHaveTextContent("That isn't the master password.")
     expect(screen.getByLabelText("Password")).toHaveAttribute("aria-invalid", "true")
   })

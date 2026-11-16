@@ -87,7 +87,7 @@ describe("Checkbox", () => {
     expect(box).toContain("hit-area")
     expect(box.some((c) => /(^|:)outline-(none|hidden)$/.test(c) || c.startsWith("focus-visible:"))).toBe(false)
     // Invalid: a 2px inside edge in the critical fill, as an invalid field has.
-    expect(box).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-critical-fill"]))
+    expect(box).toEqual(expect.arrayContaining(["aria-invalid:inset-ring-2", "aria-invalid:inset-ring-(--line-invalid)"]))
   })
 
   it("disabled takes no press and says so", () => {

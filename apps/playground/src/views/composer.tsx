@@ -21,7 +21,7 @@ export default function ComposerView() {
 
   return (
     <div className="flex flex-col gap-10 p-6">
-      <Specimen label="Empty // Figma 32:91, the send button off">
+      <Specimen label="Empty // Send dimmed to 50%, still reached by Tab, a press does nothing (Unicron 51)">
         <Composer placeholder="Reply to Mira" onSend={(text) => setSent(text)} />
       </Specimen>
 

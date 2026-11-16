@@ -146,7 +146,7 @@ export default function ListRowView() {
         <ListRow
           href="#steam"
           title="Steam"
-          marks={<Icon name="star--filled" size="sm" label="Favourite" />}
+          marks={<Icon name="star" size="sm" label="Favourite" />}
           meta="store.steampowered.com"
           metaStyle="plain"
           status="Passkey + code"
@@ -189,6 +189,15 @@ export default function ListRowView() {
           preview="Booked the two-bedroom. Check-in is after 3."
           onClick={() => undefined}
         />
+      </Specimen>
+
+      <Specimen label="Status mark // a 270 column: the status as a mark, its word in the row's description (Warpcore 18)" wide={false}>
+        <div className="flex w-68 flex-col">
+          <ListRow size="compact" href="#chat-14" title="Promote the staging build" statusMark={{ icon: "time", label: "Waiting on you", tone: "needs-you" }} />
+          <ListRow size="compact" href="#chat-13" title="Rename the spend export" statusMark={{ icon: "renew", label: "Running", tone: "live" }} />
+          <ListRow size="compact" href="#chat-12" title="Retry the nightly deploy" statusMark={{ icon: "warning", label: "Failed", tone: "critical" }} />
+          <ListRow size="compact" href="#chat-11" title="Draft the November brief" statusMark={{ icon: "checkmark", label: "Done" }} />
+        </div>
       </Specimen>
     </div>
   )

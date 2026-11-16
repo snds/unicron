@@ -1,5 +1,6 @@
 // The adaptive layers: one component, a dialog, a menu or a popover on a desktop and a bottom
-// sheet on a phone (by the useViewport width class; fixed here to show both). View: ?view=adaptive
+// sheet on a phone (by the useViewport width class; fixed here to show both). Their phone sheets
+// do not drag, so they draw no grabber (Unicron 54). View: ?view=adaptive
 import {
   AdaptiveDialog,
   AdaptiveMenu,

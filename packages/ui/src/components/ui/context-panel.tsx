@@ -202,7 +202,10 @@ function ContextPanel({
           data-slot="context-panel-tabs"
           role="tablist"
           aria-label={label}
-          className="flex min-w-0 flex-1 flex-wrap items-center gap-1"
+          // One line that scrolls sideways, as a scrolling FilterChipGroup: with three-digit counts
+          // (Unicron 13) four tabs no longer fit a 400 panel, and wrapping pushed the panel down.
+          // Room above and below keeps a 44px touch target unclipped.
+          className="no-scrollbar flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain pointer-coarse:-my-2.5 pointer-coarse:py-2.5"
           onKeyDown={(event) => {
             const items = Array.from(listRef.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [])
             const target = rovingTarget(items, document.activeElement as HTMLElement | null, event.key, "horizontal")

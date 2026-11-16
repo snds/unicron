@@ -67,7 +67,7 @@ const PLAIN_TAGS = new Set(["div", "span", "section", "article"])
 const ROW_STATES = cn(
   "[a,button]:hover:bg-state-hover [a,button]:active:bg-state-pressed has-[>[data-slot=item-main]:hover]:bg-state-hover has-[>[data-slot=item-main]:active]:bg-state-pressed",
   // A selected row under the pointer keeps its soft fill with the wash laid on it.
-  "data-[selected=true]:bg-primary-soft data-[selected=true]:edge-l [a,button]:data-[selected=true]:hover:bg-[color-mix(in_oklab,var(--primary-soft),var(--text-body)_6%)] [a,button]:data-[selected=true]:active:bg-[color-mix(in_oklab,var(--primary-soft),var(--text-body)_10%)]",
+  "data-[selected=true]:bg-primary-soft data-[selected=true]:edge-l [a,button]:data-[selected=true]:hover:bg-[color-mix(in_oklab,var(--primary-soft),var(--text-body)_4%)] [a,button]:data-[selected=true]:active:bg-[color-mix(in_oklab,var(--primary-soft),var(--text-body)_6%)]",
   "focus-visible:-outline-offset-2 has-[>[data-slot=item-main]:focus-visible]:outline-2 has-[>[data-slot=item-main]:focus-visible]:-outline-offset-2 has-[>[data-slot=item-main]:focus-visible]:outline-ring",
   // A row that is the control (a link, a button, or one whose ItemMain covers it) is never under
   // the 44px touch minimum on a coarse pointer, whatever its size (contract 6.6).

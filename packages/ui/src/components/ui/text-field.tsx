@@ -120,8 +120,8 @@ function setRef<T>(ref: React.Ref<T> | undefined, value: T | null) {
 /**
  * Text Field (Figma 32:48): the overline label, the box (raised, a 1px rule inside it, at least
  * 48 tall, 12 / 16 in), the value in the `ui` role, and a caption under it. Focus draws Figma's
- * 2px inside border in the primary fill and no outer ring; an error draws it in the critical
- * fill and turns the label and the help critical. `multiline` grows with its text from 6 lines.
+ * 2px inside border in the focus line (`--line-focus`) and no outer ring; an error draws it in
+ * the invalid line (`--line-invalid`) and turns the label and the help critical. `multiline` grows with its text from 6 lines.
  * `type="number"` adds − and + steppers. `leading` and `trailing` hold an icon or a small button.
  */
 function TextField(props: TextFieldProps) {

@@ -226,7 +226,132 @@ describe("AppFrameSidebar", () => {
   })
 })
 
+describe("AppFrameSwitcher's accounts (Unicron 73)", () => {
+  const WORKSPACES = [
+    { value: "personal", label: "Personal" },
+    { value: "studio", label: "Studio", detail: "build-01" },
+    { value: "client", label: "Client work" },
+  ]
+  function Switcher({ onValueChange, onAdd }: { onValueChange: (v: string) => void; onAdd?: () => void }) {
+    const [value, setValue] = React.useState("personal")
+    return (
+      <AppFrameSwitcher
+        overline="Workspace"
+        title={WORKSPACES.find((w) => w.value === value)!.label}
+        label="Switch workspace"
+        accountsLabel="Workspaces"
+        accounts={WORKSPACES}
+        value={value}
+        onValueChange={(v) => {
+          setValue(v)
+          onValueChange(v)
+        }}
+        add={onAdd ? { label: "Add a workspace…", onClick: onAdd } : undefined}
+      />
+    )
+  }
+
+  it("is a menu of radio items: the open one checked; the arrow keys only move; Enter switches", async () => {
+    const onValueChange = vi.fn()
+    render(<Switcher onValueChange={onValueChange} onAdd={() => {}} />)
+    const trigger = screen.getByRole("button", { name: "Switch workspace" })
+    expect(trigger).toHaveAttribute("aria-haspopup", "menu")
+    fireEvent.click(trigger)
+    const menu = await screen.findByRole("menu")
+    const group = screen.getByRole("group", { name: "Workspaces" })
+    expect(menu).toContainElement(group)
+    const items = screen.getAllByRole("menuitemradio")
+    expect(items.map((el) => el.textContent)).toEqual(["Personal", "Studiobuild-01", "Client work"])
+    expect(items[0]).toHaveAttribute("aria-checked", "true")
+    expect(screen.getByRole("menuitem", { name: "Add a workspace…" })).toBeInTheDocument()
+    // Moving over another account loads nothing.
+    fireEvent.keyDown(document.activeElement ?? menu, { key: "ArrowDown" })
+    fireEvent.keyDown(document.activeElement ?? menu, { key: "ArrowDown" })
+    expect(onValueChange).not.toHaveBeenCalled()
+    expect(screen.getByText("Personal", { selector: '[data-slot="app-frame-switcher-title"]' })).toBeInTheDocument()
+    // A press (Enter, Space or a click) on one switches to it.
+    fireEvent.click(items[1])
+    expect(onValueChange).toHaveBeenCalledTimes(1)
+    expect(onValueChange).toHaveBeenCalledWith("studio")
+    expect(screen.getByText("Studio", { selector: '[data-slot="app-frame-switcher-title"]' })).toBeInTheDocument()
+  })
+
+  it("a press on the open account switches nothing", async () => {
+    const onValueChange = vi.fn()
+    render(<Switcher onValueChange={onValueChange} />)
+    fireEvent.click(screen.getByRole("button", { name: "Switch workspace" }))
+    const items = await screen.findAllByRole("menuitemradio")
+    fireEvent.click(items[0])
+    expect(onValueChange).not.toHaveBeenCalled()
+  })
+})
+
+describe("the sidebar primary's quick create (Unicron 48)", () => {
+  it("answers Shift+F10, the context-menu key and a right click; not Shift+Enter; a key's own context-menu event is not a second press", () => {
+    setViewport(1440, 900)
+    const onLongPress = vi.fn()
+    const onClick = vi.fn()
+    render(<Sidebar action={{ label: "New skill", icon: "add", onClick, onLongPress }} />)
+    const button = screen.getByRole("button", { name: "New skill" })
+    expect(button).toHaveAttribute("aria-keyshortcuts", "Shift+F10 ContextMenu")
+    fireEvent.keyDown(button, { key: "F10", shiftKey: true })
+    expect(onLongPress).toHaveBeenCalledTimes(1)
+    // The browser's own context-menu event right after the key is the same press.
+    fireEvent.contextMenu(button)
+    expect(onLongPress).toHaveBeenCalledTimes(1)
+    fireEvent.keyDown(button, { key: "ContextMenu" })
+    expect(onLongPress).toHaveBeenCalledTimes(2)
+    fireEvent.keyDown(button, { key: "Enter", shiftKey: true })
+    expect(onLongPress).toHaveBeenCalledTimes(2)
+    fireEvent.keyDown(button, { key: "F10" })
+    expect(onLongPress).toHaveBeenCalledTimes(2)
+  })
+
+  it("a right click on its own runs it", () => {
+    setViewport(1440, 900)
+    const onLongPress = vi.fn()
+    render(<Sidebar action={{ label: "New skill", icon: "add", onLongPress }} />)
+    const event = fireEvent.contextMenu(screen.getByRole("button", { name: "New skill" }))
+    expect(event).toBe(false)
+    expect(onLongPress).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe("StatusItem (contract 5.1b #4)", () => {
+  it("warns at the app's marks as its countdown runs, once each (Unicron 33)", () => {
+    const { rerender } = render(<StatusItem tone="live" text="Unlocked" countdown={302} announceAt={[300, 60]} announce="Unlocked." />)
+    const status = () => screen.getByRole("status")
+    expect(status()).toHaveTextContent("Unlocked.")
+    rerender(<StatusItem tone="live" text="Unlocked" countdown={301} announceAt={[300, 60]} announce="Unlocked." />)
+    expect(status()).toHaveTextContent("Unlocked.")
+    rerender(<StatusItem tone="live" text="Unlocked" countdown={300} announceAt={[300, 60]} announce="Unlocked." />)
+    expect(status()).toHaveTextContent("Unlocked, 5 minutes left")
+    rerender(<StatusItem tone="live" text="Unlocked" countdown={200} announceAt={[300, 60]} announce="Unlocked." />)
+    expect(status()).toHaveTextContent("Unlocked, 5 minutes left")
+    // A tick that skips past a mark still says it.
+    rerender(<StatusItem tone="live" text="Unlocked" countdown={58} announceAt={[300, 60]} announce="Unlocked." />)
+    expect(status()).toHaveTextContent("Unlocked, 1 minute left")
+  })
+
+  it("in a frame, says its warnings in the frame's one region", async () => {
+    setViewport(1440, 900)
+    const Frame = ({ left }: { left: number }) => (
+      <AppFrame>
+        <AppFrameStatusLine crumbs={[{ label: "Tasks" }]}>
+          <StatusItem tone="live" text="Spend" countdown={left} announceAt={[60]} />
+        </AppFrameStatusLine>
+        <AppFrameMain />
+      </AppFrame>
+    )
+    const { rerender } = render(<Frame left={61} />)
+    rerender(<Frame left={60} />)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    expect(document.querySelector('[data-slot="app-frame-announcer"]')).toHaveTextContent("Spend, 1 minute left")
+    expect(document.querySelector('[data-slot="status-item-status"]')).toBeNull()
+  })
+
   it("writes countdowns as decisions §13 does", () => {
     expect(formatCountdown(8)).toBe("08 S")
     // A part of a second still to go counts as a second: 59.2 left reads a full minute.

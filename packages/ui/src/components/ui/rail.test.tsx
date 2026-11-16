@@ -5,13 +5,14 @@ import { describe, expect, it, vi } from "vitest"
 import { NavMark, Rail, RailItem, formatNavCount, markKeyShortcuts, nameWithMark, railItemVariants, resolveNavMark, rovingTarget } from "./rail"
 
 describe("the nav mark (contract 5.1b #7)", () => {
-  it("writes counts as cross-app decisions §13 does: 07, 12, 248, 1,204; 99+ at an icon's corner", () => {
-    expect(formatNavCount(7)).toBe("07")
-    expect(formatNavCount(12)).toBe("12")
+  it("writes counts as cross-app decisions §13 does: 007, 012, 248, 1,204; at an icon's corner 07 and 99+", () => {
+    expect(formatNavCount(7)).toBe("007")
+    expect(formatNavCount(12)).toBe("012")
     expect(formatNavCount(248)).toBe("248")
     expect(formatNavCount(1204)).toBe("1,204")
     expect(formatNavCount(1204, { cap: true })).toBe("99+")
     expect(formatNavCount(99, { cap: true })).toBe("99")
+    expect(formatNavCount(7, { cap: true })).toBe("07")
   })
 
   it("reads a number, a count, a square and a key, and draws nothing for 0", () => {

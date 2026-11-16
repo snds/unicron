@@ -43,8 +43,25 @@ describe("FloatButton (Figma 20:1690)", () => {
     for (const props of [{ kind: "neutral" }, { kind: "primary" }, { current: true }] as const) {
       const fills = classesOf(props).filter((c) => /(^|:)bg-/.test(c))
       expect(fills.length).toBeGreaterThanOrEqual(3)
-      // No alpha modifier (bg-primary/90) and no translucent wash role.
-      for (const fill of fills) expect(fill).not.toMatch(/\/\d+$|state-(hover|pressed)/)
+      // No alpha modifier (bg-primary/90) and no translucent wash role as a colour. A wash may only
+      // be a layer (a background image) over an opaque colour set for the same state.
+      for (const fill of fills) {
+        if (fill.includes("bg-[image:")) {
+          const state = fill.slice(0, fill.indexOf("bg-["))
+          expect(fills).toContain(`${state}bg-surface-raised`)
+        } else expect(fill).not.toMatch(/\/\d+$|state-(hover|pressed)/)
+      }
+    }
+  })
+
+  it("pressed: the neutral kind lays the state-pressed role on the raised surface; the primary fill goes to 85%, the inverted ink to 86% (Unicron 28)", () => {
+    expect(classesOf({ kind: "neutral" })).toEqual(
+      expect.arrayContaining(["active:bg-surface-raised", "active:bg-[image:linear-gradient(var(--state-pressed),var(--state-pressed))]"])
+    )
+    expect(classesOf({ kind: "primary" })).toContain("active:bg-[color-mix(in_oklab,var(--primary)_85%,var(--background))]")
+    expect(classesOf({ current: true })).toContain("active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]")
+    for (const props of [{ kind: "neutral" }, { kind: "primary" }, { current: true }] as const) {
+      expect(classesOf(props).some((c) => c.includes("80%") || c.includes("10%"))).toBe(false)
     }
   })
 
@@ -154,7 +171,7 @@ describe("FloatButton (Figma 20:1690)", () => {
     render(<FloatButton label="Approve" icon="checkmark" kind="primary" extended onLongPress={onLongPress} />)
     const button = screen.getByRole("button", { name: "Approve" })
     expect(button).toHaveAttribute("aria-keyshortcuts", floatButtonLongPressKeys)
-    fireEvent.keyDown(button, { key: "Enter", shiftKey: true })
+    fireEvent.keyDown(button, { key: "F10", shiftKey: true })
     expect(onLongPress).toHaveBeenCalledTimes(1)
   })
 
@@ -323,14 +340,36 @@ describe("FloatButton long press", () => {
     expect(onLongPress).not.toHaveBeenCalled()
   })
 
-  it("the same action runs from the keyboard on Shift+Enter, without the click", () => {
+  it("the same action runs from the keyboard on Shift+F10 and the context-menu key, without the click (Unicron 48)", () => {
     const { button, onClick, onLongPress } = setup()
-    expect(fireEvent.keyDown(button, { key: "Enter", shiftKey: true })).toBe(false)
+    expect(floatButtonLongPressKeys).toBe("Shift+F10 ContextMenu")
+    expect(fireEvent.keyDown(button, { key: "F10", shiftKey: true })).toBe(false)
     expect(onLongPress).toHaveBeenCalledTimes(1)
+    fireEvent.keyUp(button, { key: "F10", shiftKey: true })
+    expect(fireEvent.keyDown(button, { key: "ContextMenu" })).toBe(false)
+    expect(onLongPress).toHaveBeenCalledTimes(2)
+    fireEvent.keyUp(button, { key: "ContextMenu" })
     expect(onClick).not.toHaveBeenCalled()
-    // Plain Enter is still the button's own action, and a held key does not repeat the long press.
-    fireEvent.keyDown(button, { key: "Enter", shiftKey: true, repeat: true })
+    // A held key does not repeat the long press.
+    fireEvent.keyDown(button, { key: "F10", shiftKey: true, repeat: true })
+    expect(onLongPress).toHaveBeenCalledTimes(2)
+  })
+
+  it("Shift+Enter is no longer a long press: it is the button's own Enter, and F10 alone does nothing (Unicron 48)", () => {
+    const { button, onLongPress } = setup()
+    expect(fireEvent.keyDown(button, { key: "Enter", shiftKey: true })).toBe(true)
+    expect(fireEvent.keyDown(button, { key: "F10" })).toBe(true)
+    expect(onLongPress).not.toHaveBeenCalled()
+  })
+
+  it("the context menu that the key raises after it runs nothing more", () => {
+    const { button, onLongPress } = setup()
+    fireEvent.keyDown(button, { key: "ContextMenu" })
+    expect(fireEvent.contextMenu(button)).toBe(false)
     expect(onLongPress).toHaveBeenCalledTimes(1)
+    // A later right click is its own long press again.
+    fireEvent.contextMenu(button)
+    expect(onLongPress).toHaveBeenCalledTimes(2)
   })
 
   it("and from the context-menu key or a right click, with the browser's own menu held back", () => {
@@ -351,7 +390,7 @@ describe("FloatButton long press", () => {
     const onPointerDown = vi.fn()
     const { button } = setup({ onPointerDown })
     expect(button).toHaveAttribute("aria-keyshortcuts", floatButtonLongPressKeys)
-    expect(button).toHaveAccessibleDescription(`Quick create: hold, or press ${floatButtonLongPressKeys}`)
+    expect(button).toHaveAccessibleDescription("Quick create: hold, or press Shift+F10 or the menu key")
     // The description is not part of the name.
     expect(button).toHaveAccessibleName("Create")
     fireEvent.pointerDown(button, { button: 0, clientX: 20, clientY: 20 })

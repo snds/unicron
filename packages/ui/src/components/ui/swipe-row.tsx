@@ -20,6 +20,12 @@ export type SwipeActionTone = "primary" | "neutral" | "needs-you"
 interface SwipeRowActionBase {
   /** The words on the tile and in the row's menu, in sentence case ("Archive"). The tile sets the capitals. */
   label: string
+  /**
+   * The full words for the row's menu and for the tile's accessible name, where the tile has room
+   * only for a short one: the tile says "Fix", the menu and a screen reader "Fix with Claude Code"
+   * (Synapse 21). Default: `label`.
+   */
+  menuLabel?: string
   /** A Carbon name, drawn at 20 px above the label. */
   icon: IconName
   /** Default: `primary` for the outermost trailing action and for the leading one, `neutral` for the rest. */
@@ -74,11 +80,11 @@ const swipeActionVariants = cva(
   {
     variants: {
       tone: {
-        // The outermost action, which a full swipe runs: the identity fill. Pressed is the fill at 80%.
-        primary: "bg-primary text-primary-foreground active:bg-primary/80",
+        // The outermost action, which a full swipe runs: the identity fill. Pressed is the fill at 85%, as every solid.
+        primary: "bg-primary text-primary-foreground active:bg-primary/85",
         // Raised surface, a hairline on its left, ink. Pressed is the pressed wash laid on the
         // surface, so the tile stays opaque over the row's ground.
-        neutral: "rule-l bg-surface-raised text-foreground active:bg-[color-mix(in_oklab,var(--text-body)_10%,var(--surface-raised))]",
+        neutral: "rule-l bg-surface-raised text-foreground active:bg-[color-mix(in_oklab,var(--text-body)_6%,var(--surface-raised))]",
         // The yellow. Figma draws the tone and does not say what it is for: an approval's tile,
         // which only ever opens its review. Focus inside it takes the yellow's ink.
         "needs-you": "on-needs-you bg-needs-you-fill text-needs-you-on-fill",
@@ -141,7 +147,7 @@ function SwipeRowMenuItems({ menu }: { menu: SwipeRowMenuValue }) {
   return menu.actions.map((action, i) => (
     <DropdownMenuItem key={`${i}-${action.label}`} disabled={action.disabled} onClick={() => menu.activate(action)}>
       <Icon name={action.icon} />
-      {action.label}
+      {action.menuLabel ?? action.label}
     </DropdownMenuItem>
   ))
 }
@@ -168,6 +174,25 @@ interface Measure {
   edge: number
   snap: number
   full: number
+}
+
+/**
+ * How many tiles on a side make it crowded: with three, the open tiles (3 × 80 = 240) already reach
+ * the 60% line on a phone (234 at 390), so opening the row to choose would also run the outermost
+ * action (Lockdown 18, Unicron gap 3).
+ */
+export const swipeRowCrowdedTiles = 3
+
+/**
+ * Where a full swipe starts, in px of travel, on a side with `count` tiles. Normally `full` of the
+ * row's width. On a crowded side it is raised to at least one more tile past the open tiles (320 at
+ * 390 for three), and never past the row's own width, so a full swipe stays possible but is never
+ * the same move as opening the row.
+ */
+function fullLine(d: Measure, count: number): number {
+  const line = d.full * d.width
+  if (count < swipeRowCrowdedTiles) return line
+  return Math.max(line, Math.min(count * d.tile + d.tile, d.width))
 }
 
 function measure(el: HTMLElement): Measure {
@@ -217,7 +242,9 @@ export type SwipeRowProps = Omit<React.ComponentProps<"div">, "children"> & {
  *
  * - A left swipe reveals `trailing`; past half their width the row snaps open, under it it closes.
  *   Past 60% of the row's width a full swipe runs the outermost action, only when it is
- *   `reversible`; otherwise the row opens and stops. A right swipe reaches `leading` the same way,
+ *   `reversible`; otherwise the row opens and stops. A side with three tiles or more raises that
+ *   line to one tile past the open tiles (at most the row's width), so opening it is never a full
+ *   swipe by accident (Lockdown 18). A right swipe reaches `leading` the same way,
  *   and only when it starts 24 px clear of the screen's left edge (the system's back gesture).
  * - An action marked `confirm` (an approval) is never run by the row: every way in opens its review.
  * - Past the furthest it may go the row resists (`rubberBand`). It settles on the spring-settle
@@ -339,7 +366,7 @@ function SwipeRow({
     const travel = Math.abs(at)
     const open = side.length * d.tile
     const last = at < 0 ? outer : leading
-    if (d.width > 0 && travel >= d.full * d.width && takesFullSwipe(last)) {
+    if (d.width > 0 && travel >= fullLine(d, side.length) && takesFullSwipe(last)) {
       close()
       activate(last)
       return
@@ -411,7 +438,8 @@ function SwipeRow({
       const next = constrain(d.base + dx - d.shift, d)
       setOffset(next)
       // Past the full-swipe line, on an action a full swipe may finish: the row says so.
-      setArmed(d.width > 0 && Math.abs(next) >= d.full * d.width && takesFullSwipe(next < 0 ? outer : leading))
+      const count = next < 0 ? trailing.length : leading ? 1 : 0
+      setArmed(d.width > 0 && Math.abs(next) >= fullLine(d, count) && takesFullSwipe(next < 0 ? outer : leading))
     },
     onPointerUp(event: React.PointerEvent<HTMLDivElement>) {
       onPointerUp?.(event)
@@ -492,6 +520,7 @@ function SwipeRow({
                 tone={leading.tone ?? "primary"}
                 icon={leading.icon}
                 label={leading.label}
+                aria-label={leading.menuLabel}
                 disabled={leading.disabled}
                 tabIndex={-1}
                 grow
@@ -516,6 +545,7 @@ function SwipeRow({
                       tone={action.tone ?? (isOuter ? "primary" : "neutral")}
                       icon={action.icon}
                       label={action.label}
+                      aria-label={action.menuLabel}
                       disabled={action.disabled}
                       tabIndex={-1}
                       grow={isOuter}

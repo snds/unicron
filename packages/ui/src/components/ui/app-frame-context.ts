@@ -5,7 +5,7 @@
 import * as React from "react"
 
 import { readLength } from "../../lib/length"
-import { classifyViewport, useViewport, type Viewport, type ViewportWidth } from "../use-viewport"
+import { classifyViewport, sidebarRailAt, useViewport, type Viewport, type ViewportWidth } from "../use-viewport"
 import type { PageHeadSwitcher } from "./page-head"
 
 /**
@@ -51,12 +51,20 @@ export const MINIMIZE_RESTORE_AT = 1
 const MINIMIZE_FALLBACK = 64
 
 /**
- * The scroll-minimize state machine (rules.md 6.5). Expanded, it minimizes once the content has
- * scrolled past `threshold`; minimized, it stays so until the content is back at the top. So a
- * small scroll back up never makes the chrome jump, and the two never flicker at the line.
+ * The scroll-minimize state machine (rules.md 6.5; Unicron 68, as Safari's bar does). Expanded, it
+ * minimizes once the content scrolls down past `threshold`. Minimized, it comes back on any scroll
+ * up, wherever the page is, and at the top. `previous` is the scroll position the last reading
+ * saw; `max` is the furthest the content can scroll, so the rubber band past the end of the page
+ * (iOS springs back up from there) never counts as a scroll up.
  */
-export function nextMinimized(minimized: boolean, scrollTop: number, threshold: number): boolean {
-  return minimized ? scrollTop > MINIMIZE_RESTORE_AT : scrollTop > threshold
+export function nextMinimized(minimized: boolean, scrollTop: number, threshold: number, previous: number = scrollTop, max: number = Number.POSITIVE_INFINITY): boolean {
+  if (scrollTop <= MINIMIZE_RESTORE_AT) return false
+  // Moving up from inside the page (not from the rubber band below its end).
+  const up = scrollTop < previous && previous <= max
+  const down = scrollTop > previous
+  if (minimized) return !up
+  // Expanded: only a scroll down past the line minimizes, so a scroll up that ends past it stays expanded.
+  return down && scrollTop > threshold
 }
 
 export interface ScrollMinimizeOptions {
@@ -69,7 +77,7 @@ export interface ScrollMinimizeOptions {
 /**
  * Watches a scroller and says whether the phone's chrome is minimized: the large title has gone
  * under the top row, the wordmark hides, the tab bar shrinks to the active tab, the strip joins
- * the bottom row and a hairline shows under the top row. It reverses back at the top.
+ * the bottom row and a hairline shows under the top row. It reverses on any scroll up, and at the top.
  *
  * Pass the element (or null while there is none). The frame runs this on whichever column shows;
  * an app with its own scroller can run it too.
@@ -86,8 +94,13 @@ export function useScrollMinimize(scroller: HTMLElement | null, { threshold, ena
       const line = threshold ?? readLength(scroller, "--c-app-frame-minimize-threshold", MINIMIZE_FALLBACK)
       // A screen that was already scrolled (a column coming back into view) starts where it is.
       state.current = scroller.scrollTop > line
+      let last = scroller.scrollTop
       const onScroll = () => {
-        const next = nextMinimized(state.current, scroller.scrollTop, line)
+        const top = scroller.scrollTop
+        // Without layout (a test, a box not on the page) there is no end to measure.
+        const max = scroller.scrollHeight > scroller.clientHeight ? scroller.scrollHeight - scroller.clientHeight : Number.POSITIVE_INFINITY
+        const next = nextMinimized(state.current, top, line, last, max)
+        last = top
         if (next === state.current) return
         state.current = next
         notify()
@@ -147,10 +160,10 @@ export function shrinkFor(input: ShrinkInput): AppFrameShrink {
  *
  * - `none`: no strip. A toast takes the strip's slot above the bottom row.
  * - `live-action`: a strip with an action (undo send). It is never covered: toasts wait until it ends.
- * - `live`: a strip without an action (a sync running, the place strip). It gives way for the
- *   toast's time, then comes back.
- * - `needs-you`: a request that waits on the person (and a critical strip, which the person must be
- *   able to act on). It never gives way: the toast sits under the top row instead.
+ * - `live`: a strip without an action (offline, a sync running, the place strip). It stays shown,
+ *   and the toast stacks just above it (Vale 15: offline is a lasting state, not news).
+ * - `needs-you`: a request that waits on the person (and the deprecated critical strip). It stays
+ *   shown, and the toast stacks just above it (Synapse 10), never under the top row.
  */
 export type AppFrameStripState = "none" | "live-action" | "live" | "needs-you"
 
@@ -161,17 +174,22 @@ export function stripStateFor(tone: "neutral" | "live" | "needs-you" | "critical
 }
 
 /**
- * Where a toast goes: `content` (the bottom left of the content, on a desktop), `strip` (the phone's
- * status-strip slot, just above the bottom row, so the bottom never holds three bars), `top` (under
- * the phone's top row), or `wait` (held back until the strip ends).
+ * Where a toast goes (contract 5.1c C6, Unicron 1.1):
+ *
+ * - `content`: the bottom left of the content, on a desktop.
+ * - `strip`: the phone's status-strip slot, just above the bottom row, when no strip shows.
+ * - `above-strip`: just above the strip, which stays shown (a needs-you strip, offline, a sync).
+ * - `wait`: held back until a strip with an action ends.
+ * - `top`: deprecated, no longer returned since 1.1 (toasts used to sit under the top row while a
+ *   needs-you strip showed, where they covered the page head and the switcher).
  */
-export type AppFrameToastPlacement = "content" | "strip" | "top" | "wait"
+export type AppFrameToastPlacement = "content" | "strip" | "above-strip" | "wait" | "top"
 
 export function toastPlacementFor(phone: boolean, strip: AppFrameStripState): AppFrameToastPlacement {
   if (!phone) return "content"
-  if (strip === "needs-you") return "top"
   if (strip === "live-action") return "wait"
-  return "strip"
+  if (strip === "none") return "strip"
+  return "above-strip"
 }
 
 /* ── One polite region (contract 5.1c C7) ──────────────────────────────────────────────────────── */
@@ -270,7 +288,10 @@ export interface AppFrameContextValue {
   setClearance: (edge: "top" | "bottom", px: number) => void
   /** The list + detail shrink step at this width (C8). `push` also makes `split` false. */
   shrink: AppFrameShrink
-  /** The frame asks the sidebar to stand as its rail (C8): expanding it then opens the drawer, as at medium. */
+  /**
+   * The frame asks the sidebar to stand as its rail: at 1024 to 1099 on every screen (Unicron 74),
+   * and wider when a list + detail needs the room (C8). Expanding it then opens the drawer, as at medium.
+   */
   sidebarRail: boolean
   /** The sidebar says it is there, and whether it is collapsed by choice (null: gone). */
   setSidebar: (sidebar: { collapsed: boolean } | null) => void
@@ -279,10 +300,10 @@ export interface AppFrameContextValue {
   /** The phone's status strip, as a toast reads it (C6). */
   strip: AppFrameStripState
   setStrip: (id: string, state: AppFrameStripState | null) => void
-  /** Toasts are showing: a `live` strip gives way meanwhile (C6). */
+  /** Toasts are showing. Since 1.1 every strip stays shown meanwhile, and the toast stacks above it (C6). */
   toastShowing: boolean
   setToastShowing: (showing: boolean) => void
-  /** The bottom row's bar, so the frame can place a toast just above it. */
+  /** The bottom row's bar, so the frame can place a toast just above it (or above the strip on it). */
   setBottomBar: (el: HTMLElement | null) => void
   /** The content's area on a desktop, so the frame can place a toast at its bottom left. */
   setMainArea: (el: HTMLElement | null) => void
@@ -321,7 +342,7 @@ export function useAppFrame(): AppFrameContextValue {
     focus: false,
     setClearance: noop,
     shrink: "none",
-    sidebarRail: false,
+    sidebarRail: layout === "expanded" && sidebarRailAt(viewport.width),
     setSidebar: noop,
     registerSplitPart: () => noop,
     strip: "none",

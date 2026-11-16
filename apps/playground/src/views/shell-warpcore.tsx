@@ -1,7 +1,8 @@
-// Warpcore's first screen, Tasks with one waiting on you, as one composition of the frame's parts:
-// the top bar, a list that fills and a 534 detail at 1440 (Desktop 01, 38:756); the floating rows,
-// the live strip and the scrolled chrome at 390 (Mobile 06, 37:666; States 02, 51:5902). It
-// switches by width. The chips, rows, steps and the needs-you block are the system's own parts.
+// Warpcore's first screens as one composition of the frame's parts. At 1440, Tasks with one waiting
+// on you: the top bar, a list that fills and a 534 detail (Desktop 01, 38:756). At 390 it opens on
+// Chat, as Figma's first phone screen does (Mobile 01, 37:45); the Tasks tab shows the floating
+// rows, the live strip and the scrolled chrome (Mobile 06, 37:666; States 02, 51:5902). It switches
+// by width. The chips, rows, steps and the needs-you block are the system's own parts.
 // The top bar's Search names its key, `/` (decisions §6, C2), in its tooltip and aria-keyshortcuts.
 // View: ?view=shell-warpcore
 import { useState } from "react"
@@ -18,6 +19,8 @@ import {
   AppFrameTopRow,
   AppLockup,
   Button,
+  ChatMessage,
+  Composer,
   FilterChip,
   FilterChipGroup,
   FloatButton,
@@ -54,9 +57,36 @@ const STEPS: { title: string; status: StepStatus; statusLabel?: string }[] = [
   { title: "Merge", status: "upcoming", statusLabel: "Next" },
 ]
 
+/** Mobile 01's conversation: four messages, 20 apart, under the chat's head. */
+function Conversation() {
+  return (
+    <AppFrameInset>
+      <div className="flex flex-col gap-5 pb-4">
+        <ChatMessage role="user" meta="You // 14:02">
+          Split the OPAQUE migration into a diff I can review, and run the full test suite in the background.
+        </ChatMessage>
+        <ChatMessage role="agent" meta="Claude Code // 14:03">
+          Done. The diff is ready, and the tests are running in the cloud sandbox. I'll post here when they finish.
+        </ChatMessage>
+        <ChatMessage role="user" meta="You // 14:05">
+          Draw the new login flow so I can share it with the team.
+        </ChatMessage>
+        <ChatMessage role="agent" meta="Claude Code // 14:06">
+          Here's the handshake as a sequence. Two messages, and the password never leaves the device.
+        </ChatMessage>
+        {/* Figma floats the composer 8 above the bottom row (y 704). The frame has no slot for a
+            composer over the tab bar yet, so the demo keeps it at the foot of the conversation. */}
+        <Composer placeholder="Ask about SEA-51" />
+      </div>
+    </AppFrameInset>
+  )
+}
+
 function Tasks() {
   const frame = useAppFrame()
-  const [section, setSection] = useState("tasks")
+  // The phone opens on Chat, Figma's first phone screen; wider screens open on Tasks (Desktop 01).
+  const [section, setSection] = useState("chat")
+  const chat = frame.phone && section === "chat"
   const [picked, setPicked] = useState<string | null>(null)
   const [show, setShow] = useState("all")
   // Desktop 01 opens the task that waits on you first (decisions §9: the list puts it first).
@@ -94,39 +124,46 @@ function Tasks() {
       )}
 
       <AppFrameMain>
-        <AppFrameList size="fill" aria-label="Tasks">
-          {/* The chips belong to the head: the frame places them under the title and sets the space to the list (Desktop / 01: chips at y 196, the first row at y 248). */}
-          <AppFramePageHead
-            size={frame.split ? "lg" : "md"}
-            overline="Tasks // 03 running // 01 waiting on you"
-            title="Tasks"
-            count="/12"
-            below={
-              <FilterChipGroup label="Show" value={show} onValueChange={setShow}>
-                <FilterChip value="all" count={12}>All</FilterChip>
-                <FilterChip value="running" count={3}>Running</FilterChip>
-                <FilterChip value="waiting" count={1}>Waiting</FilterChip>
-                <FilterChip value="done" count={8}>Done</FilterChip>
-              </FilterChipGroup>
-            }
-          />
-          <ul aria-label="Tasks" className="flex flex-col">
-            {TASKS.map((t) => (
-              <ListRow
-                key={t.id}
-                render={<li />}
-                index={t.index}
-                title={t.title}
-                meta={t.meta}
-                status={t.status}
-                tone={t.live ? "live" : "neutral"}
-                progress={t.progress}
-                selected={frame.split && t.id === open}
-                onClick={() => setPicked(t.id)}
-              />
-            ))}
-          </ul>
-        </AppFrameList>
+        {chat ? (
+          <AppFrameList size="fill" aria-label="Chat">
+            <AppFramePageHead size="md" overline="Chat // SEA-51 // Claude Code" title="OPAQUE login" />
+            <Conversation />
+          </AppFrameList>
+        ) : (
+          <AppFrameList size="fill" aria-label="Tasks">
+            {/* The chips belong to the head: the frame places them under the title and sets the space to the list (Desktop / 01: chips at y 196, the first row at y 248). */}
+            <AppFramePageHead
+              size={frame.split ? "lg" : "md"}
+              overline="Tasks // 03 running // 01 waiting on you"
+              title="Tasks"
+              count="/12"
+              below={
+                <FilterChipGroup label="Show" value={show} onValueChange={setShow}>
+                  <FilterChip value="all" count={12}>All</FilterChip>
+                  <FilterChip value="running" count={3}>Running</FilterChip>
+                  <FilterChip value="waiting" count={1}>Waiting</FilterChip>
+                  <FilterChip value="done" count={8}>Done</FilterChip>
+                </FilterChipGroup>
+              }
+            />
+            <ul aria-label="Tasks" className="flex flex-col">
+              {TASKS.map((t) => (
+                <ListRow
+                  key={t.id}
+                  render={<li />}
+                  index={t.index}
+                  title={t.title}
+                  meta={t.meta}
+                  status={t.status}
+                  tone={t.live ? "live" : "neutral"}
+                  progress={t.progress}
+                  selected={frame.split && t.id === open}
+                  onClick={() => setPicked(t.id)}
+                />
+              ))}
+            </ul>
+          </AppFrameList>
+        )}
         <AppFrameDetail size="narrow" open={picked !== null} onBack={() => setPicked(null)} aria-label={task?.title ?? "Task"}>
           {task ? (
             <AppFrameInset fill>
@@ -161,13 +198,15 @@ function Tasks() {
         </AppFrameDetail>
       </AppFrameMain>
 
-      <AppFrameAccessory
-        tone="live"
-        meta={frame.minimized ? "Tasks // 03 running" : "SEA-48 // Running 04:12 // $0.42"}
-        title={frame.minimized ? "SEA-48 running 04:12" : "Add baseline drift check"}
-        action={{ label: "Open" }}
-        announce="Add baseline drift check is running."
-      />
+      {chat ? null : (
+        <AppFrameAccessory
+          tone="live"
+          meta={frame.minimized ? "Tasks // 03 running" : "SEA-48 // Running 04:12 // $0.42"}
+          title={frame.minimized ? "SEA-48 running 04:12" : "Add baseline drift check"}
+          action={{ label: "Open" }}
+          announce="Add baseline drift check is running."
+        />
+      )}
 
       {pushed ? (
         <AppFrameBottomRow

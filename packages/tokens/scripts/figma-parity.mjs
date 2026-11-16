@@ -3,12 +3,19 @@
 //
 // The reference is tokens/figma/theme-2026-11.json, a checked-in snapshot of the read-out of the
 // Figma file (scripts/figma-snapshot.mjs writes it). This script reads what the build made,
-// dist/tokens.css, resolves it as a browser would in each of the 8 modes, and compares:
+// dist/tokens.css, resolves it as a browser would, and compares:
 //
-//   - the 21 theme roles, in every mode: the sRGB hex and the alpha
-//   - the defaults (no data-theme) against Figma's default app
-//   - each source slot: its hex, and the Figma variable id written in its $description
-//   - the 23 type roles: family, weight, size, line height, letter spacing, case
+//   - the 7 roles every theme shares (needs-you, critical, scrim), on both grounds, against every
+//     Figma mode of that ground
+//   - the 14 roles a theme sets (surfaces, inks, identity, live), with no data-theme, against
+//     Figma's `Default` mode. Figma has no Default mode yet (Unicron 1: the core's own theme is new
+//     in 1.1), so until it does these are reported as a known gap, not failed.
+//   - the four apps' themes the playground carries as fixtures (apps/playground/src/app-themes/),
+//     laid over the build, in their 8 Figma modes: every role, each slot's hex, and the Figma
+//     variable id in its $description. Each app now owns its theme; these files are the
+//     playground's copies, so they must still be exactly Figma's.
+//   - the type roles: family, weight, size, line height, letter spacing, case. A role marked
+//     `"figma": "pending"` (mono-row, 1.1) is not in Figma yet: reported, not failed.
 //   - size/control, size/touch-min, radius/control
 //   - the spacing values, against Tailwind's 4px unit (spacing has no tokens of its own)
 //
@@ -22,7 +29,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { hex, parseColor, toSrgb } from "./lib/color.mjs"
-import { modeVars, parseTokensCss, resolveValue } from "./lib/css.mjs"
+import { modeVars, parseTokensCss, readTheme, resolveValue } from "./lib/css.mjs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const tokensDir = path.join(here, "..", "tokens")
@@ -45,17 +52,22 @@ const SLOT_OF = {
   "primary/soft": "primary-soft", "primary/display": "primary-display", "secondary/live": "live",
 }
 const cssName = (figmaName) => `--${figmaName.replace(/\//g, "-")}`
-const modeParts = (mode) => {
-  const [app, ground] = mode.split(" / ")
-  return { app, ground }
-}
+
+const gaps = []
+const DEFAULT_MODE = "Default"
 
 // ── Modes ────────────────────────────────────────────────────────────────────────────────────
-const builtModes = Object.keys(parsed.themes).flatMap((app) => ["graphite", "stone"].map((ground) => `${app} / ${ground}`))
-same("modes", builtModes.join(", "), snapshot.modes.join(", "))
-same("default app", built.defaultApp, modeParts(snapshot.defaultMode).app)
+const slotNames = built.themeSlots
+const fixtureDir = path.join(here, "..", "..", "..", "apps", "playground", "src", "app-themes")
+const fixtures = fs.existsSync(fixtureDir)
+  ? fs.readdirSync(fixtureDir).filter((f) => f.endsWith(".json") && !f.endsWith(".exceptions.json")).map((f) => {
+      const json = readJson(path.join(fixtureDir, f))
+      return { file: `apps/playground/src/app-themes/${f}`, json, ...readTheme(path.join(fixtureDir, f), slotNames) }
+    })
+  : []
+const appModes = snapshot.modes.filter((m) => !m.startsWith(`${DEFAULT_MODE} /`))
+same("the fixtures' modes", fixtures.flatMap((t) => ["graphite", "stone"].map((g) => `${t.name} / ${g}`)).sort().join(", "), [...appModes].sort().join(", "))
 
-// ── Theme roles, as built, in every mode ─────────────────────────────────────────────────────
 /** A role in one mode → { hex: "#RRGGBB", alpha } as a browser resolves it. */
 function builtColor(name, vars) {
   const raw = vars.get(name)
@@ -64,60 +76,69 @@ function builtColor(name, vars) {
   return { hex: hex(toSrgb(lab).rgb).toUpperCase(), alpha: lab.alpha }
 }
 let colorsCompared = 0
-function compareRole(where, name, vars, want) {
+function compareRole(where, name, vars, want, onMiss = differ) {
   const got = builtColor(name, vars)
   colorsCompared++
   if (!got) return differences.push(`${where}: ${name} is not in the built CSS`)
   if (got.hex !== want.hex || Math.abs(got.alpha - want.alpha) > 1e-6) {
-    differ(where, `${got.hex} @ ${got.alpha}`, `${want.hex} @ ${want.alpha}`)
-  }
-}
-for (const [role, { modes }] of Object.entries(snapshot.roles)) {
-  for (const [mode, want] of Object.entries(modes)) {
-    const { app, ground } = modeParts(mode)
-    if (!parsed.themes[app]) continue // already reported under "modes"
-    compareRole(`${role} in ${mode}`, cssName(role), modeVars(parsed, app, ground), want)
-  }
-  // No data-theme attribute: Figma's default app, on both grounds.
-  const defaultApp = modeParts(snapshot.defaultMode).app
-  for (const ground of ["graphite", "stone"]) {
-    compareRole(`${role} with no data-theme (${ground})`, cssName(role), modeVars(parsed, null, ground), modes[`${defaultApp} / ${ground}`])
+    onMiss(where, `${got.hex} @ ${got.alpha}`, `${want.hex} @ ${want.alpha}`)
   }
 }
 
-// ── Theme slots, at the source ───────────────────────────────────────────────────────────────
-// Each slot is one Figma primitive: its hex, and its variable id in the description.
+// ── Roles every theme shares, and the default theme ──────────────────────────────────────────
+const hasDefault = snapshot.modes.includes(`${DEFAULT_MODE} / graphite`)
+for (const [role, { modes }] of Object.entries(snapshot.roles)) {
+  for (const ground of ["graphite", "stone"]) {
+    const vars = modeVars(parsed, null, ground)
+    if (!SLOT_OF[role]) {
+      // Shared: the same in every Figma mode of this ground.
+      for (const mode of appModes.filter((m) => m.endsWith(`/ ${ground}`))) compareRole(`${role} with no data-theme (${ground}), against ${mode}`, cssName(role), vars, modes[mode])
+    } else if (hasDefault) {
+      compareRole(`${role} with no data-theme (${ground})`, cssName(role), vars, modes[`${DEFAULT_MODE} / ${ground}`])
+    } else {
+      gaps.push(`${role} (${ground})`)
+    }
+  }
+}
+
+// ── The fixtures: the four apps' themes, laid over the build ─────────────────────────────────
 let slotsCompared = 0
-function compareSlots(file, json, app) {
+for (const theme of fixtures) {
+  for (const [role, { modes }] of Object.entries(snapshot.roles)) {
+    for (const ground of ["graphite", "stone"]) {
+      const mode = `${theme.name} / ${ground}`
+      if (!modes[mode]) continue // already reported under "the fixtures' modes"
+      compareRole(`${role} in ${mode} (${theme.file})`, cssName(role), modeVars(parsed, theme.name, ground, theme.slots), modes[mode])
+    }
+  }
   for (const [role, slot] of Object.entries(SLOT_OF)) {
     for (const ground of ["graphite", "stone"]) {
-      const token = json.theme?.[ground]?.[slot]
-      const want = snapshot.roles[role].modes[`${app} / ${ground}`]
-      const where = `${file} theme.${ground}.${slot}`
+      const token = theme.json.theme?.[ground]?.[slot]
+      const want = snapshot.roles[role].modes[`${theme.name} / ${ground}`]
+      const where = `${theme.file} theme.${ground}.${slot}`
       slotsCompared++
-      if (!token) {
+      if (!token || !want) {
         differences.push(`${where}: missing`)
         continue
       }
       same(where, token.$value, want.hex)
       if (!String(token.$description ?? "").includes(`${want.primitiveId} `)) {
-        differences.push(`${where}: $description must name ${want.primitiveId} (${want.primitive}), the primitive Figma's ${role} points at in ${app} / ${ground}`)
+        differences.push(`${where}: $description must name ${want.primitiveId} (${want.primitive}), the primitive Figma's ${role} points at in ${theme.name} / ${ground}`)
       }
     }
   }
+  const figmaModes = theme.json.$extensions?.["unicron.app"]?.figmaModes ?? {}
+  for (const ground of ["graphite", "stone"]) same(`${theme.file} figmaModes.${ground}`, figmaModes[ground], `${theme.name} / ${ground}`)
 }
-for (const app of Object.keys(built.themes)) {
-  const file = `themes/${app}.json`
-  const json = readJson(path.join(tokensDir, file))
-  compareSlots(file, json, app)
-  const figmaModes = json.$extensions?.["unicron.app"]?.figmaModes ?? {}
-  for (const ground of ["graphite", "stone"]) same(`${file} figmaModes.${ground}`, figmaModes[ground], `${app} / ${ground}`)
-}
-compareSlots("global.json", readJson(path.join(tokensDir, "global.json")), built.defaultApp)
 
 // ── Type roles ───────────────────────────────────────────────────────────────────────────────
 const typeName = (figmaName) => figmaName.replace(/\//g, "-")
-same("type roles", Object.keys(built.type).join(", "), Object.keys(snapshot.type).map(typeName).join(", "))
+const pendingType = Object.keys(built.type).filter((role) => built.type[role].figma === "pending")
+for (const role of pendingType) {
+  if (Object.keys(snapshot.type).map(typeName).includes(role)) differences.push(`type ${role}: Figma has it now; take "figma": "pending" off it in tokens/type.json`)
+  else gaps.push(`type role ${role}`)
+}
+same("type roles", Object.keys(built.type).filter((role) => !pendingType.includes(role)).join(", "), Object.keys(snapshot.type).map(typeName).join(", "))
 const rootVars = modeVars(parsed, null, "stone")
 const number = (value, unit) => {
   const m = new RegExp(`^(-?[\\d.]+)${unit}$`).exec(String(value))
@@ -181,8 +202,11 @@ if (differences.length) {
   for (const d of differences) console.error(`  ${d}`)
   process.exit(1)
 }
+if (gaps.length) {
+  console.log(`figma parity: known gaps, reported and not failed (Figma has no Default mode in Unicron / Theme yet, and no style for a role added in 1.1): ${gaps.join(", ")}`)
+}
 console.log(
-  `✓ figma parity: ${Object.keys(snapshot.roles).length} roles × ${snapshot.modes.length} modes and the defaults (${colorsCompared} colours), ` +
-    `${slotsCompared} source slots with their Figma ids, ${Object.keys(snapshot.type).length} type roles, ` +
+  `✓ figma parity: the shared roles on both grounds, ${fixtures.length} app themes (playground fixtures) × ${Object.keys(snapshot.roles).length} roles in their ${appModes.length} modes (${colorsCompared} colours), ` +
+    `${slotsCompared} fixture slots with their Figma ids, ${Object.keys(snapshot.type).length} type roles, ` +
     `${Object.keys(snapshot.size).length} sizes, the radius, ${Object.keys(snapshot.space).length} spacing steps on the ${TAILWIND_UNIT_PX}px unit — all equal Figma (read ${snapshot.source.extracted})`
 )

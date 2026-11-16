@@ -1,0 +1,37 @@
+/*
+ * Lockdown's theme, as Lockdown declares it in its own layer (Unicron 1.1: no app's theme lives in the
+ * core). The 28 slots, 14 per ground, from Figma's `lockdown / graphite` and `lockdown / stone` modes. The
+ * playground loads it so its theme switcher can show Lockdown; lockdown.json beside it holds the same
+ * values with their Figma ids, and `unicron-contrast` measures them (its misses are listed in
+ * lockdown.exceptions.json). The contrast run fails if this file and lockdown.json differ.
+ */
+[data-theme="lockdown"] {
+  --g-theme-graphite-ground: #171A18;
+  --g-theme-graphite-raised: #1F2320;
+  --g-theme-graphite-rule: #303431;
+  --g-theme-graphite-grid-dot: #373C38;
+  --g-theme-graphite-faint: #5C625E;
+  --g-theme-graphite-label: #B0B6B1;
+  --g-theme-graphite-secondary: #D1D5D2;
+  --g-theme-graphite-body: #EEF1EE;
+  --g-theme-graphite-primary-fill: #008231;
+  --g-theme-graphite-primary-on-fill: #FFFFFF;
+  --g-theme-graphite-primary-text: #67CA85;
+  --g-theme-graphite-primary-soft: #152C1C;
+  --g-theme-graphite-primary-display: #11AE5B;
+  --g-theme-graphite-live: #7CBBF0;
+  --g-theme-stone-ground: #EDF1EE;
+  --g-theme-stone-raised: #F5FAF6;
+  --g-theme-stone-rule: #CED4D0;
+  --g-theme-stone-grid-dot: #B9C0BB;
+  --g-theme-stone-faint: #A0A6A1;
+  --g-theme-stone-label: #656A66;
+  --g-theme-stone-secondary: #3B3E3C;
+  --g-theme-stone-body: #141715;
+  --g-theme-stone-primary-fill: #007625;
+  --g-theme-stone-primary-on-fill: #FFFFFF;
+  --g-theme-stone-primary-text: #007839;
+  --g-theme-stone-primary-soft: #CCE8D2;
+  --g-theme-stone-primary-display: #007625;
+  --g-theme-stone-live: #296898;
+}

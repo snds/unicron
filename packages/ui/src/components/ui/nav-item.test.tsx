@@ -16,7 +16,7 @@ describe("NavItem (Figma 15:487)", () => {
     expect(link).toHaveAttribute("href", "/mail")
     expect(link).toHaveAttribute("data-slot", "nav-item-main")
     expect(within(link).getByText("01")).toHaveAttribute("aria-hidden", "true")
-    expect(within(link).getByText("12")).toHaveAttribute("aria-hidden", "true")
+    expect(within(link).getByText("012")).toHaveAttribute("aria-hidden", "true")
   })
 
   it("draws the drawn anatomy: 8 / 10 padding, 10 apart, label in the label role, folio index and count, 20px icon", () => {
@@ -25,7 +25,7 @@ describe("NavItem (Figma 15:487)", () => {
     expect(classesOf(link)).toEqual(expect.arrayContaining(["gap-2.5", "py-2", "pe-2.5", "rounded-sm"]))
     expect(link.className).toContain("ps-[calc(--spacing(2.5)")
     expect(classesOf(link.querySelector('[data-slot="nav-item-label"]')!)).toEqual(expect.arrayContaining(["type-label", "text-text-secondary", "truncate"]))
-    expect(classesOf(link.querySelector('[data-slot="nav-item-index"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-faint"]))
+    expect(classesOf(link.querySelector('[data-slot="nav-item-index"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
     expect(classesOf(link.querySelector('[data-slot="nav-mark"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
     expect(link.querySelector('[data-slot="icon"]')).toHaveAttribute("width", "20")
     // The icon takes the row's secondary ink.
@@ -217,7 +217,7 @@ describe("NavSection", () => {
     const group = screen.getByRole("group", { name: "Apps, 4" })
     const heading = within(group).getByText("Apps")
     expect(classesOf(heading)).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
-    expect(heading).toHaveTextContent("Apps // 04")
+    expect(heading).toHaveTextContent("Apps // 004")
     const list = within(group).getByRole("list")
     expect(within(list).getAllByRole("listitem")).toHaveLength(2)
     expect(classesOf(list)).toEqual(expect.arrayContaining(["flex-col", "gap-1"]))

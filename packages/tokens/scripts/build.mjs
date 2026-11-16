@@ -2,22 +2,24 @@
 // Builds dist/tokens.css and dist/tokens.json from the DTCG sources in tokens/.
 //
 // Three tiers, three CSS prefixes:
-//   tokens/global.json          → --g-*   raw values. Includes the theme slots (--g-theme-*), with
-//                                         the default app's values.
+//   tokens/global.json          → --g-*   raw values. Includes the 28 theme slots (--g-theme-*), with
+//                                         Unicron's own default theme.
 //   tokens/semantic.json        → --*     roles: Figma's theme roles, with the shadcn contract as
 //                                         aliases of them. light = $value, dark = $extensions["unicron.modes"].dark
 //   tokens/component.json       → --c-*   per-component knobs that alias semantic tokens
 //   + tokens/component/*.json             the same tier, one file per component area, merged in
 //
 // Two axes (docs/02-tokens.md → Two axes):
-//   app     tokens/themes/<app>.json re-declares the 28 theme slots under [data-theme="<app>"].
-//           No attribute = the defaults in global.json.
+//   theme   the 28 theme slots. The core ships one generic default (global.json); an app declares
+//           its own in its own layer, as `[data-theme="<app>"] { --g-theme-…: …; }` (Unicron 1:
+//           no app's theme lives in the core). docs/05-consuming.md → Declare your app's theme.
 //   ground  graphite (dark) and stone (light). Tier 2 reads the stone slot in light and the
 //           graphite slot in dark.
 // Every colour of tiers 2 and 3 is written in both ground blocks, even when its expression is the
 // same in both: a custom property keeps the value it computed where it was declared, so an alias
 // (`--background: var(--surface-ground)`) has to be declared again wherever its target changes.
-// For the same reason both ground blocks also match [data-theme]: a themed box re-reads its slots.
+// For the same reason both ground blocks also match [data-theme]: a box an app themes re-reads its
+// slots on either ground, though the core declares no [data-theme="…"] block of its own.
 //
 // Type roles: tokens/type.json holds 23 typography composites. Each becomes five variables,
 // --type-<role>-family, -weight, -size, -leading, -tracking (px → rem for size and leading).
@@ -47,8 +49,6 @@ const out = path.join(root, "dist")
 
 const MODES_KEY = "unicron.modes"
 const THEME_KEY = "unicron.theme"
-const APP_KEY = "unicron.app"
-const DEFAULT_APP_KEY = "unicron.default-app"
 const TYPE_KEY = "unicron.type"
 const REM_PX = 16
 
@@ -216,47 +216,18 @@ for (const tier of tiers) {
   if (dark.length) blocks.dark.push({ tier: tier.name, lines: dark })
 }
 
-// ── The app axis: tokens/themes/<app>.json ───────────────────────────────────────────────────
-// Each file re-declares the theme slots of global.json, all of them and nothing else, as raw
-// values. The default app's file must equal the defaults, so `data-theme="<default>"` and no
-// attribute are the same thing.
-const slotPaths = tiers[0].tokens.filter((t) => t.path[0] === "theme").map((t) => t.path.join("."))
-const defaultApp = globalJson.theme?.$extensions?.[DEFAULT_APP_KEY]
-if (!slotPaths.length || !defaultApp) throw new Error("global.json: expected a `theme` group that names its default app")
-
-const apps = jsonFiles(path.join(src, "themes"))
-  .map((file) => {
-    const json = readJson(file)
-    const meta = json.$extensions?.[APP_KEY]
-    const name = path.basename(file, ".json")
-    if (!meta || meta.name !== name) throw new Error(`${rel(file)}: $extensions["${APP_KEY}"].name must be "${name}"`)
-    const tokens = flatten(json)
-    const paths = tokens.map((t) => t.path.join("."))
-    const missing = slotPaths.filter((p) => !paths.includes(p))
-    const extra = paths.filter((p) => !slotPaths.includes(p))
-    if (missing.length) throw new Error(`${rel(file)}: missing theme slots: ${missing.join(", ")}`)
-    if (extra.length) throw new Error(`${rel(file)}: holds tokens that are not theme slots: ${extra.join(", ")}`)
-    const lines = []
-    const values = {}
-    for (const { path: p, token } of tokens) {
-      const css = byPath.get(p.join("."))
-      if (typeof token.$value !== "string" || /[{]|var\(/.test(token.$value)) {
-        throw new Error(`${rel(file)} ${p.join(".")}: a theme slot holds a raw value, not a reference`)
-      }
-      lines.push(`  ${css}: ${token.$value};`)
-      values[css] = token.$value
-    }
-    return { name, order: meta.order ?? Infinity, figmaModes: meta.figmaModes, lines, values }
-  })
-  .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
-
-const defaultTheme = apps.find((a) => a.name === defaultApp)
-if (!defaultTheme) throw new Error(`global.json names the default app "${defaultApp}", but tokens/themes/${defaultApp}.json is missing`)
-for (const [css, value] of Object.entries(defaultTheme.values)) {
-  if (flat[css].value !== value) {
-    throw new Error(`${css}: the default in global.json (${flat[css].value}) differs from tokens/themes/${defaultApp}.json (${value})`)
+// ── The theme axis: the 28 slots of global.json → theme ─────────────────────────────────────
+// The core holds only its own default. Each slot is a raw value, so an app's layer can replace it
+// under [data-theme="<app>"] and every role and knob above follows.
+const slotTokens = tiers[0].tokens.filter((t) => t.path[0] === "theme")
+if (slotTokens.length !== 28) throw new Error(`global.json: expected 28 theme slots, found ${slotTokens.length}`)
+for (const { path: p, token } of slotTokens) {
+  if (typeof token.$value !== "string" || /[{]|var\(/.test(token.$value)) {
+    throw new Error(`global.json ${p.join(".")}: a theme slot holds a raw value, not a reference`)
   }
 }
+const themeSlots = slotTokens.map((t) => byPath.get(t.path.join(".")))
+if (fs.existsSync(path.join(src, "themes"))) throw new Error("tokens/themes/ is gone since 1.1: an app's theme lives in the app (Unicron 1)")
 
 // ── Type roles: tokens/type.json ─────────────────────────────────────────────────────────────
 const round = (n) => +n.toFixed(5)
@@ -339,9 +310,9 @@ const block = (title, selector, lines) => `/* ── ${title} ── */\n${selec
 let css = `/* Generated by @unicron/tokens (scripts/build.mjs) from the JSON sources in tokens/ — do not edit. */\n\n`
 for (const { tier, lines } of blocks.light) {
   if (tier === "global") {
-    // Tier 1 has no ground. The app axis follows it: one block of theme slots per app.
-    css += block(`${titles.global} · theme slots default to ${defaultApp}`, ":root", lines)
-    for (const app of apps) css += block(`Tier 1 · App theme: ${app.name} (--g-theme-*)`, `[data-theme="${app.name}"]`, app.lines)
+    // Tier 1 has no ground. Its theme slots hold Unicron's default theme; an app's layer replaces
+    // them under its own [data-theme].
+    css += block(`${titles.global} · theme slots hold the Unicron default`, ":root", lines)
     css += block("Type roles (--type-*)", ":root", typeLines)
     continue
   }
@@ -364,30 +335,35 @@ css += `/* ── Tailwind v4 theme key for the bare \`rounded\` class: --radius
 // @import, no url(), no font file. A page whose policy is only `style-src 'self'` can link it.
 // The page uses the roles by their own names (var(--surface-raised)); Tailwind's --color-* names
 // are not here. The font roles, which tokens.css hands to Tailwind, are root variables here.
-// One addition, for a frame that must follow the browser's light or dark setting with no script:
-// a root that carries the class `system` (and not `dark` or `light`) takes the graphite roles
-// while the browser prefers dark. The ground block re-reads a themed box inside it, one level
-// deep, as `.dark` does. scripts/check.mjs holds the file to all of this.
-const SYSTEM_SELECTOR = ":root.system:not(.light), :root.system:not(.light) [data-theme]:not(.light):not(:root.system .light *)"
+// Grounds differ from tokens.css in one way (Unicron 14): a root with no ground class follows the
+// browser's light or dark setting, with no script. `class="stone"` forces stone and
+// `class="graphite"` forces graphite; `light` and `dark` still work as before, and so does the old
+// `system` class (it is now the same as no class). A themed box inside a root that follows the
+// browser re-reads its slots, one level deep, as it does inside `.dark`.
+// scripts/check.mjs holds the file to all of this.
+const PLAIN_LIGHT_SELECTOR = `${LIGHT_SELECTOR}, .stone`
+const PLAIN_DARK_SELECTOR = `${DARK_SELECTOR}, .graphite, .graphite [data-theme]:not(.light):not(.stone):not(.graphite .light *):not(.graphite .stone *)`
+const FORCED = ":not(.light):not(.stone):not(.dark):not(.graphite)"
+const SYSTEM_SELECTOR = `:root${FORCED}, :root${FORCED} [data-theme]:not(.light):not(.stone):not(:root .light *):not(:root .stone *)`
 let plain = `/* Generated by @unicron/tokens (scripts/build.mjs) from the JSON sources in tokens/ — do not edit.
-   The plain sheet: every role and knob in every mode as custom properties, for a page with no
+   The plain sheet: every role and knob in both grounds as custom properties, for a page with no
    Tailwind (an extension frame). No @theme, no nested style rule, no @import, no url(): it loads
-   under a policy of style-src 'self' alone. Themes: data-theme on the root (or a box). Grounds:
-   the class dark or light; the class system follows the browser's prefers-color-scheme. */\n\n`
+   under a policy of style-src 'self' alone. Grounds: with no class the root follows the browser's
+   prefers-color-scheme; the class stone (or light) forces stone, graphite (or dark) forces
+   graphite. An app's theme: its own [data-theme] block of the 28 slots, on the root or a box. */\n\n`
 for (const { tier, lines } of blocks.light) {
   if (tier === "global") {
-    plain += block(`${titles.global} · theme slots default to ${defaultApp}`, ":root", lines)
-    for (const app of apps) plain += block(`Tier 1 · App theme: ${app.name} (--g-theme-*)`, `[data-theme="${app.name}"]`, app.lines)
+    plain += block(`${titles.global} · theme slots hold the Unicron default`, ":root", lines)
     plain += block("Type roles (--type-*)", ":root", typeLines)
     plain += block("Font roles (--font-*; Tailwind theme variables in tokens.css)", ":root", plainFonts)
     continue
   }
   const dark = blocks.dark.find((b) => b.tier === tier)
-  plain += block(`${titles[tier]} · light (stone)`, LIGHT_SELECTOR, lines)
-  if (dark) plain += block(`${titles[tier]} · dark (graphite)`, DARK_SELECTOR, dark.lines)
+  plain += block(`${titles[tier]} · light (stone)`, PLAIN_LIGHT_SELECTOR, lines)
+  if (dark) plain += block(`${titles[tier]} · dark (graphite)`, PLAIN_DARK_SELECTOR, dark.lines)
 }
 const indent = (text) => text.replace(/^(?=.)/gm, "  ")
-plain += `/* ── A root with the class system follows the browser: the dark (graphite) blocks again, while it prefers dark ── */\n@media (prefers-color-scheme: dark) {\n`
+plain += `/* ── A root with no ground class follows the browser: the dark (graphite) blocks again, while it prefers dark ── */\n@media (prefers-color-scheme: dark) {\n`
 plain += blocks.dark.map(({ tier, lines }) => indent(`/* ${titles[tier]} · system, dark */\n${SYSTEM_SELECTOR} {\n${lines.join("\n")}\n}\n`)).join("\n")
 plain += "}\n"
 
@@ -399,9 +375,9 @@ fs.writeFileSync(
   JSON.stringify(
     {
       $generated: "@unicron/tokens scripts/build.mjs",
-      defaultApp,
-      // Each app's theme slots, keyed like `tokens`. An app's value replaces the token's `value`.
-      themes: Object.fromEntries(apps.map((a) => [a.name, a.values])),
+      // The 28 theme slots an app declares under its own [data-theme] (their default values are in
+      // `tokens`). The contrast tool (bin unicron-contrast) measures an app's theme by them.
+      themeSlots,
       // The type roles, grouped: { body: { family, weight, size, leading, tracking }, … }.
       type: typeRoles,
       tokens: flat,
@@ -414,5 +390,5 @@ fs.writeFileSync(
 for (const note of component.notes) console.log(`  note: ${note}`)
 const counts = tiers.map((t) => `${t.name} ${t.tokens.length}`).join(", ")
 console.log(
-  `✓ tokens built: ${counts}, type roles ${Object.keys(typeRoles).length}, app themes ${apps.length} (${apps.map((a) => a.name).join(", ")}; default ${defaultApp}) → dist/tokens.css, dist/plain.css, dist/tokens.json`
+  `✓ tokens built: ${counts}, type roles ${Object.keys(typeRoles).length}, ${themeSlots.length} theme slots (the Unicron default; apps declare their own) → dist/tokens.css, dist/plain.css, dist/tokens.json`
 )

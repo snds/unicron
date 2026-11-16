@@ -67,23 +67,44 @@ describe("the shell a width picks (contract 5.2)", () => {
   })
 })
 
-describe("the scroll-minimize state machine", () => {
-  it("minimizes once past the line, not at it", () => {
-    expect(nextMinimized(false, 0, 64)).toBe(false)
-    expect(nextMinimized(false, 64, 64)).toBe(false)
-    expect(nextMinimized(false, 65, 64)).toBe(true)
+describe("the scroll-minimize state machine (Unicron 68)", () => {
+  it("minimizes once scrolled down past the line, not at it", () => {
+    expect(nextMinimized(false, 0, 64, 0)).toBe(false)
+    expect(nextMinimized(false, 64, 64, 0)).toBe(false)
+    expect(nextMinimized(false, 65, 64, 0)).toBe(true)
   })
 
-  it("stays minimized on the way back up, until the top", () => {
-    expect(nextMinimized(true, 64, 64)).toBe(true)
-    expect(nextMinimized(true, 10, 64)).toBe(true)
-    expect(nextMinimized(true, MINIMIZE_RESTORE_AT + 1, 64)).toBe(true)
-    expect(nextMinimized(true, MINIMIZE_RESTORE_AT, 64)).toBe(false)
-    expect(nextMinimized(true, 0, 64)).toBe(false)
+  it("comes back on any scroll up, as Safari's bar does, wherever the page is", () => {
+    expect(nextMinimized(true, 400, 64, 401)).toBe(false)
+    expect(nextMinimized(true, 64, 64, 120)).toBe(false)
+    expect(nextMinimized(true, 10, 64, 30)).toBe(false)
+  })
+
+  it("stays minimized while the page goes on down, or holds still", () => {
+    expect(nextMinimized(true, 500, 64, 400)).toBe(true)
+    expect(nextMinimized(true, 500, 64, 500)).toBe(true)
+  })
+
+  it("a scroll up that ends past the line stays expanded: only a scroll down minimizes", () => {
+    expect(nextMinimized(false, 300, 64, 400)).toBe(false)
+    expect(nextMinimized(false, 300, 64, 300)).toBe(false)
+  })
+
+  it("is always expanded at the top", () => {
+    expect(nextMinimized(true, MINIMIZE_RESTORE_AT, 64, MINIMIZE_RESTORE_AT)).toBe(false)
+    expect(nextMinimized(true, 0, 64, 0)).toBe(false)
   })
 
   it("treats iOS's rubber band past the top as the top", () => {
-    expect(nextMinimized(true, -30, 64)).toBe(false)
+    expect(nextMinimized(true, -30, 64, -10)).toBe(false)
+  })
+
+  it("never counts the rubber band past the end of the page springing back as a scroll up", () => {
+    // The page ends at 1000; the bounce went to 1040 and springs back.
+    expect(nextMinimized(true, 1020, 64, 1040, 1000)).toBe(true)
+    expect(nextMinimized(true, 1000, 64, 1020, 1000)).toBe(true)
+    // From inside the page, a scroll up still counts.
+    expect(nextMinimized(true, 990, 64, 1000, 1000)).toBe(false)
   })
 })
 
@@ -107,7 +128,12 @@ describe("useScrollMinimize", () => {
     expect(scroller).not.toHaveAttribute("data-minimized")
     scrollTo(120)
     expect(scroller).toHaveAttribute("data-minimized")
-    scrollTo(30)
+    scrollTo(300)
+    expect(scroller).toHaveAttribute("data-minimized")
+    // Any scroll up brings the chrome back (Unicron 68); down again past the line minimizes it.
+    scrollTo(280)
+    expect(scroller).not.toHaveAttribute("data-minimized")
+    scrollTo(320)
     expect(scroller).toHaveAttribute("data-minimized")
     scrollTo(0)
     expect(scroller).not.toHaveAttribute("data-minimized")
@@ -168,7 +194,7 @@ describe("the phone's chrome on scroll (rules.md 6.5)", () => {
     return { above, row, bars: (above.children.length > 0 ? 1 : 0) + 1 }
   }
 
-  it("minimizes past the threshold and comes back at the top, never with more than two bars at the bottom", () => {
+  it("minimizes past the threshold and comes back on any scroll up, never with more than two bars at the bottom", () => {
     setViewport(390, 844)
     const { container, rerender } = render(<Inbox />)
     const frame = screen.getByTestId("frame")
@@ -201,8 +227,12 @@ describe("the phone's chrome on scroll (rules.md 6.5)", () => {
     expect(bars).toBe(1)
     expect(screen.getByRole("tab", { name: "Mail" })).toBeInTheDocument()
 
-    // A little way back up: still minimized. At the top: back as it was.
-    scrollTo(20)
+    // Further down: still minimized. Any scroll back up: back as it was (Unicron 68), and at the top too.
+    scrollTo(240)
+    expect(frame).toHaveAttribute("data-minimized")
+    scrollTo(220)
+    expect(frame).not.toHaveAttribute("data-minimized")
+    scrollTo(260)
     expect(frame).toHaveAttribute("data-minimized")
     scrollTo(0)
     expect(frame).not.toHaveAttribute("data-minimized")

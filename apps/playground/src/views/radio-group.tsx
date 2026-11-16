@@ -16,7 +16,7 @@ export default function RadioGroupView() {
           </RadioGroup>
         </Column>
       </Specimen>
-      <Specimen label="RadioGroup // square radios beside their labels (Lockdown, Keep which?)">
+      <Specimen label="RadioGroup // round radios, the one round control, beside their labels (Lockdown, Keep which?; Unicron 41)">
         <Column>
           <RadioGroup aria-label="Keep which?" defaultValue="mine">
             <Field orientation="horizontal">

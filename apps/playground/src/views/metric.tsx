@@ -1,4 +1,4 @@
-// Metric: Figma's Metric (15:513), its delta tones, as a link, and the hero size (Lockdown Health, Warpcore Spend, Synapse Overview). View: ?view=metric
+// Metric: Figma's Metric (15:513), its delta tones, as a link, live (tabular figures), and the hero size (Lockdown Health, Warpcore Spend, Synapse Overview). View: ?view=metric
 import type { ReactNode } from "react"
 import { Badge, Metric, Progress, useViewport } from "@unicron/ui"
 
@@ -59,6 +59,14 @@ export default function MetricView() {
             <Progress variant="segmented" tone="budget" segments={64} value={8.6} max={10} aria-label="$8.60 of $10.00 today" />
           </Metric>
         </div>
+      </Specimen>
+
+      <Specimen label="Live // tabular figures while the number moves; still numbers stay proportional (Unicron 11)">
+        <Row>
+          <Metric label="Spend // still" value="$11.10" delta="yesterday" />
+          <Metric live label="Spend // live" value="$11.10" delta="running now" tone="live" />
+          <Metric live label="Tokens // live" value="1,118" delta="this task" tone="live" />
+        </Row>
       </Specimen>
 
       <Specimen label="Hero // Synapse workspace health, as a link">
