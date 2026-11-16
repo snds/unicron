@@ -1,5 +1,137 @@
 # @unicron/ui
 
+## 1.1.0
+
+### Minor Changes
+
+- 1c60ab8: Controls, chips, tabs and rows for 1.1 (decided 2026-11).
+  
+  New API:
+  
+  - `Progress`: `size` 4 or 8 on a segmented bar. 8 is Warpcore's Spend bar; 4 stays the default (Unicron 49).
+  - `FilterChip`, `TabsTrigger` and `TopTab`: `keepCase`. The label keeps its own case instead of the overline's capitals, for a label that is data, such as a person's name. `Chip` already keeps case: its value is in `caption` (Vale 8).
+  - `TabsTrigger`: `mark` (a count, a square or a key, as `TopTab` and the nav items take it). Its words join the tab's accessible name: "Requests, 2". Pass a count here, never as a hidden child (Lockdown 30).
+  - `SwipeRow` actions: `menuLabel`. The tile keeps its short word ("Fix"); the row's menu and the tile's accessible name use the full words ("Fix with Claude Code") (Synapse 21).
+  - `ListRow`: `statusMark` (`{ icon, label, tone }`, tone neutral, live, needs-you or critical). For a narrow column: the status is a 16px mark, and its word is said with the row, not drawn. It takes the place of `status` (Warpcore 18).
+  - `CodeDisplay`: `copy={false}` makes it display only: no copy on a click, Enter or the menu, no clipboard countdown, no Tab stop of its own (a concealed code still shows on Enter). For a row whose own button is the one copy, such as Lockdown's popup with `layout="compact"` (Lockdown 27).
+  - `swipeRowCrowdedTiles` (3): from this many tiles on a side, a full swipe needs more travel.
+  
+  Changed behaviour:
+  
+  - `RadioGroupItem` and `RadioRow`: the radio is round, a 16px circle with an 8px dot. It is the system's one round control, so one choice of many never looks like a checkbox (Unicron 41).
+  - `FloatButton` long press: from the keyboard it is Shift+F10 or the context-menu key (and a right click), no longer Shift+Enter, which means a new line in a text field. `floatButtonLongPressKeys` is now `"Shift+F10 ContextMenu"`. `ListRow` and `SwipeRow` already open their menus on the same keys. A Composer's Shift+Enter still makes a new line (Unicron 48).
+  - `Composer`: an empty composer's Send is dimmed to 50%. It stays `aria-disabled` and in the tab order; a press does nothing (Unicron 51).
+  - `FilterChip kind="trigger"`: while its picker is open it draws inverted ink, as Figma draws it, and still says `aria-expanded` (Unicron 50).
+  - `SwipeRow`: on a side with three tiles or more, a full swipe starts one tile past the open tiles (320 at 390), at most the row's width. Three 80px tiles already reached the 60% line (234 at 390), so opening the row ran its outermost action (Lockdown 18).
+  - Focus and invalid borders: a field's focus border (Input, Textarea, InputGroup, Select, TextField, Composer) reads `--line-focus`; its invalid border, and the invalid edge of Button, Switch, Checkbox and Radio, reads `--line-invalid`. These line roles (from @unicron/tokens) hold 3:1 on both grounds; the primary and critical fills measured 2.59:1 to 3.21:1 on graphite (Unicron 17).
+  - Pressed solids: Button default, destructive, ghost-destructive and needs-you, Switch on, the primary FloatButton and the primary swipe tile go to 85% when pressed (was 80%). Inverted ink (a current FloatButton, an on or open FilterChip) goes to 86%. The labels now hold Lc 75 on Vale and Lockdown stone and on graphite (Unicron 28).
+  - `FloatButton` neutral pressed lays the `state-pressed` role over the raised surface, instead of a hand-written 10% mix.
+  - `TabsTrigger`: the index is in the label ink, not the faint ink: it is read as part of the name (Unicron 25).
+  
+  Docs (for docs/03-components.md):
+  
+  - Radio: the one round control. A 16px circle; chosen, an 8px ink dot. Every other control keeps the 2px corner.
+  - Long press keys: Shift+F10, the context-menu key and a right click, on FloatButton, ListRow and SwipeRow. Shift+Enter is never a long press: in a Composer it makes a new line.
+  - Composer Send: empty, it is aria-disabled, dimmed to 50% and still focusable; a press does nothing.
+  - keepCase: FilterChip, TabsTrigger and TopTab take `keepCase` for a label that is a person's name; Chip always keeps case.
+  - menuLabel: a SwipeRow action's full words for its menu and its tile's name, when the tile shows a short word.
+  - statusMark: ListRow's status as a mark for narrow columns; the word is the row's description.
+  - CodeDisplay copy off: `copy={false}`, display only, for a row that has its own copy button.
+  - Tab counts: pass a tab's count as `mark`; it is said in the tab's name ("Requests, 2").
+  - Progress size: a segmented bar is 4 or 8 tall.
+- 2f48dc6: CalendarEvent leaves the core, the icon set loses its 47 extras, and the web build watch moves into Unicron (decided 2026-11; guide: docs/08-migrating-to-1.1.md).
+  
+  Removed (an app that used them follows docs/08-migrating-to-1.1.md):
+  
+  - `CalendarEvent` and `calendarEventVariants` (Unicron 2). Only Vale has a calendar, and the name carries a domain noun. Vale builds it in its own layer from core parts, and gives a selected event the 2px edge of a selected row (Unicron 89).
+  - 47 icons from the curated set, which is now 265 (Unicron 98). The set is one object a bundler cannot trim, so every icon cost every app. Register any you need with `registerIcons()`; the guide lists them and shows how.
+  
+  New API:
+  
+  - The web build watch (Updates 5): `startBuildWatch({ storagePrefix, canReloadNow, mayReload, save })`, its rules as `createBuildWatch(env)` with no DOM, `readBuild`, `quietByTheClock`, `pageBuild`, `buildWatchReloadedKey`, the timing constants, and the hook `useBuildWatch(watch)`. One copy of the check Warpcore, Vale and Lockdown's web vault each carried. It reloads by itself only in a quiet moment (the wheel counts as use), when the app's `canReloadNow()` and its own rule allow, once per build; a page whose next file is gone reloads as soon as nothing would be lost. The apps keep their copies until each swaps.
+  
+  Changed behaviour:
+  
+  - Counts read three digits, as every Figma sidebar draws them: `formatCount`, `formatListCount` and `formatNavCount` write `007`, `012`, `248`, then `1,204` (Unicron 13, Vale 6). A mark at an icon's corner (`cap`) keeps a badge's two digits and stops at `99+`. Every part that shows a count changes with it: nav items, the rail, list rows, filter chips, section headers, tabs, the context panel. Sentences keep plain numbers ("3 new senders"); the formatter does not write those.
+  
+  Icon map (`unicron-codemod icons`, `iconFromMaterial`):
+  
+  - `timer` and `snooze` map to Carbon's own `timer` and `snooze`, not `time` (Unicron 96).
+  - `left_panel_open` and `left_panel_close` map to Figma's `open-panel--left` and `open-panel--filled--left`, one family with the right side (Unicron 99).
+  - New `_aliases`: `key` → `password`, `link--off` → `unlink`, names a spec wrote that Carbon spells another way; the codemod rewrites them (Unicron 100).
+  
+  Notes:
+  
+  - The lean stylesheet entry (`@unicron/ui/styles/lean.css` and `unicron-sources`) is the way to a smaller CSS bundle; Warpcore moves to it (Unicron 103).
+  - Docs: a label length guideline for fields (short mono caps overline; long wording in the helper line; Unicron 42); a mirrored Carbon glyph as a registered icon (Vale's forward; Unicron 95).
+- 976c318: The frame, its bars, layers, toasts and live announcements for 1.1 (decided 2026-11).
+  
+  New API:
+  
+  - `Accessory`, `StatusItem` and `AgentPrompt`: `announceAt`, a list of seconds left at which the countdown is said once ("Chrome on Windows, 1 minute left"), never each tick (WCAG 2.2.1). Each app sets its own: Warpcore `[300, 60]`, Synapse `[60, 30, 10]`. `AgentPrompt` defaults to `[60]`; the status parts to none (Unicron 33).
+  - `AgentPrompt`: `details`, a slot between the question and the options for what the call carries, such as a `CodeBlock` of its arguments. It is not capped, and it is in the phone's sheet too (Synapse 18).
+  - `AppFrameSwitcher`: `accounts`, `value`, `onValueChange`, `accountsLabel` and `add`. The chevron opens the accounts as a menu of radio items: the arrow keys only move, and Enter, Space or a click switches, so passing over an account never loads it (Unicron 73). `menu` still takes a menu of your own.
+  - `PopoverContent`: `width`, `default` (320) or `wide` (420, Figma's one drawn popover, Warpcore's environment picker). `wide` reads `--c-popover-width-wide` from @unicron/tokens (Unicron 60).
+  
+  Changed behaviour:
+  
+  - `AppFrame`: in a development build it warns once when no `data-theme` is set on the root (or on a box around the frame): the core's generic default theme is then in use. See docs/05-consuming.md (Unicron 4).
+  - Phone chrome: it comes back on any scroll up, as Safari's bar does, not only at the top. It minimizes again on a scroll down past the line. The rubber band below the end of a page does not count as a scroll up (Unicron 68).
+  - Toasts on a phone: a strip that shows (a needs-you request, offline, a sync) stays shown, and the toast stacks 8 above it. Toasts no longer sit under the top row, where they covered the page head and the switcher. A strip with an action (undo send) is still never covered: new toasts wait. `toastPlacementFor` returns `above-strip` for a strip that shows; `top` stays in its type, unused, until 2.0 (Synapse 10, Vale 15).
+  - Desktop sidebar: from 1024 to 1099 px it is its rail on every screen, not only on a list + detail screen, so it no longer changes width from one section to the next. Expanding it opens the drawer, as at medium width (Unicron 74).
+  - `TabBar` vertical (the short screen's trailing column): every tab is 44 tall (`size/touch-min`), never squeezed. When the tabs do not fit (four tabs at 667 × 320) the bar scrolls, a slide along it scrolls it, and the create button under it stays on screen (Unicron 29, 64).
+  - `TabBar` minimized: keyboard focus coming in expands it until focus leaves, and the arrow keys work again. A tap on the one tab still goes back to the top (Unicron 65).
+  - `Banner tone="critical"`: it cannot be dismissed. It draws no close button even when `onDismiss` is passed, and a development build warns once. Info, success and warning banners keep theirs (Unicron 62).
+  - `Accessory tone="critical"` is deprecated and goes in 2.0: a status strip is never critical. Show something broken that the person can fix as a critical `Banner` at the top of its section. It still draws as before, with a development warning (Unicron 67).
+  - Sheets: only the sheet that drags draws a grabber, `AdaptiveSheetContent` on a phone. A plain bottom `SheetContent`, and the phone sheets of `AdaptiveDialog`, `AdaptivePopover` and `AdaptiveMenu`, have none; their header starts 16 from the top and the close button sits 16 from the top, as on a side sheet (Unicron 54, Lockdown 29).
+  - `NeedsYou size="compact"`: its action is 40 high, 44 on a coarse pointer, whatever size the Button asks for. It is said to a screen reader each time it appears (Unicron 88).
+  - `AgentPrompt`: the countdown says what happens at zero: `QUESTION // DENIES IN 28:14` (the timer's name is "Denies in 28:14"). Once time runs out it says the core's "Timed out" in every app (Unicron 92, Synapse 18).
+  - `SecretField`: inside an `AppFrame`, a copy's "Copied. Clipboard clears in 30 seconds." and "Clipboard cleared." are said through the frame's one polite region, not the field's own, so they never talk over a status line or a strip (Unicron 33).
+  - `NavItem`: the index is in the label ink, not the faint ink: it is read as part of the row (Unicron 25). Measured on the ground: 4.83 to 8.50 to 1 (Lc 60.4 to 68.6), was 2.17 to 2.82 to 1.
+  - `AppFrameSidebar` primary: quick create (`onLongPress`) answers Shift+F10 and the context-menu key as well as a right click, and says so in `aria-keyshortcuts` (Unicron 48).
+  
+  Docs (for docs/03-components.md, docs/04-patterns.md and the contract):
+  
+  - Contract C6, toasts on a phone: no strip, the toast takes the strip's slot above the bottom row; a strip that shows (needs-you, offline, a sync) stays, and the toast stacks 8 above it; a strip with an action is never covered and toasts wait. Never under the top row.
+  - rules.md 6.5 (lane D): the chrome minimizes on a scroll down past 64 and comes back on any scroll up, and at the top.
+  - Countdown announcements: `announceAt` (seconds left) on Accessory, StatusItem and AgentPrompt; each mark said once, through the frame's one region inside an AppFrame. Warpcore 300 and 60; Synapse 60, 30 and 10.
+  - Banner: critical never dismisses; info, success and warning may.
+  - Accessory: `critical` deprecated; a broken thing is a critical Banner.
+  - Sheet grabber: only on the draggable adaptive sheet.
+  - Popover widths: 320 by default, 420 `wide`.
+  - Sidebar at 1024 to 1099: its rail, every screen.
+  - Account switcher: a menu of radio items; arrows move, Enter or Space switches.
+  - Vertical tab bar: 44 tabs, scrolls when short. Minimized bar: expands for keyboard focus.
+  - NeedsYou compact action: 40, 44 on touch; announced each time it appears.
+  - AgentPrompt: `details` slot; countdown words `DENIES IN 28:14`; "Timed out".
+  - AppFrame: development warning without `data-theme`.
+  - docs/specs/security/agent-prompt.md: the `details` slot between body and options (uncapped); the countdown's visible words and name ("Denies in 28:14"); `announceAt` (default 60) and its sentence ("1 minute left. Then it denies.").
+  - docs/specs/security/secret-field.md: inside an AppFrame the copy countdown's two sentences go to the frame's one polite region; the field's own region keeps the rest.
+- 21f1af2: **App themes leave the core; Unicron ships its own default theme and a contrast tool for yours** (Unicron 1).
+  
+  - `tokens/themes/` is gone, and with it the `[data-theme="warpcore|vale|lockdown|synapse"]` blocks in `tokens.css` and `plain.css` and `themes` / `defaultApp` in `tokens.json`. With no `data-theme` the 28 theme slots now hold Unicron's own default theme (neutral surfaces, a quiet slate identity, a teal live colour), which clears every contrast pair the gate measures. `tokens.json` lists the slot names as `themeSlots`.
+  - New bin `unicron-contrast <theme.json|theme.css|dir> [--exceptions file.json]`: lays an app's 28 slots over the built roles and knobs and measures every recipe on graphite and stone. Each app passes its own exceptions file; the core's list now holds only misses every theme shares (the critical and needs-you colours). `apca-w3` is now a dependency.
+  - `examples/app-extension.css` declares a whole app theme. `NOTICE` added (shadcn/ui MIT, snds/mailbird Apache-2.0).
+  
+  **New roles** (not in Figma yet): `line-field` (a field's resting border, 3:1; `input` now points at it; Unicron 18), `line-focus` and `line-invalid` (focus and error borders: the fills on stone, the text colours on graphite, 3:1; Unicron 17), `primary-mark` (a mark with no words; Unicron 19), and the small-text inks `small-label`, `small-primary`, `small-critical`, `small-live` (Lc 75 and 4.5:1 on the ground, a raised surface and both washes; Synapse 1). New knobs: `--c-popover-width-wide` (420), `--c-progress-height-large` (8px), `--c-diff-added`. New type role `mono-row` (Geist Mono 13/20; Lockdown 4) and its `type-mono-row` utility.
+  
+  **Changed values.** `state-hover` 6% → 4%, `state-pressed` 10% → 6% of the ink (Unicron 16); a solid's pressed state is modelled at 85% (Unicron 28); `running-surface` 14% → 6% (Unicron 27); `diff-added` on stone 8% → 3% (Unicron 28); stone `warning` `amber.550` → new `amber.575`, 4.7:1 as small text (Warpcore 2); `--c-progress-primary` and `--c-progress-critical` take the text colours on graphite (Unicron 19). `text-faint` is narrowed to disabled words and decoration (Unicron 25).
+  
+  **`@unicron/ui`.** `type-number-tabular`, a modifier for a number that changes while you watch; `Metric` takes `live` to turn it on (Unicron 11). `rule-box-emphasis` defaults to `--line-focus` and the `edge-*` utilities to `--primary-mark`.
+  
+  ### Migrating
+  
+  1. **Declare your app's theme.** Copy your 28 slots into your own layer under `[data-theme="<app>"]` (the playground's copies, with their Figma ids, are in `apps/playground/src/app-themes/<app>.json` and `.css`). Without it, `data-theme="<app>"` shows Unicron's default theme. Then add `unicron-contrast src/app-extension.css --exceptions src/contrast-exceptions.json` to your checks (`--print-exceptions` writes the first list). See docs/05-consuming.md → Declare your app's theme.
+  2. **No `data-theme` is no longer Warpcore.** A page that relied on the default being Warpcore's colours sets `data-theme="warpcore"` and declares Warpcore's theme.
+  3. **`plain.css` follows the browser by default** (Unicron 14). A root with no class used to be stone; now it follows `prefers-color-scheme`. Add `class="stone"` (or `light`) to keep stone; `class="graphite"` (or `dark`) forces graphite. `class="system"` still works.
+  4. **Point borders and marks at the new roles** (no class goes silent; these are the ones that measure right): a field's resting border `--input` / `line-field`; focus and error borders `line-focus` / `line-invalid` (not `primary-fill` / `critical-fill`); a selected edge, tab indicator or progress cell `primary-mark`; reading text in `text-faint` → `text-label`.
+  5. **Deprecated, removed in 2.0** (Unicron 7): `--g-neutral-*`, `--g-white-alpha-*` and the accent ramps `--g-blue-*`, `--g-coral-*`, `--g-green-*`, `--g-amber-*`, `--g-red-*`. They keep their names and values for all of 1.x. Alias a role (`surface-*`, `text-*`, `line-*`), a status role or a swatch instead; 2.0's migration guide lists each replacement, and the core's own status roles move to status-named tokens there.
+
+### Patch Changes
+
+- Updated dependencies [21f1af2]
+  - @unicron/tokens@1.1.0
+
 ## 1.0.0
 
 ### Major Changes

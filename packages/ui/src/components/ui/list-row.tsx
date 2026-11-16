@@ -57,8 +57,8 @@ export interface ListRowProgress {
 }
 
 /**
- * A count as decisions §13 writes it: two digits (`07`), three from 100 (`146`), a comma from
- * 1,000 (`1,204`). Shared by the data parts that show a count (SectionHeader, FilterChip, ListRow).
+ * A count as decisions §13 writes it: three digits (`007`, `012`, `146`), a comma from 1,000
+ * (`1,204`) (Unicron 13). Shared by the data parts that show a count (SectionHeader, FilterChip, ListRow).
  */
 export function formatListCount(count: number): string {
   return formatCount(count)

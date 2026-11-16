@@ -9,7 +9,7 @@ const slot = (container: HTMLElement, name: string) => container.querySelector(`
 describe("SectionHeader (Figma 32:60)", () => {
   it("is a heading of the overline title and the count; the rule is drawn, not read", () => {
     const { container } = render(<SectionHeader title="Mail // folders" count={12} />)
-    const heading = screen.getByRole("heading", { level: 2, name: "Mail // folders 12" })
+    const heading = screen.getByRole("heading", { level: 2, name: "Mail // folders 012" })
     expect(heading).toContainElement(slot(container, "section-header-title"))
     expect(slot(container, "section-header-title").className).toContain("type-overline")
     expect(slot(container, "section-header-title").className).toContain("text-muted-foreground")
@@ -30,7 +30,7 @@ describe("SectionHeader (Figma 32:60)", () => {
 
   it("writes a number count as decisions §13 says; any other count as given", () => {
     const { rerender } = render(<SectionHeader title="Activity" count={6} />)
-    expect(screen.getByRole("heading")).toHaveTextContent("Activity 06")
+    expect(screen.getByRole("heading")).toHaveTextContent("Activity 006")
     rerender(<SectionHeader title="Knowledge" count={1204} />)
     expect(screen.getByRole("heading")).toHaveTextContent("Knowledge 1,204")
     rerender(<SectionHeader title="Failing checks" count="03 of 06" />)
@@ -56,7 +56,7 @@ describe("SectionHeader (Figma 32:60)", () => {
     expect(header.className.split(/\s+/)).toEqual(expect.arrayContaining(["sticky", "top-0", "bg-background"]))
     // A letter is drawn as Lockdown's Desktop / 01 draws it: the index role, `// 04`, no rule beside it.
     expect(slot(container, "section-header-title")).toHaveClass("type-number-index")
-    expect(header).toHaveTextContent("S // 04")
+    expect(header).toHaveTextContent("S // 004")
     expect(container.querySelector('[data-slot="section-header-rule"]')).toBeNull()
     // 48 tall, the letter's line 4 above the bottom (its ink from 17 to 38), not centred.
     const cls = header.className.split(/\s+/)

@@ -117,8 +117,12 @@ function Items() {
       <AppFrameMain>
         <AppFrameList aria-label="Items">
           {frame.split ? (
+            // Desktop / 01 (41:720): the field is 432 by 48, its top level with the detail's head
+            // (y 96), and the first letter group starts 28 under it (y 172).
             <AppFrameInset>
-              <SearchField aria-label="Search items" placeholder="Search 248 items" />
+              <div className="pb-7">
+                <SearchField aria-label="Search items" placeholder="Search 248 items" />
+              </div>
             </AppFrameInset>
           ) : (
             <>

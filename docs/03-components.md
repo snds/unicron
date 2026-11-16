@@ -72,7 +72,7 @@ was restyled; [07 · Migrating to 1.0](07-migrating-to-1.0.md) lists what change
 | `label` | `Label` (`variant`: field, the mono caps overline; choice, running text beside a checkbox, radio or switch), `labelVariants` | Form | label |
 | `field` | `Field`, `FieldSet`, `FieldLegend`, `FieldGroup`, `FieldLabel`, `FieldContent`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`, `FieldDisabledReason`, `useDisabledReason` | Form | div / fieldset |
 | `checkbox` | `Checkbox` (a 16px square; checked is ink with a check; `indeterminate`) | Form | Base UI Checkbox |
-| `radio-group` | `RadioGroup`, `RadioGroupItem` (a 16px square; chosen is an ink square inside), `RadioRow` (a choice with a sentence; `rule`) | Form | Base UI RadioGroup, Radio. 1.0 |
+| `radio-group` | `RadioGroup`, `RadioGroupItem` (a 16px circle; chosen is an 8px ink dot; 1.1), `RadioRow` (a choice with a sentence; `rule`) | Form | Base UI RadioGroup, Radio. 1.0 |
 | `switch` | `Switch` (Figma's Toggle: a 44 × 24 track and a square knob; one size) | Form | Base UI Switch |
 | `toggle-row` | `ToggleRow` (Switch's props, plus `label`, `description`, `badge`, `meta`, `rule`, `inset`, `disabledReason`; the whole row is the target) | Form | Base UI Switch. 1.0 |
 | `select` | `Select`, `SelectTrigger` (`size`: default 48, sm 40), `SelectValue`, `SelectContent` (`width`, `alignItemWithTrigger`), `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` | Form | Base UI Select |
@@ -93,7 +93,6 @@ was restyled; [07 · Migrating to 1.0](07-migrating-to-1.0.md) lists what change
 | `meta-list` | `MetaList`, `MetaItem` (`label`): a mono label over a value, in columns | Data Display | dl. 1.0 |
 | `steps` | `Steps`, `Step` (`title`, `status`: done, current, upcoming, failed; `statusLabel`, `live`, `index`, `leading`, `detail`, `badge`, `action`, `href` or `onClick`, `disabled`), `StepsFolio` (`current`, `total`, `title`), `stepStatusWords` | Navigation | ol. 1.0 |
 | `tile` | `Tile` (`edge`: primary, none; `swatch`, `size`: default, compact; `selected`, `href` or `onClick`), `tileVariants`, `swatchFillClasses`, `SwatchId` | Layout | div, button or link (useRender). 1.0 |
-| `calendar-event` | `CalendarEvent` (`tone`: primary, neutral; `time`, `title`, `place`, `swatch`, `compact`, `selected`, `mark`, `href`), `calendarEventVariants` | Data Display | button or link (useRender). 1.0 |
 | `log-row` | `LogRow` (`time`, `dateTime`, `href`, `link`) | Data Display | div or link (useRender). 1.0 |
 | `diff-block` | `DiffBlock` (`path`, `previousPath`, `state`, `lines` or `diff`, `stats`, `additions`, `deletions`, `lineNumbers`, `foldable`, `maxLines`, `wrap`, `wrapToggle`, `copy`, `actions`), `parseDiffLines`, `parseUnifiedDiff` | Data Display | section. 1.0 |
 | `file-chip` | `FileChip` (`name`, `type`, `size`, `thumbnail`, `busy`, `critical`, `href` or `onClick`, `action`) | Data Display | div + a link or a button. 1.0 |
@@ -220,7 +219,8 @@ transform (README → Regenerating components) rather than hand-writing.
   between parts is a 4px step (2, 6, 10 and 14 only inside a component). The browser gate measures
   it on every view (`apps/playground/tests/rules.spec.ts`).
 - **Every radius is 2px** (`rounded` and every `rounded-*` step). Marks are squares: unread, live,
-  an indicator, a status orb's dot. `rounded-full` is not a control shape.
+  an indicator, a status orb's dot. `rounded-full` is not a control shape. The one round control
+  is the radio (1.1).
 - **A control under 44px tall takes `hit-area`.** It widens the target to `size-touch-min` on a
   coarse pointer without moving anything drawn.
 
@@ -253,8 +253,10 @@ transform (README → Regenerating components) rather than hand-writing.
 
 **Words, counts and time**
 
-- A count is written one way everywhere (`formatListCount`, `formatNavCount`): `07`, `12`, `248`,
-  `1,204`; at an icon's corner it stops at `99+`. Zero draws nothing.
+- A count is written one way everywhere (`formatListCount`, `formatNavCount`): three digits, as
+  every Figma sidebar draws them (`007`, `012`, `248`), then `1,204` (1.1, Unicron 13). A mark at
+  an icon's corner keeps a badge's two digits (`07`) and stops at `99+`. Zero draws nothing. A
+  count inside a sentence is a plain number ("3 new senders"): write it yourself (Vale 6).
 - A countdown reads `08 S` under a minute and `01:34` from a minute up (`formatCountdown`). Its
   ticking text is `aria-hidden`; a stable sentence goes to a polite region.
 - Labels in mono caps (`type-overline`) are typed in sentence case; CSS sets the capitals, so a
@@ -268,7 +270,8 @@ transform (README → Regenerating components) rather than hand-writing.
   name (`FloatButton label`, `IconButton label`).
 - **Every gesture has a key or a press.** Slide to scrub is the arrow keys; a swipe up on a strip
   is a press on its text; the switcher's swipe is ArrowLeft and ArrowRight; a long press is
-  Shift+Enter; a row's swipe actions are in its menu; a pull to refresh always sits beside a
+  Shift+F10, the context-menu key or a right click (never Shift+Enter, which makes a new line in a
+  Composer; 1.1); a row's swipe actions are in its menu; a pull to refresh always sits beside a
   plain "Check again".
 - **One polite region per frame.** Inside an `AppFrame`, a `StatusItem` and an `Accessory` hand
   their sentence to the frame's one `role="status"` region. A status part never owns a live region
@@ -280,8 +283,12 @@ transform (README → Regenerating components) rather than hand-writing.
 ### Icons
 
 `<Icon name="arrow--right" />` draws an inline SVG from the curated Carbon set. The name is typed
-(`IconName`); a name not in the set is a type error. Add one to `src/icons/names.json` (a Carbon
-svg name with 32px art) and run `pnpm --filter @unicron/ui icons:build`.
+(`IconName`); a name not in the set is a type error. The set is Figma's 57, what the components
+draw, and the Carbon match for every Material name the four apps used (265 since 1.1; the 47
+extras left, see [08 · Migrating to 1.1](08-migrating-to-1.1.md#icons)). The data is one object a
+bundler cannot trim, so every icon in it costs every app: a name joins `src/icons/names.json` only
+when a component or the icon map needs it (then `pnpm --filter @unicron/ui icons:build`). Anything
+else is the app's, with `registerIcons`.
 
 - 20px by default. A compact control (Button, Top Tab, a chip, inline meta) draws its icon at
   16px itself; callers do not pass a size. `Icon` sets its size with `width` and `height`, not a
@@ -290,6 +297,24 @@ svg name with 32px art) and run `pnpm --filter @unicron/ui icons:build`.
   stands alone, outside a control.
 - With `label` it is `role="img"`; without one it is `aria-hidden`.
 - An app registers a glyph Carbon lacks with `registerIcons` ([consuming](05-consuming.md#4a-icons-carbon)).
+  A mirrored Carbon glyph needs no new art: wrap Carbon's markup in a flipping group. Vale's
+  forward is Carbon's `reply`, mirrored (the playground's Icons view draws it):
+
+  ```ts
+  import reply from "@carbon/icons/svg/32/reply.svg?raw" // Vite; any loader that gives the text
+  import { registerIcons } from "@unicron/ui"
+
+  const inner = reply.replace(/^<svg[^>]*>|<\/svg>\s*$/g, "")
+  registerIcons({ "vale--forward": `<g transform="matrix(-1 0 0 1 32 0)">${inner}</g>` })
+
+  declare module "@unicron/ui" {
+    interface UnicronIconRegistry { "vale--forward": true }
+  }
+  ```
+- `timer` (Carbon's stopwatch) and `snooze` (its alarm clock with a z) are their own icons since
+  1.1, not `time`; `time` is the plain clock. The left panel pair is Figma's `open-panel` family,
+  as on the right (`open-panel--left`, `open-panel--filled--left` while open). A spec that asks for
+  `key` means `password`, and `link--off` means `unlink` (MAPPING.md → Names Carbon spells another way).
 - No sparkle icons.
 
 ### Button, FloatButton, IconButton
@@ -307,8 +332,9 @@ svg name with 32px art) and run `pnpm --filter @unicron/ui icons:build`.
   the sentence around it (WCAG 1.4.1).
 - **FloatButton** is the square button of the floating chrome, and the close button of a layer.
   `label` is its name and its tooltip. `current` draws inverted ink. `extended` shows the label as
-  a word beside the glyph. `onLongPress` has a keyboard path: Shift+Enter, the context-menu key or
-  a right click.
+  a word beside the glyph. `onLongPress` has a keyboard path: Shift+F10, the context-menu key or
+  a right click (`floatButtonLongPressKeys`); ListRow, SwipeRow and the sidebar's primary open
+  their menus on the same keys.
 - **IconButton** is an icon-only control inside content. One `label` is both its accessible name
   and its tooltip, so the two never drift apart. `tooltip` gives longer text, `shortcut` adds a
   `Kbd`. `render` swaps the control: pass a `Toggle` for an on/off tool, or let a
@@ -343,6 +369,13 @@ The mark is `aria-hidden`; its words are in the host's name. The older `indicato
 - **Label.** Above a field it is a mono caps overline. Beside a checkbox, a radio or a switch it
   is running text, and takes that look by itself. A `Label` used anywhere else as running text
   needs `variant="choice"`.
+- **Keep a field's label short.** The overline is a name, not a sentence: one to three words
+  that say what goes in the box ("Backup password", "Server", "Recovery email"). Anything
+  longer (when to leave it empty, what it is for, a limit) goes in the helper line under the box,
+  in sentence case. So "A new backup password (leave empty to keep the one you have)" is the label
+  `Backup password` with the helper `Leave empty to keep the one you have.` A long overline wraps
+  into a block of mono capitals that is slow to read and pushes the box down, out of line with
+  its neighbours.
 - **Select or NativeSelect.** `NativeSelect` is the default for a form: the system draws the list,
   and on a phone that is the picker people know. Use `Select` when an option needs more than a
   line of plain text, or when the list has to match the menus beside it. Past about 15 options,
@@ -350,8 +383,9 @@ The mark is `aria-hidden`; its words are in the host's name. The older `indicato
   the list has opened. Label it with `Label htmlFor` pointing at an `id` on `SelectTrigger`.
   `SelectContent alignItemWithTrigger` lays the chosen option over the trigger (a pointer only);
   a list taller than the screen then scrolls behind an arrow, with no bar.
-- **A radio shows a square inside; a checkbox shows a check.** Both are 16px squares, ink when
-  chosen. `RadioRow` is a choice with a sentence.
+- **A radio is the one round control; a checkbox shows a check** (1.1). A radio is a 16px circle
+  with an 8px ink dot when chosen, so one choice of many never looks like a checkbox. Every other
+  control keeps the 2px corner. `RadioRow` is a choice with a sentence.
 
 ### Rows
 
@@ -373,6 +407,11 @@ The mark is `aria-hidden`; its words are in the host's name. The older `indicato
 - **A row's ⋯** is `OverflowMenu` (`menu` on FieldRow, SecretField and CodeDisplay): always shown,
   a menu on a desktop and a sheet on a phone. A security row's copy and show rows are
   `SecretFieldMenuItem` and `CodeDisplayMenuItem`, never the app's own copy.
+- **`statusMark`** on ListRow (`{ icon, label, tone }`) is the status as a 16px mark for a narrow
+  column: its word is said with the row, never drawn. It takes the place of `status`.
+- **CodeDisplay `copy={false}`** is display only (no copy on a click, Enter or the menu, no Tab
+  stop of its own), for a row whose own button is the one copy.
+- **Progress `size`**: a segmented bar is 4 tall by default, 8 for a hero bar (Warpcore's Spend).
 - **Side padding is opt-in** (`inset` on FieldRow, ToggleRow and SectionHeader). A desktop column
   draws rows flush; a phone draws them 16 in with a full-bleed rule.
 - **A swatch** (`swatch-01` to `swatch-12`) is only a bar, an edge or a square
@@ -393,6 +432,10 @@ can apply the safety rules and build its menu from one list.
 - A right swipe that starts within 24px of the screen's left edge does nothing: that edge is the
   system's way back.
 - Every action is also in the row's menu. Under reduced motion the row snaps.
+- `menuLabel` gives an action its full words for the menu and the tile's name ("Fix with Claude
+  Code") when the tile shows a short word ("Fix").
+- With three tiles or more on a side (`swipeRowCrowdedTiles`), a full swipe starts one tile past
+  the open tiles, so opening the row never runs its outermost action.
 
 ### Chip and FilterChip
 
@@ -403,8 +446,12 @@ can apply the safety rules and build its menu from one list.
   whose `label` ("Remove tag trip") is its name and its tooltip.
 - **FilterChip** filters a list. A `FilterChipGroup type="single"` (the default) is a radio group:
   the arrow keys move and choose. `type="multiple"` is a group of toggles. On is inverted ink.
-  `kind="trigger"` opens a picker (a trailing chevron, no on look); `kind="button"` is a plain
-  action.
+  `kind="trigger"` opens a picker (a trailing chevron; inverted ink while its picker is open, as
+  drawn, and `aria-expanded`); `kind="button"` is a plain action.
+- **`keepCase`** on FilterChip, `TabsTrigger` and `TopTab` keeps a label in its own case, for a label
+  that is data such as a person's name. Chip always keeps case (its value is in `caption`).
+- **Tab counts.** Pass a tab's count as `mark` (`TabsTrigger`, `TopTab`); it is said in the tab's
+  name ("Requests, 2"), never as a hidden child.
 
 ### Overlays
 
@@ -474,13 +521,18 @@ blur, no shadow. (This reverses the frosted menus of 2026-10-15; see the
 
 **Sheet**
 
-- A bottom sheet draws a grabber and hugs its content (`height="content"`, up to the screen less
-  48) or takes the whole screen (`height="full"`; `fullscreen` is the deprecated name).
+- A bottom sheet hugs its content (`height="content"`, up to the screen less 48) or takes the
+  whole screen (`height="full"`; `fullscreen` is the deprecated name). Only the sheet that drags
+  draws a grabber, `AdaptiveSheetContent` on a phone (1.1); on the others the header and the
+  close button start 16 from the top, as on a side sheet.
 - `SheetHeader` is an overline over a `type-lead` title. Content goes in `SheetBody`, which
   carries the 16px sides and scrolls.
 - `AdaptiveSheetContent` is a bottom sheet under Tailwind's `sm` (640) and a panel at the right
   above it. Its grabber drags to dismiss. `wide` widens the panel (`--c-sheet-wide-width`). Its
   `className` styles the inner scroll area, not the panel.
+
+**Popover widths.** `PopoverContent width` is `default` (320) or `wide` (420, Figma's one drawn
+popover, Warpcore's environment picker).
 
 **Popover or Tooltip.** A `Tooltip` holds a few words and takes no focus: inverted ink, the
 caption role, no arrow. Use a `Popover` when the content is interactive or longer. Give it a
@@ -552,9 +604,11 @@ put; from the element on keyboard focus; on a tap on a touch screen.
 - **Put the `Toaster` inside the `AppFrame`.** It then stands where the frame says: the bottom
   left of the content on a desktop, three at most; the status strip's slot above the bottom row
   on a phone, one at a time, the rest waiting in order.
-- **On a phone a toast obeys the strip.** A live strip with no action gives way for the toast's
-  time. A live strip with an action (undo send) is never covered: new toasts wait until it ends.
-  A needs-you or critical strip never gives way: the toast sits under the top row instead.
+- **On a phone a toast obeys the strip** (contract C6, 1.1). With no strip the toast takes the
+  strip's slot. A strip that shows (needs-you, offline, a sync) stays shown, and the toast stacks
+  8 above it (`toastPlacementFor` returns `above-strip`). A strip with an action (undo send) is
+  never covered: new toasts wait until it ends. A toast never sits under the top row, where it
+  covered the page head and the switcher.
 
 ### The frame
 
@@ -576,13 +630,23 @@ no shell CSS and no media query, and puts no `className` on a system component t
   row: `start`, `fill` (a composer), `end`, and no tab bar.
 - **Scrolled.** Past 64px (`--c-app-frame-minimize-threshold`) the chrome minimizes: the wordmark
   hides, the page head becomes a small centred title, the tab bar shrinks to its active tab, the
-  strip moves into the bottom row, and a hairline shows under the top row. It comes back only at
-  the top. There are never more than two bars at the foot.
+  strip moves into the bottom row, and a hairline shows under the top row. It comes back on any
+  scroll up, as Safari's bar does, and at the top (1.1, Unicron 68); the rubber band below the
+  end of a page is not a scroll up. There are never more than two bars at the foot.
+- **Vertical tab bar** (the short screen's trailing column): every tab is 44 tall, never squeezed;
+  when the tabs do not fit, the bar scrolls and the create button under it stays on screen.
+- **Minimized tab bar.** Keyboard focus coming in expands it until focus leaves; a tap on the one
+  tab still goes back to the top.
 - **Scroll edge.** `AppFrameScrollEdge` is a masked fill of the ground under the chrome. No blur.
 - **Desktop with a sidebar** (Vale, Lockdown, Synapse). `AppFrameSidebar` (204 wide) holds the
   lockup, an optional switcher, an optional primary action, `NavSection`s of `NavItem`s, and a
   pinned foot. It is on the page's ground, set apart by space. `AppFrameStatusLine` is the top
-  line: crumbs left, up to two `StatusItem`s right, a hairline below.
+  line: crumbs left, up to two `StatusItem`s right, a hairline below. From 1024 to 1099 the
+  sidebar is its rail on every screen, so it never changes width from one section to the next;
+  expanding it opens the drawer. `AppFrameSwitcher accounts` opens the accounts as a menu of radio
+  items: the arrow keys only move, and Enter, Space or a click switches.
+- **No `data-theme`.** In a development build `AppFrame` warns once when no `data-theme` is set on
+  the root (or a box around the frame): the core's generic default theme is then in use.
 - **Desktop with a top bar** (Warpcore). `AppFrameTopBar` holds the lockup, `TopTabs` and a right
   cluster. When it runs out of room it gives up one thing at a time: the short status, the
   wordmark, the primary's word, the tab numbers, the tab words.
@@ -630,13 +694,21 @@ A document or a marketing page should not use `AppFrame`: those need the page to
   screen. It holds one solid action (`Button variant="needs-you"`) and up to two text actions. It
   has no corner and no dismiss. `more` adds `// +1` when more wait behind it.
 - **`size="compact"`** is one 48px line for the top of an open layer (`notice`). While it shows,
-  the full block behind the scrim hides by itself, so one yellow shape shows.
+  the full block behind the scrim hides by itself, so one yellow shape shows. Its action is 40
+  high, 44 on a coarse pointer, and it is said to a screen reader each time it appears.
 - **A strip, not a block, on a phone.** There the same thing is an `Accessory tone="needs-you"`
   above the bottom row. It cannot be dismissed or swiped away.
 - **Banner** is for the page's own news. `critical` is `role="alert"`; the others are
   `role="status"`. Each tone has its own glyph, so the tone never rests on colour. `compact` is
-  one caption paragraph; its text wraps and is never cut.
-- **`Accessory tone="critical"`** borrows the critical Banner's look at strip size.
+  one caption paragraph; its text wraps and is never cut. A critical Banner cannot be dismissed:
+  it draws no close button even with `onDismiss` (info, success and warning keep theirs).
+- **`Accessory tone="critical"` is deprecated** (1.1; gone in 2.0): a status strip is never
+  critical. Show something broken that the person can fix as a critical `Banner` at the top of its
+  section. It still draws, with a development warning.
+- **Countdown announcements.** `announceAt` (seconds left) on `Accessory`, `StatusItem` and
+  `AgentPrompt` says each mark once ("1 minute left"), never each tick (WCAG 2.2.1), through the
+  frame's one region inside an `AppFrame`. Warpcore uses 300 and 60; Synapse 60, 30 and 10;
+  `AgentPrompt` defaults to 60.
 - **StatusOrb** tells ten states apart by shape and motion as well as colour. Its "working" ring
   is the one agent motion: generic loading (`Spinner`, `Skeleton`) never uses it.
 - **Skeleton** is sized by `className` (a tile, a line of text), or by `variant="row"` for one
@@ -651,7 +723,7 @@ A document or a marketing page should not use `AppFrame`: those need the page to
 
 - **Composer.** Enter sends and Shift+Enter makes a line (`sendKey` changes that); it never sends
   while an input method composes. While a reply streams the button is Stop. An empty composer's
-  Send is at full strength but does nothing (`aria-disabled`). `status`, `chips` and `attach` are
+  Send is dimmed to 50%, `aria-disabled` and still in the tab order; a press does nothing (1.1). `status`, `chips` and `attach` are
   slots above and inside the box.
 - **ChatMessage.** A person's message is a raised bubble at the right, up to 300 wide. An agent's
   has no bubble, runs the full width in `type-response`, and its meta is in the live colour. While
@@ -674,6 +746,39 @@ every app shows its updates the same way. Pass the update kit's `UpdateStatus`
   when the build has no updates.
 - Pass `words` to change any of the words. `updateLine(status, appName)` is the status line on its
   own, for a menu or a command palette.
+
+**A web page's own update: the build watch** (`lib/update-watch`, 1.1). One copy for Warpcore,
+Vale and Lockdown's web vault, which each had their own. The app's build writes `build.json`
+(`{"build": "<id>"}`) beside the page and the same id in `<meta name="<prefix>-build">`; the
+watch asks for `build.json` at load, when the tab comes back, when the device is online again,
+every 15 minutes in view, and when a lazy file fails to load.
+
+```ts
+import { startBuildWatch, useBuildWatch } from "@unicron/ui"
+
+// Once, from main.tsx. Null on a dev server (no build id): nothing is watched.
+export const buildWatch = startBuildWatch({
+  storagePrefix: "lockdown",           // the key `lockdown.build.reloadedFor`, the tag `lockdown-build`
+  canReloadNow,                        // the app's: nothing typed, nothing open, nothing in flight
+  mayReload: async () => !(await session.state()).signed_in, // the app's own rule, asked last
+})
+
+// In the screen that shows the sign.
+const watch = useBuildWatch(buildWatch) // { current, latest, ready, needed, checkedAt } or null
+```
+
+- **It reloads by itself only when every rule says yes:** a quiet moment (the tab hidden for a
+  minute, or no key, click, touch or wheel for five; the wheel counts, since reading is use), the
+  app's `canReloadNow()`, the app's `mayReload()`, and not already once for that build in this tab
+  (no session storage, no reload by itself: a bad deploy cannot loop).
+- **Blocked** (`needed`): a lazy file of the old build is gone. The page no longer waits for a quiet
+  moment, only for the other rules, and otherwise says "Reload to continue".
+- **Reload pressed** is `buildWatch.reloadNow()`: `save()` (if given), then a reload at once,
+  whatever the rules say.
+- An answer that is not a plain build id (a sign-in page, an error, a proxy's page) never means
+  new and never takes an offer back. The request goes to the page's own origin, past the cache,
+  with no cookie (`credentials` changes that) and no referrer.
+- Its rules are `createBuildWatch(env)` with no DOM, for an app that wires them itself or tests them.
 
 ## Motion recipes
 
@@ -776,6 +881,12 @@ what 1.0 changed. The specs are the reference; this is the summary.
   key from answering: keys are inert for 500ms after a prompt starts listening, a `standing`
   answer ("Always") takes its key only with focus inside the prompt, and `listen={false}` turns
   the keys off. On a phone the options open in a sheet, or stay in place with `layout="inline"`.
+- **AgentPrompt in 1.1.** `details` is a slot between the question and the options for what the
+  call carries (a `CodeBlock` of its arguments), not capped, and in the phone's sheet too. The
+  countdown says what happens at zero (`QUESTION // DENIES IN 28:14`, named "Denies in 28:14"),
+  and "Timed out" once time runs out.
+- **SecretField in an AppFrame.** A copy's "Copied. Clipboard clears in 30 seconds." and
+  "Clipboard cleared." go through the frame's one polite region, never talking over a strip.
 - **CrownJewel** ([spec](specs/security/crown-jewel-treatment.md)). The treatment for secrets that
   never autofill and never reach agents. `CrownJewelMark` is the inline lock and its word.
   `CrownJewelSurface` is an inverted panel that re-maps the roles for its subtree and flips a

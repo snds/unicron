@@ -37,6 +37,16 @@ async function scrollShown(page: Page, to: number) {
   }, to)
 }
 
+/**
+ * Warpcore's phone demo opens on Chat, as Figma's first phone screen does (Unicron 77). The frame
+ * checks below read its Tasks list (the chips, the rows, the live strip), so they go there first.
+ */
+async function warpcoreTasks(page: Page, name: string) {
+  if (name !== "shell-warpcore") return
+  await page.locator('[data-slot="app-frame-bottom-row"] [data-slot="tab-bar"]').getByRole("tab", { name: "Tasks" }).click()
+  await expect(page.locator('[data-slot="app-frame-list"][aria-label="Tasks"]')).toBeVisible()
+}
+
 test.describe("the phone's chrome on scroll (rules.md 6.5)", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
@@ -48,6 +58,7 @@ test.describe("the phone's chrome on scroll (rules.md 6.5)", () => {
   ] as const) {
     test(`${name}: minimizes when scrolled, keeps two bars at most at the bottom, and comes back at the top`, async ({ page }) => {
       await open(page, name, theme)
+      await warpcoreTasks(page, name)
       const frame = page.locator('[data-slot="app-frame"]')
       const topRow = page.locator('[data-slot="app-frame-top-row"]')
       const tabBar = page.locator('[data-slot="app-frame-bottom-row"] [data-slot="tab-bar"]')
@@ -308,6 +319,9 @@ test.describe("list + detail shrink order (C8)", () => {
 
 test.describe("pull to refresh (C9)", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  // A real touch drag goes through Chromium's DevTools protocol; WebKit's own pull (its bounce) is
+  // on Sean's device checklist (docs/08-migrating-to-1.1.md → Checked by hand).
+  test.skip(({ browserName }) => browserName !== "chromium", "drives a real touch through Chromium's DevTools protocol")
 
   /** A real touch drag through Chromium's input pipeline, so touch-action decides who gets it. */
   async function drag(page: Page, x: number, y: number, dy: number, { lift = true } = {}) {
@@ -517,6 +531,7 @@ test.describe("the phone's bottom row", () => {
   ] as const) {
     test(`${name}: minimizing and restoring trade room smoothly, and the create button never moves`, async ({ page }) => {
       await open(page, name, theme)
+      await warpcoreTasks(page, name)
       const frame = page.locator('[data-slot="app-frame"]')
       const down = await sampleRow(page, () => scrollShown(page, 400))
       await expect(frame).toHaveAttribute("data-minimized", "")
@@ -759,6 +774,7 @@ test.describe("the phone demos' heads", () => {
 
   test("Warpcore: the chips 16 under the title and the list 16 under the chips (Mobile / 06)", async ({ page }) => {
     await open(page, "shell-warpcore", "warpcore")
+    await warpcoreTasks(page, "shell-warpcore")
     const list = page.locator('[data-slot="app-frame-list"]')
     const head = await box(list.locator('[data-slot="page-head"]'))
     const chips = await box(list.locator('[data-slot="filter-chip-group"]'))
@@ -847,6 +863,7 @@ test.describe("the bottom fade is fixed to the bottom row", () => {
   ] as const) {
     test(`${name}: it fades over 80 and is solid from 40 above the row${strip ? ", with a strip on the row" : ""}`, async ({ page }) => {
       await open(page, name, theme)
+      await warpcoreTasks(page, name)
       const seen = await page.evaluate(() => {
         const row = document.querySelector('[data-slot="app-frame-bottom-row-bar"]')!.getBoundingClientRect()
         const edge = document.querySelector('[data-slot="app-frame-scroll-edge"][data-edge="bottom"]')!

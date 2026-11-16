@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { vi } from "vitest"
 
@@ -8,8 +8,10 @@ import {
   canCheckForUpdates,
   updateLine,
   updateWords,
+  useBuildWatch,
   type UpdateStatus,
 } from "./update-status"
+import { createBuildWatch } from "../../lib/update-watch"
 
 const base: UpdateStatus = {
   version: "0.1.0-main.20261107093000",
@@ -218,5 +220,33 @@ describe("the update rows in the Field Row and Toggle Row looks", () => {
     expect(container.querySelector('[data-slot="auto-check-switch"] [data-slot="toggle-row"]')!.className).toContain("rule-t")
     fireEvent.click(screen.getByText("Check for updates automatically"))
     expect(onCheckedChange).toHaveBeenCalledWith(false)
+  })
+})
+
+describe("useBuildWatch", () => {
+  it("is null where no watch runs", () => {
+    const { result } = renderHook(() => useBuildWatch(null))
+    expect(result.current).toBeNull()
+  })
+
+  it("follows the watch it is given", async () => {
+    let body = '{"build":"a"}'
+    const watch = createBuildWatch({
+      current: "a",
+      fetchText: async () => body,
+      now: () => 0,
+      hidden: () => false,
+      canReload: () => false,
+      reload: () => {},
+      reloadedFor: () => null,
+      noteReloaded: () => {},
+    })
+    const { result } = renderHook(() => useBuildWatch(watch))
+    expect(result.current).toMatchObject({ current: "a", ready: false })
+    body = '{"build":"b"}'
+    await act(async () => {
+      await watch.check(true)
+    })
+    expect(result.current).toMatchObject({ latest: "b", ready: true })
   })
 })

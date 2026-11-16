@@ -46,15 +46,18 @@ describe("ContextPanel", () => {
     expect(panel.className).toContain("w-[calc(var(--c-app-frame-context-panel)+--spacing(3))]")
     const list = screen.getByRole("tablist", { name: "Context" })
     const tabs = screen.getAllByRole("tab")
-    expect(tabs.map((t) => t.textContent)).toEqual(["Tasks 03", "Artifacts 04", "Envs 03", "Files 06"])
+    expect(tabs.map((t) => t.textContent)).toEqual(["Tasks 003", "Artifacts 004", "Envs 003", "Files 006"])
     expect(list).toContainElement(tabs[0])
+    // One line that scrolls sideways, never wrapping under three-digit counts (Unicron 13).
+    expect(list).toHaveClass("flex-nowrap", "overflow-x-auto", "no-scrollbar")
+    expect(list).not.toHaveClass("flex-wrap")
     // Active: inverted ink, square, the overline role (Figma 15:503); one tab stop.
     expect(tabs[0]).toHaveAttribute("aria-selected", "true")
     expect(tabs[0]).toHaveClass("bg-text-body", "text-surface-ground", "type-overline", "h-6")
     expect(tabs[0]).not.toHaveClass("rounded-sm")
     expect(tabs[0]).toHaveAttribute("tabindex", "0")
     expect(tabs[1]).toHaveAttribute("tabindex", "-1")
-    const tabpanel = screen.getByRole("tabpanel", { name: "Tasks 03" })
+    const tabpanel = screen.getByRole("tabpanel", { name: "Tasks 003" })
     expect(tabs[0]).toHaveAttribute("aria-controls", tabpanel.id)
     expect(tabpanel).toHaveTextContent("The tasks panel")
   })
@@ -92,7 +95,7 @@ describe("ContextPanel", () => {
     expect(screen.getByRole("button", { name: "Files, 6" })).toHaveAttribute("data-state", "default")
     fireEvent.click(screen.getByRole("button", { name: "Envs, 3" }))
     expect(screen.getByRole("complementary", { name: "Context" })).toHaveAttribute("data-state", "open")
-    expect(screen.getByRole("tab", { name: "Envs 03" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByRole("tab", { name: "Envs 003" })).toHaveAttribute("aria-selected", "true")
   })
 
   it("after a collapse or an expand by its own controls, focus goes to the counterpart, never to the page's body", () => {
@@ -107,11 +110,11 @@ describe("ContextPanel", () => {
     const envs = screen.getByRole("button", { name: "Envs, 3" })
     act(() => envs.focus())
     fireEvent.click(envs)
-    expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Envs 03" }))
+    expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Envs 003" }))
     // And Expand itself: the chosen tab again.
     fireEvent.click(screen.getByRole("button", { name: "Collapse panel" }))
     fireEvent.click(screen.getByRole("button", { name: "Expand panel" }))
-    expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Envs 03" }))
+    expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Envs 003" }))
   })
 
   it("a state the app changes by itself moves no focus", () => {

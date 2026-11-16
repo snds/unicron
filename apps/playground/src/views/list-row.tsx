@@ -146,7 +146,7 @@ export default function ListRowView() {
         <ListRow
           href="#steam"
           title="Steam"
-          marks={<Icon name="star--filled" size="sm" label="Favourite" />}
+          marks={<Icon name="star" size="sm" label="Favourite" />}
           meta="store.steampowered.com"
           metaStyle="plain"
           status="Passkey + code"

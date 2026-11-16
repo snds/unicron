@@ -30,8 +30,9 @@ jobs:
       # depends on it. Private packages (root, playground) are listed too; only @unicron/* ship.
       - run: pnpm -r pack --dry-run
 
-  # Motion contracts, in a real browser: each recipe in the playground's Motion view moves only what
-  # its contract lists, for no longer than its role, and not at all under reduced motion. The start,
+  # Motion contracts and the playground's browser checks, in a real browser (Chromium; WebKit and
+  # Firefox are configured, see below; Unicron 107). Each recipe in the Motion view moves only what its
+  # contract lists, for no longer than its role, and not at all under reduced motion. The start,
   # middle and end frames of each are kept as an artifact for review.
   motion:
     runs-on: ubuntu-latest
@@ -44,8 +45,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm --filter playground exec playwright install --with-deps chromium
-      - run: pnpm --filter playground test:motion
+      - run: pnpm --filter playground exec playwright install --with-deps chromium webkit firefox
+      # Chromium, as before. WebKit and Firefox are installed and in the config; their first run
+      # found engine differences in parts other lanes own (the 1.1 hand-off lists each). This line
+      # becomes the plain `test:motion` (all three) once those are fixed.
+      - run: pnpm --filter playground test:motion --project chromium
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -57,9 +57,19 @@ describe("the public surface of @unicron/ui", () => {
       "AdaptivePopover",
       "OverflowMenu",
       "useAdaptiveSheet",
+      "UpdateStatusRow",
+      "useBuildWatch",
+      "createBuildWatch",
+      "startBuildWatch",
+      "readBuild",
     ]) {
       expect(ui, name).toHaveProperty(name)
     }
+  })
+
+  it("no longer offers CalendarEvent: it moved to Vale's own layer in 1.1", () => {
+    expect(ui).not.toHaveProperty("CalendarEvent")
+    expect(ui).not.toHaveProperty("calendarEventVariants")
   })
 
   it("closes the subpaths of files that are parts of another module", () => {

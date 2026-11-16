@@ -40,7 +40,7 @@ export default function FloatButtonView() {
         <FloatButton label="Approve" icon="checkmark" kind="primary" size="l" extended />
         <FloatButton label="Share" icon="share" kind="primary" size="l" extended />
         <FloatButton label="Reject" icon="close" size="l" extended />
-        <FloatButton label="Stop" icon="stop" size="m" extended />
+        <FloatButton label="Stop" icon="stop--filled" size="m" extended />
       </Specimen>
 
       <Specimen label="Mark // the nav items' mark: the update square on Settings, open comments, a filter on">

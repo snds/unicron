@@ -44,7 +44,7 @@ const NavSectionContext = React.createContext<NavSectionContextValue | null>(nul
 export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
   /** The group's name, in sentence case: the overline sets the capitals ("Mail // folders"). */
   title: string
-  /** How many, joined to the title as `// 04` (cross-app decisions §13). */
+  /** How many, joined to the title as `// 004` (cross-app decisions §13). */
   count?: number
   /** One small control beside the heading: a ghost icon Button ("New vault"). Hidden while collapsed. */
   action?: React.ReactNode

@@ -16,7 +16,7 @@ describe("NavItem (Figma 15:487)", () => {
     expect(link).toHaveAttribute("href", "/mail")
     expect(link).toHaveAttribute("data-slot", "nav-item-main")
     expect(within(link).getByText("01")).toHaveAttribute("aria-hidden", "true")
-    expect(within(link).getByText("12")).toHaveAttribute("aria-hidden", "true")
+    expect(within(link).getByText("012")).toHaveAttribute("aria-hidden", "true")
   })
 
   it("draws the drawn anatomy: 8 / 10 padding, 10 apart, label in the label role, folio index and count, 20px icon", () => {
@@ -217,7 +217,7 @@ describe("NavSection", () => {
     const group = screen.getByRole("group", { name: "Apps, 4" })
     const heading = within(group).getByText("Apps")
     expect(classesOf(heading)).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
-    expect(heading).toHaveTextContent("Apps // 04")
+    expect(heading).toHaveTextContent("Apps // 004")
     const list = within(group).getByRole("list")
     expect(within(list).getAllByRole("listitem")).toHaveLength(2)
     expect(classesOf(list)).toEqual(expect.arrayContaining(["flex-col", "gap-1"]))

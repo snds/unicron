@@ -39,8 +39,18 @@ and the attention edge on the left are gone. The sections below describe the beh
 - **Tokens.** `--c-agent-prompt-edge`, `-edge-color` and `-edge-answered` are gone. The one knob
   is `--c-agent-prompt-arm-delay` (500ms). The colours are the needs-you roles.
 
-Not built: timed announcements of the countdown (Warpcore asks for 5 and 1 minutes left, Synapse
-for 60, 30 and 10 seconds).
+## 1.1 (decided 2026-11-16)
+
+- **`details`**: a slot between the body and the options for what the call carries, such as a
+  `CodeBlock` of its arguments. It is not capped (the body's six lines do not apply), and it is in
+  the phone's sheet too (Synapse 18).
+- **The countdown says what happens at zero** (Unicron 92): the visible words are
+  `QUESTION // DENIES IN 28:14`, and the timer's name is "Denies in 28:14". Once time runs out it
+  says the core's "Timed out" in every app.
+- **Timed announcements** (Unicron 33): `announceAt`, the seconds left at which the countdown is
+  said once, never each tick (WCAG 2.2.1). The default is `[60]`: "1 minute left. Then it denies."
+  Warpcore passes `[300, 60]`, Synapse `[60, 30, 10]`. Inside an `AppFrame` the sentence goes
+  through the frame's one polite region.
 
 ## Purpose and the user job
 
