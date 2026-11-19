@@ -103,8 +103,12 @@ const OFF_SCALE: Record<string, Exception> = {
   "large-type-view-group": { why: "the space between two large characters is a tenth of their fitted size (--c-large-type-char-gap), sideways only", view: "large-type-view", size: "1440" },
 }
 
-/** The one gradient: the phone's scroll edge, a mask on the ground (rules.md 1.1 and 6.6). */
-const GRADIENT_ALLOWED = new Set(["app-frame-scroll-edge"])
+/**
+ * The one gradient: the scroll edge, a mask on the ground (rules.md 1.1 and 6.6). The phone's
+ * chrome draws it as a masked fill; the desktop sidebar's middle masks its own end where its
+ * sections run past the pinned foot. Both fade content into the ground; neither paints colour.
+ */
+const GRADIENT_ALLOWED = new Set(["app-frame-scroll-edge", "app-frame-sidebar-middle"])
 
 // ── The measure, in the page ────────────────────────────────────────────────────────────────────
 

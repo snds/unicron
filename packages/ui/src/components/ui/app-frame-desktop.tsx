@@ -203,7 +203,9 @@ function AppFrameSidebar({
   // every render of the app), and Esc closes it.
   React.useEffect(() => {
     if (!drawerShows) return
-    drawerRef.current?.querySelector<HTMLElement>("a[href],button:not([disabled]),[tabindex='0']")?.focus()
+    // Not the drawer's own Close control at the end of the lockup's row: it is first in the drawer
+    // now, and a tooltip opened by that focus would take the first Esc meant for the drawer.
+    drawerRef.current?.querySelector<HTMLElement>(":is(a[href],button:not([disabled]),[tabindex='0']):not([data-slot='app-frame-sidebar-control'])")?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return
       setDrawerOpen(false)
