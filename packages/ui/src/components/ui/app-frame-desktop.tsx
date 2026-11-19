@@ -67,7 +67,7 @@ export type AppFrameSidebarProps = Omit<React.ComponentProps<"nav">, "children">
   action?: AppFrameAction | React.ReactNode
   /** Pinned at the foot, under the scrolling middle: the Settings `NavItem`. */
   footer?: React.ReactNode
-  /** A control at the end of the foot's row (Lockdown's Lock). The collapse control follows it. */
+  /** A control at the end of the foot's row (Lockdown's Lock). The collapse control is at the end of the lockup's row. */
   footerControl?: React.ReactNode
   /**
    * The sidebar as its rail at the expanded width, by choice (Synapse ⌘\, Vale ADR-0073). The app
@@ -92,8 +92,9 @@ export type AppFrameSidebarProps = Omit<React.ComponentProps<"nav">, "children">
 /**
  * AppFrameSidebar: the desktop navigation column of Vale, Lockdown and Synapse (contract 5.2,
  * 5.1b #9). 204 wide on the page's own ground, 24 from the content, as every desktop frame draws
- * it: the lockup, an optional switcher, the full-width primary, the `NavSection`s 28 apart (they
- * scroll), and the pinned foot with its control slot.
+ * it: the lockup (with the collapse control at the end of its row), an optional switcher, the
+ * full-width primary, the `NavSection`s 28 apart (they scroll, and fade into the ground at the foot
+ * rather than cut a row), and the pinned foot with its control slot.
  *
  * Collapsed (by choice at the expanded width, always at medium) it is the rail: 48 wide, the mark,
  * the primary as an icon, every section's items as rail items (their labels in tooltips), the foot,
@@ -202,7 +203,9 @@ function AppFrameSidebar({
   // every render of the app), and Esc closes it.
   React.useEffect(() => {
     if (!drawerShows) return
-    drawerRef.current?.querySelector<HTMLElement>("a[href],button:not([disabled]),[tabindex='0']")?.focus()
+    // Not the drawer's own Close control at the end of the lockup's row: it is first in the drawer
+    // now, and a tooltip opened by that focus would take the first Esc meant for the drawer.
+    drawerRef.current?.querySelector<HTMLElement>(":is(a[href],button:not([disabled]),[tabindex='0']):not([data-slot='app-frame-sidebar-control'])")?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return
       setDrawerOpen(false)
@@ -241,8 +244,18 @@ function AppFrameSidebar({
   const full = (inDrawer: boolean) => (
     <>
       <div data-slot="app-frame-sidebar-head" className="flex flex-col gap-4">
-        <div className="flex h-control items-center" style={leadingInset?.start ? { paddingInlineStart: leadingInset.start } : undefined}>
-          {React.isValidElement<{ showName?: boolean }>(lockup) ? React.cloneElement(lockup, { showName: lockup.props.showName ?? true }) : lockup}
+        <div className="flex h-control items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center" style={leadingInset?.start ? { paddingInlineStart: leadingInset.start } : undefined}>
+            {React.isValidElement<{ showName?: boolean }>(lockup) ? React.cloneElement(lockup, { showName: lockup.props.showName ?? true }) : lockup}
+          </div>
+          {/* The collapse (or, in the drawer, close) control sits at the end of the lockup's row, so
+              the pinned foot's item (Settings) takes the foot's full width and its current fill
+              reaches the sidebar's edge (Synapse Stage L). */}
+          {inDrawer ? (
+            <SidebarControl label="Close sidebar" icon="open-panel--filled--left" onClick={() => setDrawerOpen(false)} />
+          ) : onCollapsedChange ? (
+            <SidebarControl ref={collapseButton} label="Collapse sidebar" icon="open-panel--filled--left" onClick={() => askCollapsed(true)} />
+          ) : null}
         </div>
         {switcher}
         {isAction(action) ? (
@@ -261,18 +274,22 @@ function AppFrameSidebar({
           action
         )}
       </div>
-      <div data-slot="app-frame-sidebar-middle" className="-mx-1 mt-6 flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-1">
+      <div
+        data-slot="app-frame-sidebar-middle"
+        className={cn(
+          "-mx-1 mt-6 flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto px-1",
+          // Where the sections run past the foot they scroll, and the last 32 fade into the ground
+          // (the scroll edge, a mask: rules.md 6.6) instead of cutting a row's words in half. The
+          // same 32 of padding at the end lets the last row scroll clear of the fade.
+          "pb-8 [mask-image:linear-gradient(to_bottom,black_calc(100%-var(--spacing)*8),transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_calc(100%-var(--spacing)*8),transparent)]"
+        )}
+      >
         {children}
       </div>
-      {footer || footerControl || onCollapsedChange || inDrawer ? (
-        <div data-slot="app-frame-sidebar-footer" className="mt-4 flex items-center gap-2">
+      {footer || footerControl ? (
+        <div data-slot="app-frame-sidebar-footer" className="flex items-center gap-2">
           <div className="min-w-0 flex-1">{footer}</div>
           {footerControl}
-          {inDrawer ? (
-            <SidebarControl label="Close sidebar" icon="open-panel--filled--left" onClick={() => setDrawerOpen(false)} />
-          ) : onCollapsedChange ? (
-            <SidebarControl ref={collapseButton} label="Collapse sidebar" icon="open-panel--filled--left" onClick={() => askCollapsed(true)} />
-          ) : null}
         </div>
       ) : null}
     </>
@@ -492,7 +509,20 @@ function AppFrameSwitcher({
         ) : null}
       </DropdownMenuContent>
     ) : undefined)
-  const chevron = <FloatButton label={label} icon="chevron--down" onClick={onOpen} aria-haspopup={menu ? "menu" : undefined} />
+  // A plain ghost chevron on the title's 32px line, not a 48px float button: the bordered box stood
+  // apart from the name it opens, and its height pushed the sidebar's middle down (Synapse Stage L).
+  const chevron = (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      data-slot="app-frame-switcher-chevron"
+      aria-label={label}
+      onClick={onOpen}
+      aria-haspopup={menu ? "menu" : undefined}
+    >
+      <Icon name="chevron--down" />
+    </Button>
+  )
   return (
     <div data-slot="app-frame-switcher" className={cn("flex min-w-0 flex-col", className)} {...props}>
       <p className="type-overline truncate text-text-label">{overline}</p>
