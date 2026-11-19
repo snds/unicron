@@ -65,10 +65,19 @@ describe("Switch (Figma 32:53, Toggle)", () => {
     expect(track).not.toContain("rounded-full")
   })
 
-  it("on is the primary fill; off is the raised surface with a hairline", () => {
+  it("on is the primary fill; off is the raised surface edged in a field's 3:1 border, not the hairline", () => {
     render(<Switch aria-label="Lock after 5 minutes" />)
     const track = classesOf(screen.getByRole("switch"))
-    expect(track).toEqual(expect.arrayContaining(["data-checked:bg-primary", "data-unchecked:bg-surface-raised", "data-unchecked:rule-box"]))
+    expect(track).toEqual(
+      expect.arrayContaining([
+        "data-checked:bg-primary",
+        "data-unchecked:bg-surface-raised",
+        "data-unchecked:not-aria-invalid:inset-ring",
+        "data-unchecked:not-aria-invalid:inset-ring-input",
+      ])
+    )
+    // The line-rule hairline (about 1.3:1) left an off switch on a raised row as a bare knob.
+    expect(track).not.toContain("data-unchecked:rule-box")
   })
 
   it("the knob is a 16px square that travels 20px on a motion role", () => {

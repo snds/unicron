@@ -8,8 +8,12 @@ import { cn } from "../../lib/utils"
 
 /**
  * Switch: Figma's Toggle. A 44 × 24 track with 4px of padding and a square 16px knob that travels
- * 20px. On is the primary fill with an on-fill knob; off is the raised surface with a hairline and
- * a label-ink knob, so the two states differ by position and by fill, never by colour alone.
+ * 20px. On is the primary fill with an on-fill knob; off is the raised surface with a label-ink
+ * knob, edged in 1px of `line-field` (`--input`), so the two states differ by position and by fill,
+ * never by colour alone. The edge is a field's resting border, not the `line-rule` hairline: a
+ * hairline measured about 1.3:1, so an off switch on a raised row (a settings card) showed only its
+ * knob, a bare square. `line-field` holds 3:1 against the raised surface and the ground on both
+ * grounds (WCAG 1.4.11; Unicron 18). Disabled is half strength, on and off alike.
  * (`Toggle` in code is the pressed button, a different control.)
  *
  * Focus is the stylesheet's one ring for every control. The switch is 24px tall, so on a coarse
@@ -29,7 +33,7 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-lg p-1 transition-[background-color,box-shadow] data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/85 data-unchecked:rule-box data-unchecked:bg-surface-raised data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) data-disabled:pointer-events-none data-disabled:opacity-50",
+        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-lg p-1 transition-[background-color,box-shadow] data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/85 data-unchecked:bg-surface-raised data-unchecked:not-aria-invalid:inset-ring data-unchecked:not-aria-invalid:inset-ring-input data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) data-disabled:pointer-events-none data-disabled:opacity-50",
         className
       )}
       {...props}
