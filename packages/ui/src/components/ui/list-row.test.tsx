@@ -169,6 +169,18 @@ describe("ListRow (Figma 9:181)", () => {
     expect(screen.getByRole("button", { name: TASK.title })).not.toContainElement(screen.getByRole("button", { name: "Fill" }))
   })
 
+  it("the trailing part reads status, badge, then the action, as Figma List Row draws it (F19)", () => {
+    const { container } = render(
+      <ListRow {...TASK} badge={<span>Optional</span>} action={<button>Connect</button>} />
+    )
+    const trailing = slot(container, "list-row-trailing")!
+    const order = [slot(container, "list-row-status")!, slot(container, "list-row-badge")!, screen.getByRole("button", { name: "Connect" })]
+    order.forEach((el) => expect(trailing).toContainElement(el))
+    for (let i = 1; i < order.length; i++) {
+      expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
+  })
+
   it("detail is a caption line, two lines at most, and describes the row", () => {
     const { container } = render(<ListRow title="Groq" detail="May train on prompts. Tasks never use it." href="#groq" />)
     expect(slot(container, "list-row-detail")!.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-caption", "line-clamp-2"]))
