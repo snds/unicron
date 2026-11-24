@@ -141,6 +141,15 @@
  * keeps its offset through a rotation, leaving the top bar off screen and a gap at the bottom.
  * :has() so this touches only an app that uses the frame.
  */
+/*
+ * On a phone there is no inset panel: the top row and the content sit on the ground, so the edge is the ground
+ * too. Otherwise the status bar (the theme-color, read from this) shows a seam under the clock.
+ */
+html:has([data-slot="app-frame"][data-layout="phone"]),
+html:has([data-slot="app-frame"][data-layout="rail"]) {
+  --c-app-frame-edge: var(--surface-ground);
+}
+
 html:has([data-slot="app-frame"]),
 html:has([data-slot="app-frame"]) body {
   height: 100%;

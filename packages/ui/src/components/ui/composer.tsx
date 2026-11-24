@@ -22,6 +22,11 @@ export type ComposerSendKey = "enter" | "mod-enter" | "auto" | "none"
 /** `default` grows with its text; `line` stays one line tall (a phone held sideways). */
 export type ComposerSize = "default" | "line"
 
+/** The box as one row: the field beside its tools, 4px above and below the 32px tools. */
+const ONE_ROW_ALWAYS = "flex-row items-center gap-2 py-1"
+const ONE_ROW =
+  "short:flex-row short:items-center short:gap-2 short:py-1 group-data-[keyboard=open]/frame:flex-row group-data-[keyboard=open]/frame:items-center group-data-[keyboard=open]/frame:gap-2 group-data-[keyboard=open]/frame:py-1"
+
 /** Every word the composer says on its own. Swap for another language. */
 export const composerCopy = {
   /** The field's name when the host gives none. */
@@ -329,6 +334,10 @@ export function Composer({
         data-slot="composer-box"
         className={cn(
           "bg-surface-raised inset-ring inset-ring-line-field flex min-w-0 flex-col gap-2.5 rounded-xl pt-3 pr-3 pb-2.5 pl-4",
+          // One row, the field beside its tools, wherever height is scarce: a phone on its side, an open keyboard,
+          // or the line size. Two rows there would leave almost nothing of the conversation to read.
+          ONE_ROW,
+          size === "line" && ONE_ROW_ALWAYS,
           // Focus in the field: Figma's 2px inside border in the focus line (--line-focus), as a Text Field draws it.
           "has-[[data-slot=composer-field]:focus]:rule-box-emphasis has-[[data-slot=composer-field]:focus]:[--rule-color:var(--line-focus)]",
           disabled && !focusable && "opacity-50"
@@ -352,6 +361,8 @@ export function Composer({
             // 16px on a touch screen, as every field: iOS zooms the page into a field set under 16px.
             fieldTextOnTouch,
             "type-body text-text-body placeholder:text-text-label min-w-0 resize-none bg-transparent outline-none",
+            "short:flex-1 group-data-[keyboard=open]/frame:flex-1",
+            size === "line" && "flex-1",
             size === "line"
               ? "h-6 overflow-y-auto"
               : "max-h-[calc(var(--type-body-leading)*var(--c-composer-max-lines))] overflow-y-auto",
