@@ -1,5 +1,22 @@
 # @unicron/tokens
 
+## 2.0.0
+
+### Major Changes
+
+- 7b687ef: Unicron 2.0 foundations, from the published Figma library (2026-11-24): a theme is the accent only (10 slots); shared neutrals in four surface layers with alpha lines, hover and selection; status, count, severity, label and chart roles; the radius scale (4, 6, 8, 12, 16, round); app-sized type in one sans with seven new roles; popover and dialog shadows and the frost blur. The legacy ramps are gone. See docs/10-migrating-to-2.0.md.
+
+### Minor Changes
+
+- d33e2d7: 2.0 controls, from the Figma library: Button is M 32 / S 28 / L 44 with a ui/emphasis label in sentence case, a 6px corner and a line/field edge on Secondary, plus a new `quiet` kind; Icon Button is a 32 or 28 square. Filter Chip is a round 28px pill (ui role, line/rule edge; on is the selected wash). New `CountBadge` (minor, default, concerning, urgent). Unread marks and counts use the shared count blue (info/fill). `cn` now merges the named sizes (h-control-m, size-icon).
+- 6bc83e7: `Dialog` takes the 2.0 Dialog (Figma 76:139). The popup sits on the popover surface under the dialog's edge shadow (the new `surface-dialog` utility), with 12px corners. The header and footer are bands of their own, each with a rule that runs edge to edge. The header has 20 above and 16 under the title, the footer has 16 above and below its actions, and the actions sit 12 apart. The title takes the title role (20/28 semibold). The `dialog.padding-top` knob is now 1.25rem: 20 above, below, and between the bands. A sticky footer pins on the popover surface.
+- 903c446: `ContextPanel` open takes the 2.0 Right Panel (Figma 127:460): 360 wide (the `app-frame.context-panel` knob drops from 400), on the ground with a rule at its start. A 48 head holds pill tabs, drawn as Tabs draws them (the 8% selected fill, the count in caption type and label ink), and a ghost 28 collapse button. The body sits 16 in from the sides. A new `composer` prop docks a Composer under the body, 12 in, for panels that can be asked questions.
+- 1cfc4f9: 2.0 Pill Tab and Status Mark. Every `TabsList` variant now draws the Figma Pill Tab: 28 tall, a 6px corner, the chosen tab on the neutral 8% fill with body ink. The line indicator and the segmented track are gone; `variant="line"` still builds and draws the same pill. `StatusOrb` draws the Figma Status Mark: round marks in the shared status colours, a quarter arc turning over a faint track for working, a hollow ring for idle, and a disc with a check or a cross for done and failed.
+
+### Patch Changes
+
+- 911f015: `ListRow` takes the 2.0 library's List Row (Figma 9:181). Rows have no dividers; they sit inset in their list with 8px corners. Selected is the 8% fill (surface/selected) with the 2px inset bar, replacing primary-soft and the edge. Inline rows are 56 tall (label meta) or 60 (plain), padded 8 / 10 with 12 between columns; the title is ui-emphasis, and the meta and status are in the meta role in label ink, no longer overline caps. A message is 84 tall, padded 10 / 12: a round unread dot in info/fill, the time as a caption, and the preview cut at one line by default (was two). `tone="live"` is retired (it now colours the status in the working ink); put a working `StatusOrb` in `leading` instead. The account and time are joined by " · ".
+
 ## 1.1.0
 
 ### Minor Changes

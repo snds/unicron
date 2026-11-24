@@ -1,5 +1,37 @@
 # @unicron/ui
 
+## 2.0.0
+
+### Major Changes
+
+- 7b687ef: Unicron 2.0 foundations, from the published Figma library (2026-11-24): a theme is the accent only (10 slots); shared neutrals in four surface layers with alpha lines, hover and selection; status, count, severity, label and chart roles; the radius scale (4, 6, 8, 12, 16, round); app-sized type in one sans with seven new roles; popover and dialog shadows and the frost blur. The legacy ramps are gone. See docs/10-migrating-to-2.0.md.
+
+### Minor Changes
+
+- 86a81df: `Composer` takes the 2.0 library's Composer (Figma 32:91), the floating raised bar. It has 16px corners and a 1px line/field edge, and is 88 tall at rest. The field sits on top in the body role. Under it is a tools row: `attach` and `leadingAction` first, then Send at the end, now a 32px circle on the accent fill with an up arrow. The bar is padded 12 at the top and right, 10 at the bottom, and 16 on the left. The one-line size keeps a 24px field.
+- d33e2d7: 2.0 controls, from the Figma library: Button is M 32 / S 28 / L 44 with a ui/emphasis label in sentence case, a 6px corner and a line/field edge on Secondary, plus a new `quiet` kind; Icon Button is a 32 or 28 square. Filter Chip is a round 28px pill (ui role, line/rule edge; on is the selected wash). New `CountBadge` (minor, default, concerning, urgent). Unread marks and counts use the shared count blue (info/fill). `cn` now merges the named sizes (h-control-m, size-icon).
+- 5cba40c: Counts are plain numbers, as the 2.0 library draws them: `formatCount` writes `7`, `12`, `146`, and `1,204` (1.x wrote `007`), and a capped mark stops at `99+` without a leading zero. The parts that joined words with " // " now use " · ": a NavSection's count, a SectionHeader index count, a ChatMessage's phase, and the countdown in an Accessory and a StatusItem. The status line's crumbs use " / ". StepsFolio reads `STEP 2 OF 7`.
+- 6bc83e7: `Dialog` takes the 2.0 Dialog (Figma 76:139). The popup sits on the popover surface under the dialog's edge shadow (the new `surface-dialog` utility), with 12px corners. The header and footer are bands of their own, each with a rule that runs edge to edge. The header has 20 above and 16 under the title, the footer has 16 above and below its actions, and the actions sit 12 apart. The title takes the title role (20/28 semibold). The `dialog.padding-top` knob is now 1.25rem: 20 above, below, and between the bands. A sticky footer pins on the popover surface.
+- 8fadaa0: Fields match the 2.0 Text Field: 32px tall boxes (44px on touch), 10px side padding, and the 6px control radius. Input, Textarea, TextField, ChipField, InputGroup, Select, and NativeSelect all follow it. The small Select and NativeSelect are 28px.
+- b518aff: Icons draw Material Symbols Rounded (outlined, weight 400), as the 2.0 Figma library does. The names do not change: every curated name keeps its 1.x Carbon spelling, and `src/icons/drawings.json` maps it to the Material file that draws it (the 2.0 noun map included: an agent is `smart_toy`, a skill `school`, a tool `build`, a tag `label`). The drawings come from `@material-symbols/svg-400` at build time, scaled onto the same 32 grid, so `registerIcons` glyphs and every size rule still work. `CARBON_ICONS_VERSION` is now `MATERIAL_SYMBOLS_VERSION`.
+- 911f015: `ListRow` takes the 2.0 library's List Row (Figma 9:181). Rows have no dividers; they sit inset in their list with 8px corners. Selected is the 8% fill (surface/selected) with the 2px inset bar, replacing primary-soft and the edge. Inline rows are 56 tall (label meta) or 60 (plain), padded 8 / 10 with 12 between columns; the title is ui-emphasis, and the meta and status are in the meta role in label ink, no longer overline caps. A message is 84 tall, padded 10 / 12: a round unread dot in info/fill, the time as a caption, and the preview cut at one line by default (was two). `tone="live"` is retired (it now colours the status in the working ink); put a working `StatusOrb` in `leading` instead. The account and time are joined by " · ".
+- ae8cb48: `DropdownMenu` takes the 2.0 library's Menu (Figma 76:415) and Menu Item (76:325). The panel is frosted by default: the new `surface-frost` utility draws the popover frost at 72% over a 24px backdrop blur, the popover shadow, and a 1px rule, and falls back to the solid popover surface when a person asks for reduced transparency. It has 8px corners and 4 inside. Rows are 32 tall (44 on touch), in the ui role and body ink, with the 5% hover fill; the current row takes the 8% selected fill. The keys at a row's end are plain meta-role text in label ink, no longer a Kbd. Rows sit 4 apart, not Figma's 2, to keep menus on the 4px grid. `AdaptiveMenu`'s sheet rows follow the same look.
+- 903c446: `ContextPanel` open takes the 2.0 Right Panel (Figma 127:460): 360 wide (the `app-frame.context-panel` knob drops from 400), on the ground with a rule at its start. A 48 head holds pill tabs, drawn as Tabs draws them (the 8% selected fill, the count in caption type and label ink), and a ghost 28 collapse button. The body sits 16 in from the sides. A new `composer` prop docks a Composer under the body, 12 in, for panels that can be asked questions.
+- 903c446: `SearchField` follows the 2.0 Search Field (Figma 171:493): a 16px search icon, and a new `shortcut` prop that shows its key as a Kbd while the field is empty. The clear button takes the Kbd's place once there are words. `Kbd` takes the 2.0 xs radius (4) in place of 12.
+- 1cfc4f9: 2.0 Pill Tab and Status Mark. Every `TabsList` variant now draws the Figma Pill Tab: 28 tall, a 6px corner, the chosen tab on the neutral 8% fill with body ink. The line indicator and the segmented track are gone; `variant="line"` still builds and draws the same pill. `StatusOrb` draws the Figma Status Mark: round marks in the shared status colours, a quarter arc turning over a faint track for working, a hollow ring for idle, and a disc with a check or a cross for done and failed.
+- b98d0bc: New `TaskRow` and `AskRow`, from the 2.0 library. `TaskRow` (Figma Task Row) is one task or thread: the Status Mark, the title and its time, one line of what is happening, the meta, and the unread dot; selected is the neutral 8% fill with the inset bar. `AskRow` (Figma Ask Row) is one ask from a session, answered in one click: the session's choices as small buttons with the recommended one primary, one Reply button for an open question, and once answered, the answer with Undo.
+- 7d72246: New `TitleRow`, from the 2.0 library (Figma Title Row). The 48px desktop title row every app shares: room for the Mac window buttons, the sidebar toggle, the breadcrumb (the parent in secondary ink as a link back, a chevron, the current page), an optional status, then the actions and the panel toggle (⌘., with the needs-you dot). `kind="settings"` draws the Settings location label, "Settings | Page", with a 1 × 16 rule and a plain parent.
+
+### Patch Changes
+
+- Updated dependencies [d33e2d7]
+- Updated dependencies [6bc83e7]
+- Updated dependencies [7b687ef]
+- Updated dependencies [911f015]
+- Updated dependencies [903c446]
+- Updated dependencies [1cfc4f9]
+  - @unicron/tokens@2.0.0
+
 ## 1.1.1
 
 ### Patch Changes
