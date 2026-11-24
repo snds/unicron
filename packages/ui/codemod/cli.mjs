@@ -10,9 +10,11 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { sharedTypeAliases, transformIcons } from "./icons.mjs"
+import { transformThemeCss, transformThemeJson } from "./theme.mjs"
 import { LexError } from "./lex.mjs"
 
 const USAGE = `unicron-codemod icons <dir> [options]
+unicron-codemod theme <dir> [--dry] [--json]
 
 Renames Material Symbols icon names to Carbon names (@unicron/ui 1.0) in every source file under <dir>.
 It rewrites string literals in icon positions only, keeps the formatting, and never guesses.
@@ -33,7 +35,12 @@ Run it once, on a clean tree, then let the type checker find the rest.
 It reads these as icon positions: name= on <Icon>; attributes and properties called icon, iconName
 or glyph, or ending in Icon or Glyph; variables and functions named that way; and anything typed
 IconName (a value, a list, a Record, a tuple slot, a function's return).
-The full map, and the names with no Carbon match, are in MAPPING.md beside this file.`
+The full map, and the names with no Carbon match, are in MAPPING.md beside this file.
+
+theme (@unicron/tokens 2.0): in every .css and .json file under <dir>, removes the nine theme
+slots per ground that 2.0 shares (ground, raised, rule, grid-dot, faint, label, secondary, body,
+live), leaving the 10 accent slots. It lists every read of a removed slot or ramp and never
+rewrites one: pick the 2.0 role by what it draws (docs/10-migrating-to-2.0.md).`
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const SKIP = new Set(["node_modules", "dist", "build", "target", "coverage", "out"])
@@ -73,6 +80,35 @@ function walk(dir, extensions, found = []) {
     else if (entry.isFile() && extensions.has(path.extname(entry.name).slice(1)) && !entry.name.endsWith(".d.ts")) found.push(full)
   }
   return found
+}
+
+/** Run the theme codemod over a folder. Returns the report; writes files unless `dry`. */
+export function runTheme(dir, { dry = false } = {}) {
+  const files = []
+  let written = 0
+  for (const file of walk(dir, new Set(["css", "json"]))) {
+    if (path.basename(file) === "package.json" || file.endsWith("-lock.json")) continue
+    const source = fs.readFileSync(file, "utf8")
+    const result = file.endsWith(".css") ? transformThemeCss(source) : { ...transformThemeJson(source), reads: [] }
+    if (!result.removed && !result.reads.length) continue
+    files.push({ file: path.relative(dir, file), removed: result.removed, reads: result.reads })
+    if (result.removed && !dry) {
+      fs.writeFileSync(file, result.output)
+      written++
+    }
+  }
+  return { dir, dry, files, written }
+}
+
+function printTheme(report) {
+  const out = [`unicron-codemod theme: ${report.dir}${report.dry ? "  (dry run: nothing written)" : ""}`]
+  for (const f of report.files) {
+    out.push(`  ${f.file}: ${f.removed} slot${f.removed === 1 ? "" : "s"} removed`)
+    for (const r of f.reads) out.push(`    line ${r.line}: reads ${r.text}, gone in 2.0. Pick a role.`)
+  }
+  if (!report.files.length) out.push("  Nothing to change.")
+  out.push(report.dry ? "Dry run. Run again without --dry to write." : `Wrote ${report.written} file${report.written === 1 ? "" : "s"}.`)
+  console.log(out.join("\n"))
 }
 
 /** Read the map shipped beside this file, with any --map file laid over it. */
@@ -193,7 +229,15 @@ function main() {
     console.log(USAGE)
     process.exit(options.help ? 0 : 1)
   }
-  if (command !== "icons") fail(`unknown command "${command}". The one command is: icons\n\n${USAGE}`)
+  if (command === "theme") {
+    if (!dir || rest.length) fail(`theme takes one folder\n\n${USAGE}`)
+    if (!fs.existsSync(dir)) fail(`${dir} does not exist`)
+    const report = runTheme(dir, options)
+    if (options.json) console.log(JSON.stringify(report, null, 2))
+    else printTheme(report)
+    process.exit(0)
+  }
+  if (command !== "icons") fail(`unknown command "${command}". The commands are: icons, theme\n\n${USAGE}`)
   if (!dir || rest.length) fail(`icons takes one folder\n\n${USAGE}`)
   if (!fs.existsSync(dir)) fail(`${dir} does not exist`)
   const report = runIcons(dir, options)

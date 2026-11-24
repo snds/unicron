@@ -1,4 +1,4 @@
-# 09 · Migrating an app to 2.0
+# 10 · Migrating an app to 2.0
 
 2.0 brings the code up to the published Unicron library (Figma "Unicron — Theme Studies v0.2",
 published 2026-11-24): the calm look shared by Warpcore, Synapse, Vale, Lockdown and Fontface.
@@ -8,7 +8,8 @@ draw with them are restyled in the next releases, one area at a time.
 **The short version**
 
 1. Bump both packages to 2.0.0.
-2. Cut your theme down to the 10 accent slots (below). Delete your 18 neutral slots.
+2. Cut your theme down to the 10 accent slots (below): `npx unicron-codemod theme <dir>` deletes
+   the 18 neutral slots and lists any line that still reads one.
 3. Stop reading the legacy ramps (`--g-neutral-*`, `--g-blue-*`, `--g-coral-*`, `--g-green-*`,
    `--g-amber-*`, `--g-red-*`, `--g-white-alpha-*`). They are gone. Read a role.
 4. Rerun your contrast tool and regenerate your exceptions file
