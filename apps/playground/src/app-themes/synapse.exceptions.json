@@ -12,6 +12,7 @@
     {"id": "chat:prose-link", "modes": ["graphite"], "reason": "Figma value: Synapse's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
     {"id": "controls:btn-link", "modes": ["graphite"], "reason": "Figma value: Synapse's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
     {"id": "controls:ctl-focus-raised", "modes": ["graphite"], "reason": "Figma value: Synapse's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
-    {"id": "overlays:toast-focus-raised", "modes": ["graphite"], "reason": "Figma value: Synapse's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."}
+    {"id": "overlays:toast-focus-raised", "modes": ["graphite"], "reason": "Figma value: Synapse's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "label-soft-hover", "modes": ["stone"], "reason": "Synapse's accent wash (primary-soft) under a hover, with stone text/label on it: Lc 59.5 against Lc 60. The core clears it in stone since 2.0.2's darker label; Synapse's soft tint is a shade deeper."}
   ]
 }

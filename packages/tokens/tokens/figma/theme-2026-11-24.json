@@ -864,7 +864,7 @@
           "alpha": 1
         },
         "warpcore / stone": {
-          "hex": "#6A6C72",
+          "hex": "#686A70",
           "alpha": 1
         },
         "vale / graphite": {
@@ -872,7 +872,7 @@
           "alpha": 1
         },
         "vale / stone": {
-          "hex": "#6A6C72",
+          "hex": "#686A70",
           "alpha": 1
         },
         "lockdown / graphite": {
@@ -880,7 +880,7 @@
           "alpha": 1
         },
         "lockdown / stone": {
-          "hex": "#6A6C72",
+          "hex": "#686A70",
           "alpha": 1
         },
         "synapse / graphite": {
@@ -888,7 +888,7 @@
           "alpha": 1
         },
         "synapse / stone": {
-          "hex": "#6A6C72",
+          "hex": "#686A70",
           "alpha": 1
         },
         "fontface / graphite": {
@@ -896,7 +896,7 @@
           "alpha": 1
         },
         "fontface / stone": {
-          "hex": "#6A6C72",
+          "hex": "#686A70",
           "alpha": 1
         }
       }

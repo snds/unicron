@@ -372,7 +372,7 @@ const EXCEPTIONS = [
   { id: "field-rest-ground", modes: "all", reason: FIGMA_2 },
   { id: "body-soft-hover", modes: ["stone"], reason: FIGMA_2 },
   { id: "secondary-soft-hover", modes: "all", reason: FIGMA_2 },
-  { id: "label-soft-hover", modes: "all", reason: FIGMA_2 },
+  { id: "label-soft-hover", modes: ["graphite"], reason: FIGMA_2 },
   { id: "critical-text-accent", modes: ["graphite"], reason: SHARED_CRITICAL },
   { id: "needs-you-button-hover", modes: "all", reason: FIGMA_2 },
   { id: "needs-you-button-pressed", modes: "all", reason: FIGMA_2 },
