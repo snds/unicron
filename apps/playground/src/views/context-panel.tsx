@@ -1,5 +1,5 @@
 // ContextPanel: Warpcore's chat workspace (DR §7; chat workspace frames 01 to 06): the panel open
-// with its tabs (Filter Chip look, tab semantics), collapsed to a rail of icons and counts, hidden
+// as the 2.0 Right Panel (360, pill tabs with tab semantics, an optional docked composer), collapsed to a rail of icons and counts, hidden
 // for the chat-only focus, an artifact in its place beside the chat, and on a phone the same
 // content as the sheet the app passes. View: ?view=context-panel
 import { useState } from "react"
@@ -56,7 +56,7 @@ function Panel({ value }: { value: string }) {
   return <SectionHeader title={value} count={4} level={3} />
 }
 
-function Workspace({ initial, artifact = false, chats = true }: { initial: ContextPanelState; artifact?: boolean; chats?: boolean }) {
+function Workspace({ initial, artifact = false, chats = true, ask = false }: { initial: ContextPanelState; artifact?: boolean; chats?: boolean; ask?: boolean }) {
   const [state, setState] = useState<ContextPanelState>(initial)
   const [value, setValue] = useState("tasks")
   const [sheet, setSheet] = useState(false)
@@ -102,6 +102,7 @@ function Workspace({ initial, artifact = false, chats = true }: { initial: Conte
           tabs={TABS}
           value={value}
           onValueChange={setValue}
+          composer={ask ? <Composer placeholder="Ask about this task" /> : undefined}
           artifact={
             artifact ? (
               <div className="flex flex-col gap-4">
@@ -133,9 +134,14 @@ function Workspace({ initial, artifact = false, chats = true }: { initial: Conte
 export default function ContextPanelView() {
   return (
     <div className="flex flex-col gap-10 p-4 sm:p-6">
-      <Specimen label="Open // the tabs as Filter Chips with tab semantics (arrow keys, Home, End); collapse at the end">
+      <Specimen label="Open // Right Panel (360): pill tabs with tab semantics (arrow keys, Home, End); collapse at the end">
         <FrameBox width={1440} height={720} layout="expanded" label="Chat workspace 01 // Tasks">
           <Workspace initial="open" />
+        </FrameBox>
+      </Specimen>
+      <Specimen label="Open, with a docked composer // when the panel can be asked">
+        <FrameBox width={1440} height={720} layout="expanded" label="Right Panel // Ask">
+          <Workspace initial="open" ask />
         </FrameBox>
       </Specimen>
       <Specimen label="Rail // icons and counts, the live ink where something runs; a rail item opens its tab">

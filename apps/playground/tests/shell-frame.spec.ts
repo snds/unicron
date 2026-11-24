@@ -1007,7 +1007,7 @@ test("Lockdown scrolled on a phone: the small title is the page head's own, Item
   await context.close()
 })
 
-test("the chat workspace's heads against Figma cw-01: the conversation's overline at y 84, its lead title, the panel's controls from y 88", async ({ page }) => {
+test("the chat workspace's heads against Figma cw-01: the conversation's overline at y 84, its lead title, the Right Panel's 48 head from y 88", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1024 })
   await open(page, "context-panel", "warpcore")
   const seen = await page.evaluate(() => {
@@ -1022,12 +1022,12 @@ test("the chat workspace's heads against Figma cw-01: the conversation's overlin
       overline: y('[data-slot="page-head-overline"]'),
       title: y('[data-slot="page-head-title"]'),
       font: `${title.fontWeight} ${title.fontSize}/${title.lineHeight}`,
-      collapse: y('[data-slot="context-panel"] [data-slot="float-button"]'),
+      collapse: y('[data-slot="context-panel-head"] button[aria-label="Collapse panel"]'),
       tab: y('[data-slot="context-panel-tab"]'),
       firstMessage: y('[data-slot="chat-message"]')[0],
     }
   })
-  expect(seen).toEqual({ overline: [84, 100], title: [104, 136], font: "500 24px/32px", collapse: [88, 132], tab: [98, 122], firstMessage: 156 })
+  expect(seen).toEqual({ overline: [84, 100], title: [104, 136], font: "500 24px/32px", collapse: [98, 126], tab: [98, 126], firstMessage: 156 })
 })
 
 test.describe("the account switcher (Unicron 73)", () => {

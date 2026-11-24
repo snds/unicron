@@ -22,14 +22,14 @@ const TABS: ContextPanelTab[] = [
   { value: "files", label: "Files", icon: "document", count: 6 },
 ]
 
-function Workspace({ initial = "open", artifact, sheet }: { initial?: ContextPanelState; artifact?: React.ReactNode; sheet?: React.ReactNode }) {
+function Workspace({ initial = "open", artifact, sheet, composer }: { initial?: ContextPanelState; artifact?: React.ReactNode; sheet?: React.ReactNode; composer?: React.ReactNode }) {
   const [state, setState] = React.useState<ContextPanelState>(initial)
   const [value, setValue] = React.useState("tasks")
   return (
     <AppFrame>
       <AppFrameMain>
         <AppFrameColumn aria-label="Chat">The conversation</AppFrameColumn>
-        <ContextPanel state={state} onStateChange={setState} tabs={TABS} value={value} onValueChange={setValue} artifact={artifact} sheet={sheet}>
+        <ContextPanel state={state} onStateChange={setState} tabs={TABS} value={value} onValueChange={setValue} artifact={artifact} sheet={sheet} composer={composer}>
           {`The ${value} panel`}
         </ContextPanel>
       </AppFrameMain>
@@ -38,12 +38,12 @@ function Workspace({ initial = "open", artifact, sheet }: { initial?: ContextPan
 }
 
 describe("ContextPanel", () => {
-  it("open: a tab strip with tab semantics, drawn as Filter Chips, and its panel", () => {
+  it("open: the 2.0 Right Panel, pill tabs with tab semantics, and its panel", () => {
     setViewport(1440, 900)
     render(<Workspace />)
     const panel = screen.getByRole("complementary", { name: "Context" })
     expect(panel).toHaveAttribute("data-state", "open")
-    expect(panel.className).toContain("w-[calc(var(--c-app-frame-context-panel)+--spacing(3))]")
+    expect(panel).toHaveClass("w-(--c-app-frame-context-panel)", "bg-surface-ground")
     const list = screen.getByRole("tablist", { name: "Context" })
     const tabs = screen.getAllByRole("tab")
     expect(tabs.map((t) => t.textContent)).toEqual(["Tasks 003", "Artifacts 004", "Envs 003", "Files 006"])
@@ -51,10 +51,10 @@ describe("ContextPanel", () => {
     // One line that scrolls sideways, never wrapping under three-digit counts (Unicron 13).
     expect(list).toHaveClass("flex-nowrap", "overflow-x-auto", "no-scrollbar")
     expect(list).not.toHaveClass("flex-wrap")
-    // Active: inverted ink, square, the overline role (Figma 15:503); one tab stop.
+    // Active: the Pill Tab's 8% selected fill in body ink (Figma 15:498); one tab stop.
     expect(tabs[0]).toHaveAttribute("aria-selected", "true")
-    expect(tabs[0]).toHaveClass("bg-text-body", "text-surface-ground", "type-overline", "h-6")
-    expect(tabs[0]).not.toHaveClass("rounded-sm")
+    expect(tabs[0]).toHaveClass("bg-surface-selected", "text-text-body", "type-ui-emphasis", "h-control-s", "rounded")
+    expect(tabs[1]).toHaveClass("text-text-secondary", "hover:bg-surface-hover")
     expect(tabs[0]).toHaveAttribute("tabindex", "0")
     expect(tabs[1]).toHaveAttribute("tabindex", "-1")
     const tabpanel = screen.getByRole("tabpanel", { name: "Tasks 003" })
@@ -199,5 +199,18 @@ describe("ContextPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Collapse panel" }))
     expect(onStateChange).toHaveBeenCalledWith("rail")
     expect(screen.getByRole("complementary", { name: "Context" })).toHaveAttribute("data-state", "open")
+  })
+
+  it("docks a composer under the body when the panel can be asked, and draws no dock without one", () => {
+    setViewport(1440, 900)
+    const { unmount } = render(<Workspace composer={<textarea aria-label="Ask" />} />)
+    const panel = screen.getByRole("complementary", { name: "Context" })
+    const dock = panel.querySelector('[data-slot="context-panel-dock"]')!
+    expect(dock).toContainElement(screen.getByRole("textbox", { name: "Ask" }))
+    expect(dock).toHaveClass("px-3", "pt-2", "pb-3")
+    expect(panel.lastElementChild).toBe(dock)
+    unmount()
+    render(<Workspace />)
+    expect(document.querySelector('[data-slot="context-panel-dock"]')).toBeNull()
   })
 })
