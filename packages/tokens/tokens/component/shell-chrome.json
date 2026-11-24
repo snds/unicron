@@ -43,11 +43,16 @@
     }
   },
   "nav-item": {
-    "$description": "NavItem (Figma 15:487 \"Nav Item\").",
+    "$description": "NavItem (Figma 15:487 \"Sidebar Row\", 195:13818 \"Sidebar Group\").",
     "indent": {
       "$type": "dimension",
-      "$value": "1.875rem",
-      "$description": "How far each `level` steps in: the 20px icon and the 10px gap after it, so a child's icon lines up under its parent's label."
+      "$value": "1.125rem",
+      "$description": "How far each `level` steps in: 18px, the Sidebar Group's child indent."
+    },
+    "trailing": {
+      "$type": "dimension",
+      "$value": "1.125rem",
+      "$description": "The 18px trailing slot every Sidebar Row ends in. A count badge, a status mark or a dot centers in it, so they line up as one column; a wider badge grows it."
     }
   },
   "page-head": {

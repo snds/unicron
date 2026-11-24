@@ -475,8 +475,8 @@ test.describe("on a phone", () => {
     const second = rows.nth(1)
     await second.scrollIntoViewIfNeeded()
     const box = (await second.boundingBox())!
-    // Drawn 36 tall, as Figma draws it.
-    expect(Math.round(box.height)).toBe(36)
+    // Drawn 32 tall, as the 2.0 Sidebar Row is.
+    expect(Math.round(box.height)).toBe(32)
     const target = await second.evaluate((row) => {
       const before = getComputedStyle(row, "::before")
       return { content: before.content, height: Number.parseFloat(before.height) }
