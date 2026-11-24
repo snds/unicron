@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.0.3
+
+### Patch Changes
+
+- A menu over the scrim (`DropdownMenuContent scrim`, as in quick create) is solid instead of frosted. The scrim already sets it apart, and the frosted popover over a dimmed page left its label ink at 3.7:1 on stone.
+
 ## 2.0.2
 
 ### Patch Changes

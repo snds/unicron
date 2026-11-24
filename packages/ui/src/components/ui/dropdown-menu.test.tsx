@@ -170,9 +170,13 @@ describe("DropdownMenu in the 2.0 look (Figma Menu 76:415, Menu Item 76:325)", (
     const { unmount } = render(<QuickCreate />)
     const scrim = document.querySelector('[data-slot="dropdown-menu-scrim"]') as HTMLElement
     expect(scrim.className.split(" ")).toEqual(expect.arrayContaining(["scrim-menu", "fixed", "inset-0"]))
+    // Over the scrim the menu is solid, so its label ink keeps its contrast.
+    const solid = "[--surface-popover-frost:var(--surface-popover)]"
+    expect(document.querySelector('[data-slot="dropdown-menu-content"]')!.className.split(" ")).toContain(solid)
     unmount()
     render(<QuickCreate scrim={false} />)
     expect(document.querySelector('[data-slot="dropdown-menu-scrim"]')).toBeNull()
+    expect(document.querySelector('[data-slot="dropdown-menu-content"]')!.className.split(" ")).not.toContain(solid)
   })
 
   it("a section label is an overline in label ink", () => {

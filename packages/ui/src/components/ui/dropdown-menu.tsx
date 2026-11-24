@@ -41,6 +41,12 @@ const PANEL =
  */
 const PANEL_MOTION = "motion-anchor motion-anchor-fast"
 
+/**
+ * Over the scrim the menu is solid: the scrim already sets it apart, and 72% of the popover over a dimmed page
+ * left its label ink under 4.5:1 (Warpcore's quick create on a phone, stone).
+ */
+const OVER_SCRIM = "[--surface-popover-frost:var(--surface-popover)]"
+
 function DropdownMenuContent({
   align = "start",
   alignOffset = 0,
@@ -84,7 +90,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           data-width={width}
-          className={cn(PANEL, PANEL_MOTION, "z-50", MENU_WIDTHS[width], className)}
+          className={cn(PANEL, PANEL_MOTION, "z-50", MENU_WIDTHS[width], scrim && OVER_SCRIM, className)}
           {...props}
         />
       </MenuPrimitive.Positioner>
