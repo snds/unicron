@@ -864,7 +864,7 @@ test.describe("on a phone (second pass)", () => {
 
   test("a field's text is 16px on a touch screen in the Composer too, so iOS does not zoom into the chat's field", async ({ page }) => {
     await open(page, "composer")
-    expect(await page.locator('[data-slot="composer-field"]').first().evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("16px/20px")
+    expect(await page.locator('[data-slot="composer-field"]').first().evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("16px/24px")
   })
 })
 

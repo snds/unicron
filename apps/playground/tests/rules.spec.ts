@@ -83,6 +83,7 @@ const OFF_ROLE: Record<string, Exception> = {
     size: "390",
   },
   "mono 400 16/20": { why: "the same for a mono field: the code-inline role at 16px on touch", view: "secret-field", size: "390" },
+  "sans 400 16/24": { why: "the same for the 2.0 Composer's field, set in the body role: 16px on touch on the body role's 24 line", view: "composer", size: "390" },
   "sans 500 15/24": {
     why: "bold text in response prose: the response role's size and line in the strong weight (contract 5.1c C20: not a role of its own)",
     view: "prose",
@@ -230,7 +231,7 @@ for (const size of SIZES) {
         const offRole = Object.fromEntries(Object.entries(seen.fonts).filter(([font]) => !ROLE_FONTS.has(font) && !(font in OFF_ROLE)))
         expect(offRole, "text outside the 31 type roles (family weight size/leading: the parts that draw it)").toEqual({})
         // The touch exception is for a touch screen only.
-        if (!size.touch) for (const font of ["sans 500 16/20", "mono 400 16/20"]) expect(seen.fonts[font] ?? [], `${font} away from a touch screen`).toEqual([])
+        if (!size.touch) for (const font of ["sans 500 16/20", "mono 400 16/20", "sans 400 16/24"]) expect(seen.fonts[font] ?? [], `${font} away from a touch screen`).toEqual([])
 
         const offScale = Object.fromEntries(Object.entries(seen.gaps).filter(([slot]) => !(slot in OFF_SCALE)))
         expect(offScale, "gaps off the spacing scale").toEqual({})

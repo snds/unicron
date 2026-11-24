@@ -1,5 +1,5 @@
 // Owned component (not generated): the message box at the foot of a conversation or a thread: a field that grows, and one square send button that becomes Stop.
-// Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 32:91; contract 5.1 and 5.1b #46; no app PR, no DSA record)
+// Promoted from: Seeded in snds/unicron (2.0: Figma Composer 32:91, the floating raised bar; contract 5.1 and 5.1b #46; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
@@ -71,7 +71,7 @@ export interface ComposerProps extends Omit<React.ComponentProps<"form">, "onSub
   chips?: React.ReactNode
   /** A status strip above the chips (an Accessory): a finished background task, "Sends when you're back online." */
   status?: React.ReactNode
-  /** The leading slot: an attach button (`<IconButton icon="attachment" label="Attach a file" />`). */
+  /** The tools row's first slot: an attach button (`<IconButton icon="add" size="icon-sm" label="Attach a file" />`). */
   attach?: React.ReactNode
   /** A second leading action after it: Vale's expand to the full message form. */
   leadingAction?: React.ReactNode
@@ -80,6 +80,10 @@ export interface ComposerProps extends Omit<React.ComponentProps<"form">, "onSub
   /** Anything else for the textarea: `id`, `name`, `autoComplete`, `enterKeyHint`, `onKeyDown`, `onPaste`. */
   fieldProps?: Omit<React.ComponentProps<"textarea">, "value" | "defaultValue" | "onChange" | "disabled" | "placeholder" | "ref">
 }
+
+// Figma's Send is a 32px circle (radius/round) on the accent fill: the round shape marks the one
+// action that leaves the bar.
+const SEND = "rounded-full"
 
 function coarsePointer() {
   return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches
@@ -92,11 +96,13 @@ function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null) {
 }
 
 /**
- * The message box (Figma "21. Composer"): the raised surface with a 1px hairline, 48 tall at rest
- * (`size-control`), 16px in on the left and 4 on the right, gap 8. The field is in the `ui` role
- * with the placeholder in label ink; it grows with its text up to `--c-composer-max-lines` lines,
- * then scrolls inside itself. On a touch screen the field's text is 16px, as every field's, so iOS
- * does not zoom into it. The send button is a 32px square (Button size icon) on the primary fill with `send--alt`.
+ * The message box (Figma Composer, 2.0): a floating raised bar with 16px corners and a 1px
+ * line/field edge, 88 tall at rest. The field sits on top in the `body` role with the placeholder
+ * in label ink; it grows with its text up to `--c-composer-max-lines` lines, then scrolls inside
+ * itself. Under it, 10 below, the tools row: `attach` and `leadingAction` (small ghost Icon
+ * Buttons), then the send button at the end, a 32px circle on the primary fill with an up arrow.
+ * 12 in at the top and right, 10 at the bottom, 16 on the left. On a touch screen the field's text
+ * is 16px, as every field's, so iOS does not zoom into it.
  *
  * While the field is only empty, Send is unavailable: `aria-disabled`, dimmed to 50%, and still in
  * the tab order, so a keyboard reaches it and hears why; a press does nothing (Unicron 51: a
@@ -244,7 +250,7 @@ export function Composer({
   let action: React.ReactNode
   if (waiting) {
     action = (
-      <Button ref={button} type="button" size="icon" aria-label={composerCopy.waiting} data-slot="composer-send" data-action="waiting" onClick={press(onCancelWaiting)} disabled={disabled} {...trackFocus}>
+      <Button ref={button} type="button" size="icon" className={SEND} aria-label={composerCopy.waiting} data-slot="composer-send" data-action="waiting" onClick={press(onCancelWaiting)} disabled={disabled} {...trackFocus}>
         <Icon name="time" className="size-5" />
       </Button>
     )
@@ -254,6 +260,7 @@ export function Composer({
         ref={button}
         type="button"
         size="icon"
+        className={SEND}
         aria-label={composerCopy.stop}
         data-slot="composer-send"
         data-action="stop"
@@ -271,6 +278,7 @@ export function Composer({
         ref={button}
         type="submit"
         size="icon"
+        className={SEND}
         aria-label={composerCopy.send}
         aria-describedby={disabledReason ? reasonId : undefined}
         data-slot="composer-send"
@@ -283,7 +291,7 @@ export function Composer({
         focusableWhenDisabled={idle || (focusable && (disabled || sendDisabled)) ? true : undefined}
         {...trackFocus}
       >
-        <Icon name="send--alt" className="size-5" />
+        <Icon name="arrow--up" className="size-5" />
       </Button>
     )
   }
@@ -320,19 +328,12 @@ export function Composer({
       <div
         data-slot="composer-box"
         className={cn(
-          "bg-surface-raised rule-box min-h-control flex min-w-0 items-end gap-2 rounded-lg py-1 pr-1",
-          attach || leadingAction ? "pl-1" : "pl-4",
+          "bg-surface-raised inset-ring inset-ring-line-field flex min-w-0 flex-col gap-2.5 rounded-xl pt-3 pr-3 pb-2.5 pl-4",
           // Focus in the field: Figma's 2px inside border in the focus line (--line-focus), as a Text Field draws it.
           "has-[[data-slot=composer-field]:focus]:rule-box-emphasis has-[[data-slot=composer-field]:focus]:[--rule-color:var(--line-focus)]",
           disabled && !focusable && "opacity-50"
         )}
       >
-        {attach || leadingAction ? (
-          <div data-slot="composer-leading" className="flex shrink-0 items-center">
-            {attach}
-            {leadingAction}
-          </div>
-        ) : null}
         <textarea
           data-slot="composer-field"
           rows={1}
@@ -350,14 +351,23 @@ export function Composer({
           className={cn(
             // 16px on a touch screen, as every field: iOS zooms the page into a field set under 16px.
             fieldTextOnTouch,
-            "type-ui text-text-body placeholder:text-text-label min-w-0 flex-1 resize-none bg-transparent py-2.5 outline-none",
+            "type-body text-text-body placeholder:text-text-label min-w-0 resize-none bg-transparent outline-none",
             size === "line"
-              ? "h-10 overflow-y-auto"
-              : "max-h-[calc(var(--type-ui-leading)*var(--c-composer-max-lines)+--spacing(5))] overflow-y-auto",
+              ? "h-6 overflow-y-auto"
+              : "max-h-[calc(var(--type-body-leading)*var(--c-composer-max-lines))] overflow-y-auto",
             fieldProps?.className
           )}
         />
-        {action}
+        <div data-slot="composer-tools" className="flex min-w-0 items-center gap-0.5">
+          {attach || leadingAction ? (
+            <div data-slot="composer-leading" className="flex shrink-0 items-center gap-0.5">
+              {attach}
+              {leadingAction}
+            </div>
+          ) : null}
+          <span aria-hidden="true" className="flex-1" />
+          {action}
+        </div>
       </div>
     </form>
   )

@@ -494,9 +494,9 @@ test.describe("the phone's bottom row", () => {
     // It hugged its own width before and stopped at 268.
     expect(composer.x).toBe(bar.x)
     expect(composer.right).toBe(bar.right)
-    // Its send button sits at the row's end.
+    // Its send button sits at the row's end, 12 in (the 2.0 Composer's right padding).
     const send = await box(row.locator('[data-slot="composer-send"]'))
-    expect(bar.right - send.right).toBeLessThanOrEqual(8)
+    expect(bar.right - send.right).toBeLessThanOrEqual(12)
   })
 
   /** Every animation frame's boxes of the row's parts, from now until they have stood still for a while. */
