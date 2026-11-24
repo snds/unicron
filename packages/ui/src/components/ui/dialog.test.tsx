@@ -275,8 +275,9 @@ describe("DialogFooter sticky", () => {
     const cls = footer().className.split(" ")
     expect(footer()).not.toHaveAttribute("data-sticky")
     expect(cls).not.toContain("sticky")
-    expect(cls).toEqual(expect.arrayContaining(["flex", "justify-end", "gap-4"]))
-    expect(cls.some((c) => c.startsWith("bg-") || c.startsWith("border") || c.startsWith("rule-"))).toBe(false)
+    // A band of its own (2.0 Dialog): a rule edge to edge, the actions 12 apart, no fill.
+    expect(cls).toEqual(expect.arrayContaining(["flex", "justify-end", "gap-3", "rule-t", "py-4"]))
+    expect(cls.some((c) => c.startsWith("bg-") || c.startsWith("border"))).toBe(false)
   })
 
   it("pins to the popup's bottom edge, over its padding, opaque, with a hairline above", () => {
@@ -290,7 +291,7 @@ describe("DialogFooter sticky", () => {
     )
     const cls = footer().className.split(" ")
     expect(footer()).toHaveAttribute("data-sticky", "true")
-    expect(cls).toEqual(expect.arrayContaining(["sticky", "-bottom-(--c-dialog-padding)", "bg-surface-raised", "rule-t"]))
+    expect(cls).toEqual(expect.arrayContaining(["sticky", "-bottom-(--c-dialog-padding-top)", "bg-surface-popover", "rule-t"]))
   })
 
   it("DialogActions takes it too", () => {
@@ -347,34 +348,37 @@ describe("Dialog padding (--c-dialog-padding)", () => {
     const scrollCss = await declarations(el.querySelector('[data-slot="dialog-scroll"]') as HTMLElement)
     const footerCss = await declarations(el.querySelector('[data-slot="dialog-footer"]') as HTMLElement)
     const pad = popupCss.get("--c-dialog-padding") ?? tokens.dialog.padding.$value
-    const value = (v?: string) => v?.replaceAll("var(--c-dialog-padding)", pad).replace(/^calc\((.+) \* -1\)$/, "-$1")
+    const top = popupCss.get("--c-dialog-padding-top") ?? tokens.dialog["padding-top"].$value
+    const value = (v?: string) =>
+      v?.replaceAll("var(--c-dialog-padding-top)", top).replaceAll("var(--c-dialog-padding)", pad).replace(/^calc\((.+) \* -1\)$/, "-$1")
     return {
       pad,
-      contentPadding: value(scrollCss.get("padding")),
+      top,
+      content: { inline: value(scrollCss.get("padding-inline")), block: value(scrollCss.get("padding-block")) },
       footer: {
         marginInline: value(footerCss.get("margin-inline")),
-        marginTop: value(footerCss.get("margin-top")),
         marginBottom: value(footerCss.get("margin-bottom")),
-        padding: value(footerCss.get("padding")),
+        paddingInline: value(footerCss.get("padding-inline")),
         bottom: value(footerCss.get("bottom")),
       },
     }
   }
 
-  it("is 1.5rem by default, the 24 Figma's dialogs draw, with 1rem above the header", async () => {
+  it("is 1.5rem at the sides by default, the 24 Figma's dialogs draw, with 1.25rem above, below and between the bands", async () => {
     expect(tokens.dialog.padding.$value).toBe("1.5rem")
-    expect(tokens.dialog["padding-top"].$value).toBe("1rem")
+    expect(tokens.dialog["padding-top"].$value).toBe("1.25rem")
     expect(await measure()).toEqual({
       pad: "1.5rem",
-      contentPadding: "1.5rem",
-      footer: { marginInline: "-1.5rem", marginTop: "-1.5rem", marginBottom: "-1.5rem", padding: "1.5rem", bottom: "-1.5rem" },
+      top: "1.25rem",
+      content: { inline: "1.5rem", block: "1.25rem" },
+      footer: { marginInline: "-1.5rem", marginBottom: "-1.25rem", paddingInline: "1.5rem", bottom: "-1.25rem" },
     })
   })
 
   it.each(["1rem", "0px", "2rem"])("an override to %s keeps the footer's bleed equal to the padding", async (pad) => {
-    const m = await measure(`[--c-dialog-padding:${pad}]`)
-    expect(m.contentPadding).toBe(pad)
-    expect(m.footer).toEqual({ marginInline: `-${pad}`, marginTop: `-${pad}`, marginBottom: `-${pad}`, padding: pad, bottom: `-${pad}` })
+    const m = await measure(`[--c-dialog-padding:${pad}] [--c-dialog-padding-top:${pad}]`)
+    expect(m.content).toEqual({ inline: pad, block: pad })
+    expect(m.footer).toEqual({ marginInline: `-${pad}`, marginBottom: `-${pad}`, paddingInline: pad, bottom: `-${pad}` })
   })
 })
 
@@ -435,17 +439,17 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
       expect.arrayContaining(["type-overline", "text-text-label"])
     )
     expect(screen.getByRole("heading", { name: "github.com" }).className.split(" ")).toEqual(
-      expect.arrayContaining(["type-lead", "text-text-body"])
+      expect.arrayContaining(["type-title", "text-text-body"])
     )
   })
 
-  it("is solid and square: the raised surface, the 2px corner, a 1px rule drawn over the content, no blur or shadow", () => {
+  it("is solid: the popover surface under the dialog's edge shadow, 12px corners, a 1px rule drawn over the content, no blur", () => {
     render(<NewLogin />)
     const cls = popup().className.split(" ")
-    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rounded"]))
-    expect(cls.some((c) => /blur|shadow|ring-|rounded-(xl|lg|md)/.test(c))).toBe(false)
+    expect(cls).toEqual(expect.arrayContaining(["surface-dialog", "rounded-lg"]))
+    expect(cls.some((c) => /blur|^shadow|ring-|bg-/.test(c))).toBe(false)
     const rule = popup().querySelector('[data-slot="dialog-rule"]') as HTMLElement
-    expect(rule.className.split(" ")).toEqual(expect.arrayContaining(["rule-box", "absolute", "inset-0", "pointer-events-none"]))
+    expect(rule.className.split(" ")).toEqual(expect.arrayContaining(["rule-box", "absolute", "inset-0", "pointer-events-none", "rounded-lg"]))
     expect(rule).toHaveAttribute("aria-hidden")
     expect(overlay().className.split(" ")).toContain("scrim-dialog")
   })
@@ -460,7 +464,7 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
     expect(close.querySelector('[data-icon-name="close"]')).not.toBeNull()
     expect(close.parentElement!.className.split(" ")).toEqual(expect.arrayContaining(["absolute", "top-5", "right-4"]))
     const header = document.querySelector('[data-slot="dialog-header"]') as HTMLElement
-    expect(header.className.split(" ")).toContain("pr-12")
+    expect(header.className.split(" ")).toEqual(expect.arrayContaining(["rule-b", "pb-4", "pr-[calc(var(--c-dialog-padding)+--spacing(12))]"]))
     fireEvent.click(close)
     expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything())
   })
@@ -469,7 +473,7 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
     render(<NewLogin showCloseButton={false} />)
     expect(screen.queryByRole("button", { name: "Close" })).toBeNull()
     const header = document.querySelector('[data-slot="dialog-header"]') as HTMLElement
-    expect(header.className.split(" ")).not.toContain("pr-12")
+    expect(header.className.split(" ")).not.toContain("pr-[calc(var(--c-dialog-padding)+--spacing(12))]")
   })
 
   it("starts focus in the content, not on the close button, which comes last in the tab order", async () => {
@@ -520,11 +524,11 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
     expect(cancel.querySelector("svg")).toBeNull()
   })
 
-  it("the content scrolls inside the rule, 24 at the sides and bottom and 16 above the header", () => {
+  it("the content scrolls inside the rule, 24 at the sides and 20 above, below and between the bands", () => {
     render(<NewLogin />)
     const scroll = popup().querySelector('[data-slot="dialog-scroll"]') as HTMLElement
     expect(scroll.className.split(" ")).toEqual(
-      expect.arrayContaining(["overflow-y-auto", "p-(--c-dialog-padding)", "pt-(--c-dialog-padding-top)", "gap-6"])
+      expect.arrayContaining(["overflow-y-auto", "px-(--c-dialog-padding)", "py-(--c-dialog-padding-top)", "gap-(--c-dialog-padding-top)"])
     )
     expect(popup().className.split(" ")).toContain("overflow-hidden")
   })

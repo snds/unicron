@@ -8,8 +8,8 @@
     },
     "padding-top": {
       "$type": "dimension",
-      "$value": "1rem",
-      "$description": "The space above the header's overline (Figma: 16 on every drawn desktop dialog). The close button sits 4px lower, centred on the 52px overline and title."
+      "$value": "1.25rem",
+      "$description": "The 2.0 Dialog's vertical rhythm (Figma 76:139): 20 above the header's overline, between the header, body and footer bands, and under the body."
     },
     "margin": {
       "$type": "dimension",

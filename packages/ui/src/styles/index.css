@@ -955,6 +955,13 @@ html:has([data-slot="app-frame"]) body {
  * The popover frost at 72% over a 24px backdrop blur, the popover shadow, and the 1px rule drawn
  * inside. A person who asks for less transparency gets the solid popover surface.
  */
+/* A dialog's surface (2.0 Dialog, Figma 76:139): the solid popover fill under the dialog's edge
+   shadow. Solid, so no blur; the 1px rule is the dialog's own rule span. */
+@utility surface-dialog {
+  background-color: var(--surface-popover);
+  box-shadow: var(--shadow-dialog);
+}
+
 @utility surface-frost {
   background-color: var(--surface-popover-frost);
   -webkit-backdrop-filter: blur(var(--blur-frost));
