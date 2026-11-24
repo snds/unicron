@@ -83,7 +83,7 @@ describe("Composer", () => {
 
   it("the field's text is 16px on a touch screen, as every field's, so iOS does not zoom into it", () => {
     render(<Composer />)
-    expect(field().className.split(" ")).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:text-(length:--type-body-size)"]))
+    expect(field().className.split(" ")).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:text-(length:--size-field-text-touch)"]))
   })
 
   it("sends on Enter, makes a line on Shift+Enter, and clears itself when uncontrolled", () => {

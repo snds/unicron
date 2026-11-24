@@ -1300,6 +1300,11 @@
     "$value": "{size.touch-min}",
     "$description": "44px (Figma size/touch-min): the floor for a touch target. Tailwind: min-h-touch-min, size-touch-min."
   },
+  "size-field-text-touch": {
+    "$type": "dimension",
+    "$value": "{size.field-text-touch}",
+    "$description": "16px: a field's text on a touch screen, so iOS does not zoom into it. Read it as `pointer-coarse:text-(length:--size-field-text-touch)` (fieldTextOnTouch in @unicron/ui)."
+  },
   "shadow-popover": {
     "$type": "shadow",
     "$value": "{elevation.popover}",

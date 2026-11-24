@@ -88,7 +88,9 @@ const ROW = cva(
       disabled: { true: "pointer-events-none opacity-50", false: "" },
     },
     compoundVariants: [
-      // Label: 20 + 28 + 4 + 16 + 20 = 88. Plain: 20 + 28 + 6 + 20 + 2 + 16 = 92.
+      // Label: 20 + 20 + 4 + 16 + 20 = 80. Plain: 20 + 20 + 6 + 16 + 2 + 16 = 80; on touch the
+      // trailing column stacks the state over the controls (51 from the title's baseline), so the
+      // body holds 52 there and the row is 88.
       { layout: "inline", size: "default", metaStyle: "label", className: "items-baseline pt-5 pb-5" },
       { layout: "inline", size: "default", metaStyle: "plain", className: "items-baseline pt-5 pb-4" },
       // Compact (Lockdown's popup and sheets, Vale's summary rows): 8 + 20 + 4 + 16 + 8 = 56.
@@ -475,7 +477,7 @@ function ListRow({
   ) : (
     <div
       data-slot="list-row-body"
-      className={cn("flex min-w-0 flex-1 flex-col", metaStyle === "plain" ? (compact ? "gap-1" : "gap-1.5 pb-0.5") : "gap-1")}
+      className={cn("flex min-w-0 flex-1 flex-col", metaStyle === "plain" ? (compact ? "gap-1" : "gap-1.5 pb-0.5 pointer-coarse:min-h-13") : "gap-1")}
     >
       <p id={ids.title} data-slot="list-row-title" className={cn(lineType, "text-foreground")}>
         {main}

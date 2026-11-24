@@ -1257,6 +1257,11 @@
       "$type": "dimension",
       "$value": "0.25rem",
       "$description": "A progress track and a thin bar: 4px (Figma size/track)."
+    },
+    "field-text-touch": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$description": "A field's text size on a touch screen: iOS zooms the page into a focused field set under 16px. Not in Figma: a platform floor, not a style (Unicron 2.0, where body went to 15px)."
     }
   },
   "stroke": {

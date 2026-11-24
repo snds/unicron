@@ -7,10 +7,10 @@ import { cva } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
 /**
- * On a touch screen a field's text is 16px, the body size, not the `ui` role's 15: iOS zooms the
+ * On a touch screen a field's text is 16px (--size-field-text-touch), not the `ui` role's 13: iOS zooms the
  * page into any field set under 16px when it takes focus. The line height stays the role's 20.
  */
-export const fieldTextOnTouch = "pointer-coarse:text-(length:--type-body-size)"
+export const fieldTextOnTouch = "pointer-coarse:text-(length:--size-field-text-touch)"
 
 /**
  * The Text Field's box (Figma 32:48), for every field: Input, Textarea, InputGroup, the Select and

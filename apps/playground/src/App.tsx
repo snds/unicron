@@ -78,7 +78,7 @@ export function App() {
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center gap-x-4 gap-y-2">
             <ThemeSwitcher theme={shown.theme} ground={shown.ground} split={shown.split} />
           </div>
         </header>

@@ -21,6 +21,8 @@ export function ThemeSwitcher({ theme, ground, split }: PlaygroundTheme) {
       <ToggleGroup
         aria-label="Theme"
         data-switch="theme"
+        // Six themes since Fontface: on a phone the group scrolls inside itself, never the page.
+        className="min-w-0 max-w-full overflow-x-auto"
         variant="outline"
         size="sm"
         spacing={0}

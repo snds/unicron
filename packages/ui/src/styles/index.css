@@ -1109,7 +1109,7 @@ html:has([data-slot="app-frame"]) body {
     padding-inline: calc(var(--c-indicator-badge-height) / 4);
     font-size: var(--type-overline-size);
     line-height: var(--c-indicator-badge-height);
-    font-weight: 500;
+    font-weight: var(--type-overline-weight);
     font-variant-numeric: tabular-nums;
     text-align: center;
     background: var(--c-indicator-unread-badge-bg);
