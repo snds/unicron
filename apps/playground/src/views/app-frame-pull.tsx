@@ -27,6 +27,10 @@ const ITEMS = [
   { name: "Ledger Bank", meta: "mchen // ledger.co", status: "Strong" },
   { name: "Figma", meta: "mira@ledger.co // figma.com", status: "Weak" },
   { name: "Pine Hollow Cabins", meta: "mira.chen // pinehollow.com", status: "Strong" },
+  { name: "Northwind Air", meta: "mchen // northwind.aero", status: "Strong" },
+  { name: "Harbor Library", meta: "mira.chen // harborlib.org", status: "Reused" },
+  { name: "Juniper Health", meta: "mira.chen@fastmail.com", status: "Strong" },
+  { name: "Old Mill Hardware", meta: "mchen // oldmill.shop", status: "Weak" },
 ]
 
 /** Lockdown's Health list: a pull checks for breaches again; so does the plain action in the head. */

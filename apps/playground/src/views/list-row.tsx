@@ -20,21 +20,21 @@ export default function ListRowView() {
 
   return (
     <div className="flex flex-col gap-10 p-6">
-      <Specimen label="Inline // label meta: default, live, selected, selected live (88)">
+      <Specimen label="Inline // label meta: default, live, selected, selected live (56)">
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} />
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} tone="live" />
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} selected />
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} selected tone="live" />
       </Specimen>
 
-      <Specimen label="Inline // plain meta (92)">
+      <Specimen label="Inline // plain meta (60)">
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} metaStyle="plain" />
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} metaStyle="plain" tone="live" />
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} metaStyle="plain" selected />
         <ListRow index={TASK.index} title={TASK.title} meta={TASK.meta} status={TASK.status} metaStyle="plain" selected tone="live" />
       </Specimen>
 
-      <Specimen label="Message // unread, selected (100); two preview lines (120)">
+      <Specimen label="Message // unread, selected (84)">
         <ListRow
           layout="message"
           unread

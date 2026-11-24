@@ -65,39 +65,39 @@ export function formatListCount(count: number): string {
 }
 
 const ROW = cva(
-  // The rule is an inset shadow on top, so it adds no height. Selected is primary-soft with the 2px
-  // primary edge, also an inset shadow, so it pushes nothing. Text keeps its default colours.
-  "group/list-row relative flex w-full min-w-0 rule-t text-foreground",
+  // 2.0: no dividers. Rows sit inset in their list with an 8px rounded fill; selected is the 8%
+  // fill (surface/selected) with the inset bar, drawn as its own part. Text keeps its default colours.
+  "group/list-row relative flex w-full min-w-0 rounded-lg text-text-body",
   {
     variants: {
       layout: {
-        // Figma Inline: 16 at the sides, 24 between columns, children on the text baseline.
-        inline: "gap-6 px-4",
-        // Figma Message: 12 at the sides, 16 at the top and bottom.
-        message: "gap-3 px-3",
+        // Figma Inline: 10 at the sides, 12 between columns, children on the text baseline.
+        inline: "gap-3 px-2.5",
+        // Figma Message: 12 at the sides, 10 at the top and bottom, 10 between columns.
+        message: "gap-2.5 px-3",
       },
       size: { default: "", compact: "" },
       metaStyle: { label: "", plain: "" },
-      selected: { true: "bg-primary-soft edge-l", false: "" },
+      selected: { true: "bg-surface-selected", false: "" },
       interactive: {
-        // A wash over whatever fill the row has (none, or primary-soft), as an image layer, while
-        // the pointer is on the row's main control; the stylesheet's ring is redrawn on the row.
-        true: "has-[[data-slot=list-row-main]:hover]:bg-[image:linear-gradient(var(--state-hover),var(--state-hover))] has-[[data-slot=list-row-main]:active]:bg-[image:linear-gradient(var(--state-pressed),var(--state-pressed))] has-[[data-slot=list-row-main]:focus-visible]:outline-solid has-[[data-slot=list-row-main]:focus-visible]:outline-(length:--stroke-emphasis) has-[[data-slot=list-row-main]:focus-visible]:outline-ring has-[[data-slot=list-row-main]:focus-visible]:outline-offset-[calc(var(--stroke-emphasis)*-1)]",
+        // The 5% hover fill while the pointer is on the row's main control, the 8% while pressed;
+        // a selected row keeps its 8%. The stylesheet's ring is redrawn on the row.
+        true: "has-[[data-slot=list-row-main]:hover]:not-data-selected:bg-surface-hover has-[[data-slot=list-row-main]:active]:bg-surface-selected has-[[data-slot=list-row-main]:focus-visible]:outline-solid has-[[data-slot=list-row-main]:focus-visible]:outline-(length:--stroke-emphasis) has-[[data-slot=list-row-main]:focus-visible]:outline-ring has-[[data-slot=list-row-main]:focus-visible]:outline-offset-[calc(var(--stroke-emphasis)*-1)]",
         false: "",
       },
       disabled: { true: "pointer-events-none opacity-50", false: "" },
     },
     compoundVariants: [
-      // Label: 20 + 20 + 4 + 16 + 20 = 80. Plain: 20 + 20 + 6 + 16 + 2 + 16 = 80; on touch the
-      // trailing column stacks the state over the controls (51 from the title's baseline), so the
-      // body holds 52 there and the row is 88.
-      { layout: "inline", size: "default", metaStyle: "label", className: "items-baseline pt-5 pb-5" },
-      { layout: "inline", size: "default", metaStyle: "plain", className: "items-baseline pt-5 pb-4" },
+      // Label: 8 + 20 + 4 + 16 + 8 = 56. Plain: 8 + 20 + 6 + 16 + 2 + 8 = 60; on touch the
+      // trailing column stacks the state over the controls, so the body holds 52 there and the row is 68.
+      // On touch the trailing column stacks the status over the controls; 60 keeps that on the 4px grid.
+      { layout: "inline", size: "default", metaStyle: "label", className: "items-baseline py-2 pointer-coarse:min-h-15" },
+      { layout: "inline", size: "default", metaStyle: "plain", className: "items-baseline py-2" },
       // Compact (Lockdown's popup and sheets, Vale's summary rows): 8 + 20 + 4 + 16 + 8 = 56.
       { layout: "inline", size: "compact", className: "min-h-14 items-center py-2" },
       { layout: "inline", size: "compact", metaStyle: "plain", className: "py-1.5" },
-      // Message: 16 + 20 + 4 + 20 + 4 + 20 + 16 = 100 with one preview line.
-      { layout: "message", size: "default", className: "items-start py-4" },
+      // Message: 10 + 20 + 4 + 20 + 4 + 16 + 10 = 84 with one preview line.
+      { layout: "message", size: "default", className: "items-start py-2.5" },
       // A collapsed message: one line, 12 + 20 + 12 = 44.
       { layout: "message", size: "compact", className: "items-center py-3" },
     ],
@@ -128,11 +128,11 @@ type MainRender = useRender.RenderProp
 export type ListRowProps = Omit<React.HTMLAttributes<HTMLElement>, "title" | "onClick" | "children"> & {
   /** `inline` (indexed items: tasks, vault items) or `message` (mail, notifications). */
   layout?: ListRowLayout
-  /** Primary-soft with the 2px primary edge; the main control says `aria-current`. */
+  /** The 8% fill (surface/selected) with the 2px inset bar; the main control says `aria-current`. */
   selected?: boolean
   /** The `aria-current` value a selected row says. Default `true`; a link to a page may say `page`. */
   current?: "page" | "step" | "location" | "date" | "time" | "true"
-  /** `live` colours the status in the live ink, for running work. */
+  /** @deprecated 2.0 retires Tone=Live: put a working `StatusOrb` in `leading`. `live` still colours the status in the working ink. */
   tone?: ListRowTone
   /** `compact` (56; a collapsed message 44) for popups, sheets and summary rows. */
   size?: ListRowSize
@@ -164,12 +164,12 @@ export type ListRowProps = Omit<React.HTMLAttributes<HTMLElement>, "title" | "on
   // ── Inline ──
   /** The folio in the 40 px leading column ("01"). */
   index?: React.ReactNode
-  /** Subtitle role; wraps. Required for an inline row. */
+  /** UI emphasis role (13/500); wraps. Required for an inline row. */
   title?: React.ReactNode
-  /** One line, cut with an ellipsis. `label` (overline) or `plain` (meta) per `metaStyle`. */
+  /** One line in the meta role, cut with an ellipsis. `metaStyle` sets the room above it: 4 (`label`) or 6 and 2 under (`plain`). */
   meta?: React.ReactNode
   metaStyle?: ListRowMetaStyle
-  /** The status words, right, in overline caps ("Queued"); in the live ink when `tone="live"`. */
+  /** The status words, right, in the meta role ("Queued"). */
   status?: React.ReactNode
   /**
    * The status as a mark, for a narrow column where words would push the title onto two lines
@@ -189,7 +189,7 @@ export type ListRowProps = Omit<React.HTMLAttributes<HTMLElement>, "title" | "on
   time?: React.ReactNode
   subject?: React.ReactNode
   preview?: React.ReactNode
-  /** The 6 px unread square before the sender; "Unread" is read with the row's name. */
+  /** The 6 px unread dot (info/fill) before the sender; "Unread" is read with the row's name. */
   unread?: boolean
   /** How many messages the thread holds, after the sender. */
   count?: number
@@ -197,7 +197,7 @@ export type ListRowProps = Omit<React.HTMLAttributes<HTMLElement>, "title" | "on
   tag?: React.ReactNode
   /** Which account the message came to, before the time ("Work"). */
   account?: React.ReactNode
-  /** How many lines the preview may run to before it is cut. Default 2, as the app screens draw it. */
+  /** How many lines the preview may run to before it is cut. Default 1, as Figma draws it. */
   previewLines?: 1 | 2 | 3
 }
 
@@ -209,10 +209,11 @@ function progressProps(progress: number | ListRowProgress): ListRowProgress {
 const PREVIEW_LINES = { 1: "line-clamp-1", 2: "line-clamp-2", 3: "line-clamp-3" } as const
 
 /**
- * ListRow: one row for every list (Figma 1, "List Row"). Inline rows hold an index, a title that
- * wraps, one line of meta, a status that hugs its words and an optional segmented progress bar;
- * message rows hold an unread mark, a sender, a time, a subject and a preview. Heights 88 (label
- * meta), 92 (plain meta) and 100 (with progress) as drawn; 56 compact.
+ * ListRow: one row for every list (Figma 9:181, "List Row", 2.0). Inline rows hold an index, a title
+ * that wraps, one line of meta, a status that hugs its words and an optional segmented progress
+ * bar; message rows hold an unread dot, a sender, a time, a subject and a preview. Heights 56 (label
+ * meta), 60 (plain meta) and 84 (a message) as drawn. No dividers: rows sit inset in their list,
+ * selected is the 8% fill with the inset bar.
  *
  * Interactive with `href`, `onClick` or `mainRender`: the title (or the sender) is the row's main
  * control, stretched over the row. Its name is the title alone (a message: unread, sender and
@@ -255,7 +256,7 @@ function ListRow({
   count,
   tag,
   account,
-  previewLines = 2,
+  previewLines = 1,
   className,
   onKeyDown,
   onContextMenu,
@@ -360,10 +361,10 @@ function ListRow({
     setMenuOpen(true)
   }
 
-  const lineType = message || compact ? "type-ui" : "type-subtitle"
-  // The line box a control or a mark is centred on: the title's (28) or a message header's (20).
+  const lineType = message || compact ? "type-ui" : "type-ui-emphasis"
+  // The line box a control or a mark is centred on: the title's or a message header's (20).
   // Fixed, so a 32px button overhangs it evenly instead of pushing the row's baseline down.
-  const lineBox = message ? "type-ui-emphasis h-5" : compact ? "type-ui h-5" : "type-subtitle h-7"
+  const lineBox = message ? "type-ui-emphasis h-5" : compact ? "type-ui h-5" : "type-ui-emphasis h-5"
   // With a mouse, the menu button shows on hover and focus; without a trailing action it takes the
   // status's place then (the status hides), so at rest the status hugs the row's edge as drawn. On
   // touch it always shows, in its own place.
@@ -379,9 +380,9 @@ function ListRow({
           (compact
             ? "pointer-fine:absolute pointer-fine:top-1/2 pointer-fine:-translate-y-1/2"
             : message
-              ? "pointer-fine:absolute pointer-fine:top-4"
-              : "pointer-fine:absolute pointer-fine:top-5"),
-        overlayMenu && (message ? "pointer-fine:right-3" : "pointer-fine:right-4")
+              ? "pointer-fine:absolute pointer-fine:top-2.5"
+              : "pointer-fine:absolute pointer-fine:top-2"),
+        overlayMenu && (message ? "pointer-fine:right-3" : "pointer-fine:right-2.5")
       )}
     >
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -426,7 +427,7 @@ function ListRow({
       <div data-slot="list-row-header" className="flex h-5 min-w-0 items-baseline gap-2">
         {unread ? (
           <>
-            <span data-slot="list-row-unread" aria-hidden="true" className="size-(--c-list-row-unread-size) shrink-0 bg-foreground" />
+            <span data-slot="list-row-unread" aria-hidden="true" className="size-(--c-list-row-unread-size) shrink-0 rounded-full bg-info-fill" />
             <span id={ids.unread} className="sr-only">
               Unread
             </span>
@@ -451,9 +452,9 @@ function ListRow({
           <span aria-hidden="true" className="flex-1" />
         )}
         {has(account) || has(time) ? (
-          <span id={ids.time} data-slot="list-row-time" className={cn("shrink-0 type-overline whitespace-nowrap text-muted-foreground", underMenu)}>
+          <span id={ids.time} data-slot="list-row-time" className={cn("shrink-0 type-caption whitespace-nowrap text-text-label", underMenu)}>
             {account}
-            {has(account) && has(time) ? <span aria-hidden="true"> // </span> : null}
+            {has(account) && has(time) ? <span aria-hidden="true"> · </span> : null}
             {time}
           </span>
         ) : null}
@@ -479,7 +480,7 @@ function ListRow({
       data-slot="list-row-body"
       className={cn("flex min-w-0 flex-1 flex-col", metaStyle === "plain" ? (compact ? "gap-1" : "gap-1.5 pb-0.5 pointer-coarse:min-h-13") : "gap-1")}
     >
-      <p id={ids.title} data-slot="list-row-title" className={cn(lineType, "text-foreground")}>
+      <p id={ids.title} data-slot="list-row-title" className={cn(lineType, "text-text-body")}>
         {main}
         {has(marks) ? (
           <span data-slot="list-row-marks" className="ml-2 inline-flex items-center gap-1 align-middle">
@@ -491,7 +492,7 @@ function ListRow({
         <p
           id={ids.meta}
           data-slot="list-row-meta"
-          className={cn("truncate text-muted-foreground", metaStyle === "plain" ? "type-meta" : "type-overline")}
+          className="truncate type-meta text-text-label"
         >
           {meta}
         </p>
@@ -546,7 +547,7 @@ function ListRow({
               <span
                 id={ids.status}
                 data-slot="list-row-status"
-                className={cn("type-overline whitespace-nowrap", tone === "live" ? "text-secondary-live" : "text-muted-foreground")}
+                className={cn("type-meta whitespace-nowrap", tone === "live" ? "text-status-working" : "text-text-label")}
               >
                 {status}
               </span>
@@ -573,8 +574,11 @@ function ListRow({
         onContextMenu: openMenuOnRightClick,
         children: (
           <>
+            {selected ? (
+              <span data-slot="list-row-bar" aria-hidden="true" className="pointer-events-none absolute inset-y-2 start-1.5 w-0.5 rounded-xs bg-primary-text" />
+            ) : null}
             {!message && !has(leading) && has(index) ? (
-              <span data-slot="list-row-index" className="w-(--c-list-row-leading-width) shrink-0 type-folio text-muted-foreground">
+              <span data-slot="list-row-index" className="w-(--c-list-row-leading-width) shrink-0 type-folio text-text-label">
                 {index}
               </span>
             ) : null}

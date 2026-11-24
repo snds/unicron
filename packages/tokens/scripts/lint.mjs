@@ -306,6 +306,11 @@ const ROUND_ALLOWED = [
     count: 1,
     why: "the unread dot: the library's round Status Mark Unread (Figma 143:540), 6px in info/fill",
   },
+  {
+    file: "packages/ui/src/components/ui/list-row.tsx",
+    count: 1,
+    why: "the message layout's unread dot, the same round 6px info/fill mark as the Task Row's (Figma List Row 9:181)",
+  },
 ]
 const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
 // An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not
