@@ -483,10 +483,10 @@ const ColumnContext = React.createContext<ColumnContextValue | null>(null)
  * The room a desktop content column keeps past the content line when it is the last one: 16 of the
  * page gutter (24 at least), taken with a negative margin and given back as padding. A fixed-width
  * column adds the same 16 to its width (`AppFrameDetail size="narrow"`). Beside the flush 2.0
- * sidebar there is no gutter to take it from: the column keeps the padding inside its own box, so
- * it, and its scroll bar, end at the window's edge.
+ * sidebar there is no gutter to take it from: the column keeps 4 inside its own box, as at its
+ * start, so it and its scroll bar end at the window's edge and a centred column stays centred.
  */
-const LAST_COLUMN_ROOM = "last:-me-4 last:pe-4 [[data-flush]_&]:last:me-0"
+const LAST_COLUMN_ROOM = "last:-me-4 last:pe-4 [[data-flush]_&]:last:me-0 [[data-flush]_&]:last:pe-1"
 
 /**
  * The room a desktop column keeps before its content when no shown column stands before it: 4px,
