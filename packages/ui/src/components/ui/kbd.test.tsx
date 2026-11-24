@@ -11,11 +11,11 @@ describe("Kbd", () => {
     expect(key).toHaveAttribute("data-slot", "kbd")
   })
 
-  it("is mono in a 20px hairline box on the control radius, in the secondary ink", () => {
+  it("is mono in a 20px hairline box on the xs radius (2.0 Kbd), in the secondary ink", () => {
     render(<Kbd>Esc</Kbd>)
     const classes = screen.getByText("Esc").className.split(/\s+/)
     expect(classes).toEqual(
-      expect.arrayContaining(["type-meta", "rule-box", "bg-surface-raised", "text-support-foreground", "h-5", "min-w-5", "rounded-lg"])
+      expect.arrayContaining(["type-meta", "rule-box", "bg-surface-raised", "text-support-foreground", "h-5", "min-w-5", "rounded-xs"])
     )
     // As typed: a key's case can matter, so it never takes the caps of an overline.
     expect(classes).not.toContain("type-overline")

@@ -9,6 +9,7 @@ import { cn } from "../../lib/utils"
 import type { IconName } from "../icon"
 import { useAppFrame } from "./app-frame-context"
 import { FloatButton } from "./float-button"
+import { IconButton } from "../icon-button"
 import { Rail, RailItem, formatNavCount, rovingTarget } from "./rail"
 
 /** One tab of the panel: background tasks, artifacts, environments, files (DR §7). */
@@ -43,6 +44,11 @@ export type ContextPanelProps = Omit<React.ComponentProps<"aside">, "children"> 
   /** The showing tab's body. */
   children?: React.ReactNode
   /**
+   * A `Composer`, when the panel can be asked questions (Synapse's Ask). It docks under the body,
+   * 12 in from the sides and the bottom (Figma Right Panel 127:460).
+   */
+  composer?: React.ReactNode
+  /**
    * On a phone and at medium width the same content is a sheet the app owns and passes here (a
    * `Sheet` with its `SheetContent`); the panel draws nothing else there (DR §7).
    */
@@ -62,9 +68,9 @@ export type ContextPanelProps = Omit<React.ComponentProps<"aside">, "children"> 
  * ContextPanel (contract 5.1, DR §7): what belongs to a conversation, beside it: background tasks,
  * artifacts, environments, files. Three states, driven by the app:
  *
- * - `open`: a tab strip drawn as Filter Chips (square, the overline role, the active one inverted
- *   ink) with tab semantics (a `tablist`, arrow keys, Home and End), the collapse float button at
- *   its end, and the panel. 400 wide with a rule at its start.
+ * - `open`: the 2.0 Right Panel (Figma 127:460). A 48 head of pill tabs with tab semantics (a
+ *   `tablist`, arrow keys, Home and End) and a ghost collapse button at its end; the body; and,
+ *   when the panel can be asked, a docked `composer`. 360 wide on the ground, a rule at its start.
  * - `rail`: the expand float button over a `Rail` of `RailItem`s: each tab's glyph and count, the
  *   live ink where something runs. Pressing one opens the panel at that tab.
  * - `hidden`: nothing; the conversation takes the room.
@@ -80,6 +86,7 @@ function ContextPanel({
   value,
   onValueChange,
   children,
+  composer,
   sheet,
   artifact,
   collapseLabel = "Collapse panel",
@@ -189,23 +196,22 @@ function ContextPanel({
       data-shown=""
       aria-label={label}
       className={cn(
-        // No space of its own above the head: the collapse button starts on the columns' line, 24
-        // under the top bar's rule (Figma cw-01: the button from y 88 to 132, the chips from 98).
-        "flex h-full min-h-0 w-[calc(var(--c-app-frame-context-panel)+--spacing(3))] shrink-0 flex-col [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l",
+        // 2.0 Right Panel (Figma 127:460): one panel for every app, 360 wide on the ground, a rule
+        // at its start. The head, body and dock keep their own padding.
+        "bg-surface-ground flex h-full min-h-0 w-(--c-app-frame-context-panel) shrink-0 flex-col [[data-column][data-shown]+&]:rule-l",
         className
       )}
       {...props}
     >
-      <div data-slot="context-panel-head" className="flex items-center gap-3 pb-4">
+      <div data-slot="context-panel-head" className="flex h-12 shrink-0 items-center gap-1 pr-2 pl-3">
         <div
           ref={listRef}
           data-slot="context-panel-tabs"
           role="tablist"
           aria-label={label}
-          // One line that scrolls sideways, as a scrolling FilterChipGroup: with three-digit counts
-          // (Unicron 13) four tabs no longer fit a 400 panel, and wrapping pushed the panel down.
-          // Room above and below keeps a 44px touch target unclipped.
-          className="no-scrollbar flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain pointer-coarse:-my-2.5 pointer-coarse:py-2.5"
+          // One line that scrolls sideways: with counts, four tabs may not fit a 360 panel, and
+          // wrapping would push the panel down. Room above and below keeps a 44px touch target.
+          className="no-scrollbar flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain pointer-coarse:-my-2 pointer-coarse:py-2"
           onKeyDown={(event) => {
             const items = Array.from(listRef.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [])
             const target = rovingTarget(items, document.activeElement as HTMLElement | null, event.key, "horizontal")
@@ -231,19 +237,29 @@ function ContextPanel({
                 tabIndex={active ? 0 : -1}
                 onClick={() => select(tab.value)}
                 className={cn(
-                  // Figma 15:503 Filter Chip: 24 high, 4 / 8 padding, square corners, the overline role.
-                  "type-overline hit-area inline-flex h-6 shrink-0 items-center px-2 py-1 whitespace-pre transition-[color,background-color] duration-(--motion-fast) ease-(--motion-ease)",
+                  // Figma Pill Tab (15:498), as Tabs draws it: 28 high, 9 at the sides, the control radius.
+                  "type-ui hit-area inline-flex h-control-s shrink-0 items-center gap-1.5 rounded px-2.25 py-1 whitespace-nowrap transition-[color,background-color] duration-(--motion-fast) ease-(--motion-ease)",
                   active
-                    ? "bg-text-body text-surface-ground"
-                    : "text-text-label hover:bg-state-hover hover:text-text-body active:bg-state-pressed"
+                    ? "type-ui-emphasis bg-surface-selected text-text-body"
+                    : "text-text-secondary hover:bg-surface-hover active:bg-surface-selected"
                 )}
               >
-                {tab.count !== undefined ? `${tab.label} ${formatNavCount(tab.count)}` : tab.label}
+                {tab.label}
+                {tab.count !== undefined ? " " : null}
+                {tab.count !== undefined ? <span data-slot="context-panel-tab-count" className="type-caption text-text-label">{formatNavCount(tab.count)}</span> : null}
               </ButtonPrimitive>
             )
           })}
         </div>
-        {pinned ? null : <FloatButton ref={collapseRef} label={collapseLabel} icon="open-panel--filled--right" aria-expanded={true} onClick={() => ask("rail")} />}
+        {pinned ? null : (
+          <IconButton
+            ref={collapseRef}
+            size="icon-sm"
+            // Open is the panel's resting state, so the button keeps the plain ghost look, not
+            // the pressed wash an expanded menu button takes.
+            className="aria-expanded:bg-transparent aria-expanded:hover:bg-state-hover aria-expanded:active:bg-state-pressed"
+            label={collapseLabel} icon="open-panel--filled--right" aria-expanded={true} onClick={() => ask("rail")} />
+        )}
       </div>
       <div
         id={panelId}
@@ -251,10 +267,15 @@ function ContextPanel({
         data-slot="context-panel-body"
         aria-labelledby={tabId(value)}
         tabIndex={0}
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="min-h-0 flex-1 overflow-y-auto px-4 pt-2"
       >
         {children}
       </div>
+      {composer ? (
+        <div data-slot="context-panel-dock" className="shrink-0 px-3 pt-2 pb-3">
+          {composer}
+        </div>
+      ) : null}
     </aside>
   )
 }

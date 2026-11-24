@@ -10,6 +10,9 @@ export default function SearchFieldView() {
           <SearchField placeholder="Search mail" />
         </Column>
         <Column>
+          <SearchField placeholder="Search" shortcut="/" />
+        </Column>
+        <Column>
           <SearchField placeholder="Search mail" defaultValue="cabin" />
         </Column>
         <Column>

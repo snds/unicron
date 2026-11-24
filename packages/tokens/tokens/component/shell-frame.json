@@ -73,8 +73,8 @@
     },
     "context-panel": {
       "$type": "dimension",
-      "$value": "25rem",
-      "$description": "ContextPanel open: 400 (Warpcore chat workspace 01: x 992 to 1392)."
+      "$value": "22.5rem",
+      "$description": "ContextPanel open: 360, the 2.0 Right Panel (Figma 127:460), the same in every app."
     },
     "context-panel-min": {
       "$type": "dimension",

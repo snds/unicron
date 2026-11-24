@@ -192,6 +192,16 @@ describe("SearchField (contract 5.1a)", () => {
     expect(onPageKey).toHaveBeenCalledTimes(1)
   })
 
+  it("shows its shortcut as a Kbd while empty, and the clear button in its place once there are words", async () => {
+    render(<SearchField shortcut="/" />)
+    const field = screen.getByRole("searchbox", { name: "Search" })
+    const hint = box(field).querySelector('[data-slot="search-field-shortcut"]')
+    expect(hint).toHaveTextContent("/")
+    await userEvent.type(field, "c")
+    expect(box(field).querySelector('[data-slot="search-field-shortcut"]')).toBeNull()
+    expect(screen.getByRole("button", { name: "Clear search" })).toBeInTheDocument()
+  })
+
   it("takes a visible label instead of the default name", () => {
     render(<SearchField label="Find a setting" />)
     expect(screen.getByRole("searchbox", { name: "Find a setting" })).toBeInTheDocument()

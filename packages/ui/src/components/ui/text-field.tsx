@@ -8,6 +8,7 @@ import { cn } from "../../lib/utils"
 
 import { Icon } from "../icon"
 import { Button } from "./button"
+import { Kbd } from "./kbd"
 import { useDisabledReason } from "./field"
 import { fieldTextOnTouch, fieldBoxVariants } from "./input"
 import { labelVariants } from "./label"
@@ -387,6 +388,8 @@ export type SearchFieldProps = Omit<TextFieldTextProps, "type" | "leading" | "va
   onClear?: () => void
   /** The clear button's name. Default "Clear search". */
   clearLabel?: string
+  /** The key that jumps here ("/", "⌘K"), shown as a Kbd while the field is empty (Figma Search Field 171:493). */
+  shortcut?: string
 }
 
 /**
@@ -402,6 +405,7 @@ function SearchField({
   onClear,
   onKeyDown,
   clearLabel = "Clear search",
+  shortcut,
   trailing,
   ref,
   ...props
@@ -440,11 +444,12 @@ function SearchField({
           clear()
         }
       }}
-      leading={<Icon name="search" />}
+      leading={<Icon name="search" className="size-icon" />}
       trailing={
-        trailing || canClear ? (
+        trailing || canClear || (shortcut && !words) ? (
           <>
             {trailing}
+            {shortcut && !words ? <Kbd data-slot="search-field-shortcut">{shortcut}</Kbd> : null}
             {canClear ? (
               <Button variant="ghost" size="icon-sm" aria-label={clearLabel} data-slot="search-field-clear" onClick={clear}>
                 <Icon name="close" />
