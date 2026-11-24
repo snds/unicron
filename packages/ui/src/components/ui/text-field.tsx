@@ -86,7 +86,7 @@ const CONTROL =
 // Icons take the secondary ink. A button in a slot sits 8px from the box's edge, so its own
 // padding lines up with the value. On several lines a slot sits at the first line.
 const SLOT =
-  "flex shrink-0 items-center gap-1 self-center text-support-foreground [&>svg:not([class*='size-'])]:size-5 group-data-multiline/text-field:self-start group-data-multiline/text-field:pt-3 group-data-multiline/text-field:has-[>button]:pt-2"
+  "flex shrink-0 items-center gap-1 self-center text-support-foreground [&>svg:not([class*='size-'])]:size-5 group-data-multiline/text-field:self-start group-data-multiline/text-field:pt-1.5 group-data-multiline/text-field:has-[>button]:pt-0.5"
 
 function slotLabel(label: React.ReactNode) {
   return typeof label === "string" ? label : undefined
@@ -220,9 +220,9 @@ function Box({ children, multiline }: { children: React.ReactNode; multiline?: b
       data-slot="text-field-box"
       className={cn(
         fieldBoxVariants({ focus: "within" }),
-        "relative flex min-h-control w-full min-w-0 cursor-text gap-2 px-4",
+        "relative flex min-h-control-m pointer-coarse:min-h-touch-min w-full min-w-0 cursor-text gap-2 px-2.5",
         multiline ? "items-stretch" : "items-center",
-        "has-[>[data-slot=text-field-leading]>button]:pl-2 has-[>[data-slot=text-field-trailing]>button]:pr-2"
+        "has-[>[data-slot=text-field-leading]>button]:pl-0.5 has-[>[data-slot=text-field-trailing]>button]:pr-0.5"
       )}
       // A press on the box's own padding goes to the control, as a click on a native field would.
       onPointerDown={(event) => {
@@ -298,7 +298,7 @@ function MultilineTextField({
             resize()
             onInput?.(event)
           }}
-          className={cn(CONTROL, "resize-none py-3")}
+          className={cn(CONTROL, "resize-none py-1.5")}
         />
         <Slot side="trailing">{trailing}</Slot>
       </Box>

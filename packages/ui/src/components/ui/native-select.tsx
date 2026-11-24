@@ -13,7 +13,7 @@ import { fieldBoxVariants } from "./input"
 // pseudo-element.
 const SELECT = cn(
   fieldBoxVariants(),
-  "h-control w-full min-w-0 appearance-none pr-11 pl-4 select-none hover:bg-[color-mix(in_oklab,var(--text-body)_4%,var(--surface-raised))] data-[size=sm]:h-10 data-[size=sm]:pr-9 data-[size=sm]:pl-3 data-[size=sm]:pointer-coarse:h-touch-min"
+  "h-control-m pointer-coarse:h-touch-min w-full min-w-0 appearance-none pr-8 pl-2.5 select-none hover:bg-[color-mix(in_oklab,var(--text-body)_4%,var(--surface-raised))] data-[size=sm]:h-control-s data-[size=sm]:pr-7 data-[size=sm]:pl-2 data-[size=sm]:pointer-coarse:h-touch-min"
 )
 
 type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
@@ -41,7 +41,7 @@ function NativeSelect({
         {...props}
       />
       <Icon
-        className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-support-foreground select-none group-data-[size=sm]/native-select:right-3 group-has-[select:disabled]/native-select:opacity-50"
+        className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-support-foreground select-none group-data-[size=sm]/native-select:right-2 group-has-[select:disabled]/native-select:opacity-50"
         aria-hidden="true"
         data-slot="native-select-icon"
         name="chevron--down"

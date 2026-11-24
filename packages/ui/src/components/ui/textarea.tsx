@@ -19,7 +19,7 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
       data-slot="textarea"
       className={cn(
         fieldBoxVariants(),
-        "flex min-h-control w-full px-4 py-3 placeholder:text-muted-foreground",
+        "flex min-h-control-m w-full px-2.5 py-1.5 placeholder:text-muted-foreground",
         className
       )}
       {...props}

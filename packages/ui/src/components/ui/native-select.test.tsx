@@ -18,15 +18,15 @@ describe("NativeSelect", () => {
     render(<Subject />)
     const select = screen.getByRole("combobox", { name: "Between words" })
     expect(select.className).toEqual(expect.stringContaining("bg-surface-raised"))
-    for (const cls of ["rule-box", "h-control", "pl-4", "pr-11", "type-ui", "focus:rule-box-emphasis", "aria-invalid:rule-box-emphasis"]) expect(select.className).toContain(cls)
+    for (const cls of ["rule-box", "h-control-m", "pl-2.5", "pr-8", "type-ui", "focus:rule-box-emphasis", "aria-invalid:rule-box-emphasis"]) expect(select.className).toContain(cls)
     expect(select.parentElement!.querySelector('[data-icon-name="chevron--down"]')).not.toBeNull()
     await userEvent.selectOptions(select, "space")
     expect(select).toHaveValue("space")
   })
 
-  it("sm is 40 tall, for a row, and the 44px touch minimum on a coarse pointer", () => {
+  it("sm is 28 tall, for a row, and the 44px touch minimum on a coarse pointer", () => {
     render(<Subject size="sm" />)
-    expect(screen.getByRole("combobox").className).toContain("data-[size=sm]:h-10")
+    expect(screen.getByRole("combobox").className).toContain("data-[size=sm]:h-control-s")
     expect(screen.getByRole("combobox").className.split(" ")).toContain("data-[size=sm]:pointer-coarse:h-touch-min")
   })
 

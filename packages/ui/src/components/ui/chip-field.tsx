@@ -146,7 +146,7 @@ function ChipField({
       ) : null}
       <div
         data-slot="chip-field-box"
-        className={cn(fieldBoxVariants({ focus: "within" }), "flex min-h-control w-full min-w-0 cursor-text flex-wrap items-center gap-1 px-4 py-3")}
+        className={cn(fieldBoxVariants({ focus: "within" }), "flex min-h-control-m pointer-coarse:min-h-touch-min w-full min-w-0 cursor-text flex-wrap items-center gap-1 px-2.5 py-1")}
         onPointerDown={(event) => {
           if (event.target !== event.currentTarget) return
           event.preventDefault()

@@ -24,7 +24,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       role="group"
       className={cn(
         fieldBoxVariants({ focus: "within" }),
-        "group/input-group relative flex min-h-control w-full min-w-0 items-center has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:flex-col has-[>textarea]:items-stretch",
+        "group/input-group relative flex min-h-control-m pointer-coarse:min-h-touch-min w-full min-w-0 items-center has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:flex-col has-[>textarea]:items-stretch",
         // Beside an add-on the control keeps the 8px gap, not the box's 16px.
         "has-[>[data-align=inline-start]]:*:data-[slot=input-group-control]:pl-2 has-[>[data-align=inline-end]]:*:data-[slot=input-group-control]:pr-2",
         className
@@ -40,10 +40,10 @@ const inputGroupAddonVariants = cva(
     variants: {
       align: {
         // A button in the slot sits 8px from the box's edge, so its own padding lines up.
-        "inline-start": "order-first pl-4 has-[>button]:pl-2",
-        "inline-end": "order-last pr-4 has-[>button]:pr-2",
-        "block-start": "order-first w-full justify-start px-4 pt-3",
-        "block-end": "order-last w-full justify-start px-4 pb-3",
+        "inline-start": "order-first pl-2.5 has-[>button]:pl-0.5",
+        "inline-end": "order-last pr-2.5 has-[>button]:pr-0.5",
+        "block-start": "order-first w-full justify-start px-2.5 pt-2",
+        "block-end": "order-last w-full justify-start px-2.5 pb-2",
       },
     },
     defaultVariants: {
@@ -101,10 +101,10 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
 // The control inside the box has no box of its own. It runs the box's full height, so a click
 // anywhere in it lands in the field, and takes the box's 16px in from the sides itself.
 const CONTROL =
-  fieldTextOnTouch + " " + "min-w-0 flex-1 self-stretch bg-transparent px-4 type-ui text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed aria-disabled:cursor-not-allowed"
+  fieldTextOnTouch + " " + "min-w-0 flex-1 self-stretch bg-transparent px-2.5 type-ui text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed aria-disabled:cursor-not-allowed"
 
 function InputGroupInput({ className, ...props }: React.ComponentProps<"input">) {
-  return <InputPrimitive data-slot="input-group-control" className={cn(CONTROL, "h-auto min-h-control", className)} {...props} />
+  return <InputPrimitive data-slot="input-group-control" className={cn(CONTROL, "h-auto min-h-control-m pointer-coarse:min-h-touch-min", className)} {...props} />
 }
 
 function InputGroupTextarea({ className, ...props }: React.ComponentProps<"textarea">) {

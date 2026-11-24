@@ -52,7 +52,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
 const TRIGGER = cn(
   fieldBoxVariants(),
   "flex w-fit max-w-full min-w-0 items-center justify-between gap-2 whitespace-nowrap select-none",
-  "data-[size=default]:h-control data-[size=default]:px-4 data-[size=sm]:h-10 data-[size=sm]:px-3 data-[size=sm]:hit-area",
+  "data-[size=default]:h-control-m data-[size=default]:pointer-coarse:h-touch-min data-[size=default]:px-2.5 data-[size=sm]:h-control-s data-[size=sm]:px-2 data-[size=sm]:hit-area",
   "hover:bg-[color-mix(in_oklab,var(--text-body)_4%,var(--surface-raised))] data-popup-open:rule-box-emphasis data-placeholder:text-muted-foreground",
   "data-disabled:cursor-not-allowed data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0"
 )

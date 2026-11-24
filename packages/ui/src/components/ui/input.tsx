@@ -1,6 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
-// Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 32:48 "Text Field" box; no app PR, no DSA record)
+// Promoted from: Seeded in snds/unicron (2.0: Figma Text Field 32:48 box; no app PR, no DSA record)
 import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 import { cva } from "class-variance-authority"
@@ -13,10 +13,10 @@ import { cn } from "../../lib/utils"
 export const fieldTextOnTouch = "pointer-coarse:text-(length:--size-field-text-touch)"
 
 /**
- * The Text Field's box (Figma 32:48), for every field: Input, Textarea, InputGroup, the Select and
- * NativeSelect triggers, TextField and ChipField. The raised surface with a 1px rule drawn inside
- * it (a stroke never adds height), at least the control height (48), 16px in from the sides, the
- * value in the `ui` role. Focus is Figma's 2px inside border, and no outer ring; invalid is the
+ * The Text Field's box (Figma 32:48, 2.0), for every field: Input, Textarea, InputGroup, the Select
+ * and NativeSelect triggers, TextField and ChipField. The raised surface with a 1px rule drawn
+ * inside it (a stroke never adds height), the 6px control corner, at least 32 tall (44 on a touch
+ * screen), 10px in from the sides, the value in the `ui` role. Focus is Figma's 2px inside border, and no outer ring; invalid is the
  * same border, and it stays while focused. Their colours are the line roles `--line-focus` and
  * `--line-invalid`, which hold 3:1 against the field on both grounds (WCAG 1.4.11); Figma's
  * primary and critical fills measured 2.59:1 to 2.97:1 on graphite (Unicron 17). Read-only
@@ -25,7 +25,7 @@ export const fieldTextOnTouch = "pointer-coarse:text-(length:--size-field-text-t
  * `focus` is the box's own focus (an input); `within` is a box that holds the control (a group).
  */
 const fieldBoxVariants = cva(
-  cn("rounded-lg bg-surface-raised type-ui text-foreground rule-box outline-none transition-[box-shadow,background-color]", fieldTextOnTouch),
+  cn("rounded bg-surface-raised type-ui text-foreground rule-box outline-none transition-[box-shadow,background-color]", fieldTextOnTouch),
   {
     variants: {
       focus: {
@@ -41,7 +41,7 @@ const fieldBoxVariants = cva(
 // The placeholder is the label ink (Figma has no placeholder; the label ink is the quietest ink
 // that is still read). A file input keeps its own button, in the overline.
 const INPUT =
-  "h-control w-full min-w-0 px-4 placeholder:text-muted-foreground file:mr-3 file:inline-flex file:h-full file:border-0 file:bg-transparent file:type-overline file:text-foreground"
+  "h-control-m pointer-coarse:h-touch-min w-full min-w-0 px-2.5 placeholder:text-muted-foreground file:mr-3 file:inline-flex file:h-full file:border-0 file:bg-transparent file:type-overline file:text-foreground"
 
 /** A one-line field in the Text Field's box. Pair it with a `Label` (or use `TextField`). */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {

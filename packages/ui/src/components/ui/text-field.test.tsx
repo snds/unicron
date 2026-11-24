@@ -22,13 +22,13 @@ describe("TextField", () => {
     expect(screen.getByText("Used for replies from this account.").className).toContain("type-caption")
   })
 
-  // Figma 32:48: raised, a 1px rule drawn inside (it adds no height), at least 48 tall, 16 in, the
+  // Figma 32:48 (2.0): raised, a 1px rule drawn inside (it adds no height), at least 32 tall, 10 in, the
   // value in the ui role; focus is the 2px primary inside border and no outer ring.
   it("draws Figma's box, and the 2px primary border while anything in it has focus", () => {
     render(<TextField label="Email" />)
     const field = screen.getByRole("textbox", { name: "Email" })
     const cls = box(field).className.split(" ")
-    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box", "min-h-control", "px-4", "rounded-lg", "focus-within:rule-box-emphasis"]))
+    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box", "min-h-control-m", "px-2.5", "rounded", "focus-within:rule-box-emphasis"]))
     expect(field.className).toContain("type-ui")
     expect(field.className).toContain("outline-none")
     expect(field.className).toContain("placeholder:text-muted-foreground")
