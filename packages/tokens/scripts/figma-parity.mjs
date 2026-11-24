@@ -39,7 +39,26 @@ const built = readJson(path.join(here, "..", "dist", "tokens.json"))
 const parsed = parseTokensCss()
 
 const differences = []
-const differ = (where, got, want) => differences.push(`${where}: built ${got}, Figma ${want}`)
+// Code ahead of Figma: a shared value Sean changed in code first, which Figma follows. Each is
+// reported as a gap while Figma still holds the old value, and fails once Figma has the new one
+// (take it off this list then) or holds anything else.
+//   text/secondary and text/label on graphite: lightened to the APCA floor (Sean, 2026-11-24).
+const AHEAD_OF_FIGMA = {
+  "text/secondary graphite": { code: "#D3D4D7", figma: "#B3B5BA" },
+  "text/label graphite": { code: "#B9BABE", figma: "#8A8C92" },
+}
+const aheadSeen = new Set()
+const differ = (where, got, want) => {
+  for (const [key, { code, figma }] of Object.entries(AHEAD_OF_FIGMA)) {
+    const [role, ground] = key.split(" ")
+    if (!where.startsWith(`${role} `) || !where.includes(ground)) continue
+    if (got === `${code} @ 1` && want === `${figma} @ 1`) {
+      aheadSeen.add(key)
+      return
+    }
+  }
+  differences.push(`${where}: built ${got}, Figma ${want}`)
+}
 const same = (where, got, want) => {
   if (got !== want) differ(where, JSON.stringify(got), JSON.stringify(want))
 }
@@ -200,6 +219,10 @@ if (differences.length) {
   console.error(`✗ figma parity: ${differences.length} difference${differences.length === 1 ? "" : "s"} from tokens/figma/theme-2026-11-24.json (Figma, ${snapshot.source.extracted})`)
   for (const d of differences) console.error(`  ${d}`)
   process.exit(1)
+}
+for (const key of Object.keys(AHEAD_OF_FIGMA)) {
+  if (aheadSeen.has(key)) gaps.push(`${key} is ahead of Figma (${AHEAD_OF_FIGMA[key].code} in code, ${AHEAD_OF_FIGMA[key].figma} in Figma)`)
+  else differences.push(`${key}: Figma no longer holds ${AHEAD_OF_FIGMA[key].figma}; re-snapshot, and take it off AHEAD_OF_FIGMA once it matches`)
 }
 if (gaps.length) {
   console.log(`figma parity: known gaps, reported and not failed (Figma has no Default mode in Unicron / Theme, no style for a role added in 1.1, and a Retired folder of styles): ${gaps.join(", ")}`)

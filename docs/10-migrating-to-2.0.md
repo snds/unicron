@@ -36,7 +36,7 @@ Everything else is shared and lives in the core (`global.json` → `base`, `labe
 | `surface-popover-frost` | popover at 72% | popover at 72% | frosted menus and floating bars |
 | `surface-hover` / `-selected` | ink at 5% / 8% | ink at 5% / 8% | hover; selected and pressed |
 | `line-rule` / `-strong` / `-field` | ink at 8% / 14% / 14% | the same | hairlines, inputs |
-| `text-body` / `-secondary` / `-label` / `-faint` | `#ECEDEF` `#B3B5BA` `#8A8C92` `#5E6066` | `#1A1B1E` `#4F5157` `#6A6C72` `#9A9CA1` | inks |
+| `text-body` / `-secondary` / `-label` / `-faint` | `#ECEDEF` `#D3D4D7` `#B9BABE` `#5E6066` | `#1A1B1E` `#4F5157` `#6A6C72` `#9A9CA1` | inks |
 
 New roles: `status-done`, `status-working`, `status-failed`, `status-idle` (and
 `status-needs-you`, the amber), `info-fill` / `info-on-fill` (counts and unread dots, the deep
@@ -70,8 +70,11 @@ read the new status and severity roles.
 
 ## Contrast
 
-The shared 2.0 neutrals were solved to WCAG 2 (4.5:1 for text, 3:1 for marks), not to the APCA
-floors the contrast gate holds. The gate still measures every pair; the misses are named in the
-core's list with that reason, and an app's own list now holds only misses of its accent. This is
-flagged for Sean: either the gate moves to WCAG floors for 2.0, or Figma lightens graphite
-`text-secondary` and `text-label` a step.
+The first published 2.0 neutrals were solved to WCAG 2 (4.5:1). On graphite, `text-secondary` and
+`text-label` missed this gate's APCA floors. Sean chose to lighten them (2026-11-24):
+`text-secondary` `#B3B5BA` → `#D3D4D7` (Lc 75 on every everyday surface) and `text-label`
+`#8A8C92` → `#B9BABE` (Lc 60). Code has the new values now and Figma follows; until it does,
+`figma-parity.mjs` reports the two as ahead of Figma (`AHEAD_OF_FIGMA`), not as failures.
+
+The status, count and severity colours still sit under some APCA floors. They are named in the
+core's list with that reason; an app's own list holds only misses of its accent.

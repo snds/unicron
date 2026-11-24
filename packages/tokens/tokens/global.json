@@ -262,8 +262,8 @@
       "$description": "Figma text/secondary. Secondary ink: support text.",
       "graphite": {
         "$type": "color",
-        "$value": "#B3B5BA",
-        "$description": "Figma text/secondary, every graphite mode."
+        "$value": "#D3D4D7",
+        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 75 on every everyday surface. Figma follows."
       },
       "stone": {
         "$type": "color",
@@ -275,8 +275,8 @@
       "$description": "Figma text/label. Muted ink: labels, meta, icons at rest. 4.5:1 on every layer.",
       "graphite": {
         "$type": "color",
-        "$value": "#8A8C92",
-        "$description": "Figma text/label, every graphite mode."
+        "$value": "#B9BABE",
+        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 60 on every everyday surface. Figma follows."
       },
       "stone": {
         "$type": "color",
