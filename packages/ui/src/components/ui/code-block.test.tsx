@@ -61,7 +61,7 @@ describe("CopyButton", () => {
     const onCopied = vi.fn()
     render(<CopyButton text="Login now runs a two-message handshake." onCopied={onCopied} />)
     const button = screen.getByRole("button", { name: copyButtonCopy.copy })
-    expect(button.className).toContain("size-8")
+    expect(button.className).toContain("size-control-s")
     await act(async () => fireEvent.click(button))
     expect(onCopied).toHaveBeenCalledTimes(1)
     expect(screen.getByRole("button", { name: copyButtonCopy.copied })).toHaveAttribute("data-state", "copied")

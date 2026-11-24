@@ -20,6 +20,10 @@ import { DigitGroups } from "./digit-groups"
 import { ReviewCountdownRule, ReviewFrame, formatCountdown, rowClasses } from "./parts"
 import { RiskTierBadge, type RiskTier } from "./risk-tier-badge"
 
+// In a sheet (a phone) the two answers are Figma's L buttons, 44 tall, the sheet's stacked size;
+// in a dialog they keep Button's M.
+const SHEET_L = "group-data-[form=sheet]/review:min-h-control-l group-data-[form=sheet]/review:px-4 group-data-[form=sheet]/review:type-control-strong"
+
 export type ApprovalKind = "device" | "agent" | "device-code" | "contact-request" | "bridge"
 export type ApprovalOrigin = "scan" | "pairing" | "push"
 /** Why it was denied. `mismatch`: the person said the code on the other screen differs (compare matching). */
@@ -421,7 +425,7 @@ export function ApprovalSheet({
         >
           {showApprove && (
             <div className="col-start-2 row-start-2 flex">
-              <Button ref={approveRef} data-action="approve" block wrap disabled={approveDisabled} aria-disabled={approveDisabled} loading={busy} onClick={approve}>
+              <Button ref={approveRef} data-action="approve" block wrap className={SHEET_L} disabled={approveDisabled} aria-disabled={approveDisabled} loading={busy} onClick={approve}>
                 {approveIcon && !busy && <Icon name={approveIcon} size="sm" />}
                 {yes}
                 {approveDisabled && !busy && <span className="hidden line-through forced-colors:inline"> Locked</span>}
@@ -429,13 +433,13 @@ export function ApprovalSheet({
             </div>
           )}
           <div className={cn("row-start-2 flex", showApprove ? "col-start-1" : "col-span-2")}>
-            <Button ref={denyRef} data-action="deny" variant="secondary" block wrap disabled={busy && !expired} onClick={deny}>
+            <Button ref={denyRef} data-action="deny" variant="secondary" block wrap className={SHEET_L} disabled={busy && !expired} onClick={deny}>
               <Icon name="close" size="sm" />
               {no}
             </Button>
           </div>
           {!terminal && (
-            <div className="col-span-2 row-start-1 justify-self-start group-data-[form=dialog]/review:mr-auto">
+            <div className="col-span-2 row-start-1 flex justify-self-start group-data-[form=dialog]/review:mr-auto">
               <Button data-action="report" variant="ghost-destructive" onClick={report}>
                 <Icon name="warning--hex" size="sm" />
                 {approvalSheetWords.report}

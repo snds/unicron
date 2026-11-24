@@ -80,7 +80,8 @@
   },
   "indicator": {
     "$description": "The attention or unread mark on an Item: a dot, or a count badge. The colours and the dot size are in component/chat.json.",
-    "badge-height": { "$type": "dimension", "$value": "1rem" }
+    "badge-height": { "$type": "dimension", "$value": "1.125rem", "$description": "18px: Figma Count Badge (193:593), a round count." },
+    "badge-pad": { "$type": "dimension", "$value": "0.3125rem", "$description": "5px in on each side (Figma Count Badge)." }
   },
   "progress": {
     "$description": "Progress: a determinate bar, or one cell per step (segmented). The empty part is --line-rule; each fill is a solid held to Lc 30 against it (scripts/contrast.mjs).",

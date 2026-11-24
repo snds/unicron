@@ -9,7 +9,7 @@ const type = (text: string) => fireEvent.change(field(), { target: { value: text
 const enter = (init: KeyboardEventInit & { isComposing?: boolean; keyCode?: number } = {}) => fireEvent.keyDown(field(), { key: "Enter", ...init })
 
 describe("Composer", () => {
-  it("is Figma's box: raised, a hairline, 48 tall, 16 in on the left and 4 on the right, a 40px primary send", () => {
+  it("is Figma's box: raised, a hairline, 48 tall, 16 in on the left and 4 on the right, a 32px primary send (Button icon, 2.0)", () => {
     const { container } = render(<Composer placeholder="Reply to Mira" />)
     const root = container.querySelector('[data-slot="composer"]')!
     expect(root.tagName).toBe("FORM")
@@ -23,7 +23,7 @@ describe("Composer", () => {
     expect(field().className).toContain("placeholder:text-text-label")
     expect(field().className).toContain("max-h-[calc(var(--type-ui-leading)*var(--c-composer-max-lines)+--spacing(5))]")
     const send = screen.getByRole("button", { name: composerCopy.send })
-    expect(send.className).toContain("size-10")
+    expect(send.className).toContain("size-control-m")
     expect(send.className).toContain("bg-primary")
     expect(send.querySelector('[data-icon-name="send--alt"]')).toBeInTheDocument()
   })

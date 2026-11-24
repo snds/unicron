@@ -1,4 +1,4 @@
-// Owned component (not generated): the square mono caps chip that filters a list, and the row that holds them.
+// Owned component (not generated): the round chip that filters a list, and the row that holds them.
 // Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 15:503; no app PR, no DSA record)
 "use client"
 
@@ -21,28 +21,24 @@ export type FilterChipGroupType = "single" | "multiple"
 export type FilterChipKind = "toggle" | "trigger" | "button"
 
 const chip = cva(
-  // Figma 15:503: 24 tall, 4 / 8 padding, square corners (the one control without the 2px radius,
-  // contract §9.9), overline label. Under 44, so a touch reaches it across 44 (hit-area).
-  "hit-area inline-flex h-6 shrink-0 items-center rounded-none px-2 py-1 type-overline whitespace-nowrap select-none transition-colors duration-(--motion-fast) disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+  // Figma Filter Chip 15:503 (2.0): a round pill, 28 tall, 10 in, 6 to an icon. At rest the ui
+  // role in secondary ink inside a 1px line/rule edge; on, the selected wash and ui/emphasis in
+  // body ink. Under 44, so a touch reaches it across 44 (hit-area).
+  "hit-area inline-flex h-control-s shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 whitespace-nowrap select-none transition-colors duration-(--motion-fast) disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
   {
     variants: {
       active: {
-        // Label ink, no fill. Hover and pressed are the contract's washes.
-        false: "text-muted-foreground hover:bg-state-hover active:bg-state-pressed",
-        // Inverted ink, never the identity colour, so it never competes with a selected row.
-        // Hover and pressed take the ink to 90% and 86% over the ground, as the current FloatButton
-        // does: at 86% the label holds Lc 75.9 on graphite (85% measured 74.8; Unicron 28).
-        true: "bg-foreground text-background hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]",
+        false: "type-ui text-text-secondary inset-ring inset-ring-line-rule hover:bg-surface-hover active:bg-surface-selected",
+        true: "type-ui-emphasis bg-surface-selected text-text-body hover:bg-[color-mix(in_oklab,var(--text-body)_11%,transparent)] active:bg-[color-mix(in_oklab,var(--text-body)_14%,transparent)]",
       },
     },
     defaultVariants: { active: false },
   }
 )
 
-// A trigger chip while its picker is open: inverted ink, as Figma draws it (Unicron 50), with the
-// on look's hover and pressed.
+// A trigger chip while its picker is open: the on look, with a trailing chevron.
 const TRIGGER_OPEN =
-  "gap-1 pr-1 aria-expanded:bg-foreground aria-expanded:text-background aria-expanded:hover:bg-[color-mix(in_oklab,var(--foreground)_90%,var(--background))] aria-expanded:active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]"
+  "gap-1 pr-1.5 aria-expanded:bg-surface-selected aria-expanded:text-text-body aria-expanded:inset-ring-0"
 
 /** A filter chip's classes, for something drawn as one. */
 function filterChipVariants({ active = false, className }: { active?: boolean; className?: string } = {}): string {
