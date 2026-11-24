@@ -131,9 +131,10 @@ function DialogContent({
         data-size-asked={name === asked ? undefined : asked}
         initialFocus={initialFocus ?? focusFirst}
         className={cn(
-          // Solid and square: the raised surface, no shadow, no blur. Centred in the area below
-          // --c-dialog-titlebar-inset (0px by default), so an app's title bar strip never overlaps it.
-          "bg-surface-raised text-text-body type-body fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded outline-none",
+          // 2.0 Dialog (Figma 76:139): the popover surface under the dialog's edge shadow, 12px
+          // corners, no blur. Centred in the area below --c-dialog-titlebar-inset (0px by default),
+          // so an app's title bar strip never overlaps it.
+          "surface-dialog text-text-body type-body fixed top-[calc(50%+var(--c-dialog-titlebar-inset)/2)] left-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg outline-none",
           // A percentage of a fixed box is of the screen it is fixed to (or a host's frame), and unlike
           // 100dvh it never runs past a home-screen app's real height.
           "max-h-[calc(100%-2*var(--c-dialog-margin)-var(--c-dialog-titlebar-inset))]",
@@ -156,13 +157,15 @@ function DialogContent({
           <div
             ref={scroll}
             data-slot="dialog-scroll"
-            className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-(--c-dialog-padding) pt-(--c-dialog-padding-top)"
+            // 24 at the sides, 20 above, below and between the parts. The header and footer reach
+            // out to the edges to draw their rules (Figma: header, body and footer bands).
+            className="flex min-h-0 flex-1 flex-col gap-(--c-dialog-padding-top) overflow-y-auto overscroll-contain px-(--c-dialog-padding) py-(--c-dialog-padding-top)"
           >
             {children}
           </div>
         </DialogContentContext.Provider>
         {/* The 1px rule, drawn over the content so a sticky footer or a full-bleed child never covers it. */}
-        <span aria-hidden data-slot="dialog-rule" className="rule-box pointer-events-none absolute inset-0 rounded" />
+        <span aria-hidden data-slot="dialog-rule" className="rule-box pointer-events-none absolute inset-0 rounded-lg" />
         {showCloseButton && (
           // Last in the tab order, so focus starts in the content; drawn at the header's top right,
           // centred on the overline and title (16 + 4).
@@ -188,7 +191,8 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-header"
       data-close={showCloseButton ? "" : undefined}
-      className={cn("flex min-w-0 flex-col gap-1", showCloseButton && "pr-12", className)}
+      // A band of its own: 16 under the title, then a rule edge to edge.
+      className={cn("rule-b -mx-(--c-dialog-padding) flex min-w-0 flex-col gap-1 px-(--c-dialog-padding) pb-4", showCloseButton && "pr-[calc(var(--c-dialog-padding)+--spacing(12))]", className)}
       {...props}
     />
   )
@@ -224,13 +228,11 @@ function DialogFooter({
       data-slot="dialog-footer"
       data-sticky={sticky || undefined}
       className={cn(
-        // The actions at the right, the one primary last, 16 apart (as drawn).
-        "flex flex-wrap items-center justify-end gap-4",
-        // Pinned over the dialog's bottom padding: reaches out by --c-dialog-padding on three
-        // sides and pads back by it, and eats the gap above it, so its buttons sit where an
-        // unpinned footer's do.
-        sticky &&
-          "bg-surface-raised rule-t sticky -bottom-(--c-dialog-padding) z-10 -mx-(--c-dialog-padding) -mt-(--c-dialog-padding) -mb-(--c-dialog-padding) p-(--c-dialog-padding)",
+        // A band of its own (Figma 76:139): a rule edge to edge, then the actions at the right, the
+        // one primary last, 12 apart, 16 above and below. It takes the dialog's bottom padding.
+        "rule-t -mx-(--c-dialog-padding) -mb-(--c-dialog-padding-top) flex flex-wrap items-center justify-end gap-3 px-(--c-dialog-padding) py-4",
+        // Pinned to the bottom while the content scrolls under it.
+        sticky && "bg-surface-popover sticky -bottom-(--c-dialog-padding-top) z-10",
         className
       )}
       {...props}
@@ -250,7 +252,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
     <DialogPrimitive.Title
       data-slot="dialog-title"
       // A leading Back button sits inline with the title (a dialog with steps).
-      className={cn("type-lead text-text-body break-words has-[>[data-slot=button]]:flex has-[>[data-slot=button]]:items-center has-[>[data-slot=button]]:gap-2", className)}
+      className={cn("type-title text-text-body break-words has-[>[data-slot=button]]:flex has-[>[data-slot=button]]:items-center has-[>[data-slot=button]]:gap-2", className)}
       {...props}
     />
   )
