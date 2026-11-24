@@ -75,6 +75,8 @@ describe("AppFrameSidebar flush (2.0: Sidebar Top 144:701, Sidebar Foot 178:4541
     const body = container.querySelector('[data-slot="app-frame-body"]')!
     expect(body).toHaveClass("px-0")
     expect(body).not.toHaveClass("px-12")
+    // With no gutter to step into, the columns keep their room inside the window (and their scroll bars on it).
+    expect(body).toHaveAttribute("data-flush")
   })
 
   it("draws the web top row: the lockup and the primary as an icon button, 48 tall", () => {

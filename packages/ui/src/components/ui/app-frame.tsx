@@ -371,6 +371,7 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
         <AppFrameAnnounceContext.Provider value={announce}>
         <div
           data-slot="app-frame-body"
+          data-flush={flushSidebar ? "" : undefined}
           className={cn(
             // One cell: the whole frame. The stylesheet's grid places nothing else.
             "relative col-[1/-1] row-[1/-1] min-h-0 min-w-0 bg-surface-ground",
@@ -481,9 +482,11 @@ const ColumnContext = React.createContext<ColumnContextValue | null>(null)
 /**
  * The room a desktop content column keeps past the content line when it is the last one: 16 of the
  * page gutter (24 at least), taken with a negative margin and given back as padding. A fixed-width
- * column adds the same 16 to its width (`AppFrameDetail size="narrow"`).
+ * column adds the same 16 to its width (`AppFrameDetail size="narrow"`). Beside the flush 2.0
+ * sidebar there is no gutter to take it from: the column keeps the padding inside its own box, so
+ * it, and its scroll bar, end at the window's edge.
  */
-const LAST_COLUMN_ROOM = "last:-me-4 last:pe-4"
+const LAST_COLUMN_ROOM = "last:-me-4 last:pe-4 [[data-flush]_&]:last:me-0"
 
 /**
  * The room a desktop column keeps before its content when no shown column stands before it: 4px,
@@ -492,9 +495,10 @@ const LAST_COLUMN_ROOM = "last:-me-4 last:pe-4"
  * side. The box steps back by --column-start-room with a negative margin and gives it back as
  * padding, so the content starts where it did. A column that follows a shown one has its 12 or 24
  * to the rule instead, and no extra room. A fixed-width column adds the variable to its width.
+ * Beside the flush sidebar it keeps the padding without the step back, as `LAST_COLUMN_ROOM` does.
  */
 const START_COLUMN_ROOM =
-  "[--column-start-room:--spacing(1)] [[data-column][data-shown]+&]:[--column-start-room:0px] -ms-(--column-start-room) ps-(--column-start-room)"
+  "[--column-start-room:--spacing(1)] [[data-column][data-shown]+&]:[--column-start-room:0px] -ms-(--column-start-room) ps-(--column-start-room) [[data-flush]_&]:ms-0"
 
 /** Whether the column the part sits in is showing. True outside a column. */
 export function useAppFrameColumnShown(): boolean {
