@@ -73,8 +73,7 @@ read the new status and severity roles.
 The first published 2.0 neutrals were solved to WCAG 2 (4.5:1). On graphite, `text-secondary` and
 `text-label` missed this gate's APCA floors. Sean chose to lighten them (2026-11-24):
 `text-secondary` `#B3B5BA` → `#D3D4D7` (Lc 75 on every everyday surface) and `text-label`
-`#8A8C92` → `#B9BABE` (Lc 60). Code has the new values now and Figma follows; until it does,
-`figma-parity.mjs` reports the two as ahead of Figma (`AHEAD_OF_FIGMA`), not as failures.
+`#8A8C92` → `#B9BABE` (Lc 60). Figma was republished with them the same day.
 
 The status, count and severity colours still sit under some APCA floors. They are named in the
 core's list with that reason; an app's own list holds only misses of its accent.

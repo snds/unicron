@@ -42,11 +42,8 @@ const differences = []
 // Code ahead of Figma: a shared value Sean changed in code first, which Figma follows. Each is
 // reported as a gap while Figma still holds the old value, and fails once Figma has the new one
 // (take it off this list then) or holds anything else.
-//   text/secondary and text/label on graphite: lightened to the APCA floor (Sean, 2026-11-24).
-const AHEAD_OF_FIGMA = {
-  "text/secondary graphite": { code: "#D3D4D7", figma: "#B3B5BA" },
-  "text/label graphite": { code: "#B9BABE", figma: "#8A8C92" },
-}
+//   (empty: the graphite text/secondary and text/label change of 2026-11-24 is in Figma now.)
+const AHEAD_OF_FIGMA = {}
 const aheadSeen = new Set()
 const differ = (where, got, want) => {
   for (const [key, { code, figma }] of Object.entries(AHEAD_OF_FIGMA)) {

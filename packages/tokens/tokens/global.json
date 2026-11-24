@@ -263,7 +263,7 @@
       "graphite": {
         "$type": "color",
         "$value": "#D3D4D7",
-        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 75 on every everyday surface. Figma follows."
+        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 75 on every everyday surface, in Figma since its republish the same day."
       },
       "stone": {
         "$type": "color",
@@ -276,7 +276,7 @@
       "graphite": {
         "$type": "color",
         "$value": "#B9BABE",
-        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 60 on every everyday surface. Figma follows."
+        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 60 on every everyday surface, in Figma since its republish the same day."
       },
       "stone": {
         "$type": "color",

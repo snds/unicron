@@ -2,9 +2,10 @@
   "$description": "Snapshot of the Figma read-out: the theme roles in all 10 modes, the 22 type roles, and the space, radius and size numbers. Written from read-only Plugin API scripts against the published library (Unicron 2.0); never edited by hand. scripts/figma-parity.mjs (run by `pnpm test`) fails when a built value differs from it.",
   "source": {
     "file": "nmLJwY8cugquuZqs8xyZr9",
-    "name": "Unicron — Theme Studies v0.2 (published 2026-11-24)",
+    "name": "Unicron \u2014 Theme Studies v0.2 (published 2026-11-24)",
     "extracted": "2026-11-24",
-    "method": "read-only Plugin API scripts"
+    "method": "read-only Plugin API scripts",
+    "reread": "2026-11-24, after Sean's republish: text/secondary and text/label in the 5 graphite modes read #D3D4D7 and #B9BABE (read-only Plugin API script)."
   },
   "modes": [
     "warpcore / graphite",
@@ -815,7 +816,7 @@
     "text/secondary": {
       "modes": {
         "warpcore / graphite": {
-          "hex": "#B3B5BA",
+          "hex": "#D3D4D7",
           "alpha": 1
         },
         "warpcore / stone": {
@@ -823,7 +824,7 @@
           "alpha": 1
         },
         "vale / graphite": {
-          "hex": "#B3B5BA",
+          "hex": "#D3D4D7",
           "alpha": 1
         },
         "vale / stone": {
@@ -831,7 +832,7 @@
           "alpha": 1
         },
         "lockdown / graphite": {
-          "hex": "#B3B5BA",
+          "hex": "#D3D4D7",
           "alpha": 1
         },
         "lockdown / stone": {
@@ -839,7 +840,7 @@
           "alpha": 1
         },
         "synapse / graphite": {
-          "hex": "#B3B5BA",
+          "hex": "#D3D4D7",
           "alpha": 1
         },
         "synapse / stone": {
@@ -847,7 +848,7 @@
           "alpha": 1
         },
         "fontface / graphite": {
-          "hex": "#B3B5BA",
+          "hex": "#D3D4D7",
           "alpha": 1
         },
         "fontface / stone": {
@@ -859,7 +860,7 @@
     "text/label": {
       "modes": {
         "warpcore / graphite": {
-          "hex": "#8A8C92",
+          "hex": "#B9BABE",
           "alpha": 1
         },
         "warpcore / stone": {
@@ -867,7 +868,7 @@
           "alpha": 1
         },
         "vale / graphite": {
-          "hex": "#8A8C92",
+          "hex": "#B9BABE",
           "alpha": 1
         },
         "vale / stone": {
@@ -875,7 +876,7 @@
           "alpha": 1
         },
         "lockdown / graphite": {
-          "hex": "#8A8C92",
+          "hex": "#B9BABE",
           "alpha": 1
         },
         "lockdown / stone": {
@@ -883,7 +884,7 @@
           "alpha": 1
         },
         "synapse / graphite": {
-          "hex": "#8A8C92",
+          "hex": "#B9BABE",
           "alpha": 1
         },
         "synapse / stone": {
@@ -891,7 +892,7 @@
           "alpha": 1
         },
         "fontface / graphite": {
-          "hex": "#8A8C92",
+          "hex": "#B9BABE",
           "alpha": 1
         },
         "fontface / stone": {
