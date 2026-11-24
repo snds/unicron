@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- SidebarFoot: in the rail, the tile is the way into Settings (with its tooltip, shortcut, dot, and Current fill), so Settings stays reachable when the sidebar is collapsed.
+- SidebarFoot: in the rail, the tile is the way into Settings (with its tooltip, shortcut, dot, and Current fill), so Settings stays reachable when the sidebar is collapsed. In the full row the tile is hidden from screen readers, so the account reads its name once.
 
 ## 2.1.0
 

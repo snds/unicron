@@ -115,6 +115,12 @@ function SidebarFoot({ status, account, secondAction, settings, collapsed: colla
     )
   }
 
+  // The row writes the name beside the tile, so the tile goes unnamed there ("Sean, $1.20 today", not "Sean Sean").
+  const rowTile = (
+    <span aria-hidden="true" className="contents">
+      <InitialTile size="s" initials={account.initials} src={account.src} />
+    </span>
+  )
   const lines = (
     <span className="flex min-w-0 flex-1 flex-col">
       <span data-slot="sidebar-foot-name" className="type-ui-emphasis truncate text-text-body">
@@ -149,18 +155,18 @@ function SidebarFoot({ status, account, secondAction, settings, collapsed: colla
             aria-current={account.current ? "page" : undefined}
             className={cn(accountClass, "hover:bg-surface-hover")}
           >
-            {tile}
+            {rowTile}
             {lines}
           </a>
         ) : account.onClick ? (
           <button type="button" aria-label={account.label} onClick={account.onClick} className={cn(accountClass, "hover:bg-surface-hover")}>
-            {tile}
+            {rowTile}
             {lines}
             <Icon name="chevron--sort" size="sm" className="shrink-0 text-text-label" />
           </button>
         ) : (
           <div className={accountClass}>
-            {tile}
+            {rowTile}
             {lines}
           </div>
         )}
