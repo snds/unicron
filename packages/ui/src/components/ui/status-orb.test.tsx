@@ -25,13 +25,17 @@ describe("StatusOrb", () => {
     for (const words of Object.values(statusOrbCopy)) expect(words.split(" ").length).toBeLessThanOrEqual(2)
   })
 
-  it("draws queued, paused and stopped as still glyphs of their own, coloured from their own tokens", () => {
-    const glyphs = { queued: "time--filled", paused: "pause--outline--filled", stopped: "stop--filled" } as const
-    for (const [state, name] of Object.entries(glyphs)) {
-      const { container, unmount } = render(<StatusOrb state={state as keyof typeof glyphs} tooltip={false} />)
-      const glyph = container.querySelector('[data-slot="status-orb-glyph"]')
-      expect(glyph).toBeInTheDocument()
-      expect(glyph).toHaveAttribute("data-icon-name", name)
+  it("draws queued, paused and stopped as still discs with their own cut-out, coloured from their own tokens", () => {
+    const cuts = { queued: 1, paused: 2, stopped: 1 } as const
+    for (const [state, shapes] of Object.entries(cuts)) {
+      const { container, unmount } = render(<StatusOrb state={state as keyof typeof cuts} tooltip={false} />)
+      const glyph = container.querySelector('svg[data-slot="status-orb-glyph"]')!
+      expect(glyph).toHaveAttribute("data-mark", state)
+      // The shape is cut out of the disc (even-odd subpaths), so the ground shows through it.
+      const disc = glyph.querySelector("path")!
+      expect(disc).toHaveAttribute("fill-rule", "evenodd")
+      expect(disc).toHaveAttribute("fill", "currentColor")
+      expect(disc.getAttribute("d")!.split("Z").filter(Boolean)).toHaveLength(1 + shapes)
       expect(container.querySelector('[data-slot="status-orb-halo"]')).toBeNull()
       expect(css).toContain(`[data-slot="status-orb"][data-state="${state}"] { color: var(--c-status-orb-${state}); }`)
       // Nothing waiting or over moves.
@@ -44,9 +48,9 @@ describe("StatusOrb", () => {
     const names = new Set(statusOrbStates.map((state) => statusOrbCopy[state]))
     expect(names.size).toBe(statusOrbStates.length)
     const { container, rerender } = render(<StatusOrb state="stopped" tooltip={false} />)
-    const stopped = container.querySelector('[data-slot="status-orb-glyph"]')?.getAttribute("data-icon-name")
+    const stopped = container.querySelector('[data-slot="status-orb-glyph"]')?.innerHTML
     rerender(<StatusOrb state="failed" tooltip={false} />)
-    expect(container.querySelector('[data-slot="status-orb-glyph"]')?.getAttribute("data-icon-name")).not.toBe(stopped)
+    expect(container.querySelector('[data-slot="status-orb-glyph"]')?.innerHTML).not.toBe(stopped)
     rerender(<StatusOrb state="idle" tooltip={false} />)
     expect(container.querySelector('[data-slot="status-orb-glyph"]')).toBeNull()
   })
@@ -116,8 +120,9 @@ describe("StatusOrb as the 2.0 Status Mark", () => {
     for (const state of ["done", "failed"] as const) {
       const { container, unmount } = render(<StatusOrb state={state} tooltip={false} />)
       const glyph = container.querySelector('svg[data-slot="status-orb-glyph"]')!
-      expect(glyph.querySelector("circle")).toHaveAttribute("fill", "currentColor")
-      expect(glyph.querySelector("path")).toHaveAttribute("stroke", `var(--c-status-orb-${state}-ink)`)
+      const [disc, ink] = glyph.querySelectorAll("path")
+      expect(disc).toHaveAttribute("fill", "currentColor")
+      expect(ink).toHaveAttribute("stroke", `var(--c-status-orb-${state}-ink)`)
       unmount()
     }
   })

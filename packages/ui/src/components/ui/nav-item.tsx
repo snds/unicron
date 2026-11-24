@@ -1,5 +1,5 @@
 // Owned component (not generated): a sidebar row (index, icon, label, count) and the titled group that holds a few of them.
-// Promoted from: Seeded in snds/unicron (2026-11 design direction, Figma 15:487; no app PR, no DSA record)
+// Promoted from: Seeded in snds/unicron (2.0: Figma Sidebar Row 15:487 and Sidebar Group 195:13818; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
@@ -216,6 +216,7 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
           data-slot="nav-section-list"
           role={tree ? "tree" : radios ? "radiogroup" : "list"}
           aria-labelledby={ownName ? headingId : undefined}
+          // Rows 4 apart. Figma's Sidebar Group stacks them 2 apart; 4 keeps a section on the 4px grid.
           className={cn("flex min-w-0 flex-col gap-1", collapsed && "items-center gap-2")}
           onKeyDown={tree ? onTreeKey : radios ? onRadioKey : undefined}
         >
@@ -265,7 +266,7 @@ export type NavItemProps = Omit<useRender.ComponentProps<"a">, "children" | "ari
   mark?: NavMarkProp
   /** Shorthand for `mark={count}`. */
   count?: number
-  /** The place showing now: the soft primary tile, body ink, and `aria-current="page"`. */
+  /** The place showing now: the neutral 8% fill, the inset bar, body ink, and `aria-current="page"`. */
   current?: boolean
   /**
    * An item that turns on and off (a calendar shown in the grid): a `checkbox`; or, in a
@@ -304,9 +305,11 @@ export type NavItemProps = Omit<useRender.ComponentProps<"a">, "children" | "ari
 }
 
 /**
- * NavItem: one place in a sidebar (Figma 15:487). Index (folio), icon (20), label (label 14/20),
- * count (folio), 8 / 10 padding, 10 apart, on the 2px corner. Current is the soft primary tile with
- * every part in body ink; resting parts are secondary, faint and label ink, as drawn.
+ * NavItem: one place in a sidebar, the 2.0 Sidebar Row (Figma 15:487). Index (caption), icon (20),
+ * label (ui 13/20), count (caption), then the 18px trailing slot; 6 / 10 padding, 10 apart, 32 tall,
+ * on the 6px corner. Hover is the 5% wash. Current is the neutral 8% fill (surface/selected) with
+ * a 2 × 16 inset bar in the accent text colour and the label in ui/emphasis body ink, never an
+ * accent fill. A disclosure chevron sits inline after the label (Sidebar Group).
  *
  * A link when it has `href` (or a router link through `render`), otherwise a button. Inside a
  * collapsed `NavSection` it draws as a `RailItem`.
@@ -397,22 +400,22 @@ function NavItem({
   // In a radio group or a tree the item itself is the child the group owns: the list item steps back.
   const wrapperRole = section && !collapsed && (section.tree || section.checkable === "single") ? "none" : undefined
 
-  // Ink per part, as Figma binds it (Default, then Active).
-  // On the current tile everything is body ink, a critical item too: critical text on the soft
-  // tile falls under the label floor, so there the glyph and the words in the name carry it.
+  // Ink per part, as Figma binds it (Default, then Selected). The count stays the label ink on
+  // the selected fill too, as drawn. A critical item keeps its ink when selected: the neutral fill
+  // is light enough for it.
   const ink = {
     // A reading part, so the label ink, never the faint one (Unicron 25: faint is for disabled and decoration).
-    index: current ? "text-text-secondary" : "text-text-label",
+    index: "text-text-label",
     icon: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
-    label: current ? "text-text-body" : critical ? "text-critical-text" : "text-text-secondary",
-    count: current ? "text-text-body" : "text-text-label",
-    description: current ? "text-text-secondary" : "text-text-label",
+    label: critical ? "text-critical-text" : current ? "text-text-body" : "text-text-secondary",
+    count: "text-text-label",
+    description: "text-text-label",
   }
 
   const content = (
     <>
       {index ? (
-        <span data-slot="nav-item-index" aria-hidden="true" className={cn("type-folio shrink-0", ink.index)}>
+        <span data-slot="nav-item-index" aria-hidden="true" className={cn("type-caption shrink-0", ink.index)}>
           {index}
         </span>
       ) : null}
@@ -424,8 +427,17 @@ function NavItem({
         </span>
       ) : null}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span data-slot="nav-item-label" className={cn("type-label truncate", ink.label)}>
-          {label}
+        <span className="flex min-w-0 items-center gap-0.5">
+          <span data-slot="nav-item-label" className={cn("truncate", current ? "type-ui-emphasis" : "type-ui", ink.label)}>
+            {label}
+          </span>
+          {selfDisclosure ? (
+            // The item is its own disclosure: the chevron sits after the label (Sidebar Group),
+            // pointing right when closed and down when open.
+            <span data-slot="nav-item-chevron" aria-hidden="true" className={cn("inline-flex shrink-0 text-text-label transition-[rotate] duration-(--motion-fast) ease-(--motion-ease)", !expanded && "-rotate-90")}>
+              <Icon name="chevron--down" size="sm" />
+            </span>
+          ) : null}
         </span>
         {description ? (
           <span id={descriptionId} data-slot="nav-item-description" className={cn("type-caption", ink.description)}>
@@ -437,19 +449,14 @@ function NavItem({
       <span
         data-slot="nav-item-count"
         className={cn(
-          "inline-flex shrink-0 items-center empty:hidden",
+          // The 18px trailing slot: the mark centers in it, so marks line up down the sidebar.
+          "inline-flex h-(--c-nav-item-trailing) min-w-(--c-nav-item-trailing) shrink-0 items-center justify-center empty:hidden",
           // A mouse finds the action over the count: the count steps aside while it shows.
           action && "pointer-fine:group-hover/nav-item:invisible pointer-fine:group-focus-within/nav-item:invisible"
         )}
       >
-        <NavMark mark={resolved} placement="inline" className={ink.count} />
+        <NavMark mark={resolved} placement="inline" type="caption" className={ink.count} />
       </span>
-      {selfDisclosure ? (
-        // The item is its own disclosure: the chevron shows which way it opens.
-        <span data-slot="nav-item-chevron" aria-hidden="true" className={cn("inline-flex shrink-0 text-text-label transition-[rotate] duration-(--motion-fast) ease-(--motion-ease)", !expanded && "-rotate-90")}>
-          <Icon name="chevron--down" size="sm" />
-        </span>
-      ) : null}
     </>
   )
 
@@ -459,11 +466,9 @@ function NavItem({
     props: mergeProps<"a">(
       {
         className: cn(
-          // Padding 8 / 10, gap 10. The start padding grows by one indent per level.
-          // 36 tall, as Figma draws it; on a coarse pointer it takes a touch across 44 (contract
-          // 6.6): a phone's settings list and a sheet of places are made of these rows. Rows sit
-          // 40 apart, so two neighbours' targets share 4px, which is harmless.
-          "hit-area flex min-w-0 flex-1 items-center gap-2.5 rounded-sm py-2 ps-[calc(--spacing(2.5)+var(--nav-item-level,0)*var(--c-nav-item-indent))] pe-2.5 text-start select-none",
+          // Padding 6 / 10, gap 10: 32 tall, as Figma draws it. The start padding grows by one
+          // indent per level. On a coarse pointer it takes a touch across 44 (contract 6.6).
+          "hit-area flex min-h-8 min-w-0 flex-1 items-center gap-2.5 rounded py-1.5 ps-[calc(--spacing(2.5)+var(--nav-item-level,0)*var(--c-nav-item-indent))] pe-2.5 text-start select-none",
           // The glyphs take this ink; the index, label and count set their own.
           ink.icon,
           disabled && "pointer-events-none"
@@ -538,15 +543,19 @@ function NavItem({
       data-tone={tone}
       data-disabled={disabled ? "" : undefined}
       className={cn(
-        "group/nav-item relative flex min-w-0 items-center rounded-sm transition-[background-color] duration-(--motion-fast) ease-(--motion-ease)",
-        // Hover and pressed are the contract's washes on the row; the current tile keeps its fill.
-        "hover:bg-state-hover has-[>[data-slot=nav-item-main]:active]:bg-state-pressed",
-        "data-current:bg-primary-soft data-current:hover:bg-primary-soft data-current:has-[>[data-slot=nav-item-main]:active]:bg-primary-soft",
+        "group/nav-item relative flex min-w-0 items-center rounded transition-[background-color] duration-(--motion-fast) ease-(--motion-ease)",
+        // Hover is the 5% wash, pressed and current the 8% fill (surface/selected), never the accent.
+        "hover:bg-surface-hover has-[>[data-slot=nav-item-main]:active]:bg-surface-selected",
+        "data-current:bg-surface-selected data-current:hover:bg-surface-selected",
         disabled && "opacity-50",
         className
       )}
       style={style}
     >
+      {current ? (
+        // The inset bar: 2 × 16, 3px in from the start edge, in the accent's text colour.
+        <span data-slot="nav-item-bar" aria-hidden="true" className="pointer-events-none absolute start-0.75 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-xs bg-primary-text" />
+      ) : null}
       {main}
       {disclosure}
       {action ? (

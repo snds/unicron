@@ -19,20 +19,21 @@ describe("NavItem (Figma 15:487)", () => {
     expect(within(link).getByText("012")).toHaveAttribute("aria-hidden", "true")
   })
 
-  it("draws the drawn anatomy: 8 / 10 padding, 10 apart, label in the label role, folio index and count, 20px icon", () => {
+  it("is the 2.0 Sidebar Row: 32 tall, 6 / 10 padding, 10 apart, ui label, caption index and count, 18px trailing slot", () => {
     render(<NavItem href="/mail" label="Mail" index="01" icon="email" count={12} />)
     const link = screen.getByRole("link")
-    expect(classesOf(link)).toEqual(expect.arrayContaining(["gap-2.5", "py-2", "pe-2.5", "rounded-sm"]))
+    expect(classesOf(link)).toEqual(expect.arrayContaining(["min-h-8", "gap-2.5", "py-1.5", "pe-2.5", "rounded"]))
     expect(link.className).toContain("ps-[calc(--spacing(2.5)")
-    expect(classesOf(link.querySelector('[data-slot="nav-item-label"]')!)).toEqual(expect.arrayContaining(["type-label", "text-text-secondary", "truncate"]))
-    expect(classesOf(link.querySelector('[data-slot="nav-item-index"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
-    expect(classesOf(link.querySelector('[data-slot="nav-mark"]')!)).toEqual(expect.arrayContaining(["type-folio", "text-text-label"]))
+    expect(classesOf(link.querySelector('[data-slot="nav-item-label"]')!)).toEqual(expect.arrayContaining(["type-ui", "text-text-secondary", "truncate"]))
+    expect(classesOf(link.querySelector('[data-slot="nav-item-index"]')!)).toEqual(expect.arrayContaining(["type-caption", "text-text-label"]))
+    expect(classesOf(link.querySelector('[data-slot="nav-mark"]')!)).toEqual(expect.arrayContaining(["type-caption", "text-text-label"]))
+    expect(classesOf(link.querySelector('[data-slot="nav-item-count"]')!)).toEqual(expect.arrayContaining(["h-(--c-nav-item-trailing)", "min-w-(--c-nav-item-trailing)", "justify-center"]))
     expect(link.querySelector('[data-slot="icon"]')).toHaveAttribute("width", "20")
     // The icon takes the row's secondary ink.
     expect(classesOf(link)).toContain("text-text-secondary")
   })
 
-  // 36 tall as drawn; contract 6.6: a control under 44 extends its touch target on a coarse
+  // 32 tall as drawn; contract 6.6: a control under 44 extends its touch target on a coarse
   // pointer. A phone's settings list is made of these rows (the browser check measures the 44).
   it("takes a 44px touch on a coarse pointer, as a link and as a button", () => {
     render(
@@ -45,16 +46,24 @@ describe("NavItem (Figma 15:487)", () => {
     expect(classesOf(screen.getByRole("button", { name: "Accounts" }))).toContain("hit-area")
   })
 
-  it("current is the soft primary tile with every part in body ink, and aria-current=page", () => {
+  it("current is the neutral 8% fill with the inset bar, the label in ui/emphasis body ink, and aria-current=page", () => {
     render(<NavItem href="/inbox" label="Inbox" icon="email" count={12} current />)
     const link = screen.getByRole("link", { name: "Inbox, 12" })
     expect(link).toHaveAttribute("aria-current", "page")
     const row = rowOf(link)
     expect(row).toHaveAttribute("data-current")
-    expect(classesOf(row)).toEqual(expect.arrayContaining(["data-current:bg-primary-soft", "hover:bg-state-hover"]))
-    expect(link.querySelector('[data-slot="nav-item-label"]')!.className).toContain("text-text-body")
-    expect(link.querySelector('[data-slot="nav-mark"]')!.className).toContain("text-text-body")
+    expect(classesOf(row)).toEqual(expect.arrayContaining(["data-current:bg-surface-selected", "hover:bg-surface-hover"]))
+    expect(row.className).not.toMatch(/primary-soft/)
+    const bar = row.querySelector('[data-slot="nav-item-bar"]')!
+    expect(classesOf(bar)).toEqual(expect.arrayContaining(["w-0.5", "h-4", "start-0.75", "bg-primary-text"]))
+    expect(classesOf(link.querySelector('[data-slot="nav-item-label"]')!)).toEqual(expect.arrayContaining(["type-ui-emphasis", "text-text-body"]))
+    expect(link.querySelector('[data-slot="nav-mark"]')!.className).toContain("text-text-label")
     expect(classesOf(link)).toContain("text-text-body")
+  })
+
+  it("draws no bar on a row that is not current", () => {
+    render(<NavItem href="/inbox" label="Inbox" />)
+    expect(rowOf(screen.getByRole("link")).querySelector('[data-slot="nav-item-bar"]')).toBeNull()
   })
 
   it("is a button when it has no address, and runs onClick", async () => {
