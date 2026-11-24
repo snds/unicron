@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.1.2
+
+### Patch Changes
+
+- AppFrame: beside the flush 2.0 sidebar, the content columns keep their room inside their own box instead of stepping into a page gutter that isn't there. They, and their scroll bars, now end at the window's edge (they ran 16 px past it).
+
 ## 2.1.1
 
 ### Patch Changes
