@@ -490,6 +490,10 @@ function AppFrameSidebar({
             // the page behind it closes the drawer, as a press outside does. Focus that goes to a
             // layer the drawer itself opened (a switcher's menu, in a portal outside the frame)
             // keeps it open.
+            // Choosing a place closes it: a link, the primary action, or Settings in the foot.
+            onClick={(event) => {
+              if ((event.target as Element).closest(DRAWER_CLOSERS)) setDrawerOpen(false)
+            }}
             onBlur={(event) => {
               const next = event.relatedTarget as Node | null
               if (!next || event.currentTarget.contains(next)) return
@@ -513,6 +517,9 @@ function AppFrameSidebar({
     </>
   )
 }
+
+/** What closes the drawer once pressed: it takes the person somewhere. */
+const DRAWER_CLOSERS = "a[href], [data-slot='app-frame-sidebar-action'], [data-slot='sidebar-foot-settings']"
 
 /** The sidebar's own control in its foot: a ghost icon button with a tooltip naming its key. */
 function SidebarControl({ label, icon, onClick, ref }: { label: string; icon: IconName; onClick: () => void; ref?: React.Ref<HTMLButtonElement> }) {

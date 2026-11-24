@@ -240,6 +240,17 @@ describe("AppFrameSidebar", () => {
     expect(document.activeElement).toBe(crumb)
   })
 
+  it("the drawer closes once a place in it is chosen, and stays for its switcher", () => {
+    setViewport(820, 1180)
+    render(<Sidebar />)
+    fireEvent.click(screen.getByRole("button", { name: "Expand sidebar" }))
+    const drawer = screen.getByRole("dialog", { name: "Places" })
+    fireEvent.click(screen.getByRole("button", { name: "Switch workspace" }))
+    expect(screen.getByRole("dialog", { name: "Places" })).toBeInTheDocument()
+    fireEvent.click(drawer.querySelector<HTMLElement>("a[href]")!)
+    expect(screen.queryByRole("dialog", { name: "Places" })).not.toBeInTheDocument()
+  })
+
   it("toggles on ⌘\\ and Ctrl+\\", () => {
     setViewport(1440, 900)
     const onCollapsedChange = vi.fn()

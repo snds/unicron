@@ -5,6 +5,7 @@
 ### Patch Changes
 
 - SidebarFoot: in the rail, the tile is the way into Settings (with its tooltip, shortcut, dot, and Current fill), so Settings stays reachable when the sidebar is collapsed. In the full row the tile is hidden from screen readers, so the account reads its name once.
+- AppFrameSidebar: at medium width the drawer closes once a place in it is chosen (a link, the primary action, or Settings in the foot).
 
 ## 2.1.0
 
