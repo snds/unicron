@@ -120,7 +120,7 @@ describe("StatusOrb in the 2026-11 look", () => {
   })
 
   it("draws its dot and halo square: the stylesheet gives them no radius", () => {
-    const block = css.slice(css.indexOf("StatusOrb (components/ui/status-orb.tsx)"), css.indexOf("Indicator (components/ui/indicator.tsx)"))
+    const block = css.slice(css.indexOf("StatusOrb (components/ui/status-orb.tsx)"), css.indexOf("Count Badge (components/ui/count-badge.tsx"))
     expect(block).not.toMatch(/border-radius/)
   })
 })

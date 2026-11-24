@@ -5,18 +5,18 @@ import { describe, expect, it, vi } from "vitest"
 import { FilterChip, FilterChipGroup, filterChipVariants } from "./filter-chip"
 
 describe("FilterChip (Figma 15:503)", () => {
-  it("24 tall, 4 / 8 in, square corners, overline label; a touch reaches it across 44", () => {
+  it("a round pill, 28 tall, 10 in, the ui role (2.0); a touch reaches it across 44", () => {
     const classes = filterChipVariants().split(/\s+/)
-    expect(classes).toEqual(expect.arrayContaining(["h-6", "px-2", "py-1", "rounded-none", "type-overline", "hit-area"]))
-    expect(classes.some((c) => /^rounded-(lg|md|sm|full)$/.test(c))).toBe(false)
+    expect(classes).toEqual(expect.arrayContaining(["h-control-s", "px-2.5", "py-1", "rounded-full", "type-ui", "hit-area"]))
+    expect(classes).not.toContain("type-overline")
   })
 
-  it("off is label ink with no fill and the contract's washes; on is inverted ink, never the identity colour", () => {
+  it("off is secondary ink in a line/rule edge with no fill; on is the selected wash in body ink, never the identity colour", () => {
     const off = filterChipVariants().split(/\s+/)
-    expect(off).toEqual(expect.arrayContaining(["text-muted-foreground", "hover:bg-state-hover", "active:bg-state-pressed"]))
+    expect(off).toEqual(expect.arrayContaining(["text-text-secondary", "inset-ring-line-rule", "hover:bg-surface-hover", "active:bg-surface-selected"]))
     expect(off.some((c) => /^bg-/.test(c))).toBe(false)
     const on = filterChipVariants({ active: true }).split(/\s+/)
-    expect(on).toEqual(expect.arrayContaining(["bg-foreground", "text-background"]))
+    expect(on).toEqual(expect.arrayContaining(["bg-surface-selected", "text-text-body", "type-ui-emphasis"]))
     expect(on.some((c) => /(^|:)bg-primary/.test(c))).toBe(false)
   })
 
@@ -144,10 +144,9 @@ describe("FilterChip kinds: a trigger and a plain button (contract 5.1c C13, War
     expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("aria-hidden", "true")
     expect(chip.querySelector('[data-icon-name="chevron--down"]')).toHaveAttribute("width", "16")
     const cls = chip.className.split(/\s+/)
-    // The off look, with the chevron 4 after the words; open, it draws inverted ink (Unicron 50).
-    expect(cls).toEqual(expect.arrayContaining(["text-muted-foreground", "gap-1", "aria-expanded:bg-foreground", "aria-expanded:text-background"]))
-    expect(cls).not.toContain("aria-expanded:bg-state-pressed")
-    expect(cls).not.toContain("bg-foreground")
+    // The off look, with the chevron 4 after the words; open, it takes the on look (2.0).
+    expect(cls).toEqual(expect.arrayContaining(["text-text-secondary", "gap-1", "aria-expanded:bg-surface-selected", "aria-expanded:text-text-body"]))
+    expect(cls).not.toContain("bg-surface-selected")
     await userEvent.click(chip)
     await userEvent.click(chip)
     expect(onClick).toHaveBeenCalledTimes(2)
@@ -235,16 +234,15 @@ describe("FilterChip kinds: a trigger and a plain button (contract 5.1c C13, War
     const cls = chip.className.split(/\s+/)
     expect(cls).toEqual(
       expect.arrayContaining([
-        "aria-expanded:bg-foreground",
-        "aria-expanded:text-background",
-        "aria-expanded:active:bg-[color-mix(in_oklab,var(--foreground)_86%,var(--background))]",
+        "aria-expanded:bg-surface-selected",
+        "aria-expanded:text-text-body",
       ])
     )
   })
 })
 
 describe("FilterChip keepCase (Vale 8)", () => {
-  it("keeps a person's name in its own case; a plain label still takes capitals", () => {
+  it("keeps a person's name in its own case; since 2.0 every label is sentence case anyway", () => {
     render(
       <>
         <FilterChip keepCase count={3}>Ana McKay</FilterChip>
@@ -254,8 +252,8 @@ describe("FilterChip keepCase (Vale 8)", () => {
     const name = screen.getByRole("button", { name: /^Ana McKay / })
     expect(name).toHaveAttribute("data-keep-case")
     expect(name.querySelector('[data-slot="filter-chip-label"]')).toHaveClass("normal-case")
-    // The role is the same: only the case is kept.
-    expect(name).toHaveClass("type-overline")
+    // The role is the same for both.
+    expect(name).toHaveClass("type-ui")
     const plain = screen.getByRole("button", { name: "All" })
     expect(plain).not.toHaveAttribute("data-keep-case")
     expect(plain.querySelector('[data-slot="filter-chip-label"]')).not.toHaveClass("normal-case")

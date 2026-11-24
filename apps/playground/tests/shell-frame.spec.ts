@@ -719,7 +719,8 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     const head = await box(list.locator('[data-slot="page-head"]'))
     const chips = await box(list.locator('[data-slot="filter-chip-group"]'))
     const first = await box(list.locator('[data-slot="list-row"]').first())
-    expect([head.bottom, chips.y, chips.bottom, first.y]).toEqual([180, 196, 220, 248])
+    // 2.0 chips are 28 tall (they were 24): the list starts 4 lower.
+    expect([head.bottom, chips.y, chips.bottom, first.y]).toEqual([180, 196, 224, 252])
     // rules.md 5.4: the chips sit closer to their title than to the list (16 to 28). It was 32 to 28.
     expect(chips.y - head.bottom).toBeLessThan(first.y - chips.bottom)
     // The detail: the task's line, its title, what it does, the steps, 32 apart; the first step at y 356.
@@ -769,7 +770,7 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     const field = await box(detail.locator('[data-slot="field-row"]').first())
     // Figma (1.x frame) drew the yellow block from y 216 to 376 and the first field's rule at y 400.
     // 2.0 type moves the head 4 up; the 16 under it, the block and the 24 after it are unchanged.
-    expect([head.bottom, request.y, request.bottom, field.y]).toEqual([196, 212, 372, 396])
+    expect([head.bottom, request.y, request.bottom, field.y]).toEqual([196, 212, 364, 388]) // 2.0: the request's buttons are 32, not 40
     expect(request.y - head.bottom).toBeLessThan(field.y - request.bottom)
   })
 
@@ -779,8 +780,9 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     const request = await box(column.locator('[data-slot="needs-you"]'))
     const header = await box(column.locator('[data-slot="section-header"]').filter({ hasText: "Failing checks" }))
     const first = await box(column.locator('[data-slot="list-row"]').first())
-    // Figma: the request 452 to 612, the header's line over the first row's rule at y 672.
-    expect([request.y, request.bottom, header.bottom, first.y]).toEqual([452, 612, 672, 672])
+    // Figma (1.x): the request 452 to 612, the header's line over the first row's rule at y 672.
+    // 2.0 buttons are 32 (they were 40): the request is 8 shorter.
+    expect([request.y, request.bottom, header.bottom, first.y]).toEqual([452, 604, 664, 664])
     // The header was 32 from its own list, the same as the space between blocks.
     expect(first.y - header.bottom).toBeLessThan(header.y - request.bottom)
   })

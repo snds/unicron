@@ -76,7 +76,7 @@ describe("InputGroup", () => {
     expect(screen.getByRole("textbox", { name: "Search mail" })).toHaveFocus()
   })
 
-  it("its buttons are Button's own sizes: a word is S, an icon the 32px square", () => {
+  it("its buttons are Button's own sizes: a word is S, an icon the 28px square (2.0)", () => {
     render(
       <InputGroup>
         <InputGroupInput aria-label="Address" />
@@ -88,8 +88,8 @@ describe("InputGroup", () => {
         </InputGroupAddon>
       </InputGroup>
     )
-    expect(screen.getByRole("button", { name: "Check" }).className).toContain("h-8")
-    expect(screen.getByRole("button", { name: "Copy" }).className).toContain("size-8")
+    expect(screen.getByRole("button", { name: "Check" }).className).toContain("h-control-s")
+    expect(screen.getByRole("button", { name: "Copy" }).className).toContain("size-control-s")
   })
 
   it("holds a textarea", () => {

@@ -55,10 +55,10 @@
       "$value": "{needs-you-on-fill}",
       "$description": "The 1px ink outline on the attention square and the attention badge."
     },
-    "unread": { "$type": "color", "$value": "{text-body}", "$description": "The unread square: ink, not the identity colour (Figma List Row)." },
+    "unread": { "$type": "color", "$value": "{info-fill}", "$description": "The unread mark: the shared count blue (2.0: counts and unread are info/fill in every app)." },
     "attention-badge-bg": { "$type": "color", "$value": "{needs-you-fill}" },
     "attention-badge-ink": { "$type": "color", "$value": "{needs-you-on-fill}" },
-    "unread-badge-bg": { "$type": "color", "$value": "{text-body}", "$description": "Inverted ink, as an active Filter Chip (contract §6.5)." },
-    "unread-badge-ink": { "$type": "color", "$value": "{surface-ground}" }
+    "unread-badge-bg": { "$type": "color", "$value": "{info-fill}", "$description": "Count Badge, Severity=Default (Figma 193:593)." },
+    "unread-badge-ink": { "$type": "color", "$value": "{info-on-fill}" }
   }
 }

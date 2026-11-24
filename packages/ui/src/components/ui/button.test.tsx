@@ -28,14 +28,14 @@ const classesOf = (props: Parameters<typeof buttonVariants>[0]) => buttonVariant
 describe("buttonVariants", () => {
   it("draws an outlined kind's edge inside the box, with no border of its own", () => {
     const classes = classesOf({ variant: "secondary" })
-    expect(classes).toEqual(expect.arrayContaining(["inset-ring", "inset-ring-foreground", "text-foreground"]))
+    expect(classes).toEqual(expect.arrayContaining(["inset-ring", "inset-ring-line-field", "text-text-body"]))
     expect(classes.some((c) => c === "border" || c.startsWith("border-"))).toBe(false)
   })
 
   it("keeps a caller's class over the variant's", () => {
     const classes = classesOf({ variant: "secondary", className: "inset-ring-input" })
     expect(classes).toContain("inset-ring-input")
-    expect(classes).not.toContain("inset-ring-foreground")
+    expect(classes).not.toContain("inset-ring-line-field")
   })
 })
 
@@ -52,7 +52,7 @@ describe("Button kinds (2026-11 direction, Figma 15:478)", () => {
     const classes = classesOf({ variant: "ghost" })
     expect(classes).toContain("text-foreground")
     expect(classes.some((c) => c.startsWith("bg-") || c.startsWith("inset-ring"))).toBe(false)
-    expect(classes).toEqual(expect.arrayContaining(["h-10", "px-4"]))
+    expect(classes).toEqual(expect.arrayContaining(["h-control-m", "px-3"]))
   })
 
   it("destructive is the critical fill with its on-fill label", () => {
@@ -84,16 +84,16 @@ describe("Button kinds (2026-11 direction, Figma 15:478)", () => {
 })
 
 describe("Button sizes", () => {
-  it("M is 40 tall with 12 / 16 padding, S is 32 with 8 / 12, lg is the control height", () => {
-    expect(classesOf({ size: "default" })).toEqual(expect.arrayContaining(["h-10", "px-4", "py-3"]))
-    expect(classesOf({ size: "sm" })).toEqual(expect.arrayContaining(["h-8", "px-3", "py-2"]))
-    expect(classesOf({ size: "lg" })).toEqual(expect.arrayContaining(["h-control", "px-4"]))
+  it("M is 32 tall and S 28, both 12 in; L is 44 and 16 in (Figma Button 2.0)", () => {
+    expect(classesOf({ size: "default" })).toEqual(expect.arrayContaining(["h-control-m", "px-3", "py-1.5"]))
+    expect(classesOf({ size: "sm" })).toEqual(expect.arrayContaining(["h-control-s", "px-3", "py-1"]))
+    expect(classesOf({ size: "lg" })).toEqual(expect.arrayContaining(["h-control-l", "px-4"]))
   })
 
   it("the icon sizes are squares of the same heights", () => {
-    expect(classesOf({ size: "icon" })).toContain("size-10")
-    expect(classesOf({ size: "icon-sm" })).toContain("size-8")
-    expect(classesOf({ size: "icon-lg" })).toContain("size-control")
+    expect(classesOf({ size: "icon" })).toContain("size-control-m")
+    expect(classesOf({ size: "icon-sm" })).toContain("size-control-s")
+    expect(classesOf({ size: "icon-lg" })).toContain("size-control-l")
   })
 
   it("older size names still work, as the nearest of the three", () => {
@@ -101,10 +101,10 @@ describe("Button sizes", () => {
     expect(buttonVariants({ size: "icon-xs" })).toBe(buttonVariants({ size: "icon-sm" }))
   })
 
-  it("the label is the mono caps overline at every boxed size, with an 8px gap to a 16px icon", () => {
+  it("the label is ui/emphasis in sentence case (control/strong at L), 6px from a 20px icon", () => {
     for (const size of BOXED_SIZES) {
       const classes = classesOf({ size })
-      expect(classes).toEqual(expect.arrayContaining(["type-overline", "gap-2", "[&_svg:not([class*='size-'])]:size-4"]))
+      expect(classes).toEqual(expect.arrayContaining([size === "lg" ? "type-control-strong" : "type-ui-emphasis", "gap-1.5", "[&_svg:not([class*='size-'])]:size-icon"]))
     }
   })
 
@@ -127,10 +127,10 @@ describe("Button sizes", () => {
     expect(classes.some((name) => /^active:text-\S+\/\d+$/.test(name))).toBe(false)
   })
 
-  it("the corner is the control radius, and shape=\"pill\" no longer rounds it", () => {
-    expect(classesOf({})).toContain("rounded-lg")
+  it("the corner is the control radius (6), and shape=\"pill\" no longer rounds it", () => {
+    expect(classesOf({})).toContain("rounded")
     const pill = classesOf({ shape: "pill" })
-    expect(pill).toContain("rounded-lg")
+    expect(pill).toContain("rounded")
     expect(pill).not.toContain("rounded-full")
     expect(buttonVariants({ shape: "pill", size: "sm" })).toBe(buttonVariants({ size: "sm" }))
   })
@@ -142,13 +142,13 @@ describe("Button sizes", () => {
 
   it("wrap lets a long label take a second line: the height follows the text, never under the size's", () => {
     const wrapped = classesOf({ block: true, wrap: true })
-    expect(wrapped).toEqual(expect.arrayContaining(["h-auto", "min-h-10", "whitespace-normal", "text-center"]))
-    expect(wrapped).not.toContain("h-10")
+    expect(wrapped).toEqual(expect.arrayContaining(["h-auto", "min-h-control-m", "whitespace-normal", "text-center"]))
+    expect(wrapped).not.toContain("h-control-m")
     expect(wrapped).not.toContain("whitespace-nowrap")
-    expect(classesOf({ wrap: true, size: "sm" })).toEqual(expect.arrayContaining(["h-auto", "min-h-8"]))
-    expect(classesOf({ wrap: true, size: "lg" })).toEqual(expect.arrayContaining(["h-auto", "min-h-control"]))
+    expect(classesOf({ wrap: true, size: "sm" })).toEqual(expect.arrayContaining(["h-auto", "min-h-control-s"]))
+    expect(classesOf({ wrap: true, size: "lg" })).toEqual(expect.arrayContaining(["h-auto", "min-h-control-l"]))
     // Off by default: a label stays on one line at the size's height.
-    expect(classesOf({})).toEqual(expect.arrayContaining(["h-10", "whitespace-nowrap"]))
+    expect(classesOf({})).toEqual(expect.arrayContaining(["h-control-m", "whitespace-nowrap"]))
     expect(classesOf({})).not.toContain("h-auto")
   })
 })

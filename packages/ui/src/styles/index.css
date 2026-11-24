@@ -1090,6 +1090,38 @@ html:has([data-slot="app-frame"]) body {
     border: var(--status-orb-ring) solid currentColor;
   }
 
+  /* Count Badge (components/ui/count-badge.tsx, Figma 193:593): a round count, by severity. */
+  [data-slot="count-badge"] {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--c-indicator-badge-height);
+    height: var(--c-indicator-badge-height);
+    padding-inline: var(--c-indicator-badge-pad);
+    border-radius: var(--radius-round);
+    font-family: var(--type-overline-family);
+    font-size: var(--type-overline-size);
+    font-weight: var(--type-overline-weight);
+    line-height: var(--type-overline-leading);
+    font-variant-numeric: tabular-nums;
+    background: var(--info-fill);
+    color: var(--info-on-fill);
+  }
+  [data-slot="count-badge"][data-severity="minor"] {
+    background: transparent;
+    color: var(--text-secondary);
+    box-shadow: inset 0 0 0 var(--stroke-rule) var(--line-strong);
+  }
+  [data-slot="count-badge"][data-severity="concerning"] {
+    background: var(--severity-concerning-fill);
+    color: var(--severity-concerning-on-fill);
+  }
+  [data-slot="count-badge"][data-severity="urgent"] {
+    background: var(--severity-urgent-fill);
+    color: var(--severity-urgent-on-fill);
+  }
+
   /* Indicator (components/ui/indicator.tsx): attention or unread, a dot or a count badge. */
   [data-slot="indicator"] {
     display: inline-block;
@@ -1106,9 +1138,13 @@ html:has([data-slot="app-frame"]) body {
   [data-slot="indicator"][data-shape="badge"] {
     min-width: var(--c-indicator-badge-height);
     height: var(--c-indicator-badge-height);
-    padding-inline: calc(var(--c-indicator-badge-height) / 4);
+    padding-inline: var(--c-indicator-badge-pad);
+    border-radius: var(--radius-round);
+    font-family: var(--type-overline-family);
     font-size: var(--type-overline-size);
-    line-height: var(--c-indicator-badge-height);
+    /* The overline's own 16 line, centred in the 18 badge (Figma Count Badge). */
+    line-height: var(--type-overline-leading);
+    padding-block: calc((var(--c-indicator-badge-height) - var(--type-overline-leading)) / 2);
     font-weight: var(--type-overline-weight);
     font-variant-numeric: tabular-nums;
     text-align: center;

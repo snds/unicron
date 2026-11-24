@@ -172,8 +172,8 @@ describe("indicator on a control", () => {
 describe("IndicatorMark in the 2026-11 look", () => {
   const knobs = JSON.parse(readFileSync(resolve(__dirname, "../../../../tokens/tokens/component/chat.json"), "utf8")).indicator
 
-  it("is an ink square for unread and the yellow square for attention, with an ink outline", () => {
-    expect(knobs.unread.$value).toBe("{text-body}")
+  it("is the count blue for unread (2.0) and the yellow square for attention, with an ink outline", () => {
+    expect(knobs.unread.$value).toBe("{info-fill}")
     expect(knobs.attention.$value).toBe("{needs-you-fill}")
     expect(knobs["attention-edge"].$value).toBe("{needs-you-on-fill}")
     expect(knobs["dot-size"].$value).toBe("0.375rem")
@@ -184,9 +184,9 @@ describe("IndicatorMark in the 2026-11 look", () => {
     expect(container.querySelector('[data-slot="indicator"]')!.className).not.toContain("ring-")
   })
 
-  it("counts on the same fills, in mono, the attention badge outlined inside in ink", () => {
-    expect(knobs["unread-badge-bg"].$value).toBe("{text-body}")
-    expect(knobs["unread-badge-ink"].$value).toBe("{surface-ground}")
+  it("counts on the same fills (the Count Badge's), the attention badge outlined inside in ink", () => {
+    expect(knobs["unread-badge-bg"].$value).toBe("{info-fill}")
+    expect(knobs["unread-badge-ink"].$value).toBe("{info-on-fill}")
     expect(knobs["attention-badge-bg"].$value).toBe("{needs-you-fill}")
     expect(knobs["attention-badge-ink"].$value).toBe("{needs-you-on-fill}")
     const { container } = render(<IndicatorMark indicator={{ kind: "attention", count: 3 }} shape="badge" />)

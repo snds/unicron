@@ -459,8 +459,9 @@ test.describe("on a phone", () => {
       expect(Math.round(a.x - (d.x + d.width))).toBe(16)
       expect(Math.round(a.x + a.width)).toBe(Math.round(row.x + row.width))
       expect(a.width).toBeGreaterThan(d.width)
-      // One line where it fits (40 tall); a second line is the last resort, and the no grows with it.
-      if (width >= 360) expect(Math.round(a.height)).toBe(40)
+      // One line where it fits (44 tall, Figma's L button in a sheet); a second line is the last
+      // resort, and the no grows with it.
+      if (width >= 360) expect(Math.round(a.height)).toBe(44)
       expect(Math.round(d.height)).toBe(Math.round(a.height))
     })
   }
@@ -908,12 +909,13 @@ test("the radio is the one round control: a circle with a round dot, beside the 
   expect(Number.parseFloat(seen.dot)).toBeGreaterThanOrEqual(4)
 })
 
-test("a trigger FilterChip draws inverted ink while its picker is open, and says aria-expanded (Unicron 50)", async ({ page }) => {
+test("a trigger FilterChip takes the on look while its picker is open, and says aria-expanded (2.0)", async ({ page }) => {
   await open(page, "filter-chip")
   const open_ = page.locator('[data-slot="filter-chip"][data-kind="trigger"][aria-expanded="true"]').first()
   const shut = page.locator('[data-slot="filter-chip"][data-kind="trigger"][aria-expanded="false"]').first()
-  expect(await colorOf(open_, "background-color")).toBe(await role(page, "--text-body"))
-  expect(await colorOf(open_)).toBe(await role(page, "--surface-ground"))
+  // The selected wash (ink at 8%) under body ink, as an on chip.
+  expect(await open_.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)")
+  expect(await colorOf(open_)).toBe(await role(page, "--text-body"))
   expect(await shut.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)")
 })
 

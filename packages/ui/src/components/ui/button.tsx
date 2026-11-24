@@ -13,7 +13,9 @@ import { Spinner } from "./spinner"
 
 // The label of every boxed size: mono caps. Sizes under 44px also take `hit-area` (@unicron/ui's
 // styles), which widens the touch target to 44px on a coarse pointer. `inline` takes neither.
-const LABEL = "type-overline"
+// 2.0 (Figma Button 15:478): the label is ui/emphasis at S and M, control/strong at L, in sentence case.
+const LABEL = "type-ui-emphasis"
+const LABEL_L = "type-control-strong"
 
 // Transparent kinds: an ink wash on hover and a stronger one while pressed or while their menu is open.
 const WASH = "hover:bg-state-hover active:bg-state-pressed aria-expanded:bg-state-pressed"
@@ -23,13 +25,14 @@ const WASH = "hover:bg-state-hover active:bg-state-pressed aria-expanded:bg-stat
 // `on-needs-you` points the focus ring at that ink as well.
 const WASH_ON_NEEDS_YOU = "on-needs-you hover:bg-needs-you-on-fill/5 active:bg-needs-you-on-fill/9 aria-expanded:bg-needs-you-on-fill/9"
 // A 1px edge drawn inside the box, so an outlined button is exactly as wide as a solid one.
-const OUTLINE = "inset-ring inset-ring-foreground text-foreground"
+// Secondary: a 1px line/field edge and body ink (2.0).
+const OUTLINE = "inset-ring inset-ring-line-field text-text-body"
 
 const variants = cva(
   // No border, and nothing about focus: the edge of an outlined kind is an inset ring, and the
   // focus ring is the stylesheet's one rule for every control (2px solid --ring, 2px clear of it).
   // A control opts out of that rule with outline-none; this one must not.
-  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg whitespace-nowrap select-none motion-push disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded whitespace-nowrap select-none motion-push disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) [&_svg:not([class*='size-'])]:size-icon [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -41,6 +44,8 @@ const variants = cva(
         outline: cn(OUTLINE, WASH),
         // Text only. The same padding as the boxed kinds, so it lines up beside one.
         ghost: cn("text-foreground", WASH),
+        // Quiet (2.0): a resting hover wash in body ink; the selected wash when pressed.
+        quiet: "bg-surface-hover text-text-body hover:bg-surface-selected active:bg-surface-selected aria-expanded:bg-surface-selected",
         destructive: "bg-critical-fill text-critical-on-fill hover:bg-critical-fill/90 active:bg-critical-fill/85",
         // Pressed, the label takes the body ink, underlined: a press that differs from the hover and
         // reads on every ground. It used to dim to 80%, which fell under the label floor on every
@@ -61,19 +66,19 @@ const variants = cva(
         "needs-you-text": cn("text-needs-you-on-fill", WASH_ON_NEEDS_YOU),
       },
       size: {
-        // M: 40 tall, 12 / 16 padding.
-        default: cn(LABEL, "hit-area h-10 px-4 py-3"),
-        // S: 32 tall, 8 / 12 padding. For rows and toolbars.
-        sm: cn(LABEL, "hit-area h-8 px-3 py-2"),
-        // The floating-control height (size/control, 48).
-        lg: cn(LABEL, "h-control px-4 py-4"),
+        // M: 32 tall, 12 in (Figma Button Size=M). The default.
+        default: cn(LABEL, "hit-area h-control-m px-3 py-1.5"),
+        // S: 28 tall, 12 in. For rows and toolbars.
+        sm: cn(LABEL, "hit-area h-control-s px-3 py-1"),
+        // L: 44 tall, 16 in, control/strong: sheet buttons, stacked full width.
+        lg: cn(LABEL_L, "h-control-l px-4 py-3"),
         // Older names, kept working: each is the nearest of the three heights.
-        xs: cn(LABEL, "hit-area h-8 px-3 py-2"),
-        // Icon only: squares of the same heights.
-        icon: "hit-area size-10",
-        "icon-xs": "hit-area size-8",
-        "icon-sm": "hit-area size-8",
-        "icon-lg": "size-control",
+        xs: cn(LABEL, "hit-area h-control-s px-3 py-1"),
+        // Icon only (Icon Button 99:668): squares of the same heights, a 20px glyph.
+        icon: "hit-area size-control-m",
+        "icon-xs": "hit-area size-control-s",
+        "icon-sm": "hit-area size-control-s",
+        "icon-lg": "size-control-l",
         // A text action inside a line of text ("Sign in again"): no box and no caps of its own, so
         // it sits on the sentence's baseline in its size. Pair with variant="link". Underlined at
         // rest: its colour alone does not separate it from the sentence around it.
@@ -99,9 +104,9 @@ const variants = cva(
     },
     compoundVariants: [
       // One line is never shorter than the size.
-      { wrap: true, size: "default", class: "min-h-10" },
-      { wrap: true, size: ["sm", "xs"], class: "min-h-8" },
-      { wrap: true, size: "lg", class: "min-h-control" },
+      { wrap: true, size: "default", class: "min-h-control-m" },
+      { wrap: true, size: ["sm", "xs"], class: "min-h-control-s" },
+      { wrap: true, size: "lg", class: "min-h-control-l" },
     ],
     defaultVariants: {
       variant: "default",

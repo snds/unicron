@@ -240,7 +240,7 @@ describe("FieldRowAction", () => {
     const open = screen.getByRole("link", { name: "Open" })
     expect(open).toHaveAttribute("href", "https://store.steampowered.com")
     expect(open).toHaveAttribute("data-variant", "ghost")
-    expect(classesOf(open)).toEqual(expect.arrayContaining(["type-overline", "h-8", "hover:bg-state-hover"]))
+    expect(classesOf(open)).toEqual(expect.arrayContaining(["type-ui-emphasis", "h-control-s", "hover:bg-state-hover"]))
     expect(open).toHaveAccessibleDescription("Website")
   })
 })

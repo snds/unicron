@@ -290,7 +290,7 @@ describe("ApprovalSheet 1.0: the review look and the matching modes", () => {
     expect(classes).not.toContain("grid-cols-2")
     for (const action of ["approve", "deny"]) {
       const button = actions.querySelector(`[data-action="${action}"]`) as HTMLElement
-      expect(button.className.split(/\s+/)).toEqual(expect.arrayContaining(["w-full", "h-auto", "min-h-10", "whitespace-normal"]))
+      expect(button.className.split(/\s+/)).toEqual(expect.arrayContaining(["w-full", "h-auto", "min-h-control-m", "whitespace-normal"]))
     }
   })
 

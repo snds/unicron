@@ -666,7 +666,7 @@ has to match its run's misses exactly, so an exception that starts passing fails
 The core's list, in short:
 
 <!-- contrast:exceptions start · written by `node scripts/contrast.mjs --write-docs` (packages/tokens); do not edit by hand -->
-The run lists 122 measures in 91 recipes. In short:
+The run lists 125 measures in 94 recipes. In short:
 
 | What | Where | Measures | Floor |
 |---|---|---|---|

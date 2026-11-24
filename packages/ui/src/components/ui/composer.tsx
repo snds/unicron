@@ -96,7 +96,7 @@ function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null) {
  * (`size-control`), 16px in on the left and 4 on the right, gap 8. The field is in the `ui` role
  * with the placeholder in label ink; it grows with its text up to `--c-composer-max-lines` lines,
  * then scrolls inside itself. On a touch screen the field's text is 16px, as every field's, so iOS
- * does not zoom into it. The send button is a 40px square on the primary fill with `send--alt`.
+ * does not zoom into it. The send button is a 32px square (Button size icon) on the primary fill with `send--alt`.
  *
  * While the field is only empty, Send is unavailable: `aria-disabled`, dimmed to 50%, and still in
  * the tab order, so a keyboard reaches it and hears why; a press does nothing (Unicron 51: a
