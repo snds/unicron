@@ -13,6 +13,8 @@ import { formatCount } from "../../lib/format"
 export interface Indicator {
   kind: "attention" | "unread"
   count?: number
+  /** What a screen reader hears when the kind's own words don't fit ("update ready"). */
+  said?: string
 }
 
 /** One indicator, or both kinds. Attention wins what's drawn; both are said. */
@@ -36,7 +38,7 @@ export function indicatorsOf(indicator: IndicatorProp | undefined): Indicator[] 
 /** "Conversations, 2 waiting for you, 5 unread": what's said, attention first. */
 export function indicatorLabel(indicator: IndicatorProp | undefined): string {
   return indicatorsOf(indicator)
-    .map((i) => indicatorCopy[i.kind](i.count))
+    .map((i) => i.said ?? indicatorCopy[i.kind](i.count))
     .join(", ")
 }
 

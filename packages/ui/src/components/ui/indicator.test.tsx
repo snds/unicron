@@ -16,6 +16,7 @@ describe("indicator words", () => {
   it("carry the count and the meaning", () => {
     expect(indicatorLabel({ kind: "attention", count: 2 })).toBe("2 waiting for you")
     expect(indicatorLabel({ kind: "unread", count: 5 })).toBe("5 unread")
+    expect(indicatorLabel({ kind: "unread", said: "update ready" })).toBe("update ready")
     expect(indicatorLabel({ kind: "attention" })).toBe("Waiting for you")
     expect(indicatorLabel({ kind: "unread", count: 0 })).toBe("")
     expect(indicatorLabel(undefined)).toBe("")
