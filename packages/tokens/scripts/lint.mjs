@@ -311,6 +311,11 @@ const ROUND_ALLOWED = [
     count: 1,
     why: "the message layout's unread dot, the same round 6px info/fill mark as the Task Row's (Figma List Row 9:181)",
   },
+  {
+    file: "packages/ui/src/components/ui/composer.tsx",
+    count: 1,
+    why: "the 2.0 Composer's Send is a 32px circle on the accent fill (Figma Composer 32:91, radius/round)",
+  },
 ]
 const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
 // An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not

@@ -9,23 +9,24 @@ const type = (text: string) => fireEvent.change(field(), { target: { value: text
 const enter = (init: KeyboardEventInit & { isComposing?: boolean; keyCode?: number } = {}) => fireEvent.keyDown(field(), { key: "Enter", ...init })
 
 describe("Composer", () => {
-  it("is Figma's box: raised, a hairline, 48 tall, 16 in on the left and 4 on the right, a 32px primary send (Button icon, 2.0)", () => {
+  it("is Figma's 2.0 bar: raised, a line/field edge, 16px corners, the field over the tools row, a round 32px primary send with an up arrow", () => {
     const { container } = render(<Composer placeholder="Reply to Mira" />)
     const root = container.querySelector('[data-slot="composer"]')!
     expect(root.tagName).toBe("FORM")
     expect(root).toHaveAttribute("data-state", "empty")
     const box = container.querySelector('[data-slot="composer-box"]')!
-    for (const c of ["bg-surface-raised", "rule-box", "min-h-control", "pl-4", "pr-1", "py-1", "gap-2", "rounded-lg"]) expect(box.className).toContain(c)
+    for (const c of ["bg-surface-raised", "inset-ring-line-field", "flex-col", "gap-2.5", "rounded-xl", "pt-3", "pr-3", "pb-2.5", "pl-4"]) expect(box.className.split(" ")).toContain(c)
     // Focus draws Figma's 2px primary-fill inside border on the box, as a Text Field does.
     expect(box.className).toContain("has-[[data-slot=composer-field]:focus]:rule-box-emphasis")
     expect(field()).toHaveAttribute("placeholder", "Reply to Mira")
-    expect(field().className).toContain("type-ui")
+    expect(field().className).toContain("type-body")
     expect(field().className).toContain("placeholder:text-text-label")
-    expect(field().className).toContain("max-h-[calc(var(--type-ui-leading)*var(--c-composer-max-lines)+--spacing(5))]")
+    expect(field().className).toContain("max-h-[calc(var(--type-body-leading)*var(--c-composer-max-lines))]")
     const send = screen.getByRole("button", { name: composerCopy.send })
     expect(send.className).toContain("size-control-m")
     expect(send.className).toContain("bg-primary")
-    expect(send.querySelector('[data-icon-name="send--alt"]')).toBeInTheDocument()
+    expect(send.className).toContain("rounded-full")
+    expect(send.querySelector('[data-icon-name="arrow--up"]')).toBeInTheDocument()
   })
 
   it("keeps Send off while the field is empty or only spaces: unavailable, and a press or Enter sends nothing", () => {
@@ -83,7 +84,7 @@ describe("Composer", () => {
 
   it("the field's text is 16px on a touch screen, as every field's, so iOS does not zoom into it", () => {
     render(<Composer />)
-    expect(field().className.split(" ")).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:text-(length:--size-field-text-touch)"]))
+    expect(field().className.split(" ")).toEqual(expect.arrayContaining(["type-body", "pointer-coarse:text-(length:--size-field-text-touch)"]))
   })
 
   it("sends on Enter, makes a line on Shift+Enter, and clears itself when uncontrolled", () => {
@@ -332,7 +333,7 @@ describe("Composer", () => {
     expect(screen.getByRole("button", { name: "Send" })).toHaveAttribute("aria-disabled", "true")
   })
 
-  it("stacks the status strip, then the chips, then the box; the attach and a second action lead the field", () => {
+  it("stacks the status strip, then the chips, then the box; the attach and a second action lead the tools row under the field", () => {
     const { container } = render(
       <Composer
         status={<p>Full test suite passed: 128 of 128</p>}
@@ -346,9 +347,10 @@ describe("Composer", () => {
     expect(container.querySelector('[data-slot="composer-status"]')!.className).toContain("mb-4")
     expect(container.querySelector('[data-slot="composer-chips"]')!.className).toContain("mb-5")
     const box = container.querySelector('[data-slot="composer-box"]')!
-    expect([...box.children].map((el) => el.getAttribute("data-slot"))).toEqual(["composer-leading", "composer-field", "composer-send"])
-    // With a leading button the box is 4px in on the left too, so the button sits like Send does.
-    expect(box.className).toContain("pl-1")
+    expect([...box.children].map((el) => el.getAttribute("data-slot"))).toEqual(["composer-field", "composer-tools"])
+    const tools = container.querySelector('[data-slot="composer-tools"]')!
+    expect(tools.firstElementChild).toHaveAttribute("data-slot", "composer-leading")
+    expect(tools.lastElementChild).toHaveAttribute("data-slot", "composer-send")
     expect(screen.getByRole("button", { name: "Attach a file" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Expand" })).toBeInTheDocument()
   })
@@ -356,7 +358,7 @@ describe("Composer", () => {
   it("has a one-line size that does not grow", () => {
     const { container } = render(<Composer size="line" />)
     expect(container.querySelector('[data-slot="composer"]')).toHaveAttribute("data-size", "line")
-    expect(field().className).toContain("h-10")
+    expect(field().className).toContain("h-6")
     expect(field()).toHaveAttribute("rows", "1")
   })
 
