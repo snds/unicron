@@ -278,7 +278,7 @@ describe("Command in the 2026-11 look", () => {
     expect(cls).not.toContain("px-3")
     expect(cls).not.toContain("gap-3")
     const input = screen.getByRole("combobox").className.split(" ")
-    expect(input).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:text-(length:--type-body-size)", "placeholder:text-muted-foreground"]))
+    expect(input).toEqual(expect.arrayContaining(["type-ui", "pointer-coarse:text-(length:--size-field-text-touch)", "placeholder:text-muted-foreground"]))
     expect(input).not.toContain("type-body")
     const glyph = box.querySelector('[data-icon-name="search"]')!.parentElement as HTMLElement
     expect(glyph.className.split(" ")).toContain("text-support-foreground")

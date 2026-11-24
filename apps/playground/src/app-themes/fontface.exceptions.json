@@ -1,0 +1,15 @@
+{
+  "$description": "Contrast exceptions for Fontface's theme (fontface.json): the pairs under their floor in this theme, each with why. Reported by `unicron-contrast`, not gated. The list must match the misses exactly: one that starts passing fails the run. The misses every theme shares are in the core's own list, not here.",
+  "app": "fontface",
+  "exceptions": [
+    {"id": "primary-text-raised", "modes": ["graphite"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "primary-text-soft", "modes": ["graphite"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "small-primary-critical-soft", "modes": "all", "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "ring-soft", "modes": ["graphite"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "primary-on-fill-pressed-ground", "modes": ["stone"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "primary-on-fill-pressed-raised", "modes": ["stone"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "controls:btn-primary-press-page", "modes": ["stone"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "controls:btn-primary-press-raised", "modes": ["stone"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."},
+    {"id": "controls:float-primary-press", "modes": ["stone"], "reason": "Figma value: Fontface's accent (published 2026-11-24) under this gate's floor on one of the shared 2.0 surfaces or washes. Flagged for Sean."}
+  ]
+}

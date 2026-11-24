@@ -18,10 +18,11 @@ import lockdownUrl from "../app-themes/lockdown.css?url"
 import synapseUrl from "../app-themes/synapse.css?url"
 import valeUrl from "../app-themes/vale.css?url"
 import warpcoreUrl from "../app-themes/warpcore.css?url"
+import fontfaceUrl from "../app-themes/fontface.css?url"
 import { Block, Caption, Page } from "./_foundation"
 import { count } from "./_foundation-read"
 
-const APP_SHEETS = { warpcore: warpcoreUrl, vale: valeUrl, lockdown: lockdownUrl, synapse: synapseUrl } as const
+const APP_SHEETS = { warpcore: warpcoreUrl, vale: valeUrl, lockdown: lockdownUrl, synapse: synapseUrl, fontface: fontfaceUrl } as const
 type App = keyof typeof APP_SHEETS
 /** The class on the frame's root: none follows the browser. */
 type Ground = "graphite" | "stone" | "none"

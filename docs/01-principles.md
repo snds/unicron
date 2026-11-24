@@ -23,7 +23,7 @@ tier 1  global     --g-*     raw values, and the theme slots of Unicron's own de
 tier 2  semantic   --*       roles: Figma's names, with the shadcn names as aliases (the ground swaps here)
 type roles         --type-*  24 text styles, one set for every app
 tier 3  component  --c-*     knobs the components read (alias tier 2)
-app extension                the product's own theme (its 28 slots) and roles only it has
+app extension                the product's own theme (its 10 accent slots) and roles only it has
                              (declared by that product)
 components                   @unicron/ui: Base UI behaviour, IBM Carbon icons
 patterns                     compositions promoted by people from dsa suggestions

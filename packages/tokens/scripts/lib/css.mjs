@@ -3,7 +3,7 @@
 // they read the built CSS, not the JSON sources.
 //
 // The file has two axes (docs/02-tokens.md → Two axes):
-//   theme   the 28 theme slots (--g-theme-*) on :root hold the Unicron default. An app's theme is
+//   theme   the 10 theme slots (--g-theme-*) on :root hold the Unicron default. An app's theme is
 //           its own [data-theme="<app>"] block of the same slots, in the app's layer; the contrast
 //           tool lays one over the defaults (readTheme, below) to measure it.
 //   ground  `:root, .light, …` holds the stone (light) roles; `.dark, …` the graphite (dark) roles

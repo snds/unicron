@@ -14,60 +14,71 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 const APPS = ["warpcore", "vale", "lockdown", "synapse"] as const
 const GROUNDS = ["graphite", "stone"] as const
 
-/** `Unicron / Theme`, three roles in each of the eight modes: enough to prove both axes switch. */
+/** `Unicron / Theme` (2.0, published 2026-11-24), four roles in each of the eight modes: enough to
+ * prove both axes switch. Since 2.0 a theme is the accent only, so the ground, the ink and the live
+ * blue are the same in every app. */
 const MODES: Record<string, Record<string, string>> = {
-  "warpcore/graphite": { "surface-ground": "#18191D", "primary-fill": "#5146EE", "secondary-live": "#1EC5E4", "text-body": "#EFF0F3" },
-  "warpcore/stone": { "surface-ground": "#EFF0F5", "primary-fill": "#4837E0", "secondary-live": "#007491", "text-body": "#151618" },
-  "vale/graphite": { "surface-ground": "#161A1C", "primary-fill": "#27728F", "secondary-live": "#87C0A6", "text-body": "#EDF1F3" },
-  "vale/stone": { "surface-ground": "#ECF1F4", "primary-fill": "#186683", "secondary-live": "#397059", "text-body": "#141618" },
-  "lockdown/graphite": { "surface-ground": "#171A18", "primary-fill": "#008231", "secondary-live": "#7CBBF0", "text-body": "#EEF1EE" },
-  "lockdown/stone": { "surface-ground": "#EDF1EE", "primary-fill": "#007625", "secondary-live": "#296898", "text-body": "#141715" },
-  "synapse/graphite": { "surface-ground": "#1C181A", "primary-fill": "#B90D75", "secondary-live": "#31C8C9", "text-body": "#F3EFF0" },
-  "synapse/stone": { "surface-ground": "#F4EEF0", "primary-fill": "#AB006A", "secondary-live": "#007778", "text-body": "#181516" },
+  "warpcore/graphite": { "surface-ground": "#16171A", "primary-fill": "#5B54E8", "secondary-live": "#6CA8F5", "text-body": "#ECEDEF" },
+  "warpcore/stone": { "surface-ground": "#FFFFFF", "primary-fill": "#4F46E5", "secondary-live": "#1F64C8", "text-body": "#1A1B1E" },
+  "vale/graphite": { "surface-ground": "#16171A", "primary-fill": "#27728F", "secondary-live": "#6CA8F5", "text-body": "#ECEDEF" },
+  "vale/stone": { "surface-ground": "#FFFFFF", "primary-fill": "#186683", "secondary-live": "#1F64C8", "text-body": "#1A1B1E" },
+  "lockdown/graphite": { "surface-ground": "#16171A", "primary-fill": "#8A6A5E", "secondary-live": "#6CA8F5", "text-body": "#ECEDEF" },
+  "lockdown/stone": { "surface-ground": "#FFFFFF", "primary-fill": "#7D5E54", "secondary-live": "#1F64C8", "text-body": "#1A1B1E" },
+  "synapse/graphite": { "surface-ground": "#16171A", "primary-fill": "#B42A72", "secondary-live": "#6CA8F5", "text-body": "#ECEDEF" },
+  "synapse/stone": { "surface-ground": "#FFFFFF", "primary-fill": "#A8226A", "secondary-live": "#1F64C8", "text-body": "#1A1B1E" },
 }
 /** Unicron's own default theme, no data-theme (Unicron 1). */
 const DEFAULT: Record<(typeof GROUNDS)[number], Record<string, string>> = {
-  graphite: { "surface-ground": "#181A1B", "primary-fill": "#4778B5", "secondary-live": "#57D4D4", "text-body": "#F2F4F6" },
-  stone: { "surface-ground": "#F3F4F6", "primary-fill": "#255B9C", "secondary-live": "#007176", "text-body": "#050607" },
+  graphite: { "surface-ground": "#16171A", "primary-fill": "#4778B5", "secondary-live": "#6CA8F5", "text-body": "#ECEDEF" },
+  stone: { "surface-ground": "#FFFFFF", "primary-fill": "#255B9C", "secondary-live": "#1F64C8", "text-body": "#1A1B1E" },
 }
-/** The same in every app: one set per ground, and the yellow that never changes. */
+/** The same in every app: one set per ground, and the amber that never changes. */
 const SHARED: Record<(typeof GROUNDS)[number], Record<string, string>> = {
-  graphite: { "needs-you-fill": "#EDE54A", "needs-you-on-fill": "#1C1C1C", "critical-fill": "#BE2323", "critical-text": "#FF978A", "critical-soft": "#3E1F1B", "surface-scrim": "#000000" },
-  stone: { "needs-you-fill": "#EDE54A", "needs-you-on-fill": "#1C1C1C", "critical-fill": "#B7191C", "critical-text": "#B6322D", "critical-soft": "#FFD9D3", "surface-scrim": "#141618 @ 64%" },
+  graphite: { "needs-you-fill": "#F0B429", "needs-you-on-fill": "#1A1B1E", "critical-fill": "#BE2323", "critical-text": "#FF978A", "critical-soft": "#3E1F1B", "surface-scrim": "#000000" },
+  stone: { "needs-you-fill": "#F0B429", "needs-you-on-fill": "#1A1B1E", "critical-fill": "#B7191C", "critical-text": "#B6322D", "critical-soft": "#FFD9D3", "surface-scrim": "#141618 @ 64%" },
 }
 
 /** `Unicron Type/`: family, weight, size, line height (px) and letter spacing (share of the size). */
 const TYPE: Record<string, [family: "Geist" | "Geist Mono", weight: number, size: number, leading: number, tracking: number]> = {
-  display: ["Geist", 700, 72, 68, -0.04],
+  // Retired in the 2.0 library (marked "figma": "retired"): kept for parts not yet restyled, gone in 2.1.
+  "display": ["Geist", 700, 72, 68, -0.04],
   "display-compact": ["Geist", 700, 48, 48, -0.03],
-  title: ["Geist", 700, 32, 36, -0.015],
-  lead: ["Geist", 500, 24, 32, -0.01],
-  subtitle: ["Geist", 500, 18, 28, -0.005],
-  body: ["Geist", 400, 16, 24, 0],
+  "title": ["Geist", 600, 20, 28, 0],
+  "lead": ["Geist", 500, 24, 32, -0.01],
+  "subtitle": ["Geist", 600, 15, 20, 0],
+  "body": ["Geist", 400, 15, 24, 0],
   "body-strong": ["Geist", 500, 16, 24, 0],
-  response: ["Geist", 400, 17, 28, 0],
-  ui: ["Geist", 500, 15, 20, 0],
-  "ui-emphasis": ["Geist", 600, 15, 20, 0],
-  label: ["Geist", 500, 14, 20, 0],
-  caption: ["Geist", 400, 13, 20, 0],
-  overline: ["Geist Mono", 500, 11, 16, 0.04],
-  folio: ["Geist Mono", 500, 12, 20, 0],
-  meta: ["Geist Mono", 400, 12, 20, 0],
+  "response": ["Geist", 400, 15, 24, 0],
+  "ui": ["Geist", 400, 13, 20, 0],
+  "ui-emphasis": ["Geist", 500, 13, 20, 0],
+  "label": ["Geist", 500, 13, 20, 0],
+  "caption": ["Geist", 400, 12, 16, 0],
+  "overline": ["Geist", 600, 11, 16, 0.04],
+  "folio": ["Geist", 500, 12, 16, 0],
+  "meta": ["Geist", 400, 12, 16, 0],
   // Not in Figma yet (Lockdown 4, 1.1): Sean adds `Unicron Type/mono/row`.
   "mono-row": ["Geist Mono", 400, 13, 20, 0],
-  "code-inline": ["Geist Mono", 400, 15, 20, 0],
+  "code-inline": ["Geist Mono", 400, 13, 20, 0],
   "code-display": ["Geist Mono", 500, 36, 40, 0.12],
   "number-hero": ["Geist", 700, 168, 148, -0.05],
   "number-metric": ["Geist", 700, 44, 44, -0.02],
   "number-index": ["Geist", 700, 28, 32, -0.02],
-  "number-count": ["Geist Mono", 400, 24, 28, 0],
+  "number-count": ["Geist", 600, 24, 32, -0.005],
+  // New in the 2.0 library.
+  "control": ["Geist", 400, 14, 20, 0],
+  "control-strong": ["Geist", 600, 14, 20, 0],
+  "crumb": ["Geist", 500, 15, 20, 0],
+  "large-title": ["Geist", 700, 28, 34, -0.0142857],
+  "tab-label": ["Geist", 500, 10, 12, 0],
+  "tab-label-selected": ["Geist", 600, 10, 12, 0],
+  "code-reveal": ["Geist Mono", 400, 15, 24, 0.02],
   "brand-wordmark": ["Geist", 700, 13, 16, 0.12],
   "icon-glyph": ["Geist", 400, 32, 32, 0],
 }
 /** Number roles and mono roles line their figures up. */
 // The mono roles. The three sans number roles (hero, metric, index) are proportional, as Figma
 // draws them (a Metric's "145" is 71px wide with a plain 1), and the else branch below holds that.
-const TABULAR = ["overline", "folio", "meta", "mono-row", "code-inline", "code-display", "number-count"]
+const TABULAR = ["overline", "folio", "meta", "mono-row", "code-inline", "code-display", "number-count", "code-reveal"]
 /** Names from before 1.0, and the role each now draws. */
 const KEPT = { "page-title": "title", "section-title": "subtitle", "group-title": "label", support: "caption" }
 
@@ -135,7 +146,7 @@ for (const app of APPS) {
       })
       expect(body.background).toBe(await roleColor(page, "surface-ground"))
       expect(body.color).toBe(await roleColor(page, "text-body"))
-      expect(body.size).toBe("16px")
+      expect(body.size).toBe("15px")
       expect(body.leading).toBe("24px")
       expect(body.family).toMatch(/^"?Geist Variable/)
     })
@@ -269,7 +280,7 @@ test("Geist and Geist Mono load", async ({ page }) => {
   expect(loaded).toContain("Geist Mono Variable")
 })
 
-test("the 23 type roles draw the Figma text styles", async ({ page }) => {
+test("the 31 type roles draw the Figma text styles", async ({ page }) => {
   await open(page, "warpcore", "graphite")
   expect(await page.locator("[data-type-role]").evaluateAll((all) => all.map((el) => el.getAttribute("data-type-role")))).toEqual(Object.keys(TYPE))
   for (const [role, [family, weight, size, leading, tracking]] of Object.entries(TYPE)) {
@@ -283,8 +294,8 @@ test("the 23 type roles draw the Figma text styles", async ({ page }) => {
     expect(seen.transform, `${role} case`).toBe(role === "overline" ? "uppercase" : "none")
     if (TABULAR.includes(role)) expect(seen.numeric, `${role} figures`).toContain("tabular-nums")
     else expect(seen.numeric, `${role} figures`).not.toContain("tabular-nums")
-    // Every line height sits on the 4px grid.
-    expect(seen.leading % 4, `${role} line height on the grid`).toBe(0)
+    // Every line height sits on the 4px grid, but the phone's large title (28/34, as iOS draws it).
+    if (role !== "large-title") expect(seen.leading % 4, `${role} line height on the grid`).toBe(0)
   }
 })
 
@@ -348,7 +359,11 @@ test("spacing, radius, strokes and sizes measure what Figma says", async ({ page
   }
   const measures = {
     "radius/none": "0 px",
-    "radius/control": "2 px",
+    "radius/xs": "4 px",
+    "radius/control": "6 px",
+    "radius/md": "8 px",
+    "radius/lg": "12 px",
+    "radius/xl": "16 px",
     "radius/round": "round",
     "stroke-rule": "1 px",
     "stroke-emphasis": "2 px",
@@ -358,9 +373,11 @@ test("spacing, radius, strokes and sizes measure what Figma says", async ({ page
   for (const [name, value] of Object.entries(measures)) {
     await expect(reading(page.locator(`[data-measure="${name}"]`)), name).toHaveText(value)
   }
-  // The bare `rounded` and every step of Tailwind's radius scale is the control radius.
-  for (const name of ["rounded", ...["sm", "md", "lg", "xl", "2xl", "3xl", "4xl"].map((step) => `rounded-${step}`)]) {
-    await expect(reading(page.locator(`[data-measure="${name}"]`)), name).toHaveText("2 px")
+  // Tailwind's radius scale is the 2.0 scale: bare `rounded` and `rounded-sm` are the control
+  // radius, and the steps past xl stay at xl.
+  const TAILWIND: Record<string, string> = { "rounded-xs": "4 px", rounded: "6 px", "rounded-sm": "6 px", "rounded-md": "8 px", "rounded-lg": "12 px", "rounded-xl": "16 px", "rounded-2xl": "16 px", "rounded-3xl": "16 px", "rounded-4xl": "16 px" }
+  for (const [name, value] of Object.entries(TAILWIND)) {
+    await expect(reading(page.locator(`[data-measure="${name}"]`)), name).toHaveText(value)
   }
 })
 
@@ -518,11 +535,12 @@ async function ring(page: Page, target: Locator) {
 }
 
 for (const ground of GROUNDS) {
-  test(`the focus ring is 2px of ink, 2px clear, on ${ground}`, async ({ page }) => {
+  test(`the focus ring is 2px of the accent, 2px clear, on ${ground}`, async ({ page }) => {
     await open(page, "synapse", ground)
     const seen = await ring(page, page.locator('[data-focus="ground"]'))
     expect(seen.visible).toBe(true)
-    expect(seen).toMatchObject({ style: "solid", width: "2px", offset: "2px", color: await roleColor(page, "text-body") })
+    // 2.0: the ring is the app's accent (Figma focus ring: primary/fill, 2px, 2px clear).
+    expect(seen).toMatchObject({ style: "solid", width: "2px", offset: "2px", color: await roleColor(page, "primary-fill") })
     expect(seen.color).toBe(await roleColor(page, "ring"))
 
     // Inside a needs-you block the ring takes the ink that sits on the yellow.
@@ -584,7 +602,7 @@ for (const scheme of ["light", "dark"] as const) {
     await page.goto(`/?view=plain-css&chrome=0`)
     await expect(page.locator('[data-slot="playground-view"]')).toHaveAttribute("data-view-state", "ready")
     const frames = page.locator("[data-plain-frame]")
-    await expect(frames).toHaveCount(11)
+    await expect(frames).toHaveCount(13)
     for (const frame of await frames.all()) {
       await expect(frame, (await frame.getAttribute("data-plain-frame")) ?? "").toHaveAttribute("data-equal", "true")
     }

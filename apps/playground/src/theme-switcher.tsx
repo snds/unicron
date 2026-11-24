@@ -1,5 +1,5 @@
 // The two theme axes, and a split view (docs/02-tokens.md → Two axes):
-//   theme   Unicron (no data-theme: the core's own default) | warpcore | vale | lockdown | synapse
+//   theme   Unicron (no data-theme: the core's own default) | warpcore | vale | lockdown | synapse | fontface
 //           The four apps' themes are the apps' own; the playground loads its copies of them
 //           (./app-themes/, Unicron 1) so they can be shown here.
 //   ground  graphite (dark) | stone (light)        <html class="dark"> or class="light"
@@ -21,6 +21,8 @@ export function ThemeSwitcher({ theme, ground, split }: PlaygroundTheme) {
       <ToggleGroup
         aria-label="Theme"
         data-switch="theme"
+        // Six themes since Fontface: on a phone the group scrolls inside itself, never the page.
+        className="min-w-0 max-w-full overflow-x-auto"
         variant="outline"
         size="sm"
         spacing={0}

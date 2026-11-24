@@ -101,6 +101,9 @@ function Step({
         className={cn(
           "type-folio w-10 shrink-0",
           current ? "text-foreground" : "text-muted-foreground",
+          // A control (a checkbox) sits at the top, centred on the title's 20px line: on the baseline
+          // its own box would push the row 1px off the 4px grid.
+          leading && "flex h-5 items-center self-start",
           // The list's own count, unless the step brings a number or a control.
           !leading && index === undefined && "before:content-[counter(step,decimal-leading-zero)]"
         )}

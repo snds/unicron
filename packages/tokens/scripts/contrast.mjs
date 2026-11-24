@@ -12,7 +12,7 @@
 //       unicron-contrast src/theme.css
 //       unicron-contrast src/themes/          every <app>.json in it, with <app>.exceptions.json
 //
-//     A theme is the 28 slots (--g-theme-*), as a JSON file shaped like global.json's `theme`
+//     A theme is the 10 accent slots (--g-theme-*), as a JSON file shaped like global.json's `theme`
 //     group, or as CSS (`[data-theme="acme"] { --g-theme-graphite-ground: #…; … }`). The tool lays
 //     the slots over the core's built roles and knobs, so it measures what the app's pages draw.
 //
@@ -295,18 +295,18 @@ const CORE = [
     id: `progress-${role}`, source: `progress: bg-(--c-progress-*) = ${role}, against bg-line-rule, the empty part`, kind: "solid", paint: r(role), over: [r("line-rule")],
   })),
 
-  // ── Legacy accent ramps as text ──
-  // Apps alias the accent hues from their own layers and draw them as text on the legacy neutral
-  // ramp: 600 in light and 300 in dark (red: 700 and 200), held to Lc 75 as before. Not themed,
-  // so measured once per ground.
-  ...["blue", "coral", "green", "amber", "red"].flatMap((hue) => [
-    ...["0", "50", "100"].map((step) => ({
-      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 700 : 600} as text on neutral.${step}`, kind: "text-secondary", themed: false, modes: ["stone"], paint: r(`g-${hue}-${hue === "red" ? 700 : 600}`), over: [r(`g-neutral-${step}`)],
-    })),
-    ...["950", "900", "800"].map((step) => ({
-      id: `${hue}-text-on-${step}`, source: `${hue}.${hue === "red" ? 200 : 300} as text on neutral.${step}`, kind: "text-secondary", themed: false, modes: ["graphite"], paint: r(`g-${hue}-${hue === "red" ? 200 : 300}`), over: [r(`g-neutral-${step}`)],
-    })),
-  ]),
+  // ── Unicron 2.0: status marks, counts and severities (shared by every app) ──
+  // A status colour draws a mark and colours its word, on the ground and on a raised surface.
+  ...["done", "working", "failed", "idle"].flatMap((state) => BASES.map(([base, stack]) => ({
+    id: `status-${state}-${base}`, source: `text-status-${state} (the mark and its word) on ${base === "ground" ? "the ground" : "bg-surface-raised"}`, kind: "solid", paint: r(`status-${state}`), over: stack,
+  }))),
+  // A count badge or unread dot: the label on its fill.
+  { id: "count-important", source: "Count Badge Important: text-info-on-fill on bg-info-fill", kind: "on-fill", paint: r("info-on-fill"), over: [...GROUND, r("info-fill")] },
+  { id: "count-concerning", source: "Count Badge Concerning: text-severity-concerning-on-fill on its fill", kind: "on-fill", paint: r("severity-concerning-on-fill"), over: [...GROUND, r("severity-concerning-fill")] },
+  { id: "count-urgent", source: "Count Badge Urgent: text-severity-urgent-on-fill on its fill", kind: "on-fill", paint: r("severity-urgent-on-fill"), over: [...GROUND, r("severity-urgent-fill")] },
+  ...["info-fill", "severity-concerning-fill", "severity-urgent-fill"].map((fill) => ({
+    id: `${fill}-mark-ground`, source: `bg-${fill} as a dot or badge on the ground`, kind: "solid", paint: r(fill), over: GROUND,
+  })),
 ]
 
 // ── Emphasis levels ──────────────────────────────────────────────────────────────────────────
@@ -346,16 +346,103 @@ const CLOSE = 0.15
 // lists its own misses in the exceptions file it passes.
 const SHARED_CRITICAL = "Figma's critical colours, which every theme shares: critical-text was solved to Lc 60 on the graphite ground with no room, and black ink tops out at Lc 88.6 on the stone critical-soft; flagged for Sean"
 const SHARED_YELLOW = "Figma's needs-you yellow, which every theme shares: on stone it is as light as the surfaces and differs from them by hue alone, so it always pairs with a shape or its ink edge; flagged for Sean"
+// Unicron 2.0's shared neutrals, status and count colours are Figma's (published 2026-11-24). They
+// were solved to WCAG 2 (4.5:1 for text, 3:1 for marks; the 2026-11-22 proposal), not to the APCA
+// floors this gate holds, so secondary and label ink on graphite, washes stacked on a selected row
+// and the amber needs-you label read under their Lc floors. Reported, not gated; flagged for Sean.
+const FIGMA_2 = "Unicron 2.0's shared Figma value (published 2026-11-24), solved to WCAG 2 4.5:1 rather than this gate's APCA floor"
 const EXCEPTIONS = [
-  { id: "critical-text-raised", modes: "graphite", reason: SHARED_CRITICAL },
-  { id: "critical-text-soft", modes: "graphite", reason: SHARED_CRITICAL },
-  { id: "critical-text-accent", modes: "graphite", reason: SHARED_CRITICAL },
-  { id: "body-critical-soft", modes: "stone", reason: SHARED_CRITICAL },
-  { id: "body-diff-removed", modes: "stone", reason: SHARED_CRITICAL },
-  { id: "needs-you-fill-ground", modes: "stone", reason: SHARED_YELLOW },
-  { id: "needs-you-fill-raised", modes: "stone", reason: SHARED_YELLOW },
-  { id: "attention-on-soft", modes: "stone", reason: SHARED_YELLOW },
-  { id: "attention-on-surface", modes: "stone", reason: SHARED_YELLOW },
+  { id: "body-critical-soft", modes: ["stone"], reason: SHARED_CRITICAL },
+  { id: "secondary-critical-soft", modes: ["stone"], reason: FIGMA_2 },
+  { id: "small-label-critical-soft", modes: ["stone"], reason: FIGMA_2 },
+  { id: "small-critical-soft", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "small-critical-critical-soft", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "small-live-ground", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "small-live-raised", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "small-live-soft", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "small-live-critical-soft", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "live-ground", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "live-raised", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "live-soft", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "needs-you-on-fill", modes: "all", reason: FIGMA_2 },
+  { id: "needs-you-button", modes: "all", reason: FIGMA_2 },
+  { id: "critical-text-raised", modes: ["graphite"], reason: SHARED_CRITICAL },
+  { id: "critical-text-soft", modes: ["graphite"], reason: SHARED_CRITICAL },
+  { id: "field-rest-raised", modes: "all", reason: FIGMA_2 },
+  { id: "field-rest-ground", modes: "all", reason: FIGMA_2 },
+  { id: "body-soft-hover", modes: ["stone"], reason: FIGMA_2 },
+  { id: "secondary-soft-hover", modes: "all", reason: FIGMA_2 },
+  { id: "label-soft-hover", modes: "all", reason: FIGMA_2 },
+  { id: "critical-text-accent", modes: ["graphite"], reason: SHARED_CRITICAL },
+  { id: "needs-you-button-hover", modes: "all", reason: FIGMA_2 },
+  { id: "needs-you-button-pressed", modes: "all", reason: FIGMA_2 },
+  { id: "body-diff-removed", modes: ["stone"], reason: SHARED_CRITICAL },
+  { id: "success-text-ground", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "success-text-raised", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "success-text-soft", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "success-text-surface", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "attention-on-soft", modes: ["stone"], reason: SHARED_YELLOW },
+  { id: "attention-on-surface", modes: ["stone"], reason: SHARED_YELLOW },
+  { id: "running-text-surface", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "warning-fg", modes: "all", reason: FIGMA_2 },
+  { id: "warning-on-ground", modes: ["stone"], reason: FIGMA_2 },
+  { id: "warning-on-raised", modes: ["stone"], reason: FIGMA_2 },
+  { id: "warning-on-soft", modes: ["stone"], reason: FIGMA_2 },
+  { id: "info-on-ground", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "info-on-raised", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "info-on-soft", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "warning-ink-ground", modes: ["stone"], reason: FIGMA_2 },
+  { id: "warning-ink-raised", modes: ["stone"], reason: FIGMA_2 },
+  { id: "progress-warning", modes: ["stone"], reason: FIGMA_2 },
+  { id: "status-failed-ground", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "status-failed-raised", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "count-concerning", modes: "all", reason: FIGMA_2 },
+  { id: "count-urgent", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "info-fill-mark-ground", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "severity-concerning-fill-mark-ground", modes: ["stone"], reason: FIGMA_2 },
+  { id: "chat:message-agent-meta", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "chat:summary-overline", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "chat:orb-done-ground", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "chat:orb-done-raised", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "chat:indicator-attention-count", modes: "all", reason: FIGMA_2 },
+  { id: "chat:trace-running", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "chat:prompt-ink", modes: "all", reason: FIGMA_2 },
+  { id: "chat:prompt-row-solid", modes: "all", reason: FIGMA_2 },
+  { id: "chat:prompt-row-solid-hover", modes: "all", reason: FIGMA_2 },
+  { id: "chat:prompt-row-hover", modes: "all", reason: FIGMA_2 },
+  { id: "chat:prompt-row-press", modes: "all", reason: FIGMA_2 },
+  { id: "chat:prompt-kbd", modes: "all", reason: FIGMA_2 },
+  { id: "controls:btn-ny", modes: "all", reason: FIGMA_2 },
+  { id: "controls:btn-ny-hover", modes: "all", reason: FIGMA_2 },
+  { id: "controls:btn-ny-press", modes: "all", reason: FIGMA_2 },
+  { id: "controls:btn-ny-ink", modes: "all", reason: FIGMA_2 },
+  { id: "controls:btn-ny-ink-hover", modes: "all", reason: FIGMA_2 },
+  { id: "controls:btn-ny-ink-press", modes: "all", reason: FIGMA_2 },
+  { id: "controls:float-current-press", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "controls:badge-live", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "controls:badge-needs-you", modes: "all", reason: FIGMA_2 },
+  { id: "controls:badge-critical", modes: ["stone"], reason: FIGMA_2 },
+  { id: "controls:badge-success", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:success-glyph-raised", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:live-ground-hover", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:live-raised-hover", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:critical-text-ground-hover", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:body-critical-soft-hover", modes: ["stone"], reason: FIGMA_2 },
+  { id: "data-b:live-ground-pressed", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:live-raised-pressed", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:critical-text-ground-pressed", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "data-b:body-critical-soft-pressed", modes: "all", reason: FIGMA_2 },
+  { id: "data-b:body-soft-pressed", modes: "all", reason: FIGMA_2 },
+  { id: "data-b:secondary-soft-pressed", modes: "all", reason: FIGMA_2 },
+  { id: "data-b:label-soft-pressed", modes: "all", reason: FIGMA_2 },
+  { id: "primitives:progress-warning-ground", modes: ["stone"], reason: FIGMA_2 },
+  { id: "primitives:progress-warning-raised", modes: ["stone"], reason: FIGMA_2 },
+  { id: "primitives:progress-warning-track", modes: ["stone"], reason: FIGMA_2 },
+  { id: "security:secret-meter-fair", modes: ["stone"], reason: FIGMA_2 },
+  { id: "security:jewel-ink-pressed", modes: ["graphite"], reason: FIGMA_2 },
+  { id: "security:tier-on-needs-you", modes: "all", reason: FIGMA_2 },
+  { id: "shell-chrome:strip-ny-hover", modes: "all", reason: FIGMA_2 },
+  { id: "shell-chrome:strip-ny-press", modes: "all", reason: FIGMA_2 },
 ]
 
 // ── Recipe files, one per component area ─────────────────────────────────────────────────────
@@ -378,7 +465,7 @@ for (const file of recipeFiles) {
 // ── Modes: the default theme, or the themes given ────────────────────────────────────────────
 const parsed = parseTokensCss()
 const slotNames = [...parsed.root.keys()].filter((n) => n.startsWith("--g-theme-"))
-if (slotNames.length !== 28) throw new Error(`expected the 28 theme slots on :root in dist/tokens.css, found ${slotNames.length}`)
+if (slotNames.length !== 10) throw new Error(`expected the 10 theme slots on :root in dist/tokens.css, found ${slotNames.length}`)
 const themes = []
 for (const arg of themeArgs) {
   if (fs.statSync(arg).isDirectory()) {
@@ -664,12 +751,12 @@ if (excepted.length) {
 // from this run (`--write-docs`) and checked against it on every run, so its numbers cannot go
 // stale. Each excepted recipe belongs to one row; a new exception needs a row, and a row whose
 // recipes all pass again has to go.
+// One docs row per reason: the core list's entries grouped by why they miss (Unicron 2.0).
 const SUMMARY = [
-  { what: "`critical-text` on `surface-raised`, on `critical-soft`, on `accent` and under a hover or pressed wash (graphite)", ids: ["critical-text-raised", "critical-text-soft", "critical-text-accent", "data-b:critical-text-ground-hover", "data-b:critical-text-ground-pressed"] },
-  { what: "`text-body` on `critical-soft` (a critical banner or badge, a removed diff line), and under a button's wash there", ids: ["body-critical-soft", "body-diff-removed", "controls:badge-critical", "data-b:body-critical-soft-hover", "data-b:body-critical-soft-pressed"] },
-  { what: "`needs-you-fill` as a solid, and so `attention` as a mark", ids: ["needs-you-fill-ground", "needs-you-fill-raised", "attention-on-soft", "attention-on-surface"] },
-  { what: "`text-body` on a selected row (`primary-soft`) under the pressed wash", ids: ["data-b:body-soft-pressed"] },
-]
+  { what: "`critical-text` and `text-body` on the critical washes (Figma's shared critical colours)", ids: EXCEPTIONS.filter((e) => e.reason === SHARED_CRITICAL).map((e) => e.id) },
+  { what: "`attention` (the needs-you amber) as a mark on a wash", ids: EXCEPTIONS.filter((e) => e.reason === SHARED_YELLOW).map((e) => e.id) },
+  { what: "Unicron 2.0's shared neutrals, status and count colours under an APCA floor (solved to WCAG 2 4.5:1)", ids: EXCEPTIONS.filter((e) => e.reason === FIGMA_2).map((e) => e.id) },
+].filter((row) => row.ids.length)
 const DOCS = path.join(here, "..", "..", "..", "docs", "02-tokens.md")
 const DOCS_START = "<!-- contrast:exceptions start · written by `node scripts/contrast.mjs --write-docs` (packages/tokens); do not edit by hand -->"
 const DOCS_END = "<!-- contrast:exceptions end -->"

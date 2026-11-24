@@ -574,12 +574,12 @@ test.describe("the phone's bottom row", () => {
 
   test("the active tab's icon is primary-text, as Figma's Dock Tab and the phone frames draw it", async ({ page }) => {
     for (const [name, theme, ink] of [
-      ["shell-warpcore", "warpcore", "rgb(161, 174, 255)"],
-      ["shell-lockdown", "lockdown", "rgb(103, 202, 133)"],
+      ["shell-warpcore", "warpcore", "rgb(163, 168, 255)"],
+      ["shell-lockdown", "lockdown", "rgb(212, 179, 165)"],
     ] as const) {
       await open(page, name, theme)
       const active = page.locator('[data-slot="tab-bar"] [data-active]')
-      // Warpcore graphite #A1AEFF, Lockdown graphite #67CA85: sampled from the Figma phone frames.
+      // primary/text in the 2.0 library: Warpcore graphite #A3A8FF, Lockdown graphite #D4B3A5.
       expect(await active.evaluate((el) => getComputedStyle(el).color)).toBe(ink)
     }
   })
@@ -713,7 +713,8 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     expect(tabs[1].left - tabs[0].right).toBeCloseTo(28, 1)
     expect(tabs[2].left - tabs[1].right).toBeCloseTo(28, 1)
     // CHAT and DOCS are 70 wide in the frames; TASKS carries a count and is wider.
-    for (const tab of tabs.slice(0, 2)) expect(Math.abs(tab.width - 70)).toBeLessThanOrEqual(4)
+    // 2.0 type draws the index in the sans, not mono: about 74 wide (73 and 76 here), held within 4.
+    for (const tab of tabs.slice(0, 2)) expect(Math.abs(tab.width - 74)).toBeLessThanOrEqual(4)
     const list = page.locator('[data-slot="app-frame-list"]')
     const head = await box(list.locator('[data-slot="page-head"]'))
     const chips = await box(list.locator('[data-slot="filter-chip-group"]'))
@@ -726,7 +727,8 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     const title = await box(detail.locator('[data-slot="page-head-title"]'))
     const prose = await box(detail.locator('[data-slot="prose"]').first())
     const steps = await box(detail.locator('[data-slot="steps"]'))
-    expect([title.y, title.bottom, prose.y, steps.y]).toEqual([144, 180, 212, 356])
+    // 2.0's title is 20/28 (it was 36 tall): the blocks move 8 up and keep their 32.
+    expect([title.y, title.bottom, prose.y, steps.y]).toEqual([144, 172, 204, 348])
     // The title is no further from its description than the blocks are from each other (it was 64 to 32).
     expect(prose.y - title.bottom).toBe(32)
   })
@@ -738,8 +740,9 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     const title = await box(detail.locator('[data-slot="page-head-title"]'))
     const summary = await box(detail.locator('[data-slot="summary-block"]'))
     const body = await box(detail.locator('[data-slot="prose"]').first())
-    // Figma: the meta at y 96, the title's line 160 to 196, the summary's bar 220 to 328.
-    expect([meta.y, title.y, title.bottom, summary.y, summary.bottom]).toEqual([96, 160, 196, 220, 328])
+    // Figma (1.x frame): the meta at y 96, the title's line 160 to 196, the summary's bar 220 to 328.
+    // 2.0 type (title 20/28) moves the blocks up and keeps the 24 between them: 156 to 184, 208 to 316.
+    expect([meta.y, title.y, title.bottom, summary.y, summary.bottom]).toEqual([96, 156, 184, 208, 316])
     // It was 64 from title to summary with 32 between the other blocks.
     expect(summary.y - title.bottom).toBe(24)
     expect(body.y - summary.bottom).toBe(24)
@@ -764,8 +767,9 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     const head = await box(detail.locator('[data-slot="page-head"]'))
     const request = await box(detail.locator('[data-slot="needs-you"]'))
     const field = await box(detail.locator('[data-slot="field-row"]').first())
-    // Figma draws the yellow block from y 216 to 376 and the first field's rule at y 400. It was at 264.
-    expect([head.bottom, request.y, request.bottom, field.y]).toEqual([200, 216, 376, 400])
+    // Figma (1.x frame) drew the yellow block from y 216 to 376 and the first field's rule at y 400.
+    // 2.0 type moves the head 4 up; the 16 under it, the block and the 24 after it are unchanged.
+    expect([head.bottom, request.y, request.bottom, field.y]).toEqual([196, 212, 372, 396])
     expect(request.y - head.bottom).toBeLessThan(field.y - request.bottom)
   })
 

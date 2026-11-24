@@ -1,6 +1,6 @@
 // The playground's state lives in the address, so any view in any theme is a link:
 //   ?view=<name>     which view (a file in ./views)
-//   ?theme=<app>     warpcore | vale | lockdown | synapse   → <html data-theme="…">
+//   ?theme=<app>     warpcore | vale | lockdown | synapse | fontface   → <html data-theme="…">
 //   ?ground=<name>   graphite | stone                        → <html class="dark"> or "light"
 //   ?split=1         both grounds side by side: the view twice, graphite on the left and stone on
 //                    the right (Unicron 113). ?ground= then has no effect on the view.
@@ -13,7 +13,7 @@
 // a copy of each in ./app-themes/, loaded by index.css, so the switcher can show them.
 import { useMemo, useSyncExternalStore } from "react"
 
-export const APP_THEMES = ["warpcore", "vale", "lockdown", "synapse"] as const
+export const APP_THEMES = ["warpcore", "vale", "lockdown", "synapse", "fontface"] as const
 export type AppTheme = (typeof APP_THEMES)[number]
 
 export const GROUNDS = ["graphite", "stone"] as const
@@ -32,6 +32,7 @@ export const THEME_NAMES: Record<AppTheme | "default", string> = {
   vale: "Vale",
   lockdown: "Lockdown",
   synapse: "Synapse",
+  fontface: "Fontface",
 }
 
 export interface Address {

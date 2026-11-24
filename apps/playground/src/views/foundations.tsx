@@ -1,4 +1,4 @@
-// Foundations (?view=foundations): what every component is built from. Color roles, the 24 type
+// Foundations (?view=foundations): what every component is built from. Color roles, the 31 type
 // roles, spacing, radius, strokes, sizes, and the stylesheet's rule, scrim, focus and touch-target
 // utilities.
 //
@@ -321,6 +321,13 @@ const TYPE_ROLES: { role: string; paint: string; sample: string | ((app: string)
   { role: "number-metric", paint: "type-number-metric", sample: "218" },
   { role: "number-index", paint: "type-number-index", sample: "S" },
   { role: "number-count", paint: "type-number-count", sample: "04" },
+  { role: "control", paint: "type-control", sample: "Run tests" },
+  { role: "control-strong", paint: "type-control-strong", sample: "Approve" },
+  { role: "crumb", paint: "type-crumb", sample: "Settings" },
+  { role: "large-title", paint: "type-large-title", sample: "Projects" },
+  { role: "tab-label", paint: "type-tab-label", sample: "Home" },
+  { role: "tab-label-selected", paint: "type-tab-label-selected", sample: "Board" },
+  { role: "code-reveal", paint: "type-code-reveal", sample: "R7K2-N9QX" },
   { role: "brand-wordmark", paint: "type-brand-wordmark", sample: (app) => app.toUpperCase() },
   { role: "icon-glyph", paint: "type-icon-glyph", sample: (app) => app.charAt(0).toUpperCase() },
 ]
@@ -363,7 +370,8 @@ function Specimen({ role, alias, paint, sample }: { role: string; alias?: string
     <div
       data-type-role={alias ? undefined : role}
       data-type-alias={alias}
-      className="rule-t grid gap-x-6 gap-y-2 py-4 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start"
+      // large-title's 34px line (iOS) is the one off the grid: its row is held to 68 so the page stays on it.
+      className={`rule-t grid gap-x-6 gap-y-2 py-4 md:grid-cols-[18rem_minmax(0,1fr)] md:items-start ${role === "large-title" && !alias ? "md:min-h-17" : ""}`}
     >
       <div className="min-w-0">
         <p className="type-meta text-text-body">{alias ? `type-${alias} → type-${role}` : `type-${role}`}</p>
@@ -452,8 +460,9 @@ function Measured({
   )
 }
 
-/** The bare class and every step of Tailwind's radius scale draw the control radius, so no class rounds more than another. */
+/** Tailwind's radius scale, mapped onto the 2.0 steps (4, 6, 8, 12, 16); past xl stays at 16. */
 const RADIUS_SCALE: [name: string, paint: string][] = [
+  ["rounded-xs", "rounded-xs"],
   ["rounded", "rounded"],
   ["rounded-sm", "rounded-sm"],
   ["rounded-md", "rounded-md"],
@@ -467,23 +476,27 @@ const RADIUS_SCALE: [name: string, paint: string][] = [
 function Shape() {
   return (
     <>
-      <Block id="radius" overline="Radius // 03" title="Radius">
+      <Block id="radius" overline="Radius // 07" title="Radius">
         <div className="mb-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3">
           <Measured name="radius/none" paint="bg-surface-raised rule-box size-12 rounded-none" read={(style) => radius(style.borderTopLeftRadius)} />
+          <Measured name="radius/xs" paint="bg-surface-raised rule-box size-12 rounded-(--radius-xs)" note="badges, kbd" read={(style) => radius(style.borderTopLeftRadius)} />
           <Measured
             name="radius/control"
-            paint="bg-surface-raised rule-box size-12 rounded-(--radius)"
+            paint="bg-surface-raised rule-box size-12 rounded-(--radius-control)"
             note="every control"
             read={(style) => radius(style.borderTopLeftRadius)}
           />
+          <Measured name="radius/md" paint="bg-surface-raised rule-box size-12 rounded-(--radius-md)" note="menus, rows" read={(style) => radius(style.borderTopLeftRadius)} />
+          <Measured name="radius/lg" paint="bg-surface-raised rule-box size-12 rounded-(--radius-lg)" note="cards, dialogs" read={(style) => radius(style.borderTopLeftRadius)} />
+          <Measured name="radius/xl" paint="bg-surface-raised rule-box size-12 rounded-(--radius-xl)" note="the composer" read={(style) => radius(style.borderTopLeftRadius)} />
           <Measured
             name="radius/round"
             paint="bg-surface-raised rule-box size-12 rounded-full"
-            note="rounded-full // not a control shape"
+            note="rounded-full // pills, chips, dots"
             read={(style) => radius(style.borderTopLeftRadius)}
           />
         </div>
-        <Group title={`Tailwind's scale // ${count(RADIUS_SCALE.length)} classes, one radius`}>
+        <Group title={`Tailwind's scale // ${count(RADIUS_SCALE.length)} classes, the 2.0 steps`}>
           <div className="grid grid-cols-4 gap-x-4 gap-y-6 lg:grid-cols-8">
             {RADIUS_SCALE.map(([name, paint]) => (
               <Measured key={name} name={name} paint={`bg-surface-raised rule-box size-12 ${paint}`} read={(style) => radius(style.borderTopLeftRadius)} />

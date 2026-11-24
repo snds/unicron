@@ -2,7 +2,7 @@
  * App extension layer — EXAMPLE.
  *
  * The core carries Figma's roles, the shadcn contract and one generic default theme. An app's
- * own theme (its two hues and its neutrals, the 28 theme slots), and the roles that only one
+ * own theme (its accent, the 10 theme slots), and the roles that only one
  * product understands (what colour "unread" is, one hue per app area, a note's tint), are
  * declared by that product, in its own stylesheet, after the core:
  *
@@ -22,8 +22,8 @@
  *
  * Rules:
  *   - Alias a role (--*), never a raw value.
- *   - Do not build a surface or an ink on --g-neutral-*. That ramp is legacy and is not
- *     themed: it does not follow the app or its tint. Use surface-ground, surface-raised,
+ *   - Do not build a surface or an ink on a raw value. The legacy --g-neutral-* ramp is gone (2.0);
+ *     it was not themed. Use surface-ground, surface-raised,
  *     line-rule, text-body, text-secondary, text-label.
  *   - A role that only points at core roles is the same on both grounds. Declare it once, on
  *     the four selectors below, so it also follows a nested .dark, .light or data-theme box.
@@ -39,42 +39,23 @@
  */
 
 /*
- * The app's theme: all 28 slots, 14 per ground, as raw values (Unicron 1). The names are listed in
- * @unicron/tokens' dist/tokens.json (`themeSlots`). Each text slot is solved against the ground:
- * body to APCA Lc 90, secondary to 75 and at least 10 under body, label to 60 and at least 10
- * under secondary, primary-text to 60, primary-display to 45, and primary-on-fill on primary-fill
- * to 75. This one is a violet identity (hue 300) with a green live colour (hue 165), and it clears
- * every pair the contrast gate measures (scripts/check.mjs and `pnpm test` hold it to that).
+ * The app's theme: the 10 accent slots, 5 per ground, as raw values (Unicron 2.0: an app sets its
+ * accent and nothing else; surfaces, inks, lines and status are shared). The names are listed in
+ * @unicron/tokens' dist/tokens.json (`themeSlots`). primary-text is solved to 4.5:1 on the ground,
+ * primary-on-fill on primary-fill to 4.5:1, primary-soft is the fill at 18% (graphite) or 10%
+ * (stone). This one is a violet identity (hue 300).
  */
 [data-theme="acme"] {
-  --g-theme-graphite-ground: #1A191B;
-  --g-theme-graphite-raised: #212022;
-  --g-theme-graphite-rule: #313032;
-  --g-theme-graphite-grid-dot: #373639;
-  --g-theme-graphite-faint: #58575B;
-  --g-theme-graphite-label: #BEBDC2;
-  --g-theme-graphite-secondary: #DBDADE;
-  --g-theme-graphite-body: #F4F3F6;
   --g-theme-graphite-primary-fill: #8263B5;
   --g-theme-graphite-primary-on-fill: #FFFFFF;
   --g-theme-graphite-primary-text: #CDB7F7;
-  --g-theme-graphite-primary-soft: #2F263F;
-  --g-theme-graphite-primary-display: #B798EF;
-  --g-theme-graphite-live: #73D4AC;
-  --g-theme-stone-ground: #F5F4F6;
-  --g-theme-stone-raised: #FCFBFD;
-  --g-theme-stone-rule: #D8D7DA;
-  --g-theme-stone-grid-dot: #C1C0C4;
-  --g-theme-stone-faint: #A8A7AB;
-  --g-theme-stone-label: #646267;
-  --g-theme-stone-secondary: #403F43;
-  --g-theme-stone-body: #060507;
-  --g-theme-stone-primary-fill: #68449B;
+  --g-theme-graphite-primary-soft: #8263B52E;
+  --g-theme-graphite-primary-display: #B9A0EB;
+  --g-theme-stone-primary-fill: #6A4C9C;
   --g-theme-stone-primary-on-fill: #FFFFFF;
-  --g-theme-stone-primary-text: #654198;
-  --g-theme-stone-primary-soft: #F1EBFF;
-  --g-theme-stone-primary-display: #68449B;
-  --g-theme-stone-live: #2A7257;
+  --g-theme-stone-primary-text: #6A4C9C;
+  --g-theme-stone-primary-soft: #6A4C9C1A;
+  --g-theme-stone-primary-display: #6A4C9C;
 }
 
 /* The same on both grounds: the roles these point at already carry the ground and the app. */

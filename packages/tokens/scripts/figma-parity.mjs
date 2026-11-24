@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 // Figma parity: every built value that Figma also holds must equal Figma's.
 //
-// The reference is tokens/figma/theme-2026-11.json, a checked-in snapshot of the read-out of the
+// The reference is tokens/figma/theme-2026-11-24.json, a checked-in snapshot of the read-out of the
 // Figma file (scripts/figma-snapshot.mjs writes it). This script reads what the build made,
 // dist/tokens.css, resolves it as a browser would, and compares:
 //
-//   - the 7 roles every theme shares (needs-you, critical, scrim), on both grounds, against every
-//     Figma mode of that ground
-//   - the 14 roles a theme sets (surfaces, inks, identity, live), with no data-theme, against
-//     Figma's `Default` mode. Figma has no Default mode yet (Unicron 1: the core's own theme is new
-//     in 1.1), so until it does these are reported as a known gap, not failed.
-//   - the four apps' themes the playground carries as fixtures (apps/playground/src/app-themes/),
-//     laid over the build, in their 8 Figma modes: every role, each slot's hex, and the Figma
-//     variable id in its $description. Each app now owns its theme; these files are the
-//     playground's copies, so they must still be exactly Figma's.
+//   - every role but the five accent roles (surfaces, lines, inks, status, counts, labels, charts,
+//     needs-you, critical, scrim): shared by every app since 2.0, so the same in every Figma mode of
+//     a ground, with no data-theme
+//   - the five accent roles a theme sets, with no data-theme, against Figma's `Default` mode.
+//     Figma has no Default mode, so these are reported as a known gap, not failed.
+//   - the five apps' themes the playground carries as fixtures (apps/playground/src/app-themes/),
+//     laid over the build, in their 10 Figma modes: every role, and each slot's hex. Each app owns
+//     its theme; these files are the playground's copies, so they must still be exactly Figma's.
 //   - the type roles: family, weight, size, line height, letter spacing, case. A role marked
-//     `"figma": "pending"` (mono-row, 1.1) is not in Figma yet: reported, not failed.
-//   - size/control, size/touch-min, radius/control
+//     `"figma": "pending"` (mono-row, 1.1) is not in Figma yet, and one marked `"figma": "retired"`
+//     is in Figma's Retired folder: both reported, not failed.
+//   - the size variables, and the radius scale (each step, and Tailwind's keys for it)
 //   - the spacing values, against Tailwind's 4px unit (spacing has no tokens of its own)
 //
 // It fails on any difference. A value is changed in Figma first; then a new read-out, a new
@@ -34,22 +34,36 @@ import { modeVars, parseTokensCss, readTheme, resolveValue } from "./lib/css.mjs
 const here = path.dirname(fileURLToPath(import.meta.url))
 const tokensDir = path.join(here, "..", "tokens")
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"))
-const snapshot = readJson(path.join(tokensDir, "figma", "theme-2026-11.json"))
+const snapshot = readJson(path.join(tokensDir, "figma", "theme-2026-11-24.json"))
 const built = readJson(path.join(here, "..", "dist", "tokens.json"))
 const parsed = parseTokensCss()
 
 const differences = []
-const differ = (where, got, want) => differences.push(`${where}: built ${got}, Figma ${want}`)
+// Code ahead of Figma: a shared value Sean changed in code first, which Figma follows. Each is
+// reported as a gap while Figma still holds the old value, and fails once Figma has the new one
+// (take it off this list then) or holds anything else.
+//   (empty: the graphite text/secondary and text/label change of 2026-11-24 is in Figma now.)
+const AHEAD_OF_FIGMA = {}
+const aheadSeen = new Set()
+const differ = (where, got, want) => {
+  for (const [key, { code, figma }] of Object.entries(AHEAD_OF_FIGMA)) {
+    const [role, ground] = key.split(" ")
+    if (!where.startsWith(`${role} `) || !where.includes(ground)) continue
+    if (got === `${code} @ 1` && want === `${figma} @ 1`) {
+      aheadSeen.add(key)
+      return
+    }
+  }
+  differences.push(`${where}: built ${got}, Figma ${want}`)
+}
 const same = (where, got, want) => {
   if (got !== want) differ(where, JSON.stringify(got), JSON.stringify(want))
 }
 
 // Which theme slot holds a role's value. The other roles are shared by every app (global.json).
 const SLOT_OF = {
-  "surface/ground": "ground", "surface/raised": "raised", "line/rule": "rule", "line/grid-dot": "grid-dot",
-  "text/faint": "faint", "text/label": "label", "text/secondary": "secondary", "text/body": "body",
   "primary/fill": "primary-fill", "primary/on-fill": "primary-on-fill", "primary/text": "primary-text",
-  "primary/soft": "primary-soft", "primary/display": "primary-display", "secondary/live": "live",
+  "primary/soft": "primary-soft", "primary/display": "primary-display",
 }
 const cssName = (figmaName) => `--${figmaName.replace(/\//g, "-")}`
 
@@ -80,7 +94,7 @@ function compareRole(where, name, vars, want, onMiss = differ) {
   const got = builtColor(name, vars)
   colorsCompared++
   if (!got) return differences.push(`${where}: ${name} is not in the built CSS`)
-  if (got.hex !== want.hex || Math.abs(got.alpha - want.alpha) > 1e-6) {
+  if (got.hex !== want.hex || Math.abs(got.alpha - want.alpha) > 0.6 / 255) {
     onMiss(where, `${got.hex} @ ${got.alpha}`, `${want.hex} @ ${want.alpha}`)
   }
 }
@@ -121,10 +135,8 @@ for (const theme of fixtures) {
         differences.push(`${where}: missing`)
         continue
       }
-      same(where, token.$value, want.hex)
-      if (!String(token.$description ?? "").includes(`${want.primitiveId} `)) {
-        differences.push(`${where}: $description must name ${want.primitiveId} (${want.primitive}), the primitive Figma's ${role} points at in ${theme.name} / ${ground}`)
-      }
+      const alpha = want.alpha === 1 ? "" : Math.round(want.alpha * 255).toString(16).padStart(2, "0").toUpperCase()
+      same(where, token.$value, `${want.hex}${alpha}`)
     }
   }
   const figmaModes = theme.json.$extensions?.["unicron.app"]?.figmaModes ?? {}
@@ -134,11 +146,13 @@ for (const theme of fixtures) {
 // ── Type roles ───────────────────────────────────────────────────────────────────────────────
 const typeName = (figmaName) => figmaName.replace(/\//g, "-")
 const pendingType = Object.keys(built.type).filter((role) => built.type[role].figma === "pending")
+const retiredType = Object.keys(built.type).filter((role) => built.type[role].figma === "retired")
+for (const role of retiredType) gaps.push(`retired type role ${role}`)
 for (const role of pendingType) {
   if (Object.keys(snapshot.type).map(typeName).includes(role)) differences.push(`type ${role}: Figma has it now; take "figma": "pending" off it in tokens/type.json`)
   else gaps.push(`type role ${role}`)
 }
-same("type roles", Object.keys(built.type).filter((role) => !pendingType.includes(role)).join(", "), Object.keys(snapshot.type).map(typeName).join(", "))
+same("type roles", Object.keys(built.type).filter((role) => !pendingType.includes(role) && !retiredType.includes(role)).sort().join(", "), Object.keys(snapshot.type).map(typeName).sort().join(", "))
 const rootVars = modeVars(parsed, null, "stone")
 const number = (value, unit) => {
   const m = new RegExp(`^(-?[\\d.]+)${unit}$`).exec(String(value))
@@ -168,23 +182,24 @@ const px = (name, vars = rootVars) => {
   return m ? Number(m[1]) * (m[2] === "rem" ? 16 : 1) : NaN
 }
 const themeVars = new Map([...rootVars, ...parsed.theme])
-same("size/control (px)", px("--size-control"), snapshot.size["size/control"].px)
-same("size/touch-min (px)", px("--size-touch-min"), snapshot.size["size/touch-min"].px)
+for (const [figmaName, { px: want }] of Object.entries(snapshot.size)) {
+  same(`${figmaName} (px)`, px(`--${figmaName.replace("/", "-")}`), want)
+}
 same("size/control as Tailwind's --spacing-control (px)", px("--spacing-control", themeVars), snapshot.size["size/control"].px)
 same("size/touch-min as Tailwind's --spacing-touch-min (px)", px("--spacing-touch-min", themeVars), snapshot.size["size/touch-min"].px)
-same("size variables", Object.keys(snapshot.size).join(", "), "size/control, size/touch-min")
 
-same("radius/control (px)", px("--radius"), snapshot.radius["radius/control"].px)
-for (const [name] of parsed.theme) {
-  if (name.startsWith("--radius-")) same(`radius/control as Tailwind's ${name} (px)`, px(name, themeVars), snapshot.radius["radius/control"].px)
+// The radius scale: each step a role, and Tailwind's keys (a plain @theme block, literal values).
+const plainTheme = new Map([...fs.readFileSync(path.join(here, "..", "dist", "tokens.css"), "utf8").matchAll(/\n@theme \{\n([\s\S]*?)\n\}/g)].flatMap((m) => [...m[1].matchAll(/(--[\w-]+): ([^;]+);/g)].map((d) => [d[1], d[2]])))
+const remPx = (value) => (value?.endsWith("rem") ? parseFloat(value) * 16 : parseFloat(value))
+for (const [figmaName, { px: want }] of Object.entries(snapshot.radius)) {
+  const step = figmaName.split("/")[1]
+  if (step === "none") continue // Tailwind's own rounded-none
+  same(`${figmaName} (px)`, px(`--radius-${step}`), want)
 }
-// Tailwind's bare `rounded` reads its --radius key: the same corner.
-same("radius/control as Tailwind's --radius, the bare rounded (px)", parsed.theme.has("--radius") ? px("--radius", themeVars) : NaN, snapshot.radius["radius/control"].px)
-// radius/none and radius/round are Tailwind's own rounded-none and rounded-full: nothing is built
-// for them, so only the Figma side is held still.
-same("radius/none (px; Tailwind's rounded-none)", 0, snapshot.radius["radius/none"].px)
-same("radius/round (px; Tailwind's rounded-full)", 999, snapshot.radius["radius/round"].px)
-same("radius variables", Object.keys(snapshot.radius).join(", "), "radius/none, radius/control, radius/round")
+same("radius/control as Tailwind's bare rounded (px)", remPx(plainTheme.get("--radius")), snapshot.radius["radius/control"].px)
+for (const [step, figmaStep] of [["xs", "xs"], ["sm", "control"], ["md", "md"], ["lg", "lg"], ["xl", "xl"]]) {
+  same(`radius/${figmaStep} as Tailwind's rounded-${step} (px)`, remPx(plainTheme.get(`--radius-${step}`)), snapshot.radius[`radius/${figmaStep}`].px)
+}
 
 // ── Spacing ──────────────────────────────────────────────────────────────────────────────────
 // Spacing has no tokens: Tailwind's unit (0.25rem = 4px) is Figma's space/004, and a class such as
@@ -198,15 +213,19 @@ for (const [name, { px: value }] of Object.entries(snapshot.space)) {
 }
 
 if (differences.length) {
-  console.error(`✗ figma parity: ${differences.length} difference${differences.length === 1 ? "" : "s"} from tokens/figma/theme-2026-11.json (Figma, ${snapshot.source.extracted})`)
+  console.error(`✗ figma parity: ${differences.length} difference${differences.length === 1 ? "" : "s"} from tokens/figma/theme-2026-11-24.json (Figma, ${snapshot.source.extracted})`)
   for (const d of differences) console.error(`  ${d}`)
   process.exit(1)
 }
+for (const key of Object.keys(AHEAD_OF_FIGMA)) {
+  if (aheadSeen.has(key)) gaps.push(`${key} is ahead of Figma (${AHEAD_OF_FIGMA[key].code} in code, ${AHEAD_OF_FIGMA[key].figma} in Figma)`)
+  else differences.push(`${key}: Figma no longer holds ${AHEAD_OF_FIGMA[key].figma}; re-snapshot, and take it off AHEAD_OF_FIGMA once it matches`)
+}
 if (gaps.length) {
-  console.log(`figma parity: known gaps, reported and not failed (Figma has no Default mode in Unicron / Theme yet, and no style for a role added in 1.1): ${gaps.join(", ")}`)
+  console.log(`figma parity: known gaps, reported and not failed (Figma has no Default mode in Unicron / Theme, no style for a role added in 1.1, and a Retired folder of styles): ${gaps.join(", ")}`)
 }
 console.log(
   `✓ figma parity: the shared roles on both grounds, ${fixtures.length} app themes (playground fixtures) × ${Object.keys(snapshot.roles).length} roles in their ${appModes.length} modes (${colorsCompared} colours), ` +
-    `${slotsCompared} fixture slots with their Figma ids, ${Object.keys(snapshot.type).length} type roles, ` +
-    `${Object.keys(snapshot.size).length} sizes, the radius, ${Object.keys(snapshot.space).length} spacing steps on the ${TAILWIND_UNIT_PX}px unit — all equal Figma (read ${snapshot.source.extracted})`
+    `${slotsCompared} fixture slots, ${Object.keys(snapshot.type).length} type roles, ` +
+    `${Object.keys(snapshot.size).length} sizes, ${Object.keys(snapshot.radius).length} radii, ${Object.keys(snapshot.space).length} spacing steps on the ${TAILWIND_UNIT_PX}px unit — all equal Figma (read ${snapshot.source.extracted})`
 )

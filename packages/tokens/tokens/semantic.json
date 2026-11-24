@@ -2,134 +2,1486 @@
   "$description": "Tier 2 · Semantic roles. Emitted as --* (no prefix). The canonical roles are named as in Figma's Unicron / Theme collection (surface-ground, text-body, primary-fill …): each reads a theme slot, the stone slot in light (`$value`) and the graphite slot in dark (`$extensions[\"unicron.modes\"].dark`). The shadcn/ui contract and the sidebar contract stay, as aliases of those roles, so existing classes keep working. No role points at the legacy neutral ramp; success, warning and info keep their accent ramps. Apps add their own roles in an extension layer (see examples/app-extension.css), never here.",
   "$extensions": {
     "unicron.theme": {
-      "$description": "Extra entries for the Tailwind v4 `@theme inline` block. Radius steps are multiples of --radius: every step is 1, so every rounded-* class draws the one 2px corner. Spacing names become sizing utilities (h-control, size-control, min-h-touch-min).",
-      "radius": { "xs": 1, "sm": 1, "md": 1, "lg": 1, "xl": 1, "2xl": 1, "3xl": 1, "4xl": 1 },
-      "spacing": { "control": "{size-control}", "touch-min": "{size-touch-min}" }
+      "$description": "Extra entries for the Tailwind v4 `@theme inline` block. Radius steps name the scale (Unicron 2.0): rounded-xs 4, rounded-sm and bare rounded 6 (controls), rounded-md 8, rounded-lg 12, rounded-xl and up 16, rounded-full round. Spacing names become sizing utilities (h-control, h-control-s, size-icon, min-h-touch-min).",
+      "radius": {
+        "xs": "{radius-xs}",
+        "sm": "{radius-control}",
+        "md": "{radius-md}",
+        "lg": "{radius-lg}",
+        "xl": "{radius-xl}",
+        "2xl": "{radius-xl}",
+        "3xl": "{radius-xl}",
+        "4xl": "{radius-xl}"
+      },
+      "spacing": {
+        "control": "{size-control}",
+        "control-s": "{size-control-s}",
+        "control-m": "{size-control-m}",
+        "control-l": "{size-control-l}",
+        "icon": "{size-icon}",
+        "touch-min": "{size-touch-min}"
+      },
+      "shadow": {
+        "popover": "{shadow-popover}",
+        "dialog": "{shadow-dialog}"
+      }
     }
   },
-
-  "surface-ground": { "$type": "color", "$value": "{theme.stone.ground}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.ground}" } }, "$description": "Figma surface/ground. The page background. Also the label on an active Filter Chip, where ink and ground swap." },
-  "surface-raised": { "$type": "color", "$value": "{theme.stone.raised}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.raised}" } }, "$description": "Figma surface/raised. Raised controls and cards: the tab bar, a float button, a text field's box, menus, dialogs, a chat bubble, tiles." },
-  "surface-scrim": { "$type": "color", "$value": "{scrim.stone}", "$extensions": { "unicron.modes": { "dark": "{scrim.graphite}" } }, "$description": "Figma surface/scrim. The full-screen dim behind sheets, dialogs and menus. The colour only: the layer's opacity is a tier 3 knob (--c-scrim-sheet, -dialog, -menu). Never opaque, never blurred." },
-  "line-rule": { "$type": "color", "$value": "{theme.stone.rule}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.rule}" } }, "$description": "Figma line/rule. Hairline rules and 1px borders, a field's resting border included. Also the empty part of a progress bar. Quiet by design: its contrast is reported, not gated (scripts/contrast.mjs)." },
-  "line-field": { "$type": "color", "$value": "color-mix(in oklab, {text-label} 75%, {line-rule})", "$description": "A field's resting border, 1px: three parts label ink to one part rule, so it measures 3:1 or more against the field's own surface-raised box and the ground outside it, on both grounds, in every app (WCAG 1.4.11; Unicron 18). Not in Figma yet: Figma draws the resting border as line/rule, a hairline at about 1.3:1. Tailwind: border-line-field; `input` is its shadcn alias." },
-  "line-focus": { "$type": "color", "$value": "{primary-fill}", "$extensions": { "unicron.modes": { "dark": "{primary-text}" } }, "$description": "A focus border: a field's 2px inside border, and the focus edge of a button, a switch or a checkbox that draws one. The identity fill on stone; on graphite the identity text colour, because the fill is a mid-tone there and falls under 3:1 against the dark surfaces (Unicron 17). Held to 3:1 against surface-raised and the ground." },
-  "line-invalid": { "$type": "color", "$value": "{critical-fill}", "$extensions": { "unicron.modes": { "dark": "{critical-text}" } }, "$description": "An error border: an invalid field's 2px border, and the 2px inside edge of an invalid button, switch or checkbox. The critical fill on stone; on graphite the critical text colour, which clears 3:1 where the fill does not (Unicron 17). Held to 3:1 against surface-raised and the ground." },
-  "line-grid-dot": { "$type": "color", "$value": "{theme.stone.grid-dot}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.grid-dot}" } }, "$description": "Figma line/grid-dot. The dot grid, and the grabber of a sheet." },
-  "text-body": { "$type": "color", "$value": "{theme.stone.body}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.body}" } }, "$description": "Figma text/body. Main text and, by default, icons. Also the Secondary button's border, the unread mark and an active Filter Chip's fill. Solved to APCA Lc 90 on the ground." },
-  "text-secondary": { "$type": "color", "$value": "{theme.stone.secondary}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.secondary}" } }, "$description": "Figma text/secondary. Supporting text: helper lines, descriptions, a banner's body, an inactive nav label. Solved to APCA Lc 75 on the ground." },
-  "text-label": { "$type": "color", "$value": "{theme.stone.label}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.label}" } }, "$description": "Figma text/label. Labels, meta lines, overlines, counts, placeholders, inactive tab icons. Solved to APCA Lc 60 on the ground." },
-  "text-faint": { "$type": "color", "$value": "{theme.stone.faint}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.faint}" } }, "$description": "Figma text/faint. Only for a disabled control's words and for decoration (a rule's glyph, a watermark), which WCAG 1.4.3 does not hold to a contrast floor. Never for anything a person reads to act: an index number, a count, a hint, a placeholder or a meta line takes text-label. Its contrast is reported, not gated (Unicron 25)." },
-  "primary-fill": { "$type": "color", "$value": "{theme.stone.primary-fill}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.primary-fill}" } }, "$description": "Figma primary/fill. The app's identity as a solid: the one primary action of a screen, the selected-row edge, the tab indicator, a switch that is on, a field's focus border, the app mark." },
-  "primary-mark": { "$type": "color", "$value": "{primary-fill}", "$extensions": { "unicron.modes": { "dark": "{primary-text}" } }, "$description": "The identity as a mark with no words: the selected-row edge, the tab indicator, a progress cell, a dot. Such a mark has only its lightness to show it, so it holds Lc 30 against the surfaces it sits on (WCAG 1.4.11). The identity fill on stone; on graphite the identity text colour, because a fill dark enough to hold a white label sits under Lc 30 against the dark surfaces (Unicron 19). A fill that holds a label stays primary-fill." },
-  "primary-on-fill": { "$type": "color", "$value": "{theme.stone.primary-on-fill}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.primary-on-fill}" } }, "$description": "Figma primary/on-fill. Text and icons on primary-fill. Solved to APCA Lc 75." },
-  "primary-text": { "$type": "color", "$value": "{theme.stone.primary-text}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.primary-text}" } }, "$description": "Figma primary/text. The identity as small text, or as an icon on primary-soft. Solved to APCA Lc 60 on the ground." },
-  "primary-soft": { "$type": "color", "$value": "{theme.stone.primary-soft}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.primary-soft}" } }, "$description": "Figma primary/soft. The quiet identity tint: a selected row, the current nav item, the active dock tab, a calendar event, an artifact tile. Selection is this fill plus a 2px primary-fill edge, never a solid." },
-  "primary-display": { "$type": "color", "$value": "{theme.stone.primary-display}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.primary-display}" } }, "$description": "Figma primary/display. The identity as large type, 36px and up. Solved to APCA Lc 45, so it stays closer to the identity hue than primary-text. Never under 36px." },
-  "secondary-live": { "$type": "color", "$value": "{theme.stone.live}", "$extensions": { "unicron.modes": { "dark": "{theme.graphite.live}" } }, "$description": "Figma secondary/live. Live activity and agents only: live status text, the filled part of a progress bar, the live mark, an agent message's meta. Not the shadcn `secondary`, which is a neutral fill." },
-  "small-label": { "$type": "color", "$value": "color-mix(in oklab, {text-secondary} 99%, {text-label})", "$extensions": { "unicron.modes": { "dark": "color-mix(in oklab, {text-secondary} 93%, {text-label})" } }, "$description": "Label ink for text under 16px, where an app holds small text to APCA Lc 75 and 4.5:1 (Synapse's gate; Synapse 1): the label ink moved towards the secondary ink until it reads Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft, in the default theme and in all four apps' themes (93% of the way on graphite, 99% on stone). Mixed towards secondary, never past it, so it stays under text-secondary on every surface; in the apps' themes the step is under 2 Lc, because their label and secondary inks were solved to the ground with no room. text-label (Lc 60) stays the ink for everything else." },
-  "small-primary": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 45%, {primary-text})", "$extensions": { "unicron.modes": { "dark": "color-mix(in oklab, {text-body} 51%, {primary-text})" } }, "$description": "The identity as text under 16px, held to APCA Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft (Synapse 1): primary-text moved towards the body ink (45% on stone, 51% on graphite, solved over the default theme and the four apps' themes). primary-text (Lc 60) stays for larger text and icons." },
-  "small-critical": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 48%, {critical-text})", "$extensions": { "unicron.modes": { "dark": "color-mix(in oklab, {text-body} 51%, {critical-text})" } }, "$description": "Error text under 16px, held to APCA Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft (Synapse 1): critical-text moved towards the body ink (48% on stone, 51% on graphite)." },
-  "small-live": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 51%, {secondary-live})", "$extensions": { "unicron.modes": { "dark": "color-mix(in oklab, {text-body} 50%, {secondary-live})" } }, "$description": "Live text under 16px, held to APCA Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft (Synapse 1): the live colour moved towards the body ink (51% on stone, 50% on graphite). Text only: fills, marks and edges keep secondary-live." },
-  "needs-you-fill": { "$type": "color", "$value": "{needs-you.fill}", "$description": "Figma needs-you/fill. The yellow block that waits on the person, the same in every app and both grounds. Also the label on the dark needs-you button. At most one per screen." },
-  "needs-you-on-fill": { "$type": "color", "$value": "{needs-you.on-fill}", "$description": "Figma needs-you/on-fill. Text on the yellow; also the fill of the solid needs-you button and the border of the outline one." },
-  "critical-fill": { "$type": "color", "$value": "{critical.fill.stone}", "$extensions": { "unicron.modes": { "dark": "{critical.fill.graphite}" } }, "$description": "Figma critical/fill. Error as a solid: the destructive button, an invalid field's 2px border, a critical banner's edge." },
-  "critical-on-fill": { "$type": "color", "$value": "{critical.on-fill.stone}", "$extensions": { "unicron.modes": { "dark": "{critical.on-fill.graphite}" } }, "$description": "Figma critical/on-fill. Text on critical-fill." },
-  "critical-text": { "$type": "color", "$value": "{critical.text.stone}", "$extensions": { "unicron.modes": { "dark": "{critical.text.graphite}" } }, "$description": "Figma critical/text. Error text and a critical banner's icon." },
-  "critical-soft": { "$type": "color", "$value": "{critical.soft.stone}", "$extensions": { "unicron.modes": { "dark": "{critical.soft.graphite}" } }, "$description": "Figma critical/soft. A critical banner's background." },
-
-  "state-hover": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 4%, transparent)", "$description": "The hover wash on a neutral or transparent control or row: 4% of the ink, laid over whatever is underneath (it was 6% before 1.1; Unicron 16). Not in Figma, which draws no states yet. A solid fill shows hover as itself at 90% instead." },
-  "state-pressed": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 6%, transparent)", "$description": "The pressed wash: 6% of the ink (it was 10% before 1.1; Unicron 16). Not in Figma yet. A solid fill shows pressed as itself at 85% instead (80% before 1.1; Unicron 28)." },
-  "diff-added": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 3%, {surface-ground})", "$extensions": { "unicron.modes": { "dark": "color-mix(in oklab, {text-body} 8%, {surface-ground})" } }, "$description": "The wash behind an added line of a diff: a neutral wash of the ink in the ground, 8% on graphite and 3% on stone, where 8% took body text under Lc 90 (Unicron 28; 1.1), the same rule in every app (cross-app decisions §11: Synapse's primary-soft and critical-soft read as one colour, so an identity tint cannot mark added lines). Not in Figma. The + mark always shows: colour never carries the meaning alone." },
-  "diff-removed": { "$type": "color", "$value": "{critical-soft}", "$description": "The wash behind a removed line of a diff. The − mark always shows." },
-
-  "swatch-01": { "$type": "color", "$value": "{swatch.red.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.red.graphite}" } }, "$description": "Swatch 01 of 12 (red, hue 25): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-02": { "$type": "color", "$value": "{swatch.orange.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.orange.graphite}" } }, "$description": "Swatch 02 of 12 (orange, hue 55): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-03": { "$type": "color", "$value": "{swatch.ochre.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.ochre.graphite}" } }, "$description": "Swatch 03 of 12 (ochre, hue 85): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-04": { "$type": "color", "$value": "{swatch.olive.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.olive.graphite}" } }, "$description": "Swatch 04 of 12 (olive, hue 115): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-05": { "$type": "color", "$value": "{swatch.green.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.green.graphite}" } }, "$description": "Swatch 05 of 12 (green, hue 145): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-06": { "$type": "color", "$value": "{swatch.jade.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.jade.graphite}" } }, "$description": "Swatch 06 of 12 (jade, hue 175): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-07": { "$type": "color", "$value": "{swatch.teal.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.teal.graphite}" } }, "$description": "Swatch 07 of 12 (teal, hue 205): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-08": { "$type": "color", "$value": "{swatch.azure.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.azure.graphite}" } }, "$description": "Swatch 08 of 12 (azure, hue 235): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-09": { "$type": "color", "$value": "{swatch.blue.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.blue.graphite}" } }, "$description": "Swatch 09 of 12 (blue, hue 265): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-10": { "$type": "color", "$value": "{swatch.violet.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.violet.graphite}" } }, "$description": "Swatch 10 of 12 (violet, hue 295): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-11": { "$type": "color", "$value": "{swatch.plum.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.plum.graphite}" } }, "$description": "Swatch 11 of 12 (plum, hue 325): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-  "swatch-12": { "$type": "color", "$value": "{swatch.rose.stone}", "$extensions": { "unicron.modes": { "dark": "{swatch.rose.graphite}" } }, "$description": "Swatch 12 of 12 (rose, hue 355): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text." },
-
-  "background": { "$type": "color", "$value": "{surface-ground}", "$description": "The page. An alias of surface-ground, kept for the shadcn contract." },
-  "foreground": { "$type": "color", "$value": "{text-body}", "$description": "Main text. An alias of text-body, kept for the shadcn contract." },
-  "card": { "$type": "color", "$value": "{surface-raised}", "$description": "A raised surface. An alias of surface-raised, kept for the shadcn contract." },
-  "card-foreground": { "$type": "color", "$value": "{text-body}" },
-  "popover": { "$type": "color", "$value": "{surface-raised}", "$description": "A menu, a popover, a dialog: solid surface-raised, never glass." },
-  "popover-foreground": { "$type": "color", "$value": "{text-body}" },
-  "primary": { "$type": "color", "$value": "{primary-fill}", "$description": "The app's identity as a solid. An alias of primary-fill, kept for the shadcn contract. It was near-black before 1.0: it is now the app's colour, for the one primary action of a screen." },
-  "primary-foreground": { "$type": "color", "$value": "{primary-on-fill}" },
-  "secondary": { "$type": "color", "$value": "{surface-raised}", "$description": "The shadcn neutral fill (bg-secondary). An alias of surface-raised. Not Figma's secondary/live: that is secondary-live." },
-  "secondary-foreground": { "$type": "color", "$value": "{text-body}" },
-  "muted": { "$type": "color", "$value": "{surface-raised}", "$description": "A quiet fill: a track, a key. An alias of surface-raised." },
-  "support-foreground": { "$type": "color", "$value": "{text-secondary}", "$description": "Support text: the lines that explain, under a title or beside a value. An alias of text-secondary (APCA Lc 75)." },
-  "muted-foreground": { "$type": "color", "$value": "{text-label}", "$description": "Labels and meta: when, how many, captions, overlines, placeholders, inactive tabs, keys. An alias of text-label (APCA Lc 60)." },
-  "muted-foreground-on-fill": { "$type": "color", "$value": "{text-label}", "$description": "The same ink inside a fill. It was a shade stronger than muted-foreground on the old ramp; Figma has one label ink, so the two are now equal. Kept because fills re-point --muted-foreground at it (@unicron/ui's styles)." },
-  "faint-foreground": { "$type": "color", "$value": "{text-faint}", "$description": "The faintest ink. An alias of text-faint; see its limits there." },
-  "accent": { "$type": "color", "$value": "color-mix(in oklab, {text-body} 8%, {surface-raised})", "$description": "The hover and highlight fill of an item in a list or a menu: 8% of the ink in surface-raised. Opaque, so it also works where a wash cannot (a sticky row, a menu item over a shadowless popup)." },
-  "accent-foreground": { "$type": "color", "$value": "{text-body}" },
-  "destructive": { "$type": "color", "$value": "{critical-text}", "$description": "Destructive and error text. An alias of critical-text. The solid is critical-fill, the wash critical-soft." },
-  "warning": { "$type": "color", "$value": "{amber.575}", "$extensions": { "unicron.modes": { "dark": "{amber.300}" } }, "$description": "Something is wrong. A fill that holds a label (--warning-foreground at APCA Lc 75 or more), and shows against the ground, a raised surface and a selected row (Lc 30 or more). Also an ink for a warning glyph or a warning word: on stone 4.5:1 or more on the ground and a raised surface (WCAG 1.4.3 for small text; Warpcore 2, 1.1), Lc 60 or more on graphite. Keeps the amber ramp; the steps were re-picked at 1.0, when text on a fill went from Lc 60 to Lc 75, and the stone step again at 1.1." },
-  "warning-foreground": { "$type": "color", "$value": "{neutral.0}", "$extensions": { "unicron.modes": { "dark": "{neutral.950}" } }, "$description": "The label on --warning: white on the darker light-mode amber, near-black on the lighter dark-mode one." },
-  "info": { "$type": "color", "$value": "{blue.550}", "$extensions": { "unicron.modes": { "dark": "{blue.300}" } }, "$description": "For your information. A fill that holds a label (--info-foreground at APCA Lc 75 or more), and shows against the ground, a raised surface and a selected row (Lc 30 or more). Also an ink: Lc 60 or more on the ground. Keeps the blue ramp; the steps were re-picked at 1.0, when text on a fill went from Lc 60 to Lc 75." },
-  "info-foreground": { "$type": "color", "$value": "{neutral.0}", "$extensions": { "unicron.modes": { "dark": "{neutral.950}" } }, "$description": "The label on --info: white on the darker light-mode blue, near-black on the lighter dark-mode one." },
-  "success": { "$type": "color", "$value": "{green.500}", "$extensions": { "unicron.modes": { "dark": "{green.400}" } }, "$description": "Done, worked, complete. The fill: a mark, an orb, a bar. Lc 30 or more against the ground, a raised surface, a selected row and its own wash. It carries no text; words in this role use --success-foreground. Keeps the green ramp." },
-  "success-foreground": { "$type": "color", "$value": "{green.600}", "$extensions": { "unicron.modes": { "dark": "{green.300}" } }, "$description": "Success as text and icons: coloured text, Lc 60 or more on the ground, a raised surface, a selected row and --success-surface (it measures Lc 67 or more)." },
-  "success-surface": { "$type": "color", "$value": "{green.50}", "$extensions": { "unicron.modes": { "dark": "{green.900}" } }, "$description": "A quiet success wash behind a row, a card or a callout, under --success-foreground." },
-  "attention": { "$type": "color", "$value": "{needs-you-fill}", "$description": "Waiting on the person. An alias of needs-you-fill: the yellow, in both grounds. As a fill it holds needs-you-on-fill text; as a small mark on stone it barely differs from the ground in lightness (scripts/contrast.mjs lists it), so pair it with a shape." },
-  "attention-foreground": { "$type": "color", "$value": "{amber.600}", "$extensions": { "unicron.modes": { "dark": "{needs-you-fill}" } }, "$description": "Attention as text and icons, on a surface: a readable amber on stone, where the yellow would not read, and the yellow itself on graphite. Coloured text: Lc 60 or more on the ground, a raised surface, a selected row and --attention-surface. On the yellow block itself, text is needs-you-on-fill." },
-  "attention-surface": { "$type": "color", "$value": "{amber.50}", "$extensions": { "unicron.modes": { "dark": "color-mix(in oklab, {needs-you-fill} 14%, {surface-ground})" } }, "$description": "A quiet attention wash behind a row or a count, under --attention-foreground: a pale amber on stone, 14% of the yellow in the ground on graphite." },
-  "running": { "$type": "color", "$value": "{secondary-live}", "$description": "Working now. An alias of secondary-live: the app's live colour." },
-  "running-foreground": { "$type": "color", "$value": "{secondary-live}", "$description": "Running as text and icons. An alias of secondary-live (APCA Lc 60 on the ground)." },
-  "running-surface": { "$type": "color", "$value": "color-mix(in oklab, {secondary-live} 6%, {surface-ground})", "$description": "A quiet running wash behind a row or a callout: 6% of the live colour in the ground. It was 14% before 1.1, which took live text on it under Lc 60 in every mode (Unicron 27); 6% is the strongest wash that keeps it there." },
-  "protected": { "$type": "color", "$value": "{text-body}" },
-  "protected-foreground": { "$type": "color", "$value": "{surface-ground}" },
-  "border": { "$type": "color", "$value": "{line-rule}", "$description": "Separators and 1px borders. An alias of line-rule." },
-  "input": { "$type": "color", "$value": "{line-field}", "$description": "A field's resting border. An alias of line-field, 3:1 or more against the field and the ground (Unicron 18; it was the line-rule hairline in 1.0). Focus and error borders are line-focus and line-invalid." },
-  "ring": { "$type": "color", "$value": "{text-body}", "$description": "The focus ring: a solid 2px outline in the ink, offset 2px. An alias of text-body. A text field draws a 2px inside border in primary-fill instead." },
-  "radius": { "$type": "dimension", "$value": "{radius.base}", "$description": "The one corner: 2px (Figma radius/control). Every Tailwind step from rounded-xs to rounded-4xl draws it." },
-  "size-control": { "$type": "dimension", "$value": "{size.control}", "$description": "48px (Figma size/control): every floating control, the tab bar, the status strip, a text field's least height. Tailwind: h-control, size-control, min-h-control." },
-  "size-touch-min": { "$type": "dimension", "$value": "{size.touch-min}", "$description": "44px (Figma size/touch-min): the floor for a touch target. Tailwind: min-h-touch-min, size-touch-min." },
-  "stroke-rule": { "$type": "dimension", "$value": "{stroke.rule}", "$description": "1px: rules and borders. A stroke never adds height: on a part that hugs its content it is an inset shadow, not a border." },
-  "stroke-emphasis": { "$type": "dimension", "$value": "{stroke.emphasis}", "$description": "2px: focus and error borders, the selected-row edge, the tab indicator." },
-  "motion-fast": { "$type": "duration", "$value": "{duration.fast}", "$description": "Small state changes and quick entrances: a hover, a tooltip or a menu appearing, anything leaving. 120ms, the floor below which a change reads as a jump. Tailwind's default transition duration (`transition`, `transition-colors`) is mapped to it." },
-  "motion-base": { "$type": "duration", "$value": "{duration.base}", "$description": "A small surface arriving: a dialog, a popover, a toast." },
-  "motion-press": { "$type": "duration", "$value": "{duration.press}", "$description": "A control going down under a press. Release runs on motion-fast." },
-  "motion-state": { "$type": "duration", "$value": "{duration.state}", "$description": "A surface changing state: a sheet or a panel opening, a selection moving." },
-  "motion-move": { "$type": "duration", "$value": "{duration.move}", "$description": "Travel across the screen. The longest a default motion runs." },
-  "motion-tick": { "$type": "duration", "$value": "{duration.tick}", "$description": "One step of a countdown ring, run linear so it tracks the clock." },
-  "motion-ease-enter": { "$type": "cubicBezier", "$value": "{ease.standard}", "$description": "Things arriving: fast out, gentle settle. The same curve as motion-ease." },
-  "motion-ease-exit": { "$type": "cubicBezier", "$value": "{ease.in}", "$description": "Things leaving: they gather speed and go. Pair it with a shorter duration than the entrance." },
-  "motion-ease-move": { "$type": "cubicBezier", "$value": "{ease.in-out}", "$description": "Travel and resize: a selection moving, a panel changing height." },
-  "motion-ease-emphasis": { "$type": "cubicBezier", "$value": "{ease.back}", "$description": "A slight overshoot for a rare moment, such as a success. Never on a control used many times a minute." },
-  "motion-ease-pulse": { "$type": "cubicBezier", "$value": "{ease.pulse}", "$description": "The curve of a pulse loop." },
-  "motion-spring-settle": { "$type": "spring", "$value": "{spring.settle}", "$description": "A thumb or a pill arriving at a new place. Use as a timing function with motion-spring-settle-duration." },
-  "motion-spring-settle-duration": { "$type": "duration", "$value": "{spring.settle-duration}" },
-  "motion-spring-firm": { "$type": "spring", "$value": "{spring.firm}", "$description": "A sheet or another large surface arriving, with no visible bounce. Use with motion-spring-firm-duration." },
-  "motion-spring-firm-duration": { "$type": "duration", "$value": "{spring.firm-duration}" },
-  "motion-stagger": { "$type": "duration", "$value": "{stagger.step}", "$description": "The delay between siblings that enter in turn." },
-  "motion-stagger-max": { "$type": "number", "$value": "{stagger.max}", "$description": "Siblings after this many start together." },
-  "motion-press-depth": { "$type": "number", "$value": "{press.depth}", "$description": "Scale of a pressed control." },
-  "motion-press-depth-small": { "$type": "number", "$value": "{press.depth-small}", "$description": "Scale of a pressed icon-size control." },
-  "motion-spin": { "$type": "duration", "$value": "{duration.spin}", "$description": "One turn of a spinner or a working ring, so live states turn at one rate in every app. Tailwind's animate-spin runs on it." },
-  "motion-pulse": { "$type": "duration", "$value": "{duration.pulse}", "$description": "One beat of a pulse or a breathing halo (needs-you, thinking). Tailwind's animate-pulse runs on it." },
-  "motion-ease": { "$type": "cubicBezier", "$value": "{ease.standard}", "$description": "The one curve: fast out, gentle settle. Tailwind's default transition curve and `ease-standard` are mapped to it." },
-
-  "sidebar": { "$type": "color", "$value": "{surface-ground}", "$description": "The sidebar sits on the page's own ground, set apart by space, not a fill." },
-  "sidebar-foreground": { "$type": "color", "$value": "{text-secondary}" },
-  "sidebar-primary": { "$type": "color", "$value": "{primary}" },
-  "sidebar-primary-foreground": { "$type": "color", "$value": "{primary-foreground}" },
-  "sidebar-accent": { "$type": "color", "$value": "{primary-soft}", "$description": "The current item of the sidebar: primary-soft." },
-  "sidebar-accent-foreground": { "$type": "color", "$value": "{text-body}" },
-  "sidebar-border": { "$type": "color", "$value": "{line-rule}" },
-  "sidebar-ring": { "$type": "color", "$value": "{ring}" },
-
-  "font-sans": { "$type": "fontFamily", "$value": "{font.sans}" },
-  "font-mono": { "$type": "fontFamily", "$value": "{font.mono}" },
-  "font-heading": { "$type": "fontFamily", "$value": "{font-sans}" }
+  "surface-ground": {
+    "$type": "color",
+    "$value": "{base.surface-ground.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.surface-ground.graphite}"
+      }
+    },
+    "$description": "Figma surface/ground. The page: the chat and the main content. Also the label on an active Filter Chip, where ink and ground swap."
+  },
+  "surface-sunken": {
+    "$type": "color",
+    "$value": "{base.surface-sunken.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.surface-sunken.graphite}"
+      }
+    },
+    "$description": "Figma surface/sunken. The window edge and the left sidebar, a step below the ground."
+  },
+  "surface-raised": {
+    "$type": "color",
+    "$value": "{base.surface-raised.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.surface-raised.graphite}"
+      }
+    },
+    "$description": "Figma surface/raised. Cards, the right panel, the composer. On stone it equals the ground, set apart by a hairline."
+  },
+  "surface-popover": {
+    "$type": "color",
+    "$value": "{base.surface-popover.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.surface-popover.graphite}"
+      }
+    },
+    "$description": "Figma surface/popover. Solid menus, popovers and dialogs, under shadow-popover or shadow-dialog."
+  },
+  "surface-popover-frost": {
+    "$type": "color",
+    "$value": "{base.surface-popover-frost.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.surface-popover-frost.graphite}"
+      }
+    },
+    "$description": "Figma surface/popover-frost. Frosted glass, the default for menus, tooltips and the floating tab bar: under a backdrop blur of --g-elevation-blur."
+  },
+  "surface-hover": {
+    "$type": "color",
+    "$value": "{base.surface-hover.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.surface-hover.graphite}"
+      }
+    },
+    "$description": "Figma surface/hover. A row or quiet control under the pointer: the body ink at 5%, over whatever is underneath."
+  },
+  "surface-selected": {
+    "$type": "color",
+    "$value": "{base.surface-selected.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.surface-selected.graphite}"
+      }
+    },
+    "$description": "Figma surface/selected. A selected or pressed row, pill, chip or segment: the body ink at 8%. A selected row adds an inset colour bar (Sean, 2026-11-24), never an accent fill."
+  },
+  "surface-scrim": {
+    "$type": "color",
+    "$value": "{scrim.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{scrim.graphite}"
+      }
+    },
+    "$description": "Figma surface/scrim. The full-screen dim behind sheets, dialogs and menus. The colour only: the layer's opacity is a tier 3 knob (--c-scrim-sheet, -dialog, -menu). Never opaque, never blurred."
+  },
+  "line-rule": {
+    "$type": "color",
+    "$value": "{base.line-rule.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.line-rule.graphite}"
+      }
+    },
+    "$description": "Figma line/rule. Hairlines and 1px borders: the body ink at 8%. Carded lists use it edge to edge between rows."
+  },
+  "line-strong": {
+    "$type": "color",
+    "$value": "{base.line-strong.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.line-strong.graphite}"
+      }
+    },
+    "$description": "Figma line/strong. A stronger hairline: inputs, scrollbar thumbs, the Settings location rule. The body ink at 14%."
+  },
+  "line-field": {
+    "$type": "color",
+    "$value": "{base.line-field.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.line-field.graphite}"
+      }
+    },
+    "$description": "Figma line/field. A field's resting border: the body ink at 14%, as Figma draws it (Unicron 2.0; 1.1's 3:1 border is gone). Focus draws line-focus. Tailwind: border-line-field; `input` is its shadcn alias."
+  },
+  "line-focus": {
+    "$type": "color",
+    "$value": "{primary-fill}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{primary-text}"
+      }
+    },
+    "$description": "A focus border: a field's 2px inside border, and the focus edge of a button, a switch or a checkbox that draws one. The identity fill on stone; on graphite the identity text colour, because the fill is a mid-tone there and falls under 3:1 against the dark surfaces (Unicron 17). Held to 3:1 against surface-raised and the ground."
+  },
+  "line-invalid": {
+    "$type": "color",
+    "$value": "{critical-fill}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{critical-text}"
+      }
+    },
+    "$description": "An error border: an invalid field's 2px border, and the 2px inside edge of an invalid button, switch or checkbox. The critical fill on stone; on graphite the critical text colour, which clears 3:1 where the fill does not (Unicron 17). Held to 3:1 against surface-raised and the ground."
+  },
+  "line-grid-dot": {
+    "$type": "color",
+    "$value": "{base.line-grid-dot.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.line-grid-dot.graphite}"
+      }
+    },
+    "$description": "Figma line/grid-dot. The dot grid and the sheet grabber: the body ink at 14%."
+  },
+  "text-body": {
+    "$type": "color",
+    "$value": "{base.text-body.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.text-body.graphite}"
+      }
+    },
+    "$description": "Figma text/body. Body ink."
+  },
+  "text-secondary": {
+    "$type": "color",
+    "$value": "{base.text-secondary.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.text-secondary.graphite}"
+      }
+    },
+    "$description": "Figma text/secondary. Secondary ink: support text."
+  },
+  "text-label": {
+    "$type": "color",
+    "$value": "{base.text-label.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.text-label.graphite}"
+      }
+    },
+    "$description": "Figma text/label. Muted ink: labels, meta, icons at rest; 4.5:1 or more on every layer."
+  },
+  "text-faint": {
+    "$type": "color",
+    "$value": "{base.text-faint.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.text-faint.graphite}"
+      }
+    },
+    "$description": "Figma text/faint. Disabled and placeholder ink."
+  },
+  "primary-fill": {
+    "$type": "color",
+    "$value": "{theme.stone.primary-fill}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{theme.graphite.primary-fill}"
+      }
+    },
+    "$description": "Figma primary/fill. The app's identity as a solid: the one primary action of a screen, the selected-row edge, the tab indicator, a switch that is on, a field's focus border, the app mark."
+  },
+  "primary-mark": {
+    "$type": "color",
+    "$value": "{primary-fill}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{primary-text}"
+      }
+    },
+    "$description": "The identity as a mark with no words: the selected-row edge, the tab indicator, a progress cell, a dot. Such a mark has only its lightness to show it, so it holds Lc 30 against the surfaces it sits on (WCAG 1.4.11). The identity fill on stone; on graphite the identity text colour, because a fill dark enough to hold a white label sits under Lc 30 against the dark surfaces (Unicron 19). A fill that holds a label stays primary-fill."
+  },
+  "primary-on-fill": {
+    "$type": "color",
+    "$value": "{theme.stone.primary-on-fill}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{theme.graphite.primary-on-fill}"
+      }
+    },
+    "$description": "Figma primary/on-fill. Text and icons on primary-fill. Solved to APCA Lc 75."
+  },
+  "primary-text": {
+    "$type": "color",
+    "$value": "{theme.stone.primary-text}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{theme.graphite.primary-text}"
+      }
+    },
+    "$description": "Figma primary/text. The identity as small text, or as an icon on primary-soft. Solved to APCA Lc 60 on the ground."
+  },
+  "primary-soft": {
+    "$type": "color",
+    "$value": "{theme.stone.primary-soft}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{theme.graphite.primary-soft}"
+      }
+    },
+    "$description": "Figma primary/soft. The quiet identity tint: a selected row, the current nav item, the active dock tab, a calendar event, an artifact tile. Selection is this fill plus a 2px primary-fill edge, never a solid."
+  },
+  "primary-display": {
+    "$type": "color",
+    "$value": "{theme.stone.primary-display}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{theme.graphite.primary-display}"
+      }
+    },
+    "$description": "Figma primary/display. The identity as large type, 36px and up. Solved to APCA Lc 45, so it stays closer to the identity hue than primary-text. Never under 36px."
+  },
+  "secondary-live": {
+    "$type": "color",
+    "$value": "{base.secondary-live.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.secondary-live.graphite}"
+      }
+    },
+    "$description": "Figma secondary/live: the shared Working blue, the same in every app (Unicron 2.0; 1.1's per-app teal retired)."
+  },
+  "secondary-soft": {
+    "$type": "color",
+    "$value": "{base.secondary-soft.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.secondary-soft.graphite}"
+      }
+    },
+    "$description": "Figma secondary/soft. The live hue's soft wash: diff additions, live highlights."
+  },
+  "small-label": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {text-secondary} 99%, {text-label})",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "color-mix(in oklab, {text-secondary} 93%, {text-label})"
+      }
+    },
+    "$description": "Label ink for text under 16px, where an app holds small text to APCA Lc 75 and 4.5:1 (Synapse's gate; Synapse 1): the label ink moved towards the secondary ink until it reads Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft, in the default theme and in all four apps' themes (93% of the way on graphite, 99% on stone). Mixed towards secondary, never past it, so it stays under text-secondary on every surface; in the apps' themes the step is under 2 Lc, because their label and secondary inks were solved to the ground with no room. text-label (Lc 60) stays the ink for everything else."
+  },
+  "small-primary": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {text-body} 45%, {primary-text})",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "color-mix(in oklab, {text-body} 51%, {primary-text})"
+      }
+    },
+    "$description": "The identity as text under 16px, held to APCA Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft (Synapse 1): primary-text moved towards the body ink (45% on stone, 51% on graphite, solved over the default theme and the four apps' themes). primary-text (Lc 60) stays for larger text and icons."
+  },
+  "small-critical": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {text-body} 48%, {critical-text})",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "color-mix(in oklab, {text-body} 51%, {critical-text})"
+      }
+    },
+    "$description": "Error text under 16px, held to APCA Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft (Synapse 1): critical-text moved towards the body ink (48% on stone, 51% on graphite)."
+  },
+  "small-live": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {text-body} 51%, {secondary-live})",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "color-mix(in oklab, {text-body} 50%, {secondary-live})"
+      }
+    },
+    "$description": "Live text under 16px, held to APCA Lc 75 and 4.5:1 on the ground, surface-raised, primary-soft and critical-soft (Synapse 1): the live colour moved towards the body ink (51% on stone, 50% on graphite). Text only: fills, marks and edges keep secondary-live."
+  },
+  "needs-you-fill": {
+    "$type": "color",
+    "$value": "{needs-you.fill}",
+    "$description": "Figma needs-you/fill. The yellow block that waits on the person, the same in every app and both grounds. Also the label on the dark needs-you button. At most one per screen."
+  },
+  "needs-you-on-fill": {
+    "$type": "color",
+    "$value": "{needs-you.on-fill}",
+    "$description": "Figma needs-you/on-fill. Text on the yellow; also the fill of the solid needs-you button and the border of the outline one."
+  },
+  "critical-fill": {
+    "$type": "color",
+    "$value": "{critical.fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{critical.fill.graphite}"
+      }
+    },
+    "$description": "Figma critical/fill. Error as a solid: the destructive button, an invalid field's 2px border, a critical banner's edge."
+  },
+  "critical-on-fill": {
+    "$type": "color",
+    "$value": "{critical.on-fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{critical.on-fill.graphite}"
+      }
+    },
+    "$description": "Figma critical/on-fill. Text on critical-fill."
+  },
+  "critical-text": {
+    "$type": "color",
+    "$value": "{critical.text.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{critical.text.graphite}"
+      }
+    },
+    "$description": "Figma critical/text. Error text and a critical banner's icon."
+  },
+  "critical-soft": {
+    "$type": "color",
+    "$value": "{critical.soft.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{critical.soft.graphite}"
+      }
+    },
+    "$description": "Figma critical/soft. A critical banner's background."
+  },
+  "status-done": {
+    "$type": "color",
+    "$value": "{base.status-done.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.status-done.graphite}"
+      }
+    },
+    "$description": "Figma status/done. Done: the check mark and its word. A status word never shows without its mark."
+  },
+  "status-working": {
+    "$type": "color",
+    "$value": "{base.status-working.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.status-working.graphite}"
+      }
+    },
+    "$description": "Figma status/working. Working: the ring with a moving arc, and its word."
+  },
+  "status-failed": {
+    "$type": "color",
+    "$value": "{base.status-failed.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.status-failed.graphite}"
+      }
+    },
+    "$description": "Figma status/failed. Failed: the cross and its word."
+  },
+  "status-idle": {
+    "$type": "color",
+    "$value": "{base.status-idle.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.status-idle.graphite}"
+      }
+    },
+    "$description": "Figma status/idle. Idle or paused: the hollow ring and its word."
+  },
+  "status-needs-you": {
+    "$type": "color",
+    "$value": "{needs-you-fill}",
+    "$description": "Needs you: the filled amber dot and its word (an alias of needs-you-fill, so the five marks read from one family of names)."
+  },
+  "info-fill": {
+    "$type": "color",
+    "$value": "{base.info-fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.info-fill.graphite}"
+      }
+    },
+    "$description": "Figma info/fill. Counts and unread dots: the deep notify blue (Sean, 2026-11-23). Count Badge Severity=Important."
+  },
+  "info-on-fill": {
+    "$type": "color",
+    "$value": "{base.info-on-fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.info-on-fill.graphite}"
+      }
+    },
+    "$description": "Figma info/on-fill. White, on info-fill."
+  },
+  "severity-concerning-fill": {
+    "$type": "color",
+    "$value": "{base.severity-concerning-fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.severity-concerning-fill.graphite}"
+      }
+    },
+    "$description": "Figma severity/concerning/fill. Count Badge Severity=Concerning."
+  },
+  "severity-concerning-on-fill": {
+    "$type": "color",
+    "$value": "{base.severity-concerning-on-fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.severity-concerning-on-fill.graphite}"
+      }
+    },
+    "$description": "Figma severity/concerning/on-fill."
+  },
+  "severity-urgent-fill": {
+    "$type": "color",
+    "$value": "{base.severity-urgent-fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.severity-urgent-fill.graphite}"
+      }
+    },
+    "$description": "Figma severity/urgent/fill. Count Badge Severity=Urgent."
+  },
+  "severity-urgent-on-fill": {
+    "$type": "color",
+    "$value": "{base.severity-urgent-on-fill.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.severity-urgent-on-fill.graphite}"
+      }
+    },
+    "$description": "Figma severity/urgent/on-fill."
+  },
+  "qr-plate": {
+    "$type": "color",
+    "$value": "{base.qr-plate.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.qr-plate.graphite}"
+      }
+    },
+    "$description": "Figma qr/plate. Always light, so codes scan."
+  },
+  "qr-module": {
+    "$type": "color",
+    "$value": "{base.qr-module.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{base.qr-module.graphite}"
+      }
+    },
+    "$description": "Figma qr/module. Always dark, so codes scan."
+  },
+  "state-hover": {
+    "$type": "color",
+    "$value": "{surface-hover}",
+    "$description": "The hover wash on a neutral or transparent control or row: an alias of surface-hover (5%, Unicron 2.0)."
+  },
+  "state-pressed": {
+    "$type": "color",
+    "$value": "{surface-selected}",
+    "$description": "The pressed wash: an alias of surface-selected (8%, Unicron 2.0). A solid fill shows pressed as itself at 85%."
+  },
+  "diff-added": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {text-body} 3%, {surface-ground})",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "color-mix(in oklab, {text-body} 8%, {surface-ground})"
+      }
+    },
+    "$description": "The wash behind an added line of a diff: a neutral wash of the ink in the ground, 8% on graphite and 3% on stone, where 8% took body text under Lc 90 (Unicron 28; 1.1), the same rule in every app (cross-app decisions §11: Synapse's primary-soft and critical-soft read as one colour, so an identity tint cannot mark added lines). Not in Figma. The + mark always shows: colour never carries the meaning alone."
+  },
+  "diff-removed": {
+    "$type": "color",
+    "$value": "{critical-soft}",
+    "$description": "The wash behind a removed line of a diff. The − mark always shows."
+  },
+  "swatch-01": {
+    "$type": "color",
+    "$value": "{swatch.red.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.red.graphite}"
+      }
+    },
+    "$description": "Swatch 01 of 12 (red, hue 25): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-02": {
+    "$type": "color",
+    "$value": "{swatch.orange.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.orange.graphite}"
+      }
+    },
+    "$description": "Swatch 02 of 12 (orange, hue 55): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-03": {
+    "$type": "color",
+    "$value": "{swatch.ochre.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.ochre.graphite}"
+      }
+    },
+    "$description": "Swatch 03 of 12 (ochre, hue 85): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-04": {
+    "$type": "color",
+    "$value": "{swatch.olive.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.olive.graphite}"
+      }
+    },
+    "$description": "Swatch 04 of 12 (olive, hue 115): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-05": {
+    "$type": "color",
+    "$value": "{swatch.green.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.green.graphite}"
+      }
+    },
+    "$description": "Swatch 05 of 12 (green, hue 145): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-06": {
+    "$type": "color",
+    "$value": "{swatch.jade.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.jade.graphite}"
+      }
+    },
+    "$description": "Swatch 06 of 12 (jade, hue 175): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-07": {
+    "$type": "color",
+    "$value": "{swatch.teal.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.teal.graphite}"
+      }
+    },
+    "$description": "Swatch 07 of 12 (teal, hue 205): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-08": {
+    "$type": "color",
+    "$value": "{swatch.azure.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.azure.graphite}"
+      }
+    },
+    "$description": "Swatch 08 of 12 (azure, hue 235): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-09": {
+    "$type": "color",
+    "$value": "{swatch.blue.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.blue.graphite}"
+      }
+    },
+    "$description": "Swatch 09 of 12 (blue, hue 265): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-10": {
+    "$type": "color",
+    "$value": "{swatch.violet.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.violet.graphite}"
+      }
+    },
+    "$description": "Swatch 10 of 12 (violet, hue 295): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-11": {
+    "$type": "color",
+    "$value": "{swatch.plum.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.plum.graphite}"
+      }
+    },
+    "$description": "Swatch 11 of 12 (plum, hue 325): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "swatch-12": {
+    "$type": "color",
+    "$value": "{swatch.rose.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{swatch.rose.graphite}"
+      }
+    },
+    "$description": "Swatch 12 of 12 (rose, hue 355): a person's colour for a calendar, a note, a label. A 2px bar, edge or an 8px square; holds Lc 60 as text on surface-ground and surface-raised in every mode. Never a status, never a fill behind text."
+  },
+  "label-red": {
+    "$type": "color",
+    "$value": "{label.red.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.red.graphite}"
+      }
+    },
+    "$description": "Figma label/red. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-orange": {
+    "$type": "color",
+    "$value": "{label.orange.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.orange.graphite}"
+      }
+    },
+    "$description": "Figma label/orange. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-amber": {
+    "$type": "color",
+    "$value": "{label.amber.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.amber.graphite}"
+      }
+    },
+    "$description": "Figma label/amber. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-green": {
+    "$type": "color",
+    "$value": "{label.green.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.green.graphite}"
+      }
+    },
+    "$description": "Figma label/green. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-teal": {
+    "$type": "color",
+    "$value": "{label.teal.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.teal.graphite}"
+      }
+    },
+    "$description": "Figma label/teal. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-sky": {
+    "$type": "color",
+    "$value": "{label.sky.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.sky.graphite}"
+      }
+    },
+    "$description": "Figma label/sky. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-blue": {
+    "$type": "color",
+    "$value": "{label.blue.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.blue.graphite}"
+      }
+    },
+    "$description": "Figma label/blue. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-indigo": {
+    "$type": "color",
+    "$value": "{label.indigo.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.indigo.graphite}"
+      }
+    },
+    "$description": "Figma label/indigo. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-purple": {
+    "$type": "color",
+    "$value": "{label.purple.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.purple.graphite}"
+      }
+    },
+    "$description": "Figma label/purple. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-pink": {
+    "$type": "color",
+    "$value": "{label.pink.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.pink.graphite}"
+      }
+    },
+    "$description": "Figma label/pink. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-brown": {
+    "$type": "color",
+    "$value": "{label.brown.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.brown.graphite}"
+      }
+    },
+    "$description": "Figma label/brown. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "label-gray": {
+    "$type": "color",
+    "$value": "{label.gray.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{label.gray.graphite}"
+      }
+    },
+    "$description": "Figma label/gray. A person's colour for a tag, calendar or folder; never a status."
+  },
+  "viz-series-1": {
+    "$type": "color",
+    "$value": "{viz.series-1.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-1.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-1."
+  },
+  "viz-series-2": {
+    "$type": "color",
+    "$value": "{viz.series-2.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-2.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-2."
+  },
+  "viz-series-3": {
+    "$type": "color",
+    "$value": "{viz.series-3.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-3.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-3."
+  },
+  "viz-series-4": {
+    "$type": "color",
+    "$value": "{viz.series-4.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-4.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-4."
+  },
+  "viz-series-5": {
+    "$type": "color",
+    "$value": "{viz.series-5.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-5.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-5."
+  },
+  "viz-series-6": {
+    "$type": "color",
+    "$value": "{viz.series-6.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-6.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-6."
+  },
+  "viz-series-7": {
+    "$type": "color",
+    "$value": "{viz.series-7.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-7.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-7."
+  },
+  "viz-series-8": {
+    "$type": "color",
+    "$value": "{viz.series-8.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.series-8.graphite}"
+      }
+    },
+    "$description": "Figma viz/series-8."
+  },
+  "viz-other": {
+    "$type": "color",
+    "$value": "{viz.other.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.other.graphite}"
+      }
+    },
+    "$description": "Figma viz/other."
+  },
+  "viz-seq-1": {
+    "$type": "color",
+    "$value": "{viz.seq-1.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.seq-1.graphite}"
+      }
+    },
+    "$description": "Figma viz/seq-1."
+  },
+  "viz-seq-2": {
+    "$type": "color",
+    "$value": "{viz.seq-2.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.seq-2.graphite}"
+      }
+    },
+    "$description": "Figma viz/seq-2."
+  },
+  "viz-seq-3": {
+    "$type": "color",
+    "$value": "{viz.seq-3.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.seq-3.graphite}"
+      }
+    },
+    "$description": "Figma viz/seq-3."
+  },
+  "viz-seq-4": {
+    "$type": "color",
+    "$value": "{viz.seq-4.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.seq-4.graphite}"
+      }
+    },
+    "$description": "Figma viz/seq-4."
+  },
+  "viz-seq-5": {
+    "$type": "color",
+    "$value": "{viz.seq-5.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.seq-5.graphite}"
+      }
+    },
+    "$description": "Figma viz/seq-5."
+  },
+  "viz-seq-6": {
+    "$type": "color",
+    "$value": "{viz.seq-6.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.seq-6.graphite}"
+      }
+    },
+    "$description": "Figma viz/seq-6."
+  },
+  "viz-seq-7": {
+    "$type": "color",
+    "$value": "{viz.seq-7.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.seq-7.graphite}"
+      }
+    },
+    "$description": "Figma viz/seq-7."
+  },
+  "viz-div-neg-3": {
+    "$type": "color",
+    "$value": "{viz.div-neg-3.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.div-neg-3.graphite}"
+      }
+    },
+    "$description": "Figma viz/div-neg-3."
+  },
+  "viz-div-neg-2": {
+    "$type": "color",
+    "$value": "{viz.div-neg-2.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.div-neg-2.graphite}"
+      }
+    },
+    "$description": "Figma viz/div-neg-2."
+  },
+  "viz-div-neg-1": {
+    "$type": "color",
+    "$value": "{viz.div-neg-1.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.div-neg-1.graphite}"
+      }
+    },
+    "$description": "Figma viz/div-neg-1."
+  },
+  "viz-div-mid": {
+    "$type": "color",
+    "$value": "{viz.div-mid.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.div-mid.graphite}"
+      }
+    },
+    "$description": "Figma viz/div-mid."
+  },
+  "viz-div-pos-1": {
+    "$type": "color",
+    "$value": "{viz.div-pos-1.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.div-pos-1.graphite}"
+      }
+    },
+    "$description": "Figma viz/div-pos-1."
+  },
+  "viz-div-pos-2": {
+    "$type": "color",
+    "$value": "{viz.div-pos-2.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.div-pos-2.graphite}"
+      }
+    },
+    "$description": "Figma viz/div-pos-2."
+  },
+  "viz-div-pos-3": {
+    "$type": "color",
+    "$value": "{viz.div-pos-3.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.div-pos-3.graphite}"
+      }
+    },
+    "$description": "Figma viz/div-pos-3."
+  },
+  "viz-grid": {
+    "$type": "color",
+    "$value": "{viz.grid.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.grid.graphite}"
+      }
+    },
+    "$description": "Figma viz/grid."
+  },
+  "viz-axis": {
+    "$type": "color",
+    "$value": "{viz.axis.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.axis.graphite}"
+      }
+    },
+    "$description": "Figma viz/axis."
+  },
+  "viz-ink": {
+    "$type": "color",
+    "$value": "{viz.ink.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.ink.graphite}"
+      }
+    },
+    "$description": "Figma viz/ink."
+  },
+  "viz-focus": {
+    "$type": "color",
+    "$value": "{viz.focus.stone}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{viz.focus.graphite}"
+      }
+    },
+    "$description": "Figma viz/focus."
+  },
+  "background": {
+    "$type": "color",
+    "$value": "{surface-ground}",
+    "$description": "The page. An alias of surface-ground, kept for the shadcn contract."
+  },
+  "foreground": {
+    "$type": "color",
+    "$value": "{text-body}",
+    "$description": "Main text. An alias of text-body, kept for the shadcn contract."
+  },
+  "card": {
+    "$type": "color",
+    "$value": "{surface-raised}",
+    "$description": "A raised surface. An alias of surface-raised, kept for the shadcn contract."
+  },
+  "card-foreground": {
+    "$type": "color",
+    "$value": "{text-body}"
+  },
+  "popover": {
+    "$type": "color",
+    "$value": "{surface-popover}",
+    "$description": "The shadcn popover surface: an alias of surface-popover (Unicron 2.0)."
+  },
+  "popover-foreground": {
+    "$type": "color",
+    "$value": "{text-body}"
+  },
+  "primary": {
+    "$type": "color",
+    "$value": "{primary-fill}",
+    "$description": "The app's identity as a solid. An alias of primary-fill, kept for the shadcn contract. It was near-black before 1.0: it is now the app's colour, for the one primary action of a screen."
+  },
+  "primary-foreground": {
+    "$type": "color",
+    "$value": "{primary-on-fill}"
+  },
+  "secondary": {
+    "$type": "color",
+    "$value": "{surface-raised}",
+    "$description": "The shadcn neutral fill (bg-secondary). An alias of surface-raised. Not Figma's secondary/live: that is secondary-live."
+  },
+  "secondary-foreground": {
+    "$type": "color",
+    "$value": "{text-body}"
+  },
+  "muted": {
+    "$type": "color",
+    "$value": "{surface-raised}",
+    "$description": "A quiet fill: a track, a key. An alias of surface-raised."
+  },
+  "support-foreground": {
+    "$type": "color",
+    "$value": "{text-secondary}",
+    "$description": "Support text: the lines that explain, under a title or beside a value. An alias of text-secondary (APCA Lc 75)."
+  },
+  "muted-foreground": {
+    "$type": "color",
+    "$value": "{text-label}",
+    "$description": "Labels and meta: when, how many, captions, overlines, placeholders, inactive tabs, keys. An alias of text-label (APCA Lc 60)."
+  },
+  "muted-foreground-on-fill": {
+    "$type": "color",
+    "$value": "{text-label}",
+    "$description": "The same ink inside a fill. It was a shade stronger than muted-foreground on the old ramp; Figma has one label ink, so the two are now equal. Kept because fills re-point --muted-foreground at it (@unicron/ui's styles)."
+  },
+  "faint-foreground": {
+    "$type": "color",
+    "$value": "{text-faint}",
+    "$description": "The faintest ink. An alias of text-faint; see its limits there."
+  },
+  "accent": {
+    "$type": "color",
+    "$value": "{surface-hover}",
+    "$description": "The hover and highlight fill of an item in a list or a menu: an alias of surface-hover (Unicron 2.0)."
+  },
+  "accent-foreground": {
+    "$type": "color",
+    "$value": "{text-body}"
+  },
+  "destructive": {
+    "$type": "color",
+    "$value": "{critical-text}",
+    "$description": "Destructive and error text. An alias of critical-text. The solid is critical-fill, the wash critical-soft."
+  },
+  "warning": {
+    "$type": "color",
+    "$value": "{severity-concerning-fill}",
+    "$description": "Something is wrong: an alias of severity-concerning-fill (Unicron 2.0)."
+  },
+  "warning-foreground": {
+    "$type": "color",
+    "$value": "{severity-concerning-on-fill}",
+    "$description": "The label on --warning."
+  },
+  "info": {
+    "$type": "color",
+    "$value": "{info-fill}",
+    "$description": "For your information: an alias of info-fill (Unicron 2.0)."
+  },
+  "info-foreground": {
+    "$type": "color",
+    "$value": "{info-on-fill}",
+    "$description": "The label on --info."
+  },
+  "success": {
+    "$type": "color",
+    "$value": "{status-done}",
+    "$description": "Done, worked, complete: an alias of status-done (Unicron 2.0)."
+  },
+  "success-foreground": {
+    "$type": "color",
+    "$value": "{status-done}",
+    "$description": "Success as text and icons: an alias of status-done."
+  },
+  "success-surface": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {status-done} 10%, {surface-ground})",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "color-mix(in oklab, {status-done} 14%, {surface-ground})"
+      }
+    },
+    "$description": "A quiet success wash: 10% (stone) or 14% (graphite) of the done colour in the ground."
+  },
+  "attention": {
+    "$type": "color",
+    "$value": "{needs-you-fill}",
+    "$description": "Waiting on the person. An alias of needs-you-fill: the yellow, in both grounds. As a fill it holds needs-you-on-fill text; as a small mark on stone it barely differs from the ground in lightness (scripts/contrast.mjs lists it), so pair it with a shape."
+  },
+  "attention-foreground": {
+    "$type": "color",
+    "$value": "{label-amber}",
+    "$extensions": {
+      "unicron.modes": {
+        "dark": "{needs-you-fill}"
+      }
+    },
+    "$description": "Attention as text and icons, on a surface: label/amber on stone, where the amber fill would not read, and the fill itself on graphite."
+  },
+  "attention-surface": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {needs-you-fill} 14%, {surface-ground})",
+    "$description": "A quiet attention wash: 14% of the needs-you amber in the ground."
+  },
+  "running": {
+    "$type": "color",
+    "$value": "{status-working}",
+    "$description": "Running: an alias of status-working (Unicron 2.0)."
+  },
+  "running-foreground": {
+    "$type": "color",
+    "$value": "{status-working}",
+    "$description": "Running as text and icons: an alias of status-working."
+  },
+  "running-surface": {
+    "$type": "color",
+    "$value": "color-mix(in oklab, {secondary-live} 6%, {surface-ground})",
+    "$description": "A quiet running wash behind a row or a callout: 6% of the live colour in the ground. It was 14% before 1.1, which took live text on it under Lc 60 in every mode (Unicron 27); 6% is the strongest wash that keeps it there."
+  },
+  "protected": {
+    "$type": "color",
+    "$value": "{text-body}"
+  },
+  "protected-foreground": {
+    "$type": "color",
+    "$value": "{surface-ground}"
+  },
+  "border": {
+    "$type": "color",
+    "$value": "{line-rule}",
+    "$description": "Separators and 1px borders. An alias of line-rule."
+  },
+  "input": {
+    "$type": "color",
+    "$value": "{line-field}",
+    "$description": "A field's resting border. An alias of line-field, 3:1 or more against the field and the ground (Unicron 18; it was the line-rule hairline in 1.0). Focus and error borders are line-focus and line-invalid."
+  },
+  "ring": {
+    "$type": "color",
+    "$value": "{primary-fill}",
+    "$description": "The focus ring: 2px in the accent, offset 2px (Unicron 2.0; it was the ink in 1.1)."
+  },
+  "radius": {
+    "$type": "dimension",
+    "$value": "{radius.control}",
+    "$description": "The control corner, 6px (Figma radius/control). Bare `rounded` and `rounded-sm` draw it."
+  },
+  "radius-xs": {
+    "$type": "dimension",
+    "$value": "{radius.xs}",
+    "$description": "4px (Figma radius/xs): checkbox, keycap, inline code."
+  },
+  "radius-control": {
+    "$type": "dimension",
+    "$value": "{radius.control}",
+    "$description": "6px (Figma radius/control): buttons, inputs, pill tabs."
+  },
+  "radius-md": {
+    "$type": "dimension",
+    "$value": "{radius.md}",
+    "$description": "8px (Figma radius/md): menus, rows, small cards."
+  },
+  "radius-lg": {
+    "$type": "dimension",
+    "$value": "{radius.lg}",
+    "$description": "12px (Figma radius/lg): cards, banners, dialogs."
+  },
+  "radius-xl": {
+    "$type": "dimension",
+    "$value": "{radius.xl}",
+    "$description": "16px (Figma radius/xl): the composer and the message bubble."
+  },
+  "radius-round": {
+    "$type": "dimension",
+    "$value": "{radius.round}",
+    "$description": "Round (Figma radius/round): pills, chips, dots, avatars."
+  },
+  "size-control": {
+    "$type": "dimension",
+    "$value": "{size.control}",
+    "$description": "48px (Figma size/control): every floating control, the tab bar, the status strip, a text field's least height. Tailwind: h-control, size-control, min-h-control."
+  },
+  "size-control-s": {
+    "$type": "dimension",
+    "$value": "{size.control-s}",
+    "$description": "28px (Figma size/control-s)."
+  },
+  "size-control-m": {
+    "$type": "dimension",
+    "$value": "{size.control-m}",
+    "$description": "32px (Figma size/control-m)."
+  },
+  "size-control-l": {
+    "$type": "dimension",
+    "$value": "{size.control-l}",
+    "$description": "44px (Figma size/control-l)."
+  },
+  "size-icon": {
+    "$type": "dimension",
+    "$value": "{size.icon}",
+    "$description": "20px (Figma size/icon)."
+  },
+  "size-check": {
+    "$type": "dimension",
+    "$value": "{size.check}",
+    "$description": "A checkbox and a radio: 20px (Figma size/check)."
+  },
+  "size-index": {
+    "$type": "dimension",
+    "$value": "{size.index}",
+    "$description": "An index cell: 24px (Figma size/index)."
+  },
+  "size-track": {
+    "$type": "dimension",
+    "$value": "{size.track}",
+    "$description": "A progress track and a thin bar: 4px (Figma size/track)."
+  },
+  "size-touch-min": {
+    "$type": "dimension",
+    "$value": "{size.touch-min}",
+    "$description": "44px (Figma size/touch-min): the floor for a touch target. Tailwind: min-h-touch-min, size-touch-min."
+  },
+  "size-field-text-touch": {
+    "$type": "dimension",
+    "$value": "{size.field-text-touch}",
+    "$description": "16px: a field's text on a touch screen, so iOS does not zoom into it. Read it as `pointer-coarse:text-(length:--size-field-text-touch)` (fieldTextOnTouch in @unicron/ui)."
+  },
+  "shadow-popover": {
+    "$type": "shadow",
+    "$value": "{elevation.popover}",
+    "$description": "Figma Unicron Elevation/popover: menus, popovers, tooltips, the floating tab bar."
+  },
+  "shadow-dialog": {
+    "$type": "shadow",
+    "$value": "{elevation.dialog}",
+    "$description": "Figma Unicron Elevation/dialog: dialogs and the phone sheet."
+  },
+  "blur-frost": {
+    "$type": "dimension",
+    "$value": "{elevation.blur}",
+    "$description": "The backdrop blur under surface-popover-frost: 24px."
+  },
+  "stroke-rule": {
+    "$type": "dimension",
+    "$value": "{stroke.rule}",
+    "$description": "1px: rules and borders. A stroke never adds height: on a part that hugs its content it is an inset shadow, not a border."
+  },
+  "stroke-emphasis": {
+    "$type": "dimension",
+    "$value": "{stroke.emphasis}",
+    "$description": "2px: focus and error borders, the selected-row edge, the tab indicator."
+  },
+  "motion-fast": {
+    "$type": "duration",
+    "$value": "{duration.fast}",
+    "$description": "Small state changes and quick entrances: a hover, a tooltip or a menu appearing, anything leaving. 120ms, the floor below which a change reads as a jump. Tailwind's default transition duration (`transition`, `transition-colors`) is mapped to it."
+  },
+  "motion-base": {
+    "$type": "duration",
+    "$value": "{duration.base}",
+    "$description": "A small surface arriving: a dialog, a popover, a toast."
+  },
+  "motion-press": {
+    "$type": "duration",
+    "$value": "{duration.press}",
+    "$description": "A control going down under a press. Release runs on motion-fast."
+  },
+  "motion-state": {
+    "$type": "duration",
+    "$value": "{duration.state}",
+    "$description": "A surface changing state: a sheet or a panel opening, a selection moving."
+  },
+  "motion-move": {
+    "$type": "duration",
+    "$value": "{duration.move}",
+    "$description": "Travel across the screen. The longest a default motion runs."
+  },
+  "motion-tick": {
+    "$type": "duration",
+    "$value": "{duration.tick}",
+    "$description": "One step of a countdown ring, run linear so it tracks the clock."
+  },
+  "motion-ease-enter": {
+    "$type": "cubicBezier",
+    "$value": "{ease.standard}",
+    "$description": "Things arriving: fast out, gentle settle. The same curve as motion-ease."
+  },
+  "motion-ease-exit": {
+    "$type": "cubicBezier",
+    "$value": "{ease.in}",
+    "$description": "Things leaving: they gather speed and go. Pair it with a shorter duration than the entrance."
+  },
+  "motion-ease-move": {
+    "$type": "cubicBezier",
+    "$value": "{ease.in-out}",
+    "$description": "Travel and resize: a selection moving, a panel changing height."
+  },
+  "motion-ease-emphasis": {
+    "$type": "cubicBezier",
+    "$value": "{ease.back}",
+    "$description": "A slight overshoot for a rare moment, such as a success. Never on a control used many times a minute."
+  },
+  "motion-ease-pulse": {
+    "$type": "cubicBezier",
+    "$value": "{ease.pulse}",
+    "$description": "The curve of a pulse loop."
+  },
+  "motion-spring-settle": {
+    "$type": "spring",
+    "$value": "{spring.settle}",
+    "$description": "A thumb or a pill arriving at a new place. Use as a timing function with motion-spring-settle-duration."
+  },
+  "motion-spring-settle-duration": {
+    "$type": "duration",
+    "$value": "{spring.settle-duration}"
+  },
+  "motion-spring-firm": {
+    "$type": "spring",
+    "$value": "{spring.firm}",
+    "$description": "A sheet or another large surface arriving, with no visible bounce. Use with motion-spring-firm-duration."
+  },
+  "motion-spring-firm-duration": {
+    "$type": "duration",
+    "$value": "{spring.firm-duration}"
+  },
+  "motion-stagger": {
+    "$type": "duration",
+    "$value": "{stagger.step}",
+    "$description": "The delay between siblings that enter in turn."
+  },
+  "motion-stagger-max": {
+    "$type": "number",
+    "$value": "{stagger.max}",
+    "$description": "Siblings after this many start together."
+  },
+  "motion-press-depth": {
+    "$type": "number",
+    "$value": "{press.depth}",
+    "$description": "Scale of a pressed control."
+  },
+  "motion-press-depth-small": {
+    "$type": "number",
+    "$value": "{press.depth-small}",
+    "$description": "Scale of a pressed icon-size control."
+  },
+  "motion-spin": {
+    "$type": "duration",
+    "$value": "{duration.spin}",
+    "$description": "One turn of a spinner or a working ring, so live states turn at one rate in every app. Tailwind's animate-spin runs on it."
+  },
+  "motion-pulse": {
+    "$type": "duration",
+    "$value": "{duration.pulse}",
+    "$description": "One beat of a pulse or a breathing halo (needs-you, thinking). Tailwind's animate-pulse runs on it."
+  },
+  "motion-ease": {
+    "$type": "cubicBezier",
+    "$value": "{ease.standard}",
+    "$description": "The one curve: fast out, gentle settle. Tailwind's default transition curve and `ease-standard` are mapped to it."
+  },
+  "sidebar": {
+    "$type": "color",
+    "$value": "{surface-sunken}",
+    "$description": "The sidebar sits on the sunken layer, a step below the page (Unicron 2.0)."
+  },
+  "sidebar-foreground": {
+    "$type": "color",
+    "$value": "{text-secondary}"
+  },
+  "sidebar-primary": {
+    "$type": "color",
+    "$value": "{primary}"
+  },
+  "sidebar-primary-foreground": {
+    "$type": "color",
+    "$value": "{primary-foreground}"
+  },
+  "sidebar-accent": {
+    "$type": "color",
+    "$value": "{surface-selected}",
+    "$description": "The current item of the sidebar: the 8% selection fill (Unicron 2.0), with an inset bar where the row draws one."
+  },
+  "sidebar-accent-foreground": {
+    "$type": "color",
+    "$value": "{text-body}"
+  },
+  "sidebar-border": {
+    "$type": "color",
+    "$value": "{line-rule}"
+  },
+  "sidebar-ring": {
+    "$type": "color",
+    "$value": "{ring}"
+  },
+  "font-sans": {
+    "$type": "fontFamily",
+    "$value": "{font.sans}"
+  },
+  "font-mono": {
+    "$type": "fontFamily",
+    "$value": "{font.mono}"
+  },
+  "font-heading": {
+    "$type": "fontFamily",
+    "$value": "{font-sans}"
+  }
 }

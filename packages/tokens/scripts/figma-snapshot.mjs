@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Writes tokens/figma/theme-2026-11.json from a Figma read-out (figma-tokens.json).
+// Writes tokens/figma/theme-2026-11-24.json from a Figma read-out (figma-tokens.json).
 //
 // The read-out is made outside this repo, by read-only Plugin API scripts against the Figma file
-// "Unicron explorations" (file key ibZp32eAXdv9lPID6AMSF7). This script keeps only what the
+// the published library "Unicron — Theme Studies v0.2" (file key nmLJwY8cugquuZqs8xyZr9). This script keeps only what the
 // tokens package holds to Figma: the 21 theme roles in every mode (the four apps' 8 today, and a
 // Default pair once Sean adds it), the text styles, and the space, radius and size numbers. scripts/figma-parity.mjs then holds every built value to the snapshot.
 //
@@ -20,7 +20,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-const outFile = path.join(here, "..", "tokens", "figma", "theme-2026-11.json")
+const outFile = path.join(here, "..", "tokens", "figma", "theme-2026-11-24.json")
 
 const input = process.argv[2]
 if (!input) {
@@ -85,8 +85,8 @@ const snapshot = {
   $description:
     "Snapshot of the Figma read-out: the theme roles in every mode, the type roles, and the space, radius and size numbers. Written by scripts/figma-snapshot.mjs; never edited by hand. scripts/figma-parity.mjs (run by `pnpm test`) fails when a built value differs from it.",
   source: {
-    file: "ibZp32eAXdv9lPID6AMSF7",
-    name: "Unicron explorations",
+    file: "nmLJwY8cugquuZqs8xyZr9",
+    name: "Unicron — Theme Studies v0.2",
     extracted: readout.$meta.extracted,
     method: readout.$meta.method,
   },

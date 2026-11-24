@@ -24,7 +24,7 @@
 //       A component knob for a corner (a dimension whose last name part is `radius`: `x-radius`
 //       or `x.radius`) is the one 2px corner: it must be the bare reference `{radius}`, so no
 //       component draws a rounder part.
-//   (t) The theme slots in global.json (Unicron's default theme, 28 of them): a raw six-digit hex
+//   (t) The theme slots in global.json (Unicron's default accent, 10 of them): a raw six-digit hex
 //       each, with where it came from in `$description`: the Figma variable id, or, until Figma
 //       has a Default mode, the words "Not in Figma yet" and the OKLCH it was solved as. No app's
 //       theme lives in the core (Unicron 1): tokens/themes/ must not exist.
@@ -178,12 +178,12 @@ for (const tier of tiers) {
 
 // ── (t) theme slots ───────────────────────────────────────────────────────────────────────────
 // The theme axis is tier 1: raw values, one per Figma primitive. A slot is a six-digit hex, written
-// as Figma writes it, and says where it came from.
-const HEX = /^#[0-9A-F]{6}$/
+// as Figma writes it (eight digits for primary-soft, a wash with its alpha), and says where it came from.
+const HEX = /^#[0-9A-F]{6}([0-9A-F]{2})?$/
 function checkSlot(file, dotted, token) {
   if (token.$type !== "color") fail(`${file} ${dotted}`, `a theme slot is a colour, got $type ${JSON.stringify(token.$type)}`)
   if (typeof token.$value !== "string" || !HEX.test(token.$value)) {
-    fail(`${file} ${dotted}`, `a theme slot is a raw six-digit hex in capitals, as Figma writes it; got ${JSON.stringify(token.$value)}`)
+    fail(`${file} ${dotted}`, `a theme slot is a raw six- or eight-digit hex in capitals, as Figma writes it; got ${JSON.stringify(token.$value)}`)
   }
   const said = token.$description ?? ""
   if (!/VariableID:\d+:\d+/.test(said) && !(/Not in Figma yet/.test(said) && /oklch\(/.test(said))) {
@@ -192,9 +192,9 @@ function checkSlot(file, dotted, token) {
 }
 const defaultSlots = tiers[0].tokens.filter((t) => t.path[0] === "theme")
 const slotPaths = defaultSlots.map((t) => t.path.join("."))
-if (slotPaths.length !== 28) fail("global.json theme", `expected the 28 theme slots, found ${slotPaths.length}`)
+if (slotPaths.length !== 10) fail("global.json theme", `expected the 10 theme slots (the accent, Unicron 2.0), found ${slotPaths.length}`)
 for (const { path: p, token } of defaultSlots) checkSlot("global.json", p.join("."), token)
-if (fs.existsSync(path.join(tokensRoot, "tokens", "themes"))) fail("tokens/themes", "no app's theme lives in the core (Unicron 1): an app declares its 28 slots in its own layer")
+if (fs.existsSync(path.join(tokensRoot, "tokens", "themes"))) fail("tokens/themes", "no app's theme lives in the core (Unicron 1): an app declares its 10 slots in its own layer")
 
 // ── (y) type roles ────────────────────────────────────────────────────────────────────────────
 const TYPE_KEYS = ["fontFamily", "fontWeight", "fontSize", "lineHeight", "letterSpacing"]
@@ -217,7 +217,7 @@ for (const { path: p, token } of typeTokens) {
   if (!/^[\d.]+px$/.test(String(v.fontSize))) fail(where, `fontSize must be in px, as Figma holds it; got ${JSON.stringify(v.fontSize)}`)
   const leading = /^([\d.]+)px$/.exec(String(v.lineHeight))?.[1]
   if (leading === undefined) fail(where, `lineHeight must be in px, as Figma holds it; got ${JSON.stringify(v.lineHeight)}`)
-  else if (Number(leading) % 4 !== 0) fail(where, `lineHeight ${v.lineHeight} is off the 4px grid`)
+  else if (Number(leading) % 4 !== 0 && p[1] !== "large-title") fail(where, `lineHeight ${v.lineHeight} is off the 4px grid`) // the phone large title is Figma's 28/34
   if (!/^-?[\d.]+em$/.test(String(v.letterSpacing))) fail(where, `letterSpacing must be in em (Figma's percent ÷ 100); got ${JSON.stringify(v.letterSpacing)}`)
 }
 

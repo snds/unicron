@@ -1,259 +1,1489 @@
 {
   "$description": "Tier 1 · Global primitives. Raw values only. Emitted as --g-*. Never referenced by components directly; semantic tokens alias these. Deprecated since 1.1 (Unicron 7): the neutral ramp (--g-neutral-*), the accent ramps (--g-blue-*, --g-coral-*, --g-green-*, --g-amber-*, --g-red-*) and white-alpha. They stay, unchanged, for all of 1.x, because app layers alias them; 2.0 removes them, once no app reads them (docs/02-tokens.md → Deprecated). No core role points at the neutral ramp; success, warning and info still read their accent steps, which 2.0 moves to status-named tokens. The hue angles stay.",
-  "neutral": {
-    "$description": "Deprecated (1.1; removed in 2.0): the legacy neutral ramp (hue 260), kept unchanged for app layers that alias it. Not themed: the core reads the theme slots instead. An app points at a role (surface-ground, text-body, line-rule …) or declares its own value.",
-    "0": { "$type": "color", "$value": "oklch(1 0 0)" },
-    "25": { "$type": "color", "$value": "oklch(0.987 0.002 260)" },
-    "50": { "$type": "color", "$value": "oklch(0.974 0.003 260)" },
-    "100": { "$type": "color", "$value": "oklch(0.948 0.004 260)" },
-    "150": { "$type": "color", "$value": "oklch(0.93 0.005 260)", "$description": "Support text in dark mode (--support-foreground): Emphasis Engine's text level 4, between primary (neutral.25) and secondary (neutral.250) text, at least Lc 12 from each on every page surface." },
-    "200": { "$type": "color", "$value": "oklch(0.91 0.006 260)" },
-    "250": { "$type": "color", "$value": "oklch(0.865 0.007 260)", "$description": "Secondary text in dark mode (--muted-foreground): Emphasis Engine's text level 3, Lc 79 on the page and Lc 77 on every dark fill (neutral.800, an input's fill), so it clears APCA Bronze everywhere and stays Lc 25 under primary text." },
-    "300": { "$type": "color", "$value": "oklch(0.85 0.008 260)" },
-    "400": { "$type": "color", "$value": "oklch(0.71 0.01 260)" },
-    "450": { "$type": "color", "$value": "oklch(0.64 0.011 260)", "$description": "Control borders in light mode (--input): 3.4:1 on white, over the 3:1 a field's edge needs (WCAG 1.4.11)." },
-    "500": { "$type": "color", "$value": "oklch(0.556 0.012 260)" },
-    "550": { "$type": "color", "$value": "oklch(0.49 0.012 260)", "$description": "Secondary text in light mode (--muted-foreground): Emphasis Engine's text level 3, the weakest step at APCA Lc 75 on every page surface it reads on (Lc 81 on white, 76 on neutral.50). No ramp step sat there: 500 is Lc 73 on white, 600 is 87. On a fill it gives way to neutral.600 (--muted-foreground-on-fill)." },
-    "600": { "$type": "color", "$value": "oklch(0.44 0.012 260)" },
-    "650": { "$type": "color", "$value": "oklch(0.36 0.012 260)", "$description": "Support text in light mode (--support-foreground): Emphasis Engine's text level 4, between primary (neutral.950) and secondary (neutral.550) text: Lc 95 on white, coded 10.5 under primary and 14 over secondary, so the three draw about 13 to 16 apart once small type is rendered." },
-    "700": { "$type": "color", "$value": "oklch(0.34 0.012 260)" },
-    "800": { "$type": "color", "$value": "oklch(0.26 0.01 260)" },
-    "850": { "$type": "color", "$value": "oklch(0.22 0.009 260)" },
-    "900": { "$type": "color", "$value": "oklch(0.185 0.008 260)" },
-    "950": { "$type": "color", "$value": "oklch(0.145 0.006 260)" }
-  },
-  "blue": {
-    "$description": "Deprecated (1.1; removed in 2.0), as are the coral, green, amber and red ramps: accent hues. 500 is the light-mode step, 400 the dark-mode step (lighter, so it keeps contrast on dark surfaces). An app aliases a status role (success, warning, info, critical-*) or a swatch, or declares its own value; the core's status roles move to status-named tokens in 2.0.",
-    "600": { "$type": "color", "$value": "oklch(0.44 0.141 255)", "$description": "Blue as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
-    "550": { "$type": "color", "$value": "oklch(0.57 0.18 255)", "$description": "The light-mode info fill (--info): the lightest blue that holds a white label at Lc 75 (it measures 76.3; 500 measures 72). Lc 60 or more as an ink on the stone grounds. Added at 1.0." },
-    "500": { "$type": "color", "$value": "oklch(0.6 0.19 255)" },
-    "400": { "$type": "color", "$value": "oklch(0.7 0.15 255)" },
-    "300": { "$type": "color", "$value": "oklch(0.87 0.061 255)", "$description": "Blue as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
-    "50": { "$type": "color", "$value": "oklch(0.955 0.025 255)", "$description": "The light-mode running surface (--running-surface): blue.600 reads Lc 75 or more on it." },
-    "900": { "$type": "color", "$value": "oklch(0.27 0.06 255)", "$description": "The dark-mode running surface (--running-surface): blue.300 reads Lc 75 or more on it." }
-  },
-  "coral": {
-    "$description": "Deprecated (1.1; removed in 2.0): an accent ramp, kept unchanged for app layers that alias it. See blue.",
-    "600": { "$type": "color", "$value": "oklch(0.44 0.178 25)", "$description": "Coral as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
-    "500": { "$type": "color", "$value": "oklch(0.63 0.2 25)" },
-    "400": { "$type": "color", "$value": "oklch(0.72 0.16 25)" },
-    "300": { "$type": "color", "$value": "oklch(0.88 0.06 25)", "$description": "Coral as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." }
-  },
-  "green": {
-    "$description": "Deprecated (1.1; removed in 2.0): an accent ramp, kept unchanged for app layers that alias it. See blue.",
-    "600": { "$type": "color", "$value": "oklch(0.43 0.096 160)", "$description": "Green as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
-    "500": { "$type": "color", "$value": "oklch(0.62 0.15 160)" },
-    "400": { "$type": "color", "$value": "oklch(0.72 0.13 160)" },
-    "300": { "$type": "color", "$value": "oklch(0.85 0.15 160)", "$description": "Green as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
-    "50": { "$type": "color", "$value": "oklch(0.955 0.03 160)", "$description": "The light-mode success surface (--success-surface): green.600 reads Lc 75 or more on it." },
-    "900": { "$type": "color", "$value": "oklch(0.27 0.045 160)", "$description": "The dark-mode success surface (--success-surface): green.300 reads Lc 75 or more on it." }
-  },
-  "amber": {
-    "$description": "Deprecated (1.1; removed in 2.0): an accent ramp, kept unchanged for app layers that alias it. See blue.",
-    "600": { "$type": "color", "$value": "oklch(0.44 0.092 75)", "$description": "Amber as text in light mode: Lc 75 or more on neutral.0, .50 and .100 (page, chrome, selected rows)." },
-    "550": { "$type": "color", "$value": "oklch(0.57 0.12 75)", "$description": "The light-mode warning fill in 1.0: the lightest amber that holds a white label at Lc 75 (it measures 76.9), but only 4.0:1 as text on the stone ground. --warning uses amber.575 since 1.1; kept unchanged for anything that points here." },
-    "575": { "$type": "color", "$value": "oklch(0.53 0.11 75)", "$description": "The light-mode warning ink and fill (--warning) since 1.1: 4.7:1 or more as text on every stone ground and raised surface, so small warning text clears WCAG 1.4.3's 4.5:1 (Warpcore 2; amber.550 measured 4.0:1). Holds a white label at Lc 81, and Lc 50 as a solid against a rule." },
-    "500": { "$type": "color", "$value": "oklch(0.75 0.16 75)" },
-    "450": { "$type": "color", "$value": "oklch(0.77 0.155 76)", "$description": "The light-mode warning fill before 1.0: its label (neutral.950) Lc 62. --warning now uses amber.550 with a white label; kept unchanged for anything that points here." },
-    "400": { "$type": "color", "$value": "oklch(0.82 0.14 80)" },
-    "300": { "$type": "color", "$value": "oklch(0.87 0.105 75)", "$description": "Amber as text in dark mode: Lc 75 or more on neutral.950, .900 and .800." },
-    "50": { "$type": "color", "$value": "oklch(0.96 0.035 80)", "$description": "The light-mode attention surface (--attention-surface): amber.600 reads Lc 75 or more on it." },
-    "900": { "$type": "color", "$value": "oklch(0.28 0.045 75)", "$description": "The dark-mode attention surface (--attention-surface): amber.300 reads Lc 75 or more on it." }
-  },
-  "red": {
-    "$description": "Deprecated (1.1; removed in 2.0): an accent ramp, kept unchanged for app layers that alias it. See blue.",
-    "700": { "$type": "color", "$value": "oklch(0.45 0.16 27.3)", "$description": "Destructive text in light mode: Lc 76 or more on neutral.0, .50 and .100 (a selected row), 75 on its own 10% tint." },
-    "600": { "$type": "color", "$value": "oklch(0.47 0.16 27.3)", "$description": "Destructive text in light mode for tokens 0.4-0.6 (Lc 84 on white, 74 on a selected row). --destructive now uses red.700; kept unchanged for anything that points here." },
-    "500": { "$type": "color", "$value": "oklch(0.577 0.245 27.3)" },
-    "400": { "$type": "color", "$value": "oklch(0.704 0.191 22.2)" },
-    "300": { "$type": "color", "$value": "oklch(0.86 0.06 22.2)", "$description": "Destructive text in dark mode for tokens 0.4-0.6 (Lc 76 on neutral.900, 74 on a selected row). --destructive now uses red.200; kept unchanged for anything that points here." },
-    "200": { "$type": "color", "$value": "oklch(0.87 0.06 22.2)", "$description": "Destructive text in dark mode: Lc 76 or more on neutral.950, .900 and .800 (a selected row), 72 on its own 20% tint." }
-  },
-  "white-alpha": {
-    "$description": "Deprecated (1.1; removed in 2.0): translucent white, for hairlines on dark surfaces (shadcn's dark border/input). Alpha in the name is a percentage. Use line-rule or line-field.",
-    "10": { "$type": "color", "$value": "oklch(1 0 0 / 10%)" },
-    "15": { "$type": "color", "$value": "oklch(1 0 0 / 15%)" },
-    "35": { "$type": "color", "$value": "oklch(1 0 0 / 35%)", "$description": "Control borders in dark mode (--input): 3.1:1 or more on neutral.900 and neutral.950." }
-  },
   "hue": {
     "$description": "Bare hue angles for tinted surfaces. Lightness and chroma are semantic, so one hue gives a pastel wash in light mode and a deep one in dark.",
-    "red": { "$type": "number", "$value": 25 },
-    "orange": { "$type": "number", "$value": 55 },
-    "yellow": { "$type": "number", "$value": 95 },
-    "green": { "$type": "number", "$value": 150 },
-    "teal": { "$type": "number", "$value": 190 },
-    "blue": { "$type": "number", "$value": 245 },
-    "purple": { "$type": "number", "$value": 300 },
-    "pink": { "$type": "number", "$value": 350 },
-    "brown": { "$type": "number", "$value": 65 },
-    "gray": { "$type": "number", "$value": 260 }
+    "red": {
+      "$type": "number",
+      "$value": 25
+    },
+    "orange": {
+      "$type": "number",
+      "$value": 55
+    },
+    "yellow": {
+      "$type": "number",
+      "$value": 95
+    },
+    "green": {
+      "$type": "number",
+      "$value": 150
+    },
+    "teal": {
+      "$type": "number",
+      "$value": 190
+    },
+    "blue": {
+      "$type": "number",
+      "$value": 245
+    },
+    "purple": {
+      "$type": "number",
+      "$value": 300
+    },
+    "pink": {
+      "$type": "number",
+      "$value": 350
+    },
+    "brown": {
+      "$type": "number",
+      "$value": 65
+    },
+    "gray": {
+      "$type": "number",
+      "$value": 260
+    }
   },
   "theme": {
-    "$description": "Theme slots: the 28 values a theme sets, one per Figma primitive, per ground (graphite = dark, stone = light). These hold Unicron's own default theme: neutral surfaces and inks with a quiet slate identity (hue 255) and a teal live colour (hue 195), solved so every pair the contrast gate measures clears its floor. No app's theme lives in the core (Unicron 1): an app declares all 28 in its own layer, `[data-theme=\"<app>\"] { --g-theme-…: …; }`, and measures them with `unicron-contrast`. Tier 2 reads the stone slot in light and the graphite slot in dark; nothing else reads a slot. Figma has no Default mode yet: Sean adds one to Unicron / Theme with these values.",
+    "$description": "Theme slots: the 10 values a theme sets, the accent only (Unicron 2.0): primary fill, the label on it, primary as text, the soft wash and primary as large type, per ground (graphite = dark, stone = light). Everything else (surfaces, inks, lines, status, counts, labels, charts) is shared by every app and lives in `base` below, because the apps look the same and only their accent differs (Sean, 2026-11-23). These hold Unicron's own default accent, a quiet slate blue. No app's theme lives in the core (Unicron 1): an app declares these 10 in its own layer, `[data-theme=\"<app>\"] { --g-theme-…: …; }`, and measures them with `unicron-contrast`. Figma has no Default mode: the Warpcore, Vale, Lockdown, Synapse and Fontface modes of Unicron / Theme differ only in these five roles.",
     "graphite": {
-      "ground": { "$type": "color", "$value": "#181A1B", "$description": "Unicron default, surface/ground in Default / graphite: oklch(0.215 0.004 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "raised": { "$type": "color", "$value": "#1F2122", "$description": "Unicron default, surface/raised in Default / graphite: oklch(0.245 0.004 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "rule": { "$type": "color", "$value": "#2F3033", "$description": "Unicron default, line/rule in Default / graphite: oklch(0.31 0.005 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "grid-dot": { "$type": "color", "$value": "#353739", "$description": "Unicron default, line/grid-dot in Default / graphite: oklch(0.335 0.005 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "faint": { "$type": "color", "$value": "#56585B", "$description": "Unicron default, text/faint in Default / graphite: oklch(0.46 0.006 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "label": { "$type": "color", "$value": "#BABEC3", "$description": "Unicron default, text/label in Default / graphite: oklch(0.8 0.008 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "secondary": { "$type": "color", "$value": "#D8DBDF", "$description": "Unicron default, text/secondary in Default / graphite: oklch(0.89 0.006 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "body": { "$type": "color", "$value": "#F2F4F6", "$description": "Unicron default, text/body in Default / graphite: oklch(0.965 0.004 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-fill": { "$type": "color", "$value": "#4778B5", "$description": "Unicron default, primary/fill in Default / graphite: oklch(0.565 0.11 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Unicron default, primary/on-fill in Default / graphite: oklch(1 0 0). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-text": { "$type": "color", "$value": "#A1C7F8", "$description": "Unicron default, primary/text in Default / graphite: oklch(0.82 0.08 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-soft": { "$type": "color", "$value": "#1E2C3F", "$description": "Unicron default, primary/soft in Default / graphite: oklch(0.29 0.04 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-display": { "$type": "color", "$value": "#7AAEEF", "$description": "Unicron default, primary/display in Default / graphite: oklch(0.74 0.11 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "live": { "$type": "color", "$value": "#57D4D4", "$description": "Unicron default, secondary/live in Default / graphite: oklch(0.8 0.11 195). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." }
+      "primary-fill": {
+        "$type": "color",
+        "$value": "#4778B5",
+        "$description": "Unicron default, primary/fill in Default / graphite: oklch(0.565 0.11 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      },
+      "primary-on-fill": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Unicron default, primary/on-fill in Default / graphite: oklch(1 0 0). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      },
+      "primary-text": {
+        "$type": "color",
+        "$value": "#A1C7F8",
+        "$description": "Unicron default, primary/text in Default / graphite: oklch(0.82 0.08 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      },
+      "primary-soft": {
+        "$type": "color",
+        "$value": "#4778B52E",
+        "$description": "Unicron default, primary/soft in Default / graphite: the primary fill, oklch(0.565 0.11 255), at 18% alpha, as every app's mode in Figma holds it (a wash, not a solid). Not in Figma yet (Figma has no Default mode)."
+      },
+      "primary-display": {
+        "$type": "color",
+        "$value": "#7AAEEF",
+        "$description": "Unicron default, primary/display in Default / graphite: oklch(0.74 0.11 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      }
     },
     "stone": {
-      "ground": { "$type": "color", "$value": "#F3F4F6", "$description": "Unicron default, surface/ground in Default / stone: oklch(0.968 0.003 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "raised": { "$type": "color", "$value": "#FBFCFD", "$description": "Unicron default, surface/raised in Default / stone: oklch(0.99 0.002 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "rule": { "$type": "color", "$value": "#D5D8DB", "$description": "Unicron default, line/rule in Default / stone: oklch(0.88 0.005 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "grid-dot": { "$type": "color", "$value": "#BEC1C5", "$description": "Unicron default, line/grid-dot in Default / stone: oklch(0.81 0.006 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "faint": { "$type": "color", "$value": "#A5A8AC", "$description": "Unicron default, text/faint in Default / stone: oklch(0.73 0.007 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "label": { "$type": "color", "$value": "#606368", "$description": "Unicron default, text/label in Default / stone: oklch(0.5 0.008 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "secondary": { "$type": "color", "$value": "#3D4043", "$description": "Unicron default, text/secondary in Default / stone: oklch(0.37 0.007 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "body": { "$type": "color", "$value": "#050607", "$description": "Unicron default, text/body in Default / stone: oklch(0.12 0.004 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-fill": { "$type": "color", "$value": "#255B9C", "$description": "Unicron default, primary/fill in Default / stone: oklch(0.47 0.12 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-on-fill": { "$type": "color", "$value": "#FFFFFF", "$description": "Unicron default, primary/on-fill in Default / stone: oklch(1 0 0). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-text": { "$type": "color", "$value": "#225899", "$description": "Unicron default, primary/text in Default / stone: oklch(0.46 0.12 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-soft": { "$type": "color", "$value": "#E4F0FF", "$description": "Unicron default, primary/soft in Default / stone: oklch(0.95 0.024 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "primary-display": { "$type": "color", "$value": "#255B9C", "$description": "Unicron default, primary/display in Default / stone: oklch(0.47 0.12 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." },
-      "live": { "$type": "color", "$value": "#007176", "$description": "Unicron default, secondary/live in Default / stone: oklch(0.5 0.085 200). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)." }
+      "primary-fill": {
+        "$type": "color",
+        "$value": "#255B9C",
+        "$description": "Unicron default, primary/fill in Default / stone: oklch(0.47 0.12 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      },
+      "primary-on-fill": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Unicron default, primary/on-fill in Default / stone: oklch(1 0 0). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      },
+      "primary-text": {
+        "$type": "color",
+        "$value": "#225899",
+        "$description": "Unicron default, primary/text in Default / stone: oklch(0.46 0.12 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      },
+      "primary-soft": {
+        "$type": "color",
+        "$value": "#255B9C1A",
+        "$description": "Unicron default, primary/soft in Default / stone: the primary fill, oklch(0.47 0.12 255), at 10% alpha, as every app's mode in Figma holds it (a wash, not a solid). Not in Figma yet (Figma has no Default mode)."
+      },
+      "primary-display": {
+        "$type": "color",
+        "$value": "#255B9C",
+        "$description": "Unicron default, primary/display in Default / stone: oklch(0.47 0.12 255). Not in Figma yet (Sean adds a Default mode to Unicron / Theme)."
+      }
+    }
+  },
+  "base": {
+    "$description": "Unicron 2.0's shared neutrals and signals: one value per ground, the same in every app and in every one of Figma's 10 modes of Unicron / Theme (read 2026-11-24 from the published library, file nmLJwY8cugquuZqs8xyZr9). Surfaces step 2–4% apart (sunken, ground, raised, popover); lines, hover and selection are the body ink at a low alpha so they work on any layer. Tier 2 reads the stone value in light and the graphite value in dark.",
+    "surface-ground": {
+      "$description": "Figma surface/ground. The page: the main content and the chat.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#16171A",
+        "$description": "Figma surface/ground, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma surface/ground, every stone mode."
+      }
+    },
+    "surface-sunken": {
+      "$description": "Figma surface/sunken. Window edge and sidebar, a step below surface/ground.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#0F1012",
+        "$description": "Figma surface/sunken, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#F6F6F7",
+        "$description": "Figma surface/sunken, every stone mode."
+      }
+    },
+    "surface-raised": {
+      "$description": "Figma surface/raised. Cards, the right panel, the composer. On stone it equals the ground; a hairline separates them.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#1C1D20",
+        "$description": "Figma surface/raised, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma surface/raised, every stone mode."
+      }
+    },
+    "surface-popover": {
+      "$description": "Figma surface/popover. Menus, popovers, dialogs: the only layer with a shadow.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#232428",
+        "$description": "Figma surface/popover, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma surface/popover, every stone mode."
+      }
+    },
+    "surface-popover-frost": {
+      "$description": "Figma surface/popover-frost. Frosted menus and floating bars (Sean, 2026-11-23: frosted glass is the default for menus): the popover at 72%, under a 24px backdrop blur.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#232428B8",
+        "$description": "Figma surface/popover-frost, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFFB8",
+        "$description": "Figma surface/popover-frost, every stone mode."
+      }
+    },
+    "surface-hover": {
+      "$description": "Figma surface/hover. A row or quiet button under the pointer: the body ink at 5%.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF0D",
+        "$description": "Figma surface/hover, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E0D",
+        "$description": "Figma surface/hover, every stone mode."
+      }
+    },
+    "surface-selected": {
+      "$description": "Figma surface/selected. A selected or pressed row, pill, chip or segment: the body ink at 8%.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF14",
+        "$description": "Figma surface/selected, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E14",
+        "$description": "Figma surface/selected, every stone mode."
+      }
+    },
+    "line-rule": {
+      "$description": "Figma line/rule. Hairlines and 1px borders: the body ink at 8%.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF14",
+        "$description": "Figma line/rule, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E14",
+        "$description": "Figma line/rule, every stone mode."
+      }
+    },
+    "line-strong": {
+      "$description": "Figma line/strong. Inputs, scrollbar thumbs and a stronger hairline: the body ink at 14%.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF24",
+        "$description": "Figma line/strong, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E24",
+        "$description": "Figma line/strong, every stone mode."
+      }
+    },
+    "line-field": {
+      "$description": "Figma line/field. A field's resting border: the body ink at 14%, as Figma draws it. Below 3:1 by design (Unicron 2.0); focus draws line-focus.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF24",
+        "$description": "Figma line/field, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E24",
+        "$description": "Figma line/field, every stone mode."
+      }
+    },
+    "line-grid-dot": {
+      "$description": "Figma line/grid-dot. The dot grid and the sheet grabber: the body ink at 14%.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF24",
+        "$description": "Figma line/grid-dot, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E24",
+        "$description": "Figma line/grid-dot, every stone mode."
+      }
+    },
+    "text-body": {
+      "$description": "Figma text/body. Body ink.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF",
+        "$description": "Figma text/body, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E",
+        "$description": "Figma text/body, every stone mode."
+      }
+    },
+    "text-secondary": {
+      "$description": "Figma text/secondary. Secondary ink: support text.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#D3D4D7",
+        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 75 on every everyday surface, in Figma since its republish the same day."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#4F5157",
+        "$description": "Figma text/secondary, every stone mode."
+      }
+    },
+    "text-label": {
+      "$description": "Figma text/label. Muted ink: labels, meta, icons at rest. 4.5:1 on every layer.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#B9BABE",
+        "$description": "Lightened from Figma's first 2.0 value so it holds the APCA floor (Sean, 2026-11-24): Lc 60 on every everyday surface, in Figma since its republish the same day."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#6A6C72",
+        "$description": "Figma text/label, every stone mode."
+      }
+    },
+    "text-faint": {
+      "$description": "Figma text/faint. Disabled and placeholder ink.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#5E6066",
+        "$description": "Figma text/faint, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#9A9CA1",
+        "$description": "Figma text/faint, every stone mode."
+      }
+    },
+    "secondary-live": {
+      "$description": "Figma secondary/live. Live: the shared Working blue.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#6CA8F5",
+        "$description": "Figma secondary/live, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1F64C8",
+        "$description": "Figma secondary/live, every stone mode."
+      }
+    },
+    "secondary-soft": {
+      "$description": "Figma secondary/soft. The live hue's soft wash: diff additions and live highlights.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#19353D",
+        "$description": "Figma secondary/soft, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#C9DCE5",
+        "$description": "Figma secondary/soft, every stone mode."
+      }
+    },
+    "status-done": {
+      "$description": "Figma status/done. Done: the check mark and its word.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#4CC38A",
+        "$description": "Figma status/done, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1C7C4D",
+        "$description": "Figma status/done, every stone mode."
+      }
+    },
+    "status-working": {
+      "$description": "Figma status/working. Working: the moving arc and its word.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#6CA8F5",
+        "$description": "Figma status/working, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1F64C8",
+        "$description": "Figma status/working, every stone mode."
+      }
+    },
+    "status-failed": {
+      "$description": "Figma status/failed. Failed: the cross and its word.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#BE2323",
+        "$description": "Figma status/failed, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#B7191C",
+        "$description": "Figma status/failed, every stone mode."
+      }
+    },
+    "status-idle": {
+      "$description": "Figma status/idle. Idle or paused: the hollow ring and its word.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#8A8C92",
+        "$description": "Figma status/idle, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#6A6C72",
+        "$description": "Figma status/idle, every stone mode."
+      }
+    },
+    "info-fill": {
+      "$description": "Figma info/fill. Counts and unread dots: the deep notify blue, with white text (Sean, 2026-11-23).",
+      "graphite": {
+        "$type": "color",
+        "$value": "#2870BD",
+        "$description": "Figma info/fill, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#0D74CE",
+        "$description": "Figma info/fill, every stone mode."
+      }
+    },
+    "info-on-fill": {
+      "$description": "Figma info/on-fill. The label on info/fill.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma info/on-fill, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma info/on-fill, every stone mode."
+      }
+    },
+    "severity-concerning-fill": {
+      "$description": "Figma severity/concerning/fill. A count badge whose worst item is concerning.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#FFC53D",
+        "$description": "Figma severity/concerning/fill, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFC53D",
+        "$description": "Figma severity/concerning/fill, every stone mode."
+      }
+    },
+    "severity-concerning-on-fill": {
+      "$description": "Figma severity/concerning/on-fill. The label on the concerning fill.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#4F3422",
+        "$description": "Figma severity/concerning/on-fill, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#4F3422",
+        "$description": "Figma severity/concerning/on-fill, every stone mode."
+      }
+    },
+    "severity-urgent-fill": {
+      "$description": "Figma severity/urgent/fill. A count badge whose worst item is urgent.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#DC3E42",
+        "$description": "Figma severity/urgent/fill, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#CE2C31",
+        "$description": "Figma severity/urgent/fill, every stone mode."
+      }
+    },
+    "severity-urgent-on-fill": {
+      "$description": "Figma severity/urgent/on-fill. The label on the urgent fill.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma severity/urgent/on-fill, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma severity/urgent/on-fill, every stone mode."
+      }
+    },
+    "qr-plate": {
+      "$description": "Figma qr/plate. QR code background: always light so codes scan.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma qr/plate, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma qr/plate, every stone mode."
+      }
+    },
+    "qr-module": {
+      "$description": "Figma qr/module. QR code modules: always dark so codes scan.",
+      "graphite": {
+        "$type": "color",
+        "$value": "#0A0A0D",
+        "$description": "Figma qr/module, every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#0A0A0D",
+        "$description": "Figma qr/module, every stone mode."
+      }
+    }
+  },
+  "label": {
+    "$description": "Twelve label hues (Figma label/*), for things a person colours: tags, calendars, folders. Shared by every app; they never carry status.",
+    "red": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#E5484D",
+        "$description": "Figma label/red, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#CE2C31",
+        "$description": "Figma label/red, stone."
+      }
+    },
+    "orange": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#F76B15",
+        "$description": "Figma label/orange, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#CC4E00",
+        "$description": "Figma label/orange, stone."
+      }
+    },
+    "amber": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#E8A33D",
+        "$description": "Figma label/amber, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#9A6700",
+        "$description": "Figma label/amber, stone."
+      }
+    },
+    "green": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#4CC38A",
+        "$description": "Figma label/green, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1C7C4D",
+        "$description": "Figma label/green, stone."
+      }
+    },
+    "teal": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#12A594",
+        "$description": "Figma label/teal, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#0D7D70",
+        "$description": "Figma label/teal, stone."
+      }
+    },
+    "sky": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#2EAAD8",
+        "$description": "Figma label/sky, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#0A7AA6",
+        "$description": "Figma label/sky, stone."
+      }
+    },
+    "blue": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#6CA8F5",
+        "$description": "Figma label/blue, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1F64C8",
+        "$description": "Figma label/blue, stone."
+      }
+    },
+    "indigo": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#3E63DD",
+        "$description": "Figma label/indigo, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#3451B2",
+        "$description": "Figma label/indigo, stone."
+      }
+    },
+    "purple": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#8E4EC6",
+        "$description": "Figma label/purple, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#7340A8",
+        "$description": "Figma label/purple, stone."
+      }
+    },
+    "pink": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#E98AA8",
+        "$description": "Figma label/pink, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#B4366A",
+        "$description": "Figma label/pink, stone."
+      }
+    },
+    "brown": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#AD7F58",
+        "$description": "Figma label/brown, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#8A6142",
+        "$description": "Figma label/brown, stone."
+      }
+    },
+    "gray": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#8B8D98",
+        "$description": "Figma label/gray, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#6A6C72",
+        "$description": "Figma label/gray, stone."
+      }
+    }
+  },
+  "viz": {
+    "$description": "Data viz colours (Figma viz/*, approved by Sean 2026-11-23): eight fixed series, a blue sequential ramp and a blue/orange diverging ramp, plus chart ink. Not themed per app: the accent never colours data.",
+    "series-1": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#4066C2",
+        "$description": "Figma viz/series-1, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#355BBD",
+        "$description": "Figma viz/series-1, stone."
+      }
+    },
+    "series-2": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#D67523",
+        "$description": "Figma viz/series-2, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#D16E0D",
+        "$description": "Figma viz/series-2, stone."
+      }
+    },
+    "series-3": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#13A5B2",
+        "$description": "Figma viz/series-3, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#199EAA",
+        "$description": "Figma viz/series-3, stone."
+      }
+    },
+    "series-4": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#1F812D",
+        "$description": "Figma viz/series-4, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#06791F",
+        "$description": "Figma viz/series-4, stone."
+      }
+    },
+    "series-5": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#D76797",
+        "$description": "Figma viz/series-5, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#D45C91",
+        "$description": "Figma viz/series-5, stone."
+      }
+    },
+    "series-6": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#87660C",
+        "$description": "Figma viz/series-6, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#CB9903",
+        "$description": "Figma viz/series-6, stone."
+      }
+    },
+    "series-7": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#886ACF",
+        "$description": "Figma viz/series-7, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#6C4AB3",
+        "$description": "Figma viz/series-7, stone."
+      }
+    },
+    "series-8": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#CA5551",
+        "$description": "Figma viz/series-8, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#AC3031",
+        "$description": "Figma viz/series-8, stone."
+      }
+    },
+    "other": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#6B6D74",
+        "$description": "Figma viz/other, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#A1A1AA",
+        "$description": "Figma viz/other, stone."
+      }
+    },
+    "seq-1": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#29427C",
+        "$description": "Figma viz/seq-1, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#D8E5FF",
+        "$description": "Figma viz/seq-1, stone."
+      }
+    },
+    "seq-2": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#3959A6",
+        "$description": "Figma viz/seq-2, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#B2CAFE",
+        "$description": "Figma viz/seq-2, stone."
+      }
+    },
+    "seq-3": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#4971D3",
+        "$description": "Figma viz/seq-3, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#8CADF3",
+        "$description": "Figma viz/seq-3, stone."
+      }
+    },
+    "seq-4": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#698FE5",
+        "$description": "Figma viz/seq-4, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#698FE5",
+        "$description": "Figma viz/seq-4, stone."
+      }
+    },
+    "seq-5": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#8CADF3",
+        "$description": "Figma viz/seq-5, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#4971D3",
+        "$description": "Figma viz/seq-5, stone."
+      }
+    },
+    "seq-6": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#B2CAFE",
+        "$description": "Figma viz/seq-6, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#3959A6",
+        "$description": "Figma viz/seq-6, stone."
+      }
+    },
+    "seq-7": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#D8E5FF",
+        "$description": "Figma viz/seq-7, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#29427C",
+        "$description": "Figma viz/seq-7, stone."
+      }
+    },
+    "div-neg-3": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#80A3EF",
+        "$description": "Figma viz/div-neg-3, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#335198",
+        "$description": "Figma viz/div-neg-3, stone."
+      }
+    },
+    "div-neg-2": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#4B74D8",
+        "$description": "Figma viz/div-neg-2, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#527BDB",
+        "$description": "Figma viz/div-neg-2, stone."
+      }
+    },
+    "div-neg-1": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#2E498A",
+        "$description": "Figma viz/div-neg-1, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#98B7F8",
+        "$description": "Figma viz/div-neg-1, stone."
+      }
+    },
+    "div-mid": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#3A3B40",
+        "$description": "Figma viz/div-mid, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#E4E4E7",
+        "$description": "Figma viz/div-mid, stone."
+      }
+    },
+    "div-pos-1": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#763B03",
+        "$description": "Figma viz/div-pos-1, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#E9A679",
+        "$description": "Figma viz/div-pos-1, stone."
+      }
+    },
+    "div-pos-2": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#C16300",
+        "$description": "Figma viz/div-pos-2, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#D17935",
+        "$description": "Figma viz/div-pos-2, stone."
+      }
+    },
+    "div-pos-3": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#E19763",
+        "$description": "Figma viz/div-pos-3, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#9F5104",
+        "$description": "Figma viz/div-pos-3, stone."
+      }
+    },
+    "grid": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF14",
+        "$description": "Figma viz/grid, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E14",
+        "$description": "Figma viz/grid, stone."
+      }
+    },
+    "axis": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF24",
+        "$description": "Figma viz/axis, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E24",
+        "$description": "Figma viz/axis, stone."
+      }
+    },
+    "ink": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#B3B5BA",
+        "$description": "Figma viz/ink, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#4F5157",
+        "$description": "Figma viz/ink, stone."
+      }
+    },
+    "focus": {
+      "graphite": {
+        "$type": "color",
+        "$value": "#ECEDEF",
+        "$description": "Figma viz/focus, graphite."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#1A1B1E",
+        "$description": "Figma viz/focus, stone."
+      }
     }
   },
   "needs-you": {
-    "$description": "Waiting on the person. One yellow and one near-black, the same in every app and both grounds (Figma needs-you/*, all 8 modes).",
-    "fill": { "$type": "color", "$value": "#EDE54A", "$description": "Figma needs-you/fill (VariableID:5:137); the <app>/<ground>/yel primitives all hold this value." },
-    "on-fill": { "$type": "color", "$value": "#1C1C1C", "$description": "Figma needs-you/on-fill (VariableID:5:138); the <app>/<ground>/onYel primitives all hold this value." }
+    "$description": "Waiting on the person: one amber and one near-black, the same in every app and both grounds (Figma needs-you/*, all 10 modes; Sean 2026-11-24: it stays amber).",
+    "fill": {
+      "$type": "color",
+      "$value": "#F0B429",
+      "$description": "Figma needs-you/fill (VariableID:5:137); the <app>/<ground>/yel primitives all hold this value."
+    },
+    "on-fill": {
+      "$type": "color",
+      "$value": "#1A1B1E",
+      "$description": "Figma needs-you/on-fill (VariableID:5:138); the <app>/<ground>/onYel primitives all hold this value."
+    }
   },
   "critical": {
     "$description": "Errors. One set per ground, the same for every app (Figma critical/*, typed into the Theme collection with no primitive behind it).",
     "fill": {
-      "graphite": { "$type": "color", "$value": "#BE2323", "$description": "Figma critical/fill (VariableID:30:2325) in every graphite mode." },
-      "stone": { "$type": "color", "$value": "#B7191C", "$description": "Figma critical/fill (VariableID:30:2325) in every stone mode." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#BE2323",
+        "$description": "Figma critical/fill (VariableID:30:2325) in every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#B7191C",
+        "$description": "Figma critical/fill (VariableID:30:2325) in every stone mode."
+      }
     },
     "on-fill": {
-      "graphite": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma critical/on-fill (VariableID:30:2326) in every graphite mode." },
-      "stone": { "$type": "color", "$value": "#FFFFFF", "$description": "Figma critical/on-fill (VariableID:30:2326) in every stone mode." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma critical/on-fill (VariableID:30:2326) in every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma critical/on-fill (VariableID:30:2326) in every stone mode."
+      }
     },
     "text": {
-      "graphite": { "$type": "color", "$value": "#FF978A", "$description": "Figma critical/text (VariableID:30:2327) in every graphite mode." },
-      "stone": { "$type": "color", "$value": "#B6322D", "$description": "Figma critical/text (VariableID:30:2327) in every stone mode." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#FF978A",
+        "$description": "Figma critical/text (VariableID:30:2327) in every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#B6322D",
+        "$description": "Figma critical/text (VariableID:30:2327) in every stone mode."
+      }
     },
     "soft": {
-      "graphite": { "$type": "color", "$value": "#3E1F1B", "$description": "Figma critical/soft (VariableID:30:2328) in every graphite mode." },
-      "stone": { "$type": "color", "$value": "#FFD9D3", "$description": "Figma critical/soft (VariableID:30:2328) in every stone mode." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#3E1F1B",
+        "$description": "Figma critical/soft (VariableID:30:2328) in every graphite mode."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#FFD9D3",
+        "$description": "Figma critical/soft (VariableID:30:2328) in every stone mode."
+      }
     }
   },
   "swatch": {
     "$description": "Twelve colours for things a person colours: calendars, notes, labels, personas, graph kinds (contract 5.1b #55). Evenly spaced OKLCH hues 30° apart, starting at the system's red hue angle (hue.red, 25). Each is solved per ground, the same for every app: the lightness that holds APCA Lc 62 (60, the floor for coloured text, plus 2) against the lowest-contrast of the eight surfaces it can sit on (surface-ground and surface-raised in all four apps), at a chroma of 0.14 on stone and 0.13 on graphite, or less where sRGB has no room at that lightness. So a swatch holds as text, and as a 2px bar, edge or mark (Lc 30) with room to spare. A swatch is a colour for data, never a status; it is never a fill behind text. Not in Figma.",
     "red": {
-      "graphite": { "$type": "color", "$value": "#FF9F97", "$description": "swatch-01 (red) on graphite: oklch(0.798 0.116 25.1), hue 25. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#BF534F", "$description": "swatch-01 (red) on stone: oklch(0.579 0.140 24.6), hue 25. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#FF9F97",
+        "$description": "swatch-01 (red) on graphite: oklch(0.798 0.116 25.1), hue 25. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#BF534F",
+        "$description": "swatch-01 (red) on stone: oklch(0.579 0.140 24.6), hue 25. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "orange": {
-      "graphite": { "$type": "color", "$value": "#FCA466", "$description": "swatch-02 (orange) on graphite: oklch(0.794 0.130 54.8), hue 55. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#B55E07", "$description": "swatch-02 (orange) on stone: oklch(0.574 0.139 55.3), hue 55. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#FCA466",
+        "$description": "swatch-02 (orange) on graphite: oklch(0.794 0.130 54.8), hue 55. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#B55E07",
+        "$description": "swatch-02 (orange) on stone: oklch(0.574 0.139 55.3), hue 55. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "ochre": {
-      "graphite": { "$type": "color", "$value": "#E0B24B", "$description": "swatch-03 (ochre) on graphite: oklch(0.786 0.130 84.6), hue 85. Lc 62.0 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#967000", "$description": "swatch-03 (ochre) on stone: oklch(0.568 0.116 84.9), hue 85. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#E0B24B",
+        "$description": "swatch-03 (ochre) on graphite: oklch(0.786 0.130 84.6), hue 85. Lc 62.0 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#967000",
+        "$description": "swatch-03 (ochre) on stone: oklch(0.568 0.116 84.9), hue 85. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "olive": {
-      "graphite": { "$type": "color", "$value": "#B4C158", "$description": "swatch-04 (olive) on graphite: oklch(0.779 0.131 115.4), hue 115. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#737C00", "$description": "swatch-04 (olive) on stone: oklch(0.560 0.127 114.7), hue 115. Lc 62.2 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#B4C158",
+        "$description": "swatch-04 (olive) on graphite: oklch(0.779 0.131 115.4), hue 115. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#737C00",
+        "$description": "swatch-04 (olive) on stone: oklch(0.560 0.127 114.7), hue 115. Lc 62.2 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "green": {
-      "graphite": { "$type": "color", "$value": "#7DCB80", "$description": "swatch-05 (green) on graphite: oklch(0.773 0.131 145.0), hue 145. Lc 62.5 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#318639", "$description": "swatch-05 (green) on stone: oklch(0.550 0.139 145.0), hue 145. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#7DCB80",
+        "$description": "swatch-05 (green) on graphite: oklch(0.773 0.131 145.0), hue 145. Lc 62.5 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#318639",
+        "$description": "swatch-05 (green) on stone: oklch(0.550 0.139 145.0), hue 145. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "jade": {
-      "graphite": { "$type": "color", "$value": "#3ACEAE", "$description": "swatch-06 (jade) on graphite: oklch(0.767 0.131 174.7), hue 175. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#00856E", "$description": "swatch-06 (jade) on stone: oklch(0.551 0.104 174.8), hue 175. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#3ACEAE",
+        "$description": "swatch-06 (jade) on graphite: oklch(0.767 0.131 174.7), hue 175. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#00856E",
+        "$description": "swatch-06 (jade) on stone: oklch(0.551 0.104 174.8), hue 175. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "teal": {
-      "graphite": { "$type": "color", "$value": "#0BCBDB", "$description": "swatch-07 (teal) on graphite: oklch(0.769 0.130 205.0), hue 205. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#00828D", "$description": "swatch-07 (teal) on stone: oklch(0.554 0.095 205.2), hue 205. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#0BCBDB",
+        "$description": "swatch-07 (teal) on graphite: oklch(0.769 0.130 205.0), hue 205. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#00828D",
+        "$description": "swatch-07 (teal) on stone: oklch(0.554 0.095 205.2), hue 205. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "azure": {
-      "graphite": { "$type": "color", "$value": "#54C3FD", "$description": "swatch-08 (azure) on graphite: oklch(0.777 0.130 234.8), hue 235. Lc 62.0 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#007DAF", "$description": "swatch-08 (azure) on stone: oklch(0.557 0.119 235.4), hue 235. Lc 62.2 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#54C3FD",
+        "$description": "swatch-08 (azure) on graphite: oklch(0.777 0.130 234.8), hue 235. Lc 62.0 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#007DAF",
+        "$description": "swatch-08 (azure) on stone: oklch(0.557 0.119 235.4), hue 235. Lc 62.2 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "blue": {
-      "graphite": { "$type": "color", "$value": "#98B9FF", "$description": "swatch-09 (blue) on graphite: oklch(0.788 0.107 264.7), hue 265. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#4E73CA", "$description": "swatch-09 (blue) on stone: oklch(0.571 0.141 264.9), hue 265. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#98B9FF",
+        "$description": "swatch-09 (blue) on graphite: oklch(0.788 0.107 264.7), hue 265. Lc 62.3 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#4E73CA",
+        "$description": "swatch-09 (blue) on stone: oklch(0.571 0.141 264.9), hue 265. Lc 62.0 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "violet": {
-      "graphite": { "$type": "color", "$value": "#C1ADFF", "$description": "swatch-10 (violet) on graphite: oklch(0.795 0.116 294.8), hue 295. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#8166C4", "$description": "swatch-10 (violet) on stone: oklch(0.579 0.141 294.8), hue 295. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#C1ADFF",
+        "$description": "swatch-10 (violet) on graphite: oklch(0.795 0.116 294.8), hue 295. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#8166C4",
+        "$description": "swatch-10 (violet) on stone: oklch(0.579 0.141 294.8), hue 295. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "plum": {
-      "graphite": { "$type": "color", "$value": "#E8A0EB", "$description": "swatch-11 (plum) on graphite: oklch(0.800 0.129 325.3), hue 325. Lc 62.1 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#A45AA8", "$description": "swatch-11 (plum) on stone: oklch(0.582 0.141 325.3), hue 325. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#E8A0EB",
+        "$description": "swatch-11 (plum) on graphite: oklch(0.800 0.129 325.3), hue 325. Lc 62.1 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#A45AA8",
+        "$description": "swatch-11 (plum) on stone: oklch(0.582 0.141 325.3), hue 325. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     },
     "rose": {
-      "graphite": { "$type": "color", "$value": "#FF9AC2", "$description": "swatch-12 (rose) on graphite: oklch(0.801 0.129 355.1), hue 355. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)." },
-      "stone": { "$type": "color", "$value": "#B8537F", "$description": "swatch-12 (rose) on stone: oklch(0.582 0.139 355.0), hue 355. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)." }
+      "graphite": {
+        "$type": "color",
+        "$value": "#FF9AC2",
+        "$description": "swatch-12 (rose) on graphite: oklch(0.801 0.129 355.1), hue 355. Lc 62.2 on the lowest of the eight graphite surfaces (lockdown raised)."
+      },
+      "stone": {
+        "$type": "color",
+        "$value": "#B8537F",
+        "$description": "swatch-12 (rose) on stone: oklch(0.582 0.139 355.0), hue 355. Lc 62.1 on the lowest of the eight stone surfaces (synapse ground)."
+      }
     }
   },
   "scrim": {
     "$description": "The full-screen dim behind sheets, dialogs and menus (Figma surface/scrim, VariableID:54:50), the same for every app. Graphite is opaque black; stone carries 64% alpha inside the colour, as Figma stores it. The layer's own opacity is a tier 3 knob (--c-scrim-sheet, -dialog, -menu): 0.5, 0.6 and 0.32 on graphite, 1 on stone, where this 64% is the whole dim.",
-    "graphite": { "$type": "color", "$value": "#000000", "$description": "Figma surface/scrim (VariableID:54:50) in every graphite mode." },
-    "stone": { "$type": "color", "$value": "rgb(20 22 24 / 0.64)", "$description": "Figma surface/scrim (VariableID:54:50) in every stone mode: #141618 at 64% alpha." }
+    "graphite": {
+      "$type": "color",
+      "$value": "#000000",
+      "$description": "Figma surface/scrim (VariableID:54:50) in every graphite mode."
+    },
+    "stone": {
+      "$type": "color",
+      "$value": "rgb(20 22 24 / 0.64)",
+      "$description": "Figma surface/scrim (VariableID:54:50) in every stone mode: #141618 at 64% alpha."
+    }
   },
   "radius": {
-    "base": { "$type": "dimension", "$value": "0.125rem", "$description": "2px: Figma radius/control (VariableID:7:31), the one corner every rounded part takes. Figma's radius/none (0) and radius/round (999) are Tailwind's own rounded-none and rounded-full." }
+    "$description": "The radius scale (Figma Space collection, radius/*). Corners grow with the size of the thing: 4 checkbox and keycap, 6 controls, 8 menus and rows, 12 cards and panels, 16 the composer, round for pills, dots and avatars.",
+    "xs": {
+      "$type": "dimension",
+      "$value": "0.25rem",
+      "$description": "4px: Figma radius/xs. Checkbox, keycap, inline code."
+    },
+    "control": {
+      "$type": "dimension",
+      "$value": "0.375rem",
+      "$description": "6px: Figma radius/control (VariableID:7:31). Buttons, inputs, pill tabs."
+    },
+    "md": {
+      "$type": "dimension",
+      "$value": "0.5rem",
+      "$description": "8px: Figma radius/md. Menus, rows, small cards, option cards."
+    },
+    "lg": {
+      "$type": "dimension",
+      "$value": "0.75rem",
+      "$description": "12px: Figma radius/lg. Cards, banners, dialogs, a floating panel."
+    },
+    "xl": {
+      "$type": "dimension",
+      "$value": "1rem",
+      "$description": "16px: Figma radius/xl. The composer and the user's message bubble."
+    },
+    "round": {
+      "$type": "dimension",
+      "$value": "999px",
+      "$description": "Figma radius/round (VariableID:7:32). Pills, chips, dots, avatars, the send button."
+    }
   },
   "size": {
-    "$description": "The two control sizes Figma holds as variables. Every other fixed size is a tier 3 knob of the component that draws it.",
-    "control": { "$type": "dimension", "$value": "3rem", "$description": "48px: Figma size/control (VariableID:27:1982). Every floating control, the tab bar, the status strip, a text field's least height." },
-    "touch-min": { "$type": "dimension", "$value": "2.75rem", "$description": "44px: Figma size/touch-min (VariableID:27:1983). The floor for a touch target." }
+    "$description": "Control and icon sizes Figma holds as variables (Space collection). Every other fixed size is a tier 3 knob of the component that draws it.",
+    "control": {
+      "$type": "dimension",
+      "$value": "3rem",
+      "$description": "48px: Figma size/control (VariableID:27:1982). Every floating control, the tab bar, the status strip, a text field's least height."
+    },
+    "touch-min": {
+      "$type": "dimension",
+      "$value": "2.75rem",
+      "$description": "44px: Figma size/touch-min (VariableID:27:1983). The floor for a touch target."
+    },
+    "control-s": {
+      "$type": "dimension",
+      "$value": "1.75rem",
+      "$description": "28px: Figma size/control-s. Small buttons, pill tabs, filter chips, header icon buttons."
+    },
+    "control-m": {
+      "$type": "dimension",
+      "$value": "2rem",
+      "$description": "32px: Figma size/control-m. Buttons, text fields, menu rows, sidebar rows."
+    },
+    "control-l": {
+      "$type": "dimension",
+      "$value": "2.75rem",
+      "$description": "44px: Figma size/control-l (an alias of size/touch-min). Sheet buttons, stacked full width."
+    },
+    "icon": {
+      "$type": "dimension",
+      "$value": "1.25rem",
+      "$description": "20px: Figma size/icon. Material Symbols Rounded at opsz 20."
+    },
+    "check": {
+      "$type": "dimension",
+      "$value": "1.25rem",
+      "$description": "A checkbox and a radio: 20px (Figma size/check)."
+    },
+    "index": {
+      "$type": "dimension",
+      "$value": "1.5rem",
+      "$description": "An index cell: 24px (Figma size/index)."
+    },
+    "track": {
+      "$type": "dimension",
+      "$value": "0.25rem",
+      "$description": "A progress track and a thin bar: 4px (Figma size/track)."
+    },
+    "field-text-touch": {
+      "$type": "dimension",
+      "$value": "16px",
+      "$description": "A field's text size on a touch screen: iOS zooms the page into a focused field set under 16px. Not in Figma: a platform floor, not a style (Unicron 2.0, where body went to 15px)."
+    }
   },
   "stroke": {
     "$description": "The two stroke widths the direction draws. Figma types them in; it has no stroke variable.",
-    "rule": { "$type": "dimension", "$value": "1px", "$description": "Hairline rules and 1px borders." },
-    "emphasis": { "$type": "dimension", "$value": "2px", "$description": "Focus and error borders, the selected-row edge, the tab indicator." }
+    "rule": {
+      "$type": "dimension",
+      "$value": "1px",
+      "$description": "Hairline rules and 1px borders."
+    },
+    "emphasis": {
+      "$type": "dimension",
+      "$value": "2px",
+      "$description": "Focus and error borders, the selected-row edge, the tab indicator."
+    }
   },
   "duration": {
-    "press": { "$type": "duration", "$value": "100ms", "$description": "A control going down under a finger or a click. The one step under 120ms: the hand is already there, so it must feel immediate." },
-    "fast": { "$type": "duration", "$value": "120ms" },
-    "base": { "$type": "duration", "$value": "200ms" },
-    "state": { "$type": "duration", "$value": "280ms", "$description": "A surface changing state: a panel opening, a selection moving to a new place." },
-    "move": { "$type": "duration", "$value": "400ms", "$description": "Travel across the screen. The ceiling: no default motion runs longer." },
-    "tick": { "$type": "duration", "$value": "1000ms", "$description": "One step of a countdown ring: a second, run linear, so the ring tracks the clock." },
-    "spin": { "$type": "duration", "$value": "900ms", "$description": "One turn of a spinner or a working ring." },
-    "pulse": { "$type": "duration", "$value": "1400ms", "$description": "One beat of a pulse or a breathing halo: slow enough to read as alive, not alarming." }
+    "press": {
+      "$type": "duration",
+      "$value": "100ms",
+      "$description": "A control going down under a finger or a click. The one step under 120ms: the hand is already there, so it must feel immediate."
+    },
+    "fast": {
+      "$type": "duration",
+      "$value": "120ms"
+    },
+    "base": {
+      "$type": "duration",
+      "$value": "200ms"
+    },
+    "state": {
+      "$type": "duration",
+      "$value": "280ms",
+      "$description": "A surface changing state: a panel opening, a selection moving to a new place."
+    },
+    "move": {
+      "$type": "duration",
+      "$value": "400ms",
+      "$description": "Travel across the screen. The ceiling: no default motion runs longer."
+    },
+    "tick": {
+      "$type": "duration",
+      "$value": "1000ms",
+      "$description": "One step of a countdown ring: a second, run linear, so the ring tracks the clock."
+    },
+    "spin": {
+      "$type": "duration",
+      "$value": "900ms",
+      "$description": "One turn of a spinner or a working ring."
+    },
+    "pulse": {
+      "$type": "duration",
+      "$value": "1400ms",
+      "$description": "One beat of a pulse or a breathing halo: slow enough to read as alive, not alarming."
+    }
   },
   "ease": {
-    "standard": { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1] },
-    "out": { "$type": "cubicBezier", "$value": [0.33, 1, 0.68, 1], "$description": "Ease-out cubic: quick start, soft landing. Softer than standard." },
-    "in": { "$type": "cubicBezier", "$value": [0.32, 0, 0.67, 0], "$description": "Ease-in cubic: slow start, fast finish. For things leaving." },
-    "in-out": { "$type": "cubicBezier", "$value": [0.65, 0, 0.35, 1], "$description": "Ease-in-out cubic: for travel from one resting place to another." },
-    "back": { "$type": "cubicBezier", "$value": [0.34, 1.63, 0.64, 1], "$description": "Overshoots to about 112% and comes back. For rare moments only." },
-    "pulse": { "$type": "cubicBezier", "$value": [0.4, 0, 0.6, 1], "$description": "The even in-and-out of a pulse loop." }
+    "standard": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.2,
+        0,
+        0,
+        1
+      ]
+    },
+    "out": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.33,
+        1,
+        0.68,
+        1
+      ],
+      "$description": "Ease-out cubic: quick start, soft landing. Softer than standard."
+    },
+    "in": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.32,
+        0,
+        0.67,
+        0
+      ],
+      "$description": "Ease-in cubic: slow start, fast finish. For things leaving."
+    },
+    "in-out": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.65,
+        0,
+        0.35,
+        1
+      ],
+      "$description": "Ease-in-out cubic: for travel from one resting place to another."
+    },
+    "back": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.34,
+        1.63,
+        0.64,
+        1
+      ],
+      "$description": "Overshoots to about 112% and comes back. For rare moments only."
+    },
+    "pulse": {
+      "$type": "cubicBezier",
+      "$value": [
+        0.4,
+        0,
+        0.6,
+        1
+      ],
+      "$description": "The even in-and-out of a pulse loop."
+    }
   },
   "spring": {
     "$description": "Damped springs at mass 1. Built to a CSS linear() curve that runs over the matching -duration token; the raw stiffness and damping are kept in tokens.json for JS. Each duration is the time the spring takes to stay within 1% of rest (scripts/check.mjs holds the two together).",
-    "settle": { "$type": "spring", "$value": { "stiffness": 256, "damping": 20, "mass": 1 }, "$description": "A small thing arriving at a new place, with a slight overshoot (about 8%)." },
-    "settle-duration": { "$type": "duration", "$value": "400ms" },
-    "firm": { "$type": "spring", "$value": { "stiffness": 300, "damping": 26, "mass": 1 }, "$description": "A large surface arriving. Under 3% overshoot, so it reads as physical with no visible bounce." },
-    "firm-duration": { "$type": "duration", "$value": "380ms" },
-    "pop": { "$type": "spring", "$value": { "stiffness": 484, "damping": 19.8, "mass": 1 }, "$description": "A clear bounce (about 20%). Expressive only: no core role points here." },
-    "pop-duration": { "$type": "duration", "$value": "400ms" }
+    "settle": {
+      "$type": "spring",
+      "$value": {
+        "stiffness": 256,
+        "damping": 20,
+        "mass": 1
+      },
+      "$description": "A small thing arriving at a new place, with a slight overshoot (about 8%)."
+    },
+    "settle-duration": {
+      "$type": "duration",
+      "$value": "400ms"
+    },
+    "firm": {
+      "$type": "spring",
+      "$value": {
+        "stiffness": 300,
+        "damping": 26,
+        "mass": 1
+      },
+      "$description": "A large surface arriving. Under 3% overshoot, so it reads as physical with no visible bounce."
+    },
+    "firm-duration": {
+      "$type": "duration",
+      "$value": "380ms"
+    },
+    "pop": {
+      "$type": "spring",
+      "$value": {
+        "stiffness": 484,
+        "damping": 19.8,
+        "mass": 1
+      },
+      "$description": "A clear bounce (about 20%). Expressive only: no core role points here."
+    },
+    "pop-duration": {
+      "$type": "duration",
+      "$value": "400ms"
+    }
   },
   "stagger": {
-    "step": { "$type": "duration", "$value": "50ms", "$description": "The delay between one sibling starting and the next." },
-    "max": { "$type": "number", "$value": 4, "$description": "Siblings after this many start together, so the last one still lands inside the ceiling (4 steps of 50ms, then a 200ms entrance, is 400ms)." }
+    "step": {
+      "$type": "duration",
+      "$value": "50ms",
+      "$description": "The delay between one sibling starting and the next."
+    },
+    "max": {
+      "$type": "number",
+      "$value": 4,
+      "$description": "Siblings after this many start together, so the last one still lands inside the ceiling (4 steps of 50ms, then a 200ms entrance, is 400ms)."
+    }
   },
   "press": {
-    "depth": { "$type": "number", "$value": 0.96, "$description": "Scale of a pressed control of ordinary size (4% smaller)." },
-    "depth-small": { "$type": "number", "$value": 0.9, "$description": "Scale of a pressed icon-size control (10% smaller): a small target needs a larger change to show." }
+    "depth": {
+      "$type": "number",
+      "$value": 0.96,
+      "$description": "Scale of a pressed control of ordinary size (4% smaller)."
+    },
+    "depth-small": {
+      "$type": "number",
+      "$value": 0.9,
+      "$description": "Scale of a pressed icon-size control (10% smaller): a small target needs a larger change to show."
+    }
   },
   "font": {
     "$description": "Geist and Geist Mono, as values. @unicron/ui loads the font files (@fontsource-variable/geist, @fontsource-variable/geist-mono); the plain family name follows for an app that installs the static fonts.",
-    "sans": { "$type": "fontFamily", "$value": ["Geist Variable", "Geist", "ui-sans-serif", "system-ui", "sans-serif"] },
-    "mono": { "$type": "fontFamily", "$value": ["Geist Mono Variable", "Geist Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"] }
+    "sans": {
+      "$type": "fontFamily",
+      "$value": [
+        "Geist Variable",
+        "Geist",
+        "ui-sans-serif",
+        "system-ui",
+        "sans-serif"
+      ]
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": [
+        "Geist Mono Variable",
+        "Geist Mono",
+        "ui-monospace",
+        "SFMono-Regular",
+        "Menlo",
+        "monospace"
+      ]
+    }
+  },
+  "elevation": {
+    "$description": "Shadows for things that float, and only those (Figma effect styles Unicron Elevation/*): menus, popovers, tooltips, dialogs, the phone sheet and the floating tab bar. Panels and cards take a hairline, no shadow.",
+    "popover": {
+      "$type": "shadow",
+      "$value": "0 8px 24px #0000003D, 0 2px 6px #0000001F",
+      "$description": "Figma Unicron Elevation/popover: 24% and 12% black."
+    },
+    "dialog": {
+      "$type": "shadow",
+      "$value": "0 16px 48px #00000052, 0 2px 6px #00000029",
+      "$description": "Figma Unicron Elevation/dialog: 32% and 16% black."
+    },
+    "blur": {
+      "$type": "dimension",
+      "$value": "24px",
+      "$description": "The backdrop blur under a frosted surface (Figma Unicron Elevation/popover's background blur)."
+    }
   }
 }

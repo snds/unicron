@@ -333,7 +333,7 @@ html:has([data-slot="app-frame"]) body {
 }
 
 /*
- * Type roles: every piece of text takes one of these 24, never a hand-picked size or weight. One
+ * Type roles: every piece of text takes one of these 31, never a hand-picked size or weight. One
  * set serves every app and both grounds. The values are tokens (@unicron/tokens → type.json, read
  * from the Figma text styles): each role reads --type-<role>-family, -weight, -size, -leading and
  * -tracking. Every line height is a multiple of 4px.
@@ -352,7 +352,9 @@ html:has([data-slot="app-frame"]) body {
  *
  * Eight of the names (page-title, section-title, group-title, body, body-strong, support, meta,
  * overline) were promoted from snds/synapse (UI review round 2, F14). 23 of the roles are the
- * 2026-11 design direction (Figma, `Unicron Type/`); mono-row came in 1.1 (Lockdown 4).
+ * 2026-11 design direction (Figma, `Unicron Type/`); mono-row came in 1.1 (Lockdown 4); seven came
+ * with the 2.0 library (control, control-strong, crumb, large-title, tab-label, tab-label-selected,
+ * code-reveal), and eight of the older ones are retired in Figma and leave in 2.1.
  */
 :root {
   /* The longest line that reads well; prose wider than this is hard to follow back. */
@@ -558,6 +560,63 @@ html:has([data-slot="app-frame"]) body {
   font-size: var(--type-number-count-size);
   line-height: var(--type-number-count-leading);
   letter-spacing: var(--type-number-count-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* Text in a control at its Figma size: a button's label, a filter chip, a field's value (2.0). */
+@utility type-control {
+  font-family: var(--type-control-family);
+  font-weight: var(--type-control-weight);
+  font-size: var(--type-control-size);
+  line-height: var(--type-control-leading);
+  letter-spacing: var(--type-control-tracking);
+}
+/* The same, stressed: a primary button, the selected segment (2.0). */
+@utility type-control-strong {
+  font-family: var(--type-control-strong-family);
+  font-weight: var(--type-control-strong-weight);
+  font-size: var(--type-control-strong-size);
+  line-height: var(--type-control-strong-leading);
+  letter-spacing: var(--type-control-strong-tracking);
+}
+/* A breadcrumb's or a title row's place name: Settings | Page (2.0). */
+@utility type-crumb {
+  font-family: var(--type-crumb-family);
+  font-weight: var(--type-crumb-weight);
+  font-size: var(--type-crumb-size);
+  line-height: var(--type-crumb-leading);
+  letter-spacing: var(--type-crumb-tracking);
+}
+/* A phone screen's big title, before it scrolls (2.0). 28/34, as iOS draws it: off the 4px grid on purpose. */
+@utility type-large-title {
+  font-family: var(--type-large-title-family);
+  font-weight: var(--type-large-title-weight);
+  font-size: var(--type-large-title-size);
+  line-height: var(--type-large-title-leading);
+  letter-spacing: var(--type-large-title-tracking);
+}
+/* A phone tab bar's label (2.0). */
+@utility type-tab-label {
+  font-family: var(--type-tab-label-family);
+  font-weight: var(--type-tab-label-weight);
+  font-size: var(--type-tab-label-size);
+  line-height: var(--type-tab-label-leading);
+  letter-spacing: var(--type-tab-label-tracking);
+}
+/* The selected tab's label (2.0). */
+@utility type-tab-label-selected {
+  font-family: var(--type-tab-label-selected-family);
+  font-weight: var(--type-tab-label-selected-weight);
+  font-size: var(--type-tab-label-selected-size);
+  line-height: var(--type-tab-label-selected-leading);
+  letter-spacing: var(--type-tab-label-selected-tracking);
+}
+/* A secret shown in the clear, to read or copy by eye: a password, a recovery code (2.0). */
+@utility type-code-reveal {
+  font-family: var(--type-code-reveal-family);
+  font-weight: var(--type-code-reveal-weight);
+  font-size: var(--type-code-reveal-size);
+  line-height: var(--type-code-reveal-leading);
+  letter-spacing: var(--type-code-reveal-tracking);
   font-variant-numeric: tabular-nums;
 }
 /* The app's name in the App Lockup. */
@@ -1050,7 +1109,7 @@ html:has([data-slot="app-frame"]) body {
     padding-inline: calc(var(--c-indicator-badge-height) / 4);
     font-size: var(--type-overline-size);
     line-height: var(--c-indicator-badge-height);
-    font-weight: 500;
+    font-weight: var(--type-overline-weight);
     font-variant-numeric: tabular-nums;
     text-align: center;
     background: var(--c-indicator-unread-badge-bg);

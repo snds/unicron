@@ -2,7 +2,7 @@
 // on the components themselves: every view, at 1440 (a pointer) and at 390 (a touch phone).
 //
 //   - a component's box is a multiple of 4px tall;
-//   - every piece of text is one of the 24 type roles (family, weight, size, line height);
+//   - every piece of text is one of the 31 type roles (family, weight, size, line height);
 //   - a gap between a component's parts is on the spacing scale (4px steps; 2, 6, 10, 14 inside);
 //   - nothing is blurred, and the one gradient is the scroll edge's mask.
 //
@@ -41,7 +41,7 @@ const SIZES = [
 ] as const
 type SizeName = (typeof SIZES)[number]["name"]
 
-// ── The 24 roles, read from the tokens ──────────────────────────────────────────────────────────
+// ── The 31 roles, read from the tokens ──────────────────────────────────────────────────────────
 type RoleToken = { $value: { fontFamily: string; fontWeight: number; fontSize: string; lineHeight: string } }
 const typeTokens = JSON.parse(fs.readFileSync(path.resolve(here, "../../../packages/tokens/tokens/type.json"), "utf8")).type as Record<string, RoleToken>
 const ROLE_FONTS = new Set(
@@ -75,16 +75,16 @@ const OFF_GRID: Record<string, Exception> = {
   "nav-mark": { why: "the same 6px mark, at a navigation glyph's corner", view: "nav-item", size: "1440" },
 }
 
-/** Text that is not one of the 24 roles, as `family weight size/leading`. */
+/** Text that is not one of the 31 roles, as `family weight size/leading`. */
 const OFF_ROLE: Record<string, Exception> = {
-  "sans 500 16/20": {
-    why: "a field's value on a touch screen: 16px, so iOS does not zoom the page into it, on the ui role's weight and line (docs/02-tokens.md, Type)",
+  "sans 400 16/20": {
+    why: "a field's value on a touch screen: 16px (--size-field-text-touch), so iOS does not zoom the page into it, on the ui role's weight and line (docs/02-tokens.md, Type)",
     view: "text-field",
     size: "390",
   },
   "mono 400 16/20": { why: "the same for a mono field: the code-inline role at 16px on touch", view: "secret-field", size: "390" },
-  "sans 500 17/28": {
-    why: "bold text in response prose: the response role's size and line in the strong weight (contract 5.1c C20: not a 24th role)",
+  "sans 500 15/24": {
+    why: "bold text in response prose: the response role's size and line in the strong weight (contract 5.1c C20: not a role of its own)",
     view: "prose",
     size: "1440",
   },
@@ -226,7 +226,7 @@ for (const size of SIZES) {
         expect(offGrid, "component boxes that are not a multiple of 4px tall").toEqual({})
 
         const offRole = Object.fromEntries(Object.entries(seen.fonts).filter(([font]) => !ROLE_FONTS.has(font) && !(font in OFF_ROLE)))
-        expect(offRole, "text outside the 24 type roles (family weight size/leading: the parts that draw it)").toEqual({})
+        expect(offRole, "text outside the 31 type roles (family weight size/leading: the parts that draw it)").toEqual({})
         // The touch exception is for a touch screen only.
         if (!size.touch) for (const font of ["sans 500 16/20", "mono 400 16/20"]) expect(seen.fonts[font] ?? [], `${font} away from a touch screen`).toEqual([])
 

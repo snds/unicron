@@ -258,7 +258,7 @@ test("under style-src 'self' a Select's list adds no <style> tag as it opens; ov
 
 // ── menus ──────────────────────────────────────────────────────────────────────────────────────
 
-test("menu rows are Nav Items, as Figma draws the quick-create menu: label 14/20 Medium in secondary ink", async ({ page }) => {
+test("menu rows are Nav Items, as Figma draws the quick-create menu: the label role (13/20 Medium since 2.0) in secondary ink", async ({ page }) => {
   await open(page, "dropdown-menu", "vale", "graphite")
   const row = page.locator('[data-slot="dropdown-menu-item"]').filter({ hasText: "New message" }).first()
   await expect(row).toBeVisible()
@@ -266,10 +266,10 @@ test("menu rows are Nav Items, as Figma draws the quick-create menu: label 14/20
     const s = getComputedStyle(el)
     return { size: s.fontSize, leading: s.lineHeight, weight: s.fontWeight }
   })
-  expect(type).toEqual({ size: "14px", leading: "20px", weight: "500" })
+  expect(type).toEqual({ size: "13px", leading: "20px", weight: "500" })
   const secondary = await role(page, "--text-secondary")
-  // Vale States / 03: the row's words and glyph are #D0D5D7, text/secondary on vale / graphite.
-  expect(secondary).toBe("#D0D5D7")
+  // The row's words and glyph are text/secondary on graphite: #D3D4D7, shared by every app since 2.0.
+  expect(secondary).toBe("#D3D4D7")
   expect(await colorOf(row)).toBe(secondary)
   expect(await colorOf(row.locator('[data-slot="icon"]').first())).toBe(secondary)
   expect(await heightOf(row)).toBe(36)
@@ -287,7 +287,7 @@ test("a folder sheet can be built from AdaptiveMenu: counts, and the open folder
   expect(await colorOf(starred)).toBe(await role(page, "--text-secondary"))
   await expect(inbox.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("012")
   await expect(starred.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("004")
-  expect(await starred.evaluate((el) => getComputedStyle(el).fontSize)).toBe("14px")
+  expect(await starred.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px")
 })
 
 // ── the 4px grid: nothing baseline-aligned grows its row, and a stroke adds no height ──────────
@@ -309,11 +309,12 @@ test("rows stay on the 4px grid with a Badge, a Kbd, a description or a gated ac
   expect(fieldRows.some((r) => r.badge)).toBe(true)
   expect(fieldRows.some((r) => r.kbd)).toBe(true)
   for (const row of fieldRows) expect(onGrid(row.height), `field row ${JSON.stringify(row)}`).toBe(true)
-  // Figma's Field Row is 52 (default) and 64 (display, stacked); a description line adds 20.
+  // Figma's Field Row is 52 (default) and 64 (display, stacked); a description line adds 16 (the
+  // caption role is 12/16 since 2.0), two lines 28 more, and a gated reason 20.
   for (const row of fieldRows.filter((r) => r.size === "default" && !r.wrapped)) {
-    expect([52, 72, 84], `default field row ${JSON.stringify(row)}`).toContain(row.height)
+    expect([52, 68, 72, 80], `default field row ${JSON.stringify(row)}`).toContain(row.height)
     if (!row.description && (row.badge || row.kbd)) expect(row.height, `a Badge or a Kbd must not grow the row ${JSON.stringify(row)}`).toBe(52)
-    if (row.description && row.badge) expect(row.height).toBe(72)
+    if (row.description && row.badge) expect(row.height).toBe(68)
   }
 
   await open(page, "toggle-row")
@@ -331,7 +332,8 @@ test("rows stay on the 4px grid with a Badge, a Kbd, a description or a gated ac
     // The switch sits on a whole pixel, centred in the row.
     expect(Number.isInteger(row.switchTop - row.top), `switch ${JSON.stringify(row)}`).toBe(true)
   }
-  expect(toggles.filter((r) => r.badge).map((r) => r.height)).toEqual(toggles.filter((r) => r.badge).map(() => 64))
+  // A badge row with its description: 60 since 2.0 (the caption line is 16).
+  expect(toggles.filter((r) => r.badge).map((r) => r.height)).toEqual(toggles.filter((r) => r.badge).map(() => 60))
 
   await open(page, "steps")
   for (const folio of await page.locator('[data-slot="steps-folio"]').all()) expect(await heightOf(folio)).toBe(20)
@@ -606,12 +608,12 @@ test("a review's note is the caption role, on one line in the 560 dialog, as Loc
     const s = getComputedStyle(el)
     return `${s.fontWeight} ${s.fontSize}/${s.lineHeight}`
   })
-  expect(font).toBe("400 13px/20px")
-  expect(await heightOf(note)).toBe(20)
+  expect(font).toBe("400 12px/16px")
+  expect(await heightOf(note)).toBe(16)
   expect(await colorOf(note)).toBe(await role(page, "--text-secondary"))
 })
 
-test("a popover's head is the overline over a 15/20 emphasis title, 36 tall, with no close unless asked for (Figma cw-07)", async ({ page }) => {
+test("a popover's head is the overline over a ui-emphasis title (13/20 since 2.0), 36 tall, with no close unless asked for (Figma cw-07)", async ({ page }) => {
   await open(page, "popover")
   const picker = page.locator('[data-slot="popover-content"]', { hasText: "Where it runs" })
   const head = picker.locator('[data-slot="popover-header"]')
@@ -621,10 +623,10 @@ test("a popover's head is the overline over a 15/20 emphasis title, 36 tall, wit
     const s = getComputedStyle(el)
     return `${s.fontWeight} ${s.fontSize}/${s.lineHeight}`
   })
-  expect(title).toBe("600 15px/20px")
+  expect(title).toBe("500 13px/20px")
 })
 
-test("the command menu's search field is the field every search field is: 16 in, 8 to the glyph, the ui role", async ({ page }) => {
+test("the command menu's search field is the field every search field is: 16 in, 8 to the glyph, the ui role (13/20 since 2.0)", async ({ page }) => {
   await open(page, "command")
   const box = page.locator('[data-slot="command-input-wrapper"]').first()
   const seen = await box.evaluate((el) => {
@@ -632,7 +634,7 @@ test("the command menu's search field is the field every search field is: 16 in,
     const input = getComputedStyle(el.querySelector('[data-slot="command-input"]')!)
     return { pad: `${s.paddingLeft} ${s.paddingRight}`, gap: s.columnGap, height: el.getBoundingClientRect().height, font: `${input.fontWeight} ${input.fontSize}/${input.lineHeight}` }
   })
-  expect(seen).toEqual({ pad: "16px 16px", gap: "8px", height: 48, font: "500 15px/20px" })
+  expect(seen).toEqual({ pad: "16px 16px", gap: "8px", height: 48, font: "400 13px/20px" })
   expect(await colorOf(box.locator("svg").first())).toBe(await role(page, "--text-secondary"))
 })
 
@@ -667,11 +669,11 @@ test("RunTrace is on the 4px grid open and closed, and its reasoning is cut at a
   expect(mask).toBe("none")
 })
 
-test("a LogRow's time keeps the meta role whole (12/20) and the row stays 40", async ({ page }) => {
+test("a LogRow's time keeps the meta role whole (12/16) and the row stays 40", async ({ page }) => {
   await open(page, "log-row", "synapse")
   const row = page.locator('[data-slot="log-row"]').first()
   expect(await heightOf(row)).toBe(40)
-  expect(await row.locator('[data-slot="log-row-time"]').evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("12px/20px")
+  expect(await row.locator('[data-slot="log-row-time"]').evaluate((el) => `${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("12px/16px")
 })
 
 test("CodeDisplay: a tile is 172, a row 100 with the account 4 under the issuer, and a field 80 with no hairline above and its code centred", async ({ page }) => {
@@ -713,7 +715,7 @@ test("the file chip's name is the label role, with 48 of layout around its three
   const name = chip.locator('[data-slot="file-chip-name"]')
   // The fix: the name was the ui role (15/20), which made Vale's chip 286.86 wide where Figma
   // draws 276. The role is pinned exactly.
-  expect(await name.evaluate((el) => `${getComputedStyle(el).fontWeight} ${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("500 14px/20px")
+  expect(await name.evaluate((el) => `${getComputedStyle(el).fontWeight} ${getComputedStyle(el).fontSize}/${getComputedStyle(el).lineHeight}`)).toBe("500 13px/20px")
   const widths = await chip.evaluate((el) => {
     const of = (slot: string) => el.querySelector(`[data-slot="${slot}"]`)!.getBoundingClientRect().width
     // The same text in the plain label role, drawn by this machine.

@@ -27,7 +27,7 @@ A screen has a **theme** and a **ground**. They are set apart, on the page's roo
 
 **No app's theme lives in the core** (Unicron 1, Sean's ruling of 2026-11-16; [principle 1](01-principles.md)).
 The core ships one generic default theme, solved so that every pair the contrast gate measures
-clears its floor. Each app declares its own 28 theme slots in its own layer, under its own
+clears its floor. Each app declares its own 10 accent slots in its own layer, under its own
 `[data-theme]`, and measures them with the contrast tool this package ships
 ([05 · Consuming → Declare your app's theme](05-consuming.md#declare-your-apps-theme)). An app
 sets `data-theme` once, in its HTML, and toggles `dark` as it always did (`next-themes` with
@@ -63,8 +63,8 @@ box.
 
 | Tier | File | CSS prefix | Holds | Example |
 |---|---|---|---|---|
-| 1 Global | `global.json` | `--g-` | Raw values: the 28 theme slots (the Unicron default), the shared needs-you, critical and scrim colours, the twelve swatches, sizes, strokes, radius base, durations, easing, font stacks, and the deprecated ramps | `--g-theme-stone-ground: #F3F4F6` |
-| 1, an app's theme | the app's own layer | `--g-theme-` | The same 28 slots, with the app's values (not in this package since 1.1) | `[data-theme="vale"] { --g-theme-stone-ground: #ECF1F4 }` |
+| 1 Global | `global.json` | `--g-` | Raw values: the 10 accent slots (the Unicron default), the shared 2.0 neutrals (`base`), labels and charts, the shared needs-you, critical and scrim colours, the twelve swatches, sizes, strokes, radius base, durations, easing, font stacks, and the deprecated ramps | `--g-theme-stone-ground: #F3F4F6` |
+| 1, an app's theme | the app's own layer | `--g-theme-` | The same 10 accent slots, with the app's values (not in this package since 1.1) | `[data-theme="vale"] { --g-theme-stone-ground: #ECF1F4 }` |
 | 2 Semantic | `semantic.json` | `--` | Roles. Figma's theme roles, plus the shadcn/ui and sidebar contracts as aliases of them. Light = `$value`; dark = `$extensions["unicron.modes"].dark` | `--surface-ground: var(--g-theme-stone-ground)` / `.dark { --surface-ground: var(--g-theme-graphite-ground) }` |
 | Type roles | `type.json` | `--type-` | 24 text styles (Figma's 23 and `mono-row`), five variables each | `--type-body-size: 1rem` |
 | 3 Component | `component.json` and `component/<area>.json` | `--c-` | Knobs the core primitives read; they alias tier 2 or hold per-component sizes | `--c-scrim-sheet: 0.5` (graphite) |
@@ -362,7 +362,7 @@ does not own: Lockdown's in-page extension frames (build contract 5.1b #54).
 <html data-theme="lockdown">                  <!-- follows the browser -->
 <html data-theme="lockdown" class="graphite"> <!-- always graphite; class="stone" for stone -->
   <link rel="stylesheet" href="plain.css">
-  <link rel="stylesheet" href="lockdown-theme.css">   <!-- the app's own 28 slots -->
+  <link rel="stylesheet" href="lockdown-theme.css">   <!-- the app's own 10 accent slots -->
 ```
 
 `scripts/check.mjs` parses the file (whole comments, flat rules, the one `@media` block, nothing
@@ -666,14 +666,13 @@ has to match its run's misses exactly, so an exception that starts passing fails
 The core's list, in short:
 
 <!-- contrast:exceptions start · written by `node scripts/contrast.mjs --write-docs` (packages/tokens); do not edit by hand -->
-The run lists 15 measures in 15 recipes. In short:
+The run lists 122 measures in 91 recipes. In short:
 
 | What | Where | Measures | Floor |
 |---|---|---|---|
-| `critical-text` on `surface-raised`, on `critical-soft`, on `accent` and under a hover or pressed wash (graphite) | graphite | Lc 56.9 to 59.5 | Lc 60 |
-| `text-body` on `critical-soft` (a critical banner or badge, a removed diff line), and under a button's wash there | stone | Lc 81.0 to 88.6 | Lc 90 |
-| `needs-you-fill` as a solid, and so `attention` as a mark | stone | Lc 0.0 to 13.8 | Lc 30 |
-| `text-body` on a selected row (`primary-soft`) under the pressed wash | stone | Lc 88.2 | Lc 90 |
+| `critical-text` and `text-body` on the critical washes (Figma's shared critical colours) | both | up to Lc 3.3 under | Lc 90, 60 |
+| `attention` (the needs-you amber) as a mark on a wash | stone | Lc 24.6 to 29.4 | Lc 30 |
+| Unicron 2.0's shared neutrals, status and count colours under an APCA floor (solved to WCAG 2 4.5:1) | both | up to Lc 34.6 under | Lc 90, 75, 60, 30, 4.5, 3 |
 <!-- contrast:exceptions end -->
 
 The table is written from the default run (`node scripts/contrast.mjs --write-docs`), and every
@@ -708,7 +707,7 @@ exceptions and the must-differ rows, and fails on any miss that is not a named e
 
 ## Figma parity
 
-`packages/tokens/tokens/figma/theme-2026-11.json` is a checked-in snapshot of the Figma read-out:
+`packages/tokens/tokens/figma/theme-2026-11-24.json` is a checked-in snapshot of the Figma read-out:
 the 21 theme roles in the 8 modes, the 23 text styles, and the space, radius and size numbers.
 `scripts/figma-parity.mjs` (part of `pnpm test`) resolves the built CSS as a browser would and
 fails if anything differs:
@@ -764,7 +763,7 @@ passes. The snapshot is never edited by hand. The roles added in 1.1 (`line-fiel
 Product-only roles, and the product's own theme, live in the product, after the core import. The
 documented example is `packages/tokens/examples/app-extension.css`. Rules:
 
-- Declare the theme in the layer: all 28 slots under `[data-theme="<app>"]`, as raw values
+- Declare the theme in the layer: all 10 accent slots under `[data-theme="<app>"]`, as raw values
   (the example's first block). Switch it on in the HTML (`data-theme`, the `dark` class), not in
   CSS. Measure it with `unicron-contrast` in CI ([05 · Consuming](05-consuming.md#declare-your-apps-theme)).
 - Alias a role (`--*`), not a raw value. The deprecated `--g-neutral-*` ramp is not themed, so a
@@ -774,7 +773,7 @@ documented example is `packages/tokens/examples/app-extension.css`. Rules:
 - A role that differs by ground swaps on the core's two ground selectors, copied as they are
   ([How the two axes resolve](#how-the-two-axes-resolve)). A plain `.dark` leaves a `data-theme`
   box in a dark page on the light values while the core roles around it turn dark.
-  `scripts/check.mjs` holds the example to this, and to declaring all 28 slots; `pnpm test`
+  `scripts/check.mjs` holds the example to this, and to declaring all 10 accent slots; `pnpm test`
   measures the example's theme, which clears every floor.
 - Expose your roles to Tailwind with your own `@theme inline` block.
 

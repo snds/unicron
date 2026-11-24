@@ -9,6 +9,7 @@ const APP: Record<AppTheme, { name: string; right: { label: string; icon: "user-
   vale: { name: "Vale", right: { label: "Profile", icon: "user--avatar" } },
   lockdown: { name: "Lockdown", right: { label: "Profile", icon: "user--avatar" } },
   synapse: { name: "Synapse", right: { label: "Profile", icon: "user--avatar" } },
+  fontface: { name: "Fontface", right: { label: "Profile", icon: "user--avatar" } },
 }
 
 function Specimen({ label, children }: { label: string; children: ReactNode }) {
