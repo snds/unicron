@@ -360,6 +360,16 @@ describe("Composer", () => {
     expect(container.querySelector('[data-slot="composer"]')).toHaveAttribute("data-size", "line")
     expect(field().className).toContain("h-6")
     expect(field()).toHaveAttribute("rows", "1")
+    // One row: the field beside its tools.
+    expect(container.querySelector('[data-slot="composer-box"]')!.className).toContain("flex-row")
+  })
+
+  it("goes to one row on a phone on its side or with the keyboard up, where height is scarce", () => {
+    const { container } = render(<Composer />)
+    const box = container.querySelector('[data-slot="composer-box"]')!.className
+    expect(box).toContain("short:flex-row")
+    expect(box).toContain("group-data-[keyboard=open]/frame:flex-row")
+    expect(field().className).toContain("short:flex-1")
   })
 
   it("takes the host's field name and passes field props and its ref through", () => {
