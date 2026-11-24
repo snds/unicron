@@ -42,4 +42,12 @@ describe("AppLockup (Figma 28:2297)", () => {
     render(<AppLockup name="Vale" render={<a href="/" />} />)
     expect(screen.getByRole("link", { name: "Vale" })).toHaveAttribute("href", "/")
   })
+
+  it("size s is the 2.0 sidebar's: a 20 mark and the name as written in 14/600", () => {
+    const { container } = render(<AppLockup name="Warpcore" size="s" />)
+    expect(container.querySelector('[data-slot="app-lockup-mark"]')).toHaveClass("size-5", "rounded-md")
+    const name = container.querySelector('[data-slot="app-lockup-name"]')!
+    expect(name).toHaveClass("type-control-strong")
+    expect(name).not.toHaveClass("uppercase")
+  })
 })

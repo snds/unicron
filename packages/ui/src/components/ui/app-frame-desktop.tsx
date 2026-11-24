@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./dropdown-menu"
+import { IconButton } from "../icon-button"
 import { FloatButton } from "./float-button"
 import { Kbd } from "./kbd"
 import { Progress, type ProgressTone } from "./progress"
@@ -85,6 +86,19 @@ export type AppFrameSidebarProps = Omit<React.ComponentProps<"nav">, "children">
    * (y 44 instead of 16, so 28). In px.
    */
   leadingInset?: { start?: number; top?: number }
+  /**
+   * The 2.0 sidebar (Figma Sidebar Top 144:701, Sidebar Group 195:13818, Sidebar Foot 178:4541):
+   * 240 wide, edge to edge on the sunken ground, and the frame drops its page gutters. The top row
+   * holds the lockup and the primary as an icon button; `footer` runs the sidebar's full width
+   * (pass `SidebarFoot`). The 1.x sidebar stays the default until 3.0.
+   */
+  flush?: boolean
+  /**
+   * Flush only. The Mac top row: room for the window buttons the window draws, and the collapse
+   * control, over a 36 row with the lockup and the primary. Without it (Windows, the web) the top
+   * row is the lockup and the primary, and the collapse control lives in the `TitleRow`.
+   */
+  windowButtons?: boolean
   /** The NavSections: the middle, which scrolls between the head and the pinned foot. */
   children?: React.ReactNode
 }
@@ -113,6 +127,8 @@ function AppFrameSidebar({
   drawerOpen: drawerOpenProp,
   onDrawerOpenChange,
   leadingInset,
+  flush = false,
+  windowButtons = false,
   className,
   style,
   children,
@@ -143,9 +159,9 @@ function AppFrameSidebar({
   const { setSidebar } = frame
   React.useLayoutEffect(() => {
     if (frame.phone) return
-    setSidebar({ collapsed })
+    setSidebar({ collapsed, flush })
     return () => setSidebar(null)
-  }, [frame.phone, collapsed, setSidebar])
+  }, [frame.phone, collapsed, flush, setSidebar])
   const drawerShows = medium && drawerOpen
   // The primary's quick create from the keyboard. The key's own context-menu event that may follow
   // (Windows raises it as the Menu key comes up) is the same press, so it is not run twice.
@@ -241,6 +257,70 @@ function AppFrameSidebar({
 
   if (frame.phone) return null
 
+  // The 2.0 sidebar's primary: an icon button at the end of the lockup's row (Sidebar Top).
+  const flushAction = isAction(action) ? (
+    <IconButton
+      data-slot="app-frame-sidebar-action"
+      label={action.label}
+      icon={action.icon ?? "edit"}
+      size="icon-sm"
+      onClick={action.onClick}
+      aria-keyshortcuts={action.onLongPress ? "Shift+F10 ContextMenu" : undefined}
+      onKeyDown={action.onLongPress ? (event: React.KeyboardEvent) => quickCreateKey(event, action) : undefined}
+      onContextMenu={action.onLongPress ? (event: React.MouseEvent) => quickCreateMenu(event, action) : undefined}
+    />
+  ) : (
+    action
+  )
+  const flushLockup = React.isValidElement<{ showName?: boolean; size?: "m" | "s" }>(lockup)
+    ? React.cloneElement(lockup, { showName: lockup.props.showName ?? true, size: lockup.props.size ?? "s" })
+    : lockup
+
+  const flushFull = (inDrawer: boolean) => (
+    <>
+      <div data-slot="app-frame-sidebar-head" className="flex flex-col">
+        {windowButtons ? (
+          // Sidebar Top, Mac: the window buttons' room, then the collapse control, 48 tall.
+          <div data-slot="app-frame-sidebar-top" className="flex h-12 items-center gap-2 px-1">
+            <span data-slot="app-frame-sidebar-window-buttons" aria-hidden="true" className="w-13 shrink-0" />
+            <span className="flex-1" />
+            {inDrawer ? (
+              <SidebarControl label="Close sidebar" icon="open-panel--filled--left" onClick={() => setDrawerOpen(false)} />
+            ) : onCollapsedChange ? (
+              <SidebarControl ref={collapseButton} label="Hide sidebar" icon="open-panel--filled--left" onClick={() => askCollapsed(true)} />
+            ) : null}
+          </div>
+        ) : null}
+        <div
+          data-slot={windowButtons ? "app-frame-sidebar-app" : "app-frame-sidebar-top"}
+          className={cn("flex items-center gap-2 ps-2.5 pe-1.5", windowButtons ? "h-9" : "h-12")}
+        >
+          <div className="flex min-w-0 flex-1 items-center">{flushLockup}</div>
+          {flushAction}
+          {/* Off the Mac the collapse control is the title row's; in the drawer it closes it here. */}
+          {!windowButtons && inDrawer ? <SidebarControl label="Close sidebar" icon="open-panel--filled--left" onClick={() => setDrawerOpen(false)} /> : null}
+        </div>
+        {switcher}
+      </div>
+      <div
+        data-slot="app-frame-sidebar-middle"
+        className={cn(
+          "-mx-1 mt-2 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1",
+          "pb-8 [mask-image:linear-gradient(to_bottom,black_calc(100%-var(--spacing)*8),transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_calc(100%-var(--spacing)*8),transparent)]"
+        )}
+      >
+        {children}
+      </div>
+      {footer || footerControl ? (
+        // The foot runs the sidebar's full width, out past its 10 of padding, so its rule meets both edges.
+        <div data-slot="app-frame-sidebar-footer" className="-mx-2.5 flex items-center">
+          <div className="min-w-0 flex-1">{footer}</div>
+          {footerControl}
+        </div>
+      ) : null}
+    </>
+  )
+
   const full = (inDrawer: boolean) => (
     <>
       <div data-slot="app-frame-sidebar-head" className="flex flex-col gap-4">
@@ -295,6 +375,22 @@ function AppFrameSidebar({
     </>
   )
 
+  if (!rail && flush) {
+    return (
+      <nav
+        data-slot="app-frame-sidebar"
+        data-state="expanded"
+        data-flush=""
+        aria-label={label}
+        className={cn("flex min-h-0 w-(--c-app-frame-sidebar-flush-width) flex-col bg-surface-sunken px-2.5 [grid-area:sidebar]", className)}
+        style={style}
+        {...props}
+      >
+        {flushFull(false)}
+      </nav>
+    )
+  }
+
   if (!rail) {
     return (
       <nav
@@ -317,17 +413,30 @@ function AppFrameSidebar({
         data-slot="app-frame-sidebar"
         data-state="rail"
         aria-label={label}
-        className={cn("me-6 flex min-h-0 w-(--c-app-frame-sidebar-rail) flex-col items-center pt-4 pb-9 [grid-area:sidebar]", className)}
-        style={{ ...(leadingInset?.top ? { paddingTop: `calc(var(--spacing) * 4 + ${leadingInset.top}px)` } : null), ...style }}
+        data-flush={flush ? "" : undefined}
+        className={cn(
+          "flex min-h-0 flex-col items-center [grid-area:sidebar]",
+          flush
+            ? // The 2.0 rail: 56 on the sunken ground, the window buttons' row kept at the top on a Mac.
+              cn("w-(--c-app-frame-sidebar-flush-rail) bg-surface-sunken pb-0", windowButtons ? "pt-12" : "pt-2")
+            : "me-6 w-(--c-app-frame-sidebar-rail) pt-4 pb-9",
+          className
+        )}
+        style={{ ...(!flush && leadingInset?.top ? { paddingTop: `calc(var(--spacing) * 4 + ${leadingInset.top}px)` } : null), ...style }}
         {...props}
         inert={drawerShows || undefined}
       >
         <AppFrameRailContext.Provider value={true}>
-          <div data-slot="app-frame-sidebar-head" className="flex flex-col items-center gap-4">
-            <div className="flex h-control items-center [&_[data-slot=app-lockup-name]]:sr-only">
-              {React.isValidElement<{ showName?: boolean }>(lockup) ? React.cloneElement(lockup, { showName: false }) : lockup}
+          <div data-slot="app-frame-sidebar-head" className={cn("flex flex-col items-center", flush ? "gap-1" : "gap-4")}>
+            <div className={cn("flex items-center [&_[data-slot=app-lockup-name]]:sr-only", flush ? "h-9" : "h-control")}>
+              {React.isValidElement<{ showName?: boolean; size?: "m" | "s" }>(lockup)
+                ? React.cloneElement(lockup, { showName: false, ...(flush && { size: lockup.props.size ?? "s" }) })
+                : lockup}
             </div>
-            {isAction(action) ? (
+            {flush ? (
+              // The 2.0 rail keeps the primary the icon button it is on the sidebar's top row.
+              flushAction
+            ) : isAction(action) ? (
               <FloatButton
                 kind="primary"
                 size="l"
@@ -342,11 +451,11 @@ function AppFrameSidebar({
           <div
             data-slot="app-frame-sidebar-middle"
             // A hairline between the groups, as the rail has no headings (Synapse Y-01).
-            className="mt-6 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto [&>*+*]:pt-2 [&>*+*]:rule-t"
+            className={cn(flush ? "mt-3" : "mt-6", "flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto [&>*+*]:pt-2 [&>*+*]:rule-t")}
           >
             {children}
           </div>
-          <div data-slot="app-frame-sidebar-footer" className="mt-4 flex flex-col items-center gap-2">
+          <div data-slot="app-frame-sidebar-footer" className={cn("mt-4 flex flex-col items-center gap-2", flush && "self-stretch pb-2")}>
             {footer}
             {footerControl}
             {canExpand ? (
@@ -373,7 +482,10 @@ function AppFrameSidebar({
             data-slot="app-frame-sidebar-drawer"
             role="dialog"
             aria-label={label}
-            className="motion-slide motion-slide-from-left absolute inset-y-0 start-0 z-40 flex bg-surface-ground ps-6 pe-6 rule-r"
+            className={cn(
+              "motion-slide motion-slide-from-left absolute inset-y-0 start-0 z-40 flex rule-r",
+              flush ? "bg-surface-sunken px-2.5" : "bg-surface-ground ps-6 pe-6"
+            )}
             // The scrim stops a pointer, not the Tab key: focus that walks on out of the drawer into
             // the page behind it closes the drawer, as a press outside does. Focus that goes to a
             // layer the drawer itself opened (a switcher's menu, in a portal outside the frame)
@@ -386,9 +498,15 @@ function AppFrameSidebar({
               setDrawerOpen(false)
             }}
           >
-            <nav aria-label={label} className="flex min-h-0 w-(--c-app-frame-sidebar-width) flex-col pt-4 pb-9">
-              {full(true)}
-            </nav>
+            {flush ? (
+              <nav aria-label={label} className="flex min-h-0 w-(--c-app-frame-sidebar-flush-width) flex-col">
+                {flushFull(true)}
+              </nav>
+            ) : (
+              <nav aria-label={label} className="flex min-h-0 w-(--c-app-frame-sidebar-width) flex-col pt-4 pb-9">
+                {full(true)}
+              </nav>
+            )}
           </div>
         </>
       ) : null}

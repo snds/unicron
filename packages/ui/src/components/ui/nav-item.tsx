@@ -184,6 +184,9 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
 
   // A tree and a radio group carry the heading's name themselves; a list sits in a named group.
   const ownName = tree || radios
+  // The rail draws icons only: a group whose rows have none (a list of conversations) leaves the rail.
+  if (collapsed && !React.Children.toArray(children).some((child) => React.isValidElement<{ icon?: unknown }>(child) && child.props.icon)) return null
+
   return (
     <NavSectionContext.Provider value={context}>
       <div

@@ -101,9 +101,11 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
   const wide = viewport.widthClass === "wide" || viewport.widthClass === "ultrawide"
 
   // The list + detail shrink order (C8): the sidebar's rail first, then the detail pushed.
-  const [sidebar, setSidebarState] = React.useState<{ collapsed: boolean } | null>(null)
-  const setSidebar = React.useCallback((next: { collapsed: boolean } | null) => {
-    setSidebarState((prev) => (prev?.collapsed === next?.collapsed && (prev === null) === (next === null) ? prev : next))
+  const [sidebar, setSidebarState] = React.useState<{ collapsed: boolean; flush?: boolean } | null>(null)
+  const setSidebar = React.useCallback((next: { collapsed: boolean; flush?: boolean } | null) => {
+    setSidebarState((prev) =>
+      prev?.collapsed === next?.collapsed && Boolean(prev?.flush) === Boolean(next?.flush) && (prev === null) === (next === null) ? prev : next
+    )
   }, [])
   const [parts, setParts] = React.useState({ list: 0, detail: 0 })
   const registerSplitPart = React.useCallback((part: "list" | "detail") => {
@@ -117,6 +119,8 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
         ? {
             sidebarWidth: readLength(box, "--c-app-frame-sidebar-width", SHRINK_FALLBACK.sidebarWidth),
             railWidth: readLength(box, "--c-app-frame-sidebar-rail", SHRINK_FALLBACK.railWidth),
+            flushWidth: readLength(box, "--c-app-frame-sidebar-flush-width", SHRINK_FALLBACK.flushWidth),
+            flushRail: readLength(box, "--c-app-frame-sidebar-flush-rail", SHRINK_FALLBACK.flushRail),
             listMin: readLength(box, "--c-app-frame-list-compact", SHRINK_FALLBACK.listMin),
             gap: readLength(box, "--c-app-frame-split-gap", SHRINK_FALLBACK.gap),
             detailMin: readLength(box, "--c-app-frame-detail-min", SHRINK_FALLBACK.detailMin),
@@ -124,16 +128,19 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
         : SHRINK_FALLBACK,
     [box]
   )
+  const flushSidebar = Boolean(sidebar?.flush)
   // 1024 to 1099 the sidebar is its rail on every screen, list + detail or not (Unicron 74).
   const railBand = layout === "expanded" && sidebarRailAt(viewport.width)
   const shrink =
     layout === "expanded" && parts.list > 0 && parts.detail > 0
       ? shrinkFor({
           width: viewport.width,
-          gutter: wide ? GUTTER_WIDE : GUTTER,
+          // The 2.0 sidebar is edge to edge: no page gutters, and nothing between it and the content.
+          gutter: flushSidebar ? 0 : wide ? GUTTER_WIDE : GUTTER,
           sidebar: sidebar ? (sidebar.collapsed ? "rail" : "full") : "none",
-          sidebarGap: GUTTER,
+          sidebarGap: flushSidebar ? 0 : GUTTER,
           ...knobs,
+          ...(flushSidebar && { sidebarWidth: knobs.flushWidth, railWidth: knobs.flushRail }),
         })
       : "none"
   const split = (layout === "expanded" && shrink !== "push") || (foldBook && !phone)
@@ -373,7 +380,8 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
                 cn(
                   "grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] [grid-template-areas:'sidebar_header'_'sidebar_main']",
                   // The page gutters: 48 at 1440 as every desktop frame draws them, 24 below 1280.
-                  wide ? "px-12" : "px-6"
+                  // None beside the 2.0 sidebar, which runs edge to edge (AppFrameSidebar flush).
+                  flushSidebar ? "px-0" : wide ? "px-12" : "px-6"
                 )
           )}
         >
@@ -418,8 +426,8 @@ interface ToastBox {
 /** The page gutters (24, 48 from the wide width) and the sidebar's space to the content: the spacing scale. */
 const GUTTER = 24
 const GUTTER_WIDE = 48
-/** The shrink knobs' values without the stylesheet (C8): sidebar 204, rail 48, list 320, gap 24, detail 480. */
-const SHRINK_FALLBACK = { sidebarWidth: 204, railWidth: 48, listMin: 320, gap: 24, detailMin: 480 }
+/** The shrink knobs' values without the stylesheet (C8): sidebar 204, rail 48 (the 2.0 sidebar 240 and 56), list 320, gap 24, detail 480. */
+const SHRINK_FALLBACK = { sidebarWidth: 204, railWidth: 48, flushWidth: 240, flushRail: 56, listMin: 320, gap: 24, detailMin: 480 }
 
 /* ── Content ─────────────────────────────────────────────────────────────────────────────────── */
 

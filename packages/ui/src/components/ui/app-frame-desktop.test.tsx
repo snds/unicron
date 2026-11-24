@@ -6,6 +6,8 @@ import { AppFrame, AppFrameMain, AppFrameSidebar, AppFrameStatusLine, AppFrameSw
 import { AppLockup } from "./app-lockup"
 import { FloatButton } from "./float-button"
 import { NavItem, NavSection } from "./nav-item"
+import { SidebarFoot } from "./sidebar-foot"
+import { TooltipProvider } from "./tooltip"
 import { TopTab, TopTabs } from "./top-tabs"
 
 function setViewport(width: number, height: number) {
@@ -37,6 +39,94 @@ function Sidebar(props: Partial<React.ComponentProps<typeof AppFrameSidebar>>) {
     </AppFrame>
   )
 }
+
+describe("AppFrameSidebar flush (2.0: Sidebar Top 144:701, Sidebar Foot 178:4541)", () => {
+  function Flush(props: Partial<React.ComponentProps<typeof AppFrameSidebar>>) {
+    return (
+      <TooltipProvider>
+        <AppFrame>
+          <AppFrameSidebar
+            flush
+            lockup={<AppLockup name="Warpcore" />}
+            action={{ label: "New chat", icon: "edit" }}
+            footer={<SidebarFoot account={{ name: "Sean", initials: "S", meta: "$1.20 today" }} settings={{ onClick: () => {} }} />}
+            {...props}
+          >
+            {props.children ?? (
+              <NavSection title="Projects">
+                <NavItem label="Legion" icon="folder" href="#p" />
+              </NavSection>
+            )}
+          </AppFrameSidebar>
+          <AppFrameMain />
+        </AppFrame>
+      </TooltipProvider>
+    )
+  }
+
+  it("is 240 on the sunken ground, edge to edge: the frame drops its page gutters", () => {
+    setViewport(1440, 900)
+    const { container } = render(<Flush />)
+    const nav = screen.getByRole("navigation", { name: "Places" })
+    expect(nav).toHaveAttribute("data-flush")
+    expect(nav.className).toContain("w-(--c-app-frame-sidebar-flush-width)")
+    expect(nav).toHaveClass("bg-surface-sunken", "px-2.5")
+    expect(nav).not.toHaveClass("me-6")
+    const body = container.querySelector('[data-slot="app-frame-body"]')!
+    expect(body).toHaveClass("px-0")
+    expect(body).not.toHaveClass("px-12")
+  })
+
+  it("draws the web top row: the lockup and the primary as an icon button, 48 tall", () => {
+    setViewport(1440, 900)
+    render(<Flush />)
+    const top = screen.getByRole("navigation", { name: "Places" }).querySelector('[data-slot="app-frame-sidebar-top"]')!
+    expect(top).toHaveClass("h-12")
+    expect(top).toContainElement(screen.getByText("Warpcore"))
+    const action = screen.getByRole("button", { name: "New chat" })
+    expect(action).toHaveAttribute("data-slot", "app-frame-sidebar-action")
+    expect(action).not.toHaveClass("w-full")
+  })
+
+  it("on a Mac: the window buttons' room and Hide sidebar on the top row, the lockup on a 36 row under it", () => {
+    setViewport(1440, 900)
+    const onCollapsedChange = vi.fn()
+    render(<Flush windowButtons onCollapsedChange={onCollapsedChange} />)
+    const nav = screen.getByRole("navigation", { name: "Places" })
+    expect(nav.querySelector('[data-slot="app-frame-sidebar-window-buttons"]')).not.toBeNull()
+    expect(nav.querySelector('[data-slot="app-frame-sidebar-app"]')).toHaveClass("h-9")
+    fireEvent.click(screen.getByRole("button", { name: "Hide sidebar" }))
+    expect(onCollapsedChange).toHaveBeenLastCalledWith(true)
+  })
+
+  it("runs the foot the sidebar's full width, and the rail is 56 with the tile alone", () => {
+    setViewport(1440, 900)
+    const { rerender } = render(<Flush />)
+    const footer = screen.getByRole("navigation", { name: "Places" }).querySelector('[data-slot="app-frame-sidebar-footer"]')!
+    expect(footer).toHaveClass("-mx-2.5")
+    expect(screen.getByText("$1.20 today")).toBeInTheDocument()
+    rerender(<Flush collapsed onCollapsedChange={() => {}} />)
+    const nav = screen.getByRole("navigation", { name: "Places" })
+    expect(nav.className).toContain("w-(--c-app-frame-sidebar-flush-rail)")
+    expect(nav.querySelector('[data-slot="sidebar-foot"]')).toHaveAttribute("data-collapsed")
+    expect(screen.queryByText("$1.20 today")).toBeNull()
+    // The primary stays an icon button, and the lockup keeps its 20 mark.
+    expect(screen.getByRole("button", { name: "New chat" })).toHaveAttribute("data-slot", "app-frame-sidebar-action")
+    expect(nav.querySelector('[data-slot="app-lockup-mark"]')).toHaveClass("size-5")
+  })
+
+  it("leaves a group with no icons out of the rail", () => {
+    setViewport(1440, 900)
+    render(
+      <Flush collapsed onCollapsedChange={() => {}}>
+        <NavSection title="Conversations">
+          <NavItem label="Tile grout colors" href="#c" />
+        </NavSection>
+      </Flush>
+    )
+    expect(screen.queryByRole("link", { name: "Tile grout colors" })).toBeNull()
+  })
+})
 
 describe("AppFrameSidebar", () => {
   it("draws the lockup, the switcher, the full-width primary, the sections and the pinned foot at the expanded width", () => {

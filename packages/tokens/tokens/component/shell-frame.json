@@ -11,6 +11,16 @@
       "$value": "{size-control}",
       "$description": "The sidebar collapsed to its rail (by choice, or at medium width): one column of rail items, 48 wide (Rail Item, Figma 44:106). Synapse's brief counts 56; the drawn rail item is 48."
     },
+    "sidebar-flush-width": {
+      "$type": "dimension",
+      "$value": "15rem",
+      "$description": "The 2.0 sidebar (AppFrameSidebar flush, Figma Sidebar Top 144:701 and Sidebar Foot 178:4541): 240 wide, edge to edge on the sunken ground, with no page gutter beside it."
+    },
+    "sidebar-flush-rail": {
+      "$type": "dimension",
+      "$value": "3.5rem",
+      "$description": "The 2.0 sidebar collapsed to its rail: 56 wide (Sidebar Foot, Layout=Collapsed)."
+    },
     "list": {
       "$type": "dimension",
       "$value": "27rem",

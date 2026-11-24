@@ -80,7 +80,7 @@ function TitleRow({
     <header
       data-slot="title-row"
       data-kind={kind}
-      className={cn("flex h-12 min-w-0 shrink-0 items-center gap-3 bg-surface-ground ps-5 pe-3 rule-b", className)}
+      className={cn("flex h-12 min-w-0 shrink-0 items-center gap-3 bg-surface-ground ps-5 pe-3 rule-b [grid-area:header]", className)}
       {...props}
     >
       {windowButtons ? <span data-slot="title-row-window-buttons" aria-hidden="true" className="w-13 shrink-0" /> : null}

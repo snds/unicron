@@ -294,7 +294,8 @@ export interface AppFrameContextValue {
    */
   sidebarRail: boolean
   /** The sidebar says it is there, and whether it is collapsed by choice (null: gone). */
-  setSidebar: (sidebar: { collapsed: boolean } | null) => void
+  /** `flush`: the 2.0 sidebar, edge to edge, so the frame draws no page gutters beside it. */
+  setSidebar: (sidebar: { collapsed: boolean; flush?: boolean } | null) => void
   /** A list or a detail column says it is there, so the shrink order applies. Returns its removal. */
   registerSplitPart: (part: "list" | "detail") => () => void
   /** The phone's status strip, as a toast reads it (C6). */
