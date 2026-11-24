@@ -50,7 +50,7 @@
 //       - no raw type: `text-xs` … `text-9xl`, `font-medium` and the other weights, `leading-*`.
 //         Write a type role (`type-ui`, `type-caption`). `leading-(--token)` and
 //         `leading-[inherit]` are fine.
-//       - no `rounded-full`: the corner is 2px and marks are squares (contract 1.6). The named
+//       - no `rounded-full`: corners come from the 2.0 radius scale (4, 6, 8, 12, 16). The named
 //         exceptions are in ROUND_ALLOWED below, each with its reason.
 //       - no blur and no drop shadow: `backdrop-blur*`, `backdrop-filter`, `blur-*`, `shadow-sm`
 //         … `shadow-2xl`, `drop-shadow-*`, `text-shadow-*`, a coloured shadow. `shadow-none` is
@@ -296,6 +296,11 @@ const ROUND_ALLOWED = [
     count: 2,
     why: "the radio and its dot: the one round control (Unicron 41), so one choice of many never looks like a checkbox",
   },
+  {
+    file: "packages/ui/src/components/ui/filter-chip.tsx",
+    count: 1,
+    why: "the 2.0 Filter Chip is a pill in the published Figma library (Components page, Filter Chip), so a filter never reads as a button",
+  },
 ]
 const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
 // An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not
@@ -323,7 +328,7 @@ for (const file of files) {
     }
     for (const hit of line.match(ROUND) ?? []) {
       roundSeen.set(rel, (roundSeen.get(rel) ?? 0) + 1)
-      if (!ROUND_ALLOWED.some((entry) => entry.file === rel)) fail(`${rel}:${i + 1}`, `raw value ${hit} — the corner is 2px and marks are squares (contract 1.6); a round part needs a named exception in ROUND_ALLOWED`)
+      if (!ROUND_ALLOWED.some((entry) => entry.file === rel)) fail(`${rel}:${i + 1}`, `raw value ${hit} — corners come from the radius scale (rounded-xs … rounded-xl); a round part needs a named exception in ROUND_ALLOWED`)
     }
     for (const match of line.matchAll(ARBITRARY)) {
       for (const hit of stripTokens(match[1]).match(RAW_LENGTH) ?? []) {
