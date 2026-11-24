@@ -1007,13 +1007,14 @@ html:has([data-slot="app-frame"]) body {
 }
 
 /*
- * StatusOrb (components/ui/status-orb.tsx): one state per shape and motion, as well as colour. The
- * dot is 60% of the orb; the halo is the whole orb. In a layer, so a className still overrides.
+ * StatusOrb (components/ui/status-orb.tsx), drawn as the 2.0 Figma Status Mark (143:540): round
+ * marks, one state per shape and motion as well as colour. On the 12px grid: the needs-you dot is
+ * 8, the idle ring 9, done and failed an 11px disc. In a layer, so a className still overrides.
  */
 @layer components {
   [data-slot="status-orb"] {
     --status-orb-size: var(--c-status-orb-size-sm);
-    --status-orb-ring: calc(var(--status-orb-size) / 8);
+    --status-orb-ring: calc(var(--status-orb-size) * 0.125);
     width: var(--status-orb-size);
     height: var(--status-orb-size);
     color: var(--c-status-orb-idle);
@@ -1034,13 +1035,13 @@ html:has([data-slot="app-frame"]) body {
   [data-slot="status-orb"][data-state="failed"] { color: var(--c-status-orb-failed); }
   [data-slot="status-orb"][data-state="offline"] { color: var(--c-status-orb-offline); }
 
-  /* Marks are squares (docs/02-tokens.md → Radius): no radius on the dot or its halo. */
   [data-slot="status-orb-dot"],
   [data-slot="status-orb-halo"] {
     position: absolute;
+    border-radius: 50%;
   }
   [data-slot="status-orb-dot"] {
-    inset: 20%;
+    inset: 25%;
     background: currentColor;
   }
   [data-slot="status-orb-halo"] {
@@ -1058,12 +1059,20 @@ html:has([data-slot="app-frame"]) body {
     opacity: 0.3;
     animation: status-orb-breathe var(--motion-pulse) var(--motion-ease-pulse) infinite;
   }
-  /* Working: a ring with a gap, turning. The dot shrinks to clear it. */
+  /* Working: a quarter arc turning over a faint track (the dot, hollowed at 30%). */
   [data-state="working"] > [data-slot="status-orb-halo"] {
     display: block;
-    border: var(--status-orb-ring) solid currentColor;
+    inset: 6%;
+    border: var(--status-orb-ring) solid transparent;
     border-top-color: transparent;
+    border-right-color: currentColor;
     animation: spin var(--motion-spin) linear infinite;
+  }
+  [data-state="working"] > [data-slot="status-orb-dot"] {
+    inset: 12.5%;
+    background: transparent;
+    border: var(--status-orb-ring) solid currentColor;
+    opacity: 0.3;
   }
   /*
    * Needs you: a solid ring, and a copy of it that grows outward and fades. The copy moves on
@@ -1077,17 +1086,22 @@ html:has([data-slot="app-frame"]) body {
     content: "";
     position: absolute;
     inset: calc(var(--status-orb-ring) * -1);
+    border-radius: 50%;
     border: var(--status-orb-ring) solid currentColor;
     animation: status-orb-ping var(--motion-pulse) var(--motion-ease-enter) infinite;
   }
-  [data-state="working"] > [data-slot="status-orb-dot"],
   [data-state="needs-you"] > [data-slot="status-orb-dot"] {
     inset: 32%;
   }
-  /* Offline: hollow. */
+  /* Idle: a hollow ring. Offline: the same ring, dashed. */
+  [data-state="idle"] > [data-slot="status-orb-dot"],
   [data-state="offline"] > [data-slot="status-orb-dot"] {
+    inset: 12.5%;
     background: transparent;
     border: var(--status-orb-ring) solid currentColor;
+  }
+  [data-state="offline"] > [data-slot="status-orb-dot"] {
+    border-style: dashed;
   }
 
   /* Count Badge (components/ui/count-badge.tsx, Figma 193:593): a round count, by severity. */
@@ -1254,7 +1268,7 @@ html:has([data-slot="app-frame"]) body {
     animation: none;
     opacity: 0.6;
   }
-  /* StatusOrb: halos hold still, and the working ring is dashed rather than turning. */
+  /* StatusOrb: halos hold still, and the working arc becomes a dashed ring rather than turning. */
   [data-slot="status-orb-halo"] {
     animation: none;
   }
@@ -1264,7 +1278,7 @@ html:has([data-slot="app-frame"]) body {
   }
   [data-slot="status-orb"][data-state="working"] > [data-slot="status-orb-halo"] {
     border-style: dashed;
-    border-top-color: currentColor;
+    border-color: currentColor;
   }
 }
 
@@ -1302,7 +1316,7 @@ html:has([data-slot="app-frame"]) body {
 }
 [data-motion="reduced"] [data-slot="status-orb"][data-state="working"] > [data-slot="status-orb-halo"] {
   border-style: dashed;
-  border-top-color: currentColor;
+  border-color: currentColor;
 }
 [data-motion="off"],
 [data-motion="off"] *,

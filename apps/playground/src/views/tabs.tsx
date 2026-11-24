@@ -1,4 +1,4 @@
-// Tabs: the line variant is Figma's Top Tab (15:498); the default a square segmented control. View: ?view=tabs
+// Tabs: every variant is Figma's Pill Tab (15:498), the chosen tab on the neutral 8% fill. View: ?view=tabs
 import { Icon, Tabs, TabsContent, TabsList, TabsTrigger } from "@unicron/ui"
 
 import { Page, Specimen } from "./_primitives"
@@ -6,7 +6,7 @@ import { Page, Specimen } from "./_primitives"
 export default function TabsView() {
   return (
     <Page>
-      <Specimen label="Line // Top Tab: overline, index, 2px primary indicator" column>
+      <Specimen label="Pill Tab with an index and icons" column>
         <Tabs defaultValue="tasks">
           <TabsList variant="line" aria-label="Warpcore">
             <TabsTrigger value="chat" index="01">
@@ -39,7 +39,7 @@ export default function TabsView() {
         </Tabs>
       </Specimen>
 
-      <Specimen label="Default // square segmented control, the chosen segment in inverted ink" column>
+      <Specimen label="Pill Tab, plain" column>
         <Tabs defaultValue="characters">
           <TabsList aria-label="Kind">
             <TabsTrigger value="characters">Characters</TabsTrigger>
@@ -56,7 +56,7 @@ export default function TabsView() {
         </Tabs>
       </Specimen>
 
-      <Specimen label="Counts said in the name // 'Requests, 2' (Lockdown 30)" column>
+      <Specimen label="Counts said in the name: 'Requests, 2' (Lockdown 30)" column>
         <Tabs defaultValue="requests">
           <TabsList variant="line" aria-label="Sharing">
             <TabsTrigger value="requests" mark={2}>
@@ -80,7 +80,7 @@ export default function TabsView() {
         </Tabs>
       </Specimen>
 
-      <Specimen label="Keep case // a person's name keeps its own case (Vale 8)" column>
+      <Specimen label="Keep case: a person's name keeps its own case (Vale 8)" column>
         <Tabs defaultValue="ana">
           <TabsList variant="line" aria-label="Team">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -94,7 +94,7 @@ export default function TabsView() {
         </Tabs>
       </Specimen>
 
-      <Specimen label="Vertical // line" column>
+      <Specimen label="Vertical" column>
         <Tabs defaultValue="general" orientation="vertical">
           <TabsList variant="line" aria-label="Settings">
             <TabsTrigger value="general">General</TabsTrigger>

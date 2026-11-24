@@ -39,31 +39,27 @@ describe("Tabs", () => {
     expect(screen.getByRole("tabpanel")).toHaveTextContent("Words 5")
   })
 
-  // Figma 15:498 "Top Tab": overline labels in the label ink, ink once chosen, a 2px primary-fill
-  // indicator under the chosen one. The index is read as part of the name, so it is the label ink,
-  // not the faint ink (Unicron 25: text-faint is for disabled controls and decoration only).
-  it("line is Figma's Top Tab: overline, a 2px primary indicator, an index in the label ink", () => {
-    render(<Subject variant="line" />)
-    const tab = screen.getByRole("tab", { name: /Characters/ })
-    for (const name of ["type-overline", "text-muted-foreground", "data-active:text-foreground", "after:bg-primary-mark", "group-data-horizontal/tabs:after:h-0.5"]) expect(tab.className).toContain(name)
-    // The chosen tab's line is the list's one indicator, which slides from tab to tab.
-    const line = screen.getByRole("tablist").querySelector('[data-slot="tabs-indicator"]')!
-    for (const name of ["motion-indicator", "bg-primary-mark", "group-data-horizontal/tabs:h-0.5", "group-data-horizontal/tabs:translate-x-(--active-tab-left)"]) expect(line.className).toContain(name)
-    expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).toContain("text-text-label")
-    expect(tab.querySelector('[data-slot="tabs-trigger-index"]')!.className).not.toMatch(/faint/)
+  // 2.0: every tab is Figma's Pill Tab (15:498). "No underline, no track, no accent, no inverted pill."
+  it("is Figma's Pill Tab: 28 tall, a 6px corner, ui in secondary ink, an index in the label ink", () => {
+    for (const variant of [undefined, "line"] as const) {
+      const { unmount } = render(<Subject variant={variant} />)
+      const tab = screen.getByRole("tab", { name: /Characters/ })
+      for (const name of ["type-ui", "h-control-s", "rounded", "px-2.25", "py-1", "gap-1.5", "text-text-secondary", "[&_svg:not([class*='size-'])]:size-icon"]) expect(tab.className).toContain(name)
+      const index = tab.querySelector('[data-slot="tabs-trigger-index"]')!
+      expect(index.className).toContain("type-caption")
+      expect(index.className).toContain("text-text-label")
+      unmount()
+    }
   })
 
-  // The default is a square segmented control: a hairline box, the chosen segment in inverted ink.
-  it("default is a square segmented control; the chosen segment is inverted ink", () => {
-    render(<Subject />)
+  it("marks the chosen tab with the neutral 8% fill and body ink, never an underline, a track or the accent", () => {
+    render(<Subject variant="line" />)
     const list = screen.getByRole("tablist")
-    for (const name of ["rule-box", "rounded-lg", "p-0.5"]) expect(list.className).toContain(name)
-    const tab = screen.getByRole("tab", { name: /Characters/ })
-    expect(tab.className).toContain("group-data-[variant=default]/tabs-list:data-active:bg-foreground")
-    expect(tab.className).toContain("group-data-[variant=default]/tabs-list:data-active:text-background")
-    expect(tab.className).not.toMatch(/bg-primary(\s|$)/)
-    // The chosen segment is filled in place; nothing slides in a segmented list.
+    expect(list.className).not.toMatch(/rule-box|p-0\.5/)
     expect(list.querySelector('[data-slot="tabs-indicator"]')).toBeNull()
+    const tab = screen.getByRole("tab", { name: /Characters/ })
+    for (const name of ["data-active:type-ui-emphasis", "data-active:bg-surface-selected", "data-active:text-text-body", "not-data-active:hover:bg-surface-hover"]) expect(tab.className).toContain(name)
+    expect(tab.className).not.toMatch(/after:|bg-primary|bg-foreground|text-background/)
   })
 
   it("a tab under 44px takes the 44px touch target", () => {
@@ -95,14 +91,13 @@ describe("Tabs", () => {
     const requests = screen.getByRole("tab", { name: "Requests, 2" })
     const drawn = requests.querySelector('[data-slot="nav-mark"]')!
     expect(drawn).toHaveTextContent("02")
-    expect(drawn.className).toContain("type-overline")
-    // The count takes the tab's own ink, so it reads on a chosen (inverted) segment too.
-    expect(drawn.className).toContain("text-inherit")
+    expect(drawn.className).toContain("type-caption")
+    expect(drawn.className).toContain("text-text-label")
     expect(screen.getByRole("tab", { name: "Shared, 3 waiting on you" })).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "People" }).querySelector('[data-slot="tabs-trigger-mark-words"]')).toBeNull()
   })
 
-  it("keepCase keeps a person's name in its own case; other tabs keep the capitals (Vale 8)", () => {
+  it("keepCase keeps a person's name in its own case (Vale 8)", () => {
     render(
       <Tabs defaultValue="ana">
         <TabsList aria-label="Team">
@@ -114,7 +109,7 @@ describe("Tabs", () => {
       </Tabs>
     )
     const ana = screen.getByRole("tab", { name: "Ana McKay" })
-    expect(ana).toHaveClass("normal-case", "type-overline")
+    expect(ana).toHaveClass("normal-case", "type-ui")
     expect(ana).toHaveAttribute("data-keep-case")
     expect(screen.getByRole("tab", { name: "All" })).not.toHaveClass("normal-case")
   })

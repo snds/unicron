@@ -1,5 +1,5 @@
 // Promoted from: hand-raised from the Mercury review (none)
-// Promoted from: Seeded in snds/unicron (2026-11 design direction: live = secondary-live, needs-you = the yellow with an ink outline, square marks; contract 5.1; no app PR, no DSA record)
+// Promoted from: Seeded in snds/unicron (2.0: the Figma Status Mark 143:540, round marks in the shared status colours; needs-you keeps its ink outline; no app PR, no DSA record)
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
@@ -41,9 +41,17 @@ export interface StatusOrbProps extends Omit<React.ComponentProps<"span">, "chil
 const GLYPHS: Partial<Record<StatusOrbState, IconName>> = {
   queued: "time--filled",
   paused: "pause--outline--filled",
-  done: "checkmark--filled",
   stopped: "stop--filled",
-  failed: "warning--filled",
+}
+
+/**
+ * Done and failed, drawn as the Figma Status Mark draws them (143:540): a filled circle with a
+ * check or a cross in the fill's own ink. Drawn here rather than taken from the icon set, so the
+ * mark stays the same whichever icon family the app uses.
+ */
+const MARKS: Partial<Record<StatusOrbState, string>> = {
+  done: "M3.6 6.1 5.2 7.6 8.4 4.4",
+  failed: "M4.2 4.2 7.8 7.8M7.8 4.2 4.2 7.8",
 }
 
 /**
@@ -52,23 +60,25 @@ const GLYPHS: Partial<Record<StatusOrbState, IconName>> = {
  *
  * | state | shape | motion | colour |
  * |---|---|---|---|
- * | idle | small square | none | label ink |
- * | queued | `time--filled` glyph (a clock) | none | label ink |
- * | thinking | square in a soft halo | the halo breathes | live (`secondary-live`) |
- * | working | square in a square ring with a gap | the ring turns | live |
- * | paused | `pause--outline--filled` glyph | none | label ink |
- * | needs-you | square with an ink outline in a solid ring | the ring pulses out | the yellow |
- * | done | check | none | success |
- * | stopped | `stop--filled` glyph | none | label ink |
- * | failed | `warning--filled` glyph (a circle with an exclamation mark) | none | critical text |
- * | offline | hollow square | none | label ink |
+ * | idle | hollow ring | none | status/idle |
+ * | queued | `time--filled` glyph (a clock) | none | status/idle |
+ * | thinking | dot in a soft halo | the halo breathes | status/working |
+ * | working | faint track with a quarter arc | the arc turns | status/working |
+ * | paused | `pause--outline--filled` glyph | none | status/idle |
+ * | needs-you | dot with an ink outline in a ring | the ring pulses out | the yellow |
+ * | done | filled circle with a check | none | status/done |
+ * | stopped | `stop--filled` glyph | none | status/idle |
+ * | failed | filled circle with a cross | none | status/failed |
+ * | offline | dashed hollow ring | none | status/idle |
  *
  * Queued, paused and stopped are still: each is waiting or over, so none of them moves. Stopped is
  * a run someone ended, apart from one that failed or one that never started.
  *
- * With reduced motion the halo and the pulse hold still and the working ring becomes dashed.
+ * With reduced motion the halo and the pulse hold still and the working track becomes dashed.
  *
- * Marks are squares (contract §1.6). The yellow has no lightness contrast with the stone surfaces,
+ * Marks are round, as in the 2.0 Figma Status Mark (143:540); the colours are the shared status
+ * roles, the same in every app. Queued, paused, stopped, thinking and offline are app states the
+ * library does not draw, so they keep their 1.x shapes, made round. The yellow has no lightness contrast with the stone surfaces,
  * so the needs-you square carries a 1px outline in the yellow's own ink
  * (`--c-status-orb-needs-you-edge`): on stone the outline draws the shape, on graphite the yellow
  * does. The turning ring is the one motion reserved for agent work; generic loading uses Spinner.
@@ -76,6 +86,7 @@ const GLYPHS: Partial<Record<StatusOrbState, IconName>> = {
 export function StatusOrb({ state, size = "sm", tooltip = true, label, className, ...props }: StatusOrbProps) {
   const words = label ?? statusOrbCopy[state]
   const glyph = GLYPHS[state] ?? null
+  const mark = MARKS[state] ?? null
   const orb = (
     <span
       data-slot="status-orb"
@@ -86,7 +97,12 @@ export function StatusOrb({ state, size = "sm", tooltip = true, label, className
       className={cn("relative inline-flex shrink-0 items-center justify-center", className)}
       {...props}
     >
-      {glyph ? (
+      {mark ? (
+        <svg data-slot="status-orb-glyph" viewBox="0 0 12 12" aria-hidden focusable="false">
+          <circle cx="6" cy="6" r="5.5" fill="currentColor" />
+          <path d={mark} fill="none" stroke={`var(--c-status-orb-${state}-ink)`} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ) : glyph ? (
         <Icon name={glyph} data-slot="status-orb-glyph" />
       ) : (
         <>
