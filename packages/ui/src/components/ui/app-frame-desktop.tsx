@@ -427,11 +427,16 @@ function AppFrameSidebar({
         inert={drawerShows || undefined}
       >
         <AppFrameRailContext.Provider value={true}>
-          <div data-slot="app-frame-sidebar-head" className="flex flex-col items-center gap-4">
-            <div className="flex h-control items-center [&_[data-slot=app-lockup-name]]:sr-only">
-              {React.isValidElement<{ showName?: boolean }>(lockup) ? React.cloneElement(lockup, { showName: false }) : lockup}
+          <div data-slot="app-frame-sidebar-head" className={cn("flex flex-col items-center", flush ? "gap-1" : "gap-4")}>
+            <div className={cn("flex items-center [&_[data-slot=app-lockup-name]]:sr-only", flush ? "h-9" : "h-control")}>
+              {React.isValidElement<{ showName?: boolean; size?: "m" | "s" }>(lockup)
+                ? React.cloneElement(lockup, { showName: false, ...(flush && { size: lockup.props.size ?? "s" }) })
+                : lockup}
             </div>
-            {isAction(action) ? (
+            {flush ? (
+              // The 2.0 rail keeps the primary the icon button it is on the sidebar's top row.
+              flushAction
+            ) : isAction(action) ? (
               <FloatButton
                 kind="primary"
                 size="l"
@@ -446,7 +451,7 @@ function AppFrameSidebar({
           <div
             data-slot="app-frame-sidebar-middle"
             // A hairline between the groups, as the rail has no headings (Synapse Y-01).
-            className="mt-6 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto [&>*+*]:pt-2 [&>*+*]:rule-t"
+            className={cn(flush ? "mt-3" : "mt-6", "flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto [&>*+*]:pt-2 [&>*+*]:rule-t")}
           >
             {children}
           </div>

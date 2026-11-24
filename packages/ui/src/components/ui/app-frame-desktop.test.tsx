@@ -52,9 +52,11 @@ describe("AppFrameSidebar flush (2.0: Sidebar Top 144:701, Sidebar Foot 178:4541
             footer={<SidebarFoot account={{ name: "Sean", initials: "S", meta: "$1.20 today" }} settings={{ onClick: () => {} }} />}
             {...props}
           >
-            <NavSection title="Projects">
-              <NavItem label="Legion" icon="folder" href="#p" />
-            </NavSection>
+            {props.children ?? (
+              <NavSection title="Projects">
+                <NavItem label="Legion" icon="folder" href="#p" />
+              </NavSection>
+            )}
           </AppFrameSidebar>
           <AppFrameMain />
         </AppFrame>
@@ -108,6 +110,21 @@ describe("AppFrameSidebar flush (2.0: Sidebar Top 144:701, Sidebar Foot 178:4541
     expect(nav.className).toContain("w-(--c-app-frame-sidebar-flush-rail)")
     expect(nav.querySelector('[data-slot="sidebar-foot"]')).toHaveAttribute("data-collapsed")
     expect(screen.queryByText("$1.20 today")).toBeNull()
+    // The primary stays an icon button, and the lockup keeps its 20 mark.
+    expect(screen.getByRole("button", { name: "New chat" })).toHaveAttribute("data-slot", "app-frame-sidebar-action")
+    expect(nav.querySelector('[data-slot="app-lockup-mark"]')).toHaveClass("size-5")
+  })
+
+  it("leaves a group with no icons out of the rail", () => {
+    setViewport(1440, 900)
+    render(
+      <Flush collapsed onCollapsedChange={() => {}}>
+        <NavSection title="Conversations">
+          <NavItem label="Tile grout colors" href="#c" />
+        </NavSection>
+      </Flush>
+    )
+    expect(screen.queryByRole("link", { name: "Tile grout colors" })).toBeNull()
   })
 })
 
