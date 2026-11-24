@@ -31,7 +31,7 @@ describe("PageHead", () => {
 
   it("counts follow cross-app decisions §13; a string is shown as given", () => {
     const { container, rerender } = render(<PageHead title="Harnesses" count={9} />)
-    expect(container.querySelector('[data-slot="page-head-count"]')).toHaveTextContent("09")
+    expect(container.querySelector('[data-slot="page-head-count"]')).toHaveTextContent("9")
     rerender(<PageHead title="Tasks" count="/012" />)
     expect(container.querySelector('[data-slot="page-head-count"]')).toHaveTextContent("/012")
   })

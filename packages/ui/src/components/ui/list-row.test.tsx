@@ -144,7 +144,7 @@ describe("ListRow (Figma 9:181)", () => {
     const { container } = render(
       <ListRow layout="message" sender="Theo Park" count={3} tag={<span>Work</span>} account="Personal" time="Wed" subject="Re: Saturday carpool" preview="I can take both kids" previewLines={2} />
     )
-    expect(slot(container, "list-row-count")).toHaveTextContent("03")
+    expect(slot(container, "list-row-count")).toHaveTextContent("3")
     expect(slot(container, "list-row-tag")).toHaveTextContent("Work")
     expect(slot(container, "list-row-time")).toHaveTextContent("Personal · Wed")
     expect(slot(container, "list-row-preview")!.className).toContain("line-clamp-2")
@@ -251,10 +251,10 @@ describe("ListRow (Figma 9:181)", () => {
 })
 
 describe("formatListCount (decisions §13)", () => {
-  it("three digits, as every Figma sidebar draws them, a comma from 1,000 (Unicron 13)", () => {
-    expect(formatListCount(0)).toBe("000")
-    expect(formatListCount(7)).toBe("007")
-    expect(formatListCount(12)).toBe("012")
+  it("plain numbers, as the 2.0 library draws them, a comma from 1,000", () => {
+    expect(formatListCount(0)).toBe("0")
+    expect(formatListCount(7)).toBe("7")
+    expect(formatListCount(12)).toBe("12")
     expect(formatListCount(146)).toBe("146")
     expect(formatListCount(1204)).toBe("1,204")
   })

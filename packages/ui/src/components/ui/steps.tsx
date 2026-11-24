@@ -18,9 +18,9 @@ export const stepStatusWords: Record<StepStatus, string> = {
   failed: "Failed",
 }
 
-/** Two digits, three from 100 (decisions §13). */
+/** A plain number: no zero padding since 2.0. */
 function folio(n: number): string {
-  return String(n).padStart(2, "0")
+  return String(n)
 }
 
 /**
@@ -41,7 +41,7 @@ export type StepProps = Omit<React.ComponentProps<"li">, "title" | "onClick"> & 
   statusLabel?: React.ReactNode
   /** The step is agent work running now: the state word takes the live ink. */
   live?: boolean
-  /** The number shown in the first column. Default the step's place in the list, in two digits. */
+  /** The number shown in the first column. Default the step's place in the list, as a plain number. */
   index?: React.ReactNode
   /** Replaces the number: a Checkbox for a step the person ticks off (Lockdown's "Something happened?"). */
   leading?: React.ReactNode
@@ -213,7 +213,7 @@ function StepsFolio({ current, total, title, label = "Step", className, ...props
           title's on a shared baseline; that pixel comes off its own margin, so the line is 20
           (as LogRow's time). */}
       <span aria-hidden="true" data-slot="steps-folio-count" className="type-folio text-muted-foreground -mb-px shrink-0">
-        {`${label.toUpperCase()} ${folio(current)} // ${folio(total)}`}
+        {`${label.toUpperCase()} ${folio(current)} OF ${folio(total)}`}
       </span>
       {title ? (
         <span aria-hidden="true" data-slot="steps-folio-title" className="type-ui text-foreground min-w-0 truncate">

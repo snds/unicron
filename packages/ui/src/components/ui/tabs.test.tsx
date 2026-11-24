@@ -90,7 +90,7 @@ describe("Tabs", () => {
     )
     const requests = screen.getByRole("tab", { name: "Requests, 2" })
     const drawn = requests.querySelector('[data-slot="nav-mark"]')!
-    expect(drawn).toHaveTextContent("02")
+    expect(drawn).toHaveTextContent("2")
     expect(drawn.className).toContain("type-caption")
     expect(drawn.className).toContain("text-text-label")
     expect(screen.getByRole("tab", { name: "Shared, 3 waiting on you" })).toBeInTheDocument()

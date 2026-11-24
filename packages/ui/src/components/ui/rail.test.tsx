@@ -5,14 +5,14 @@ import { describe, expect, it, vi } from "vitest"
 import { NavMark, Rail, RailItem, formatNavCount, markKeyShortcuts, nameWithMark, railItemVariants, resolveNavMark, rovingTarget } from "./rail"
 
 describe("the nav mark (contract 5.1b #7)", () => {
-  it("writes counts as cross-app decisions §13 does: 007, 012, 248, 1,204; at an icon's corner 07 and 99+", () => {
-    expect(formatNavCount(7)).toBe("007")
-    expect(formatNavCount(12)).toBe("012")
+  it("writes counts as the 2.0 library does: 7, 12, 248, 1,204; at an icon's corner 7 and 99+", () => {
+    expect(formatNavCount(7)).toBe("7")
+    expect(formatNavCount(12)).toBe("12")
     expect(formatNavCount(248)).toBe("248")
     expect(formatNavCount(1204)).toBe("1,204")
     expect(formatNavCount(1204, { cap: true })).toBe("99+")
     expect(formatNavCount(99, { cap: true })).toBe("99")
-    expect(formatNavCount(7, { cap: true })).toBe("07")
+    expect(formatNavCount(7, { cap: true })).toBe("7")
   })
 
   it("reads a number, a count, a square and a key, and draws nothing for 0", () => {
@@ -36,7 +36,7 @@ describe("the nav mark (contract 5.1b #7)", () => {
     const { container } = render(<NavMark mark={resolveNavMark({ count: 2, tone: "needs-you" })} placement="inline" className="text-text-label" />)
     const mark = container.querySelector('[data-slot="nav-mark"]')!
     expect(mark).toHaveAttribute("aria-hidden", "true")
-    expect(mark).toHaveTextContent("02")
+    expect(mark).toHaveTextContent("2")
     expect(mark.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-folio", "bg-needs-you-fill", "text-needs-you-on-fill"]))
     expect(mark.className).not.toContain("text-text-label")
   })
@@ -88,7 +88,7 @@ describe("RailItem (Figma 44:106)", () => {
     expect(item).toHaveAttribute("data-slot", "rail-item")
     expect(item).toHaveAttribute("data-state", "default")
     expect(item.querySelector('[data-slot="icon"]')).toHaveAttribute("aria-hidden", "true")
-    expect(item.querySelector('[data-slot="nav-mark"]')).toHaveTextContent("03")
+    expect(item.querySelector('[data-slot="nav-mark"]')).toHaveTextContent("3")
   })
 
   it("is 48 × 56 from its knobs, icon over count 4px apart, on the 2px corner", () => {

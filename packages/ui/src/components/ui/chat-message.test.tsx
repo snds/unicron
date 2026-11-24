@@ -46,7 +46,7 @@ describe("ChatMessage", () => {
       </ChatMessage>
     )
     const meta = container.querySelector('[data-slot="chat-message-meta"]')!
-    expect(meta).toHaveTextContent("General // writing")
+    expect(meta).toHaveTextContent("General · writing")
     const orb = meta.querySelector('[data-slot="status-orb"]')!
     expect(orb).toHaveAttribute("data-state", "working")
     expect(orb).toHaveAttribute("aria-hidden")

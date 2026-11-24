@@ -283,8 +283,8 @@ test("a folder sheet can be built from AdaptiveMenu: counts, and the open folder
   expect(await colorOf(inbox, "background-color")).toBe(await role(page, "--surface-selected"))
   expect(await colorOf(inbox)).toBe(await role(page, "--text-body"))
   expect(await colorOf(starred)).toBe(await role(page, "--text-body"))
-  await expect(inbox.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("012")
-  await expect(starred.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("004")
+  await expect(inbox.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("12")
+  await expect(starred.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("4")
   expect(await starred.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px")
 })
 

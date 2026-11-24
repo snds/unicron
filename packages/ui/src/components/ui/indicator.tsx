@@ -41,8 +41,8 @@ export function indicatorLabel(indicator: IndicatorProp | undefined): string {
 }
 
 /**
- * A count as the four apps write it on a mark at an icon's corner (cross-app decisions §13): two
- * digits, as Figma draws a badge ("07", "14"), capped at "99+". Counts elsewhere read three digits.
+ * A count as the four apps write it on a mark at an icon's corner (cross-app decisions §13):
+ * a plain number ("7", "14"), capped at "99+" (2.0: no zero padding).
  */
 export function indicatorCount(count: number): string {
   return formatCount(count, { cap: true })

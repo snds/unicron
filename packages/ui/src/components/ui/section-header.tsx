@@ -112,7 +112,7 @@ function SectionHeader({
       {hasCount && letter ? (
         <>
           <span aria-hidden="true" className="type-meta text-muted-foreground -me-1.5">
-            {"//"}
+            {"·"}
           </span>{" "}
         </>
       ) : null}

@@ -135,17 +135,17 @@ describe("Steps (contract 5.1b #32)", () => {
 })
 
 describe("StepsFolio", () => {
-  it("draws STEP 02 // 07 and the name; reads Step 2 of 7: the name", () => {
+  it("draws STEP 2 OF 7 and the name; reads Step 2 of 7: the name", () => {
     render(<StepsFolio current={2} total={7} title="Apps" />)
     const folio = document.querySelector('[data-slot="steps-folio"]') as HTMLElement
-    expect(within(folio).getByText("STEP 02 // 07")).toHaveAttribute("aria-hidden", "true")
-    expect(classesOf(within(folio).getByText("STEP 02 // 07"))).toContain("type-folio")
+    expect(within(folio).getByText("STEP 2 OF 7")).toHaveAttribute("aria-hidden", "true")
+    expect(classesOf(within(folio).getByText("STEP 2 OF 7"))).toContain("type-folio")
     expect(within(folio).getByText("Step 2 of 7: Apps")).toHaveClass("sr-only")
   })
 
-  it("counts in two digits, three from 100, and takes another word", () => {
+  it("counts in plain numbers and takes another word", () => {
     render(<StepsFolio current={3} total={120} label="Pass" />)
-    expect(screen.getByText("PASS 03 // 120")).toBeInTheDocument()
+    expect(screen.getByText("PASS 3 OF 120")).toBeInTheDocument()
     expect(screen.getByText("Pass 3 of 120")).toBeInTheDocument()
   })
 })

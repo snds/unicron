@@ -27,8 +27,8 @@ describe("indicator words", () => {
     expect(indicatorLabel(both)).toBe("1 waiting for you, 5 unread")
   })
 
-  it("write counts as decisions §13 does: two digits, capped at 99+", () => {
-    expect(indicatorCount(7)).toBe("07")
+  it("write counts as decisions §13 does: plain numbers, capped at 99+", () => {
+    expect(indicatorCount(7)).toBe("7")
     expect(indicatorCount(12)).toBe("12")
     expect(indicatorCount(99)).toBe("99")
     expect(indicatorCount(140)).toBe("99+")
@@ -44,7 +44,7 @@ describe("IndicatorMark", () => {
     expect(mark).toHaveAttribute("data-kind", "attention")
     expect(mark).toHaveAttribute("data-shape", "badge")
     expect(mark).toHaveAttribute("aria-hidden")
-    expect(mark.textContent).toBe("01")
+    expect(mark.textContent).toBe("1")
   })
 
   it("is a dot without a count, and nothing when nothing is wanted", () => {
@@ -191,7 +191,7 @@ describe("IndicatorMark in the 2026-11 look", () => {
     expect(knobs["attention-badge-ink"].$value).toBe("{needs-you-on-fill}")
     const { container } = render(<IndicatorMark indicator={{ kind: "attention", count: 3 }} shape="badge" />)
     const badge = container.querySelector('[data-slot="indicator"]')!
-    expect(badge.textContent).toBe("03")
+    expect(badge.textContent).toBe("3")
     expect(badge.className).toContain("inset-ring-(--c-indicator-attention-edge)")
     expect(badge.className).toContain("[font-family:var(--type-overline-family)]")
   })

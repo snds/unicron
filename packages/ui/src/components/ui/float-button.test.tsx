@@ -193,7 +193,7 @@ describe("FloatButton (Figma 20:1690)", () => {
       </>
     )
     const comments = screen.getByRole("button", { name: "Comments, 3" })
-    expect(comments.querySelector('[data-slot="nav-mark"]')).toHaveTextContent("03")
+    expect(comments.querySelector('[data-slot="nav-mark"]')).toHaveTextContent("3")
     const requests = screen.getByRole("button", { name: "Requests, 2 waiting on you" })
     expect(requests.querySelector('[data-slot="nav-mark"]')).toHaveAttribute("data-tone", "needs-you")
     expect(screen.getByRole("button", { name: "View options, Filter on" }).querySelector('[data-slot="nav-mark"]')).toHaveAttribute("data-kind", "square")
