@@ -67,7 +67,7 @@ export function formatListCount(count: number): string {
 const ROW = cva(
   // 2.0: no dividers. Rows sit inset in their list with an 8px rounded fill; selected is the 8%
   // fill (surface/selected) with the inset bar, drawn as its own part. Text keeps its default colours.
-  "group/list-row relative flex w-full min-w-0 rounded-lg text-text-body",
+  "group/list-row relative flex w-full min-w-0 rounded-md text-text-body",
   {
     variants: {
       layout: {

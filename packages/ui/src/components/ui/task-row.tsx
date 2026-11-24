@@ -73,7 +73,7 @@ function TaskRow({
         "aria-describedby": describedBy,
         type: isLink ? undefined : ("button" as const),
         className: cn(
-          "group/task-row relative flex w-full min-w-0 items-start gap-2.5 rounded-lg px-3 py-2.5 text-start select-none",
+          "group/task-row relative flex w-full min-w-0 items-start gap-2.5 rounded-md px-3 py-2.5 text-start select-none",
           "transition-[background-color] duration-(--motion-fast) ease-(--motion-ease)",
           "hover:bg-surface-hover active:bg-surface-selected aria-[current=true]:bg-surface-selected",
           className

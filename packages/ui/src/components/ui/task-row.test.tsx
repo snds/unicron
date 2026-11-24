@@ -21,7 +21,7 @@ describe("TaskRow (Figma 143:633)", () => {
   it("draws the anatomy: 10 / 12 inside, 10 apart, an 8px corner, ui title, caption time and meta", () => {
     render(<TaskRow state="working" title="Back up" time="now" line="Step 2 of 4" meta="Claude Code · server · 12 min" />)
     const row = screen.getByRole("button")
-    expect(classesOf(row)).toEqual(expect.arrayContaining(["px-3", "py-2.5", "gap-2.5", "rounded-lg", "hover:bg-surface-hover"]))
+    expect(classesOf(row)).toEqual(expect.arrayContaining(["px-3", "py-2.5", "gap-2.5", "rounded-md", "hover:bg-surface-hover"]))
     expect(classesOf(row.querySelector('[data-slot="task-row-title"]')!)).toEqual(expect.arrayContaining(["type-ui", "text-text-body", "truncate"]))
     expect(classesOf(row.querySelector('[data-slot="task-row-time"]')!)).toEqual(expect.arrayContaining(["type-caption", "text-text-label"]))
     expect(classesOf(row.querySelector('[data-slot="task-row-line"]')!)).toEqual(expect.arrayContaining(["type-ui", "text-text-secondary"]))

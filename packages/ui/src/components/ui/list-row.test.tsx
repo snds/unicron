@@ -31,7 +31,7 @@ describe("ListRow (Figma 9:181)", () => {
   it("keeps Figma's 2.0 paddings and gaps: 8 / 10, gap 12, body gap 4 (label), gap 6 and 2 under the body (plain), no divider", () => {
     const { container, rerender } = render(<ListRow {...TASK} />)
     const row = () => slot(container, "list-row")!.className.split(/\s+/)
-    expect(row()).toEqual(expect.arrayContaining(["px-2.5", "gap-3", "py-2", "items-baseline", "rounded-lg"]))
+    expect(row()).toEqual(expect.arrayContaining(["px-2.5", "gap-3", "py-2", "items-baseline", "rounded-md"]))
     expect(row()).not.toContain("rule-t")
     expect(slot(container, "list-row-body")!.className).toContain("gap-1")
     rerender(<ListRow {...TASK} metaStyle="plain" />)
@@ -49,7 +49,7 @@ describe("ListRow (Figma 9:181)", () => {
   it("selected is the 8% fill with the 2px inset bar, default text colours, and says aria-current", () => {
     const { container } = render(<ListRow {...TASK} selected onClick={() => undefined} />)
     const row = slot(container, "list-row")!
-    expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(["bg-surface-selected", "rounded-lg"]))
+    expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(["bg-surface-selected", "rounded-md"]))
     const bar = slot(container, "list-row-bar")!
     expect(bar).toHaveAttribute("aria-hidden", "true")
     expect(bar.className.split(/\s+/)).toEqual(expect.arrayContaining(["inset-y-2", "start-1.5", "w-0.5", "bg-primary-text"]))
