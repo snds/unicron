@@ -433,7 +433,7 @@ export function AgentPrompt({
   const timer =
     deadline !== undefined && safeLabel && (waiting || expired) ? (
       <span role="timer" data-slot="agent-prompt-timer" aria-label={timerWords} className={cn("type-overline", ink)}>
-        {"// "}
+        {"· "}
         {timerWords}
       </span>
     ) : null
@@ -500,7 +500,7 @@ export function AgentPrompt({
           {overline ?? copy.title}
         </h3>
         {timer}
-        {more ? <span className={cn("type-overline", ink)}>{`// +${more}`}</span> : null}
+        {more ? <span className={cn("type-overline", ink)}>{`· +${more}`}</span> : null}
         {tier ? (
           <span className="ml-auto flex items-center">
             {/* On the yellow the badge takes the yellow's ink: the page's ink is near-white on graphite (1.15:1 there). */}

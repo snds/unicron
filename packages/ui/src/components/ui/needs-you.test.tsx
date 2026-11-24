@@ -84,8 +84,8 @@ describe("NeedsYou (Figma 15:517)", () => {
   it("more: the title ends // +1 on screen, and is read as one more waiting", () => {
     render(<Block more={1} />)
     const region = screen.getByRole("region", { name: "Awaiting your review // SEA-51, 1 more waiting" })
-    expect(region).toHaveTextContent("Awaiting your review // SEA-51 // +1")
-    expect(region.querySelector('[aria-hidden="true"]')).toHaveTextContent("// +1")
+    expect(region).toHaveTextContent("Awaiting your review // SEA-51 · +1")
+    expect(region.querySelector('[aria-hidden="true"]')).toHaveTextContent("· +1")
   })
 
   it("says itself politely once it is on screen, without taking focus", async () => {

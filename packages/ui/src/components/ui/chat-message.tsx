@@ -40,7 +40,7 @@ export interface ChatMessageProps extends Omit<React.ComponentProps<"article">, 
   phase?: React.ReactNode
   /** The StatusOrb before the meta while streaming. Default `working`. */
   orb?: StatusOrbState
-  /** How the message ended, after the body as `// cut off`, `// stopped`. Type each in sentence case. */
+  /** How the message ended, after the body as `Cut off · stopped`. Type each in sentence case. */
   endMarks?: readonly React.ReactNode[]
   /** Default `done`. */
   state?: ChatMessageState
@@ -147,8 +147,7 @@ export function ChatMessage({
         <p data-slot="chat-message-end" className="type-overline text-text-label">
           {endMarks.map((mark, i) => (
             <React.Fragment key={i}>
-              {i ? " " : null}
-              {"// "}
+              {i ? " · " : null}
               {mark}
             </React.Fragment>
           ))}

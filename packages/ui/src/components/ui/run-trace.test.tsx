@@ -174,10 +174,10 @@ describe("RunTrace in the 2026-11 look", () => {
     expect(done.className).toContain("text-text-body")
   })
 
-  it("separates the one line's facts with //, says failures in critical ink, and takes the system focus ring", () => {
+  it("separates the one line's facts with ·, says failures in critical ink, and takes the system focus ring", () => {
     render(<RunTrace steps={steps} />)
     const trigger = document.querySelector<HTMLElement>('[data-slot="run-trace-trigger"]')!
-    expect(trigger).toHaveTextContent("12s // 3 steps // 1 failed")
+    expect(trigger).toHaveTextContent("12s · 3 steps · 1 failed")
     // The separators are hidden; the name stays the facts.
     expect(trigger).toHaveAccessibleName("Failed 12s 3 steps 1 failed")
     expect(screen.getByText("1 failed").className).toContain("text-critical-text")

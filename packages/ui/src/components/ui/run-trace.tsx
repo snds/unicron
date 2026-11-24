@@ -218,9 +218,9 @@ function RunTrace({
   )
 }
 
-/** Between the facts on the run's one line: `//`, as every mono line in the system. */
+/** Between the facts on the run's one line: `·`, as every meta line in the system. */
 function Sep() {
-  return <span aria-hidden>{"//"}</span>
+  return <span aria-hidden>{"·"}</span>
 }
 
 /**

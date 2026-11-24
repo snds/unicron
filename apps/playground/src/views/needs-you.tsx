@@ -95,10 +95,10 @@ export default function NeedsYouView() {
       <Specimen label="Compact // one 48 line, the title and one solid action 40 high (44 on touch, Unicron 88), for the top of an open dialog or sheet (Lockdown LA8)">
         <div className="flex flex-col gap-4">
           <NeedsYouProvider>
-            <NeedsYou size="compact" announce={false} title="Sign-in request // 01:40 left" action={<Button variant="needs-you" size="sm">Review</Button>} />
+            <NeedsYou size="compact" announce={false} title="Sign-in request · 01:40 left" action={<Button variant="needs-you" size="sm">Review</Button>} />
           </NeedsYouProvider>
           <NeedsYouProvider>
-            <NeedsYou size="compact" announce={false} more={1} title="Pairing request // Chrome on Linux // 01:12 left" action={<Button variant="needs-you" size="sm">Review</Button>} />
+            <NeedsYou size="compact" announce={false} more={1} title="Pairing request · Chrome on Linux · 01:12 left" action={<Button variant="needs-you" size="sm">Review</Button>} />
           </NeedsYouProvider>
         </div>
       </Specimen>
@@ -161,7 +161,7 @@ function PageBlock() {
     <div className="absolute inset-x-0 top-0 p-4">
       <NeedsYou
         announce={false}
-        title="Sign-in request // 01:40 left"
+        title="Sign-in request · 01:40 left"
         body="A browser on this Mac asks to use the passkey for github.com."
         action={<Button variant="needs-you">Review</Button>}
         secondaryAction={<Button variant="needs-you-text">Decline</Button>}
@@ -172,5 +172,5 @@ function PageBlock() {
 
 /** The same request as the compact line on a layer. */
 function RequestLine() {
-  return <NeedsYou size="compact" announce={false} title="Sign-in request // 01:40 left" action={<Button variant="needs-you" size="sm">Review</Button>} />
+  return <NeedsYou size="compact" announce={false} title="Sign-in request · 01:40 left" action={<Button variant="needs-you" size="sm">Review</Button>} />
 }

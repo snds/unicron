@@ -209,7 +209,7 @@ describe("AgentPrompt", () => {
       render(<AgentPrompt kind="permission" overline="Question" expiresAt={T + 65_000} safeAnswer="deny" onAnswer={() => {}} />)
       const timer = screen.getByRole("timer")
       // Cross-app decisions §13: MM:SS with a leading zero. The overline's caps come from its type role.
-      expect(timer).toHaveTextContent("// Denies in 01:05")
+      expect(timer).toHaveTextContent("· Denies in 01:05")
       expect(timer).toHaveAccessibleName("Denies in 01:05")
       expect(timer.className).toContain("type-overline")
       act(() => vi.advanceTimersByTime(5_000))
@@ -279,7 +279,7 @@ describe("AgentPrompt", () => {
       vi.useFakeTimers({ now: T })
       render(<AgentPrompt kind="permission" expiresAt={T + 1_000} safeAnswer="deny" onAnswer={() => {}} />)
       act(() => vi.advanceTimersByTime(2_000))
-      expect(screen.getByRole("timer")).toHaveTextContent("// Timed out")
+      expect(screen.getByRole("timer")).toHaveTextContent("· Timed out")
     })
 
     it("draws no timer without a safe answer, and none once answered", () => {
@@ -425,7 +425,7 @@ describe("AgentPrompt in the needs-you look (2026-11)", () => {
   it("names itself from the host's overline, and says when more wait", () => {
     render(<AgentPrompt kind="reply" overline="Question" more={1} onAnswer={() => {}} />)
     const region = screen.getByRole("region", { name: "Question" })
-    expect(region).toHaveTextContent("// +1")
+    expect(region).toHaveTextContent("· +1")
   })
 
   it("keeps an open question's send button solid, with the host's word, and focuses the field", () => {

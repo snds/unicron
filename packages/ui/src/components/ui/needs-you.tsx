@@ -175,7 +175,7 @@ function NeedsYouBlock({
         {title}
         {more ? (
           <>
-            <span aria-hidden="true">{` // +${more}`}</span>
+            <span aria-hidden="true">{` · +${more}`}</span>
             <span className="sr-only">{`, ${more} more waiting`}</span>
           </>
         ) : null}
@@ -243,7 +243,7 @@ function NeedsYouCompact({
         {title}
         {more ? (
           <>
-            <span aria-hidden="true">{` // +${more}`}</span>
+            <span aria-hidden="true">{` · +${more}`}</span>
             <span className="sr-only">{`, ${more} more waiting`}</span>
           </>
         ) : null}
