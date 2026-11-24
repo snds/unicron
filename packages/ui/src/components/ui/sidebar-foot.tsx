@@ -44,6 +44,9 @@ export interface SidebarFootSettings {
   shortcut?: string
 }
 
+/** Settings' name, with the words of its dot when it has one. */
+const nameOf = (settings: SidebarFootSettings) => settings.label ?? "Settings"
+
 export type SidebarFootProps = Omit<React.ComponentProps<"div">, "children"> & {
   /** The status line over the rule: an icon and a few words ("Synced just now"). */
   status?: { icon: IconName; text: string }
@@ -70,7 +73,10 @@ function SidebarFoot({ status, account, secondAction, settings, collapsed: colla
   const tile = <InitialTile size="s" initials={account.initials} src={account.src} name={account.name} />
 
   if (collapsed) {
-    const tileClass = cn("hit-area flex size-10 items-center justify-center rounded-md", (account.href || account.onClick) && "hover:bg-surface-hover")
+    // The rail's foot is the tile alone, and it is the way into Settings (Figma: Collapsed, Current
+    // fills it as it fills the whole row). Without Settings it goes where the account row goes.
+    const tileClass = "hit-area flex size-10 items-center justify-center rounded-md hover:bg-surface-hover"
+    const settingsName = settings ? nameOf(settings) : undefined
     return (
       <div
         data-slot="sidebar-foot"
@@ -79,12 +85,25 @@ function SidebarFoot({ status, account, secondAction, settings, collapsed: colla
         className={cn("flex w-full flex-col items-center py-2 rule-t", current && "bg-surface-selected", className)}
         {...props}
       >
-        {account.href ? (
-          <a href={account.href} aria-label={accountName} aria-current={account.current ? "page" : undefined} className={tileClass}>
+        {settings ? (
+          <IconButton
+            data-slot="sidebar-foot-settings"
+            label={settingsName!}
+            tooltip={settings.label ?? "Settings"}
+            shortcut={settings.shortcut}
+            indicator={settings.indicator}
+            aria-current={settings.current ? "page" : undefined}
+            render={<button type="button" className={tileClass} />}
+            onClick={settings.onClick}
+          >
+            {tile}
+          </IconButton>
+        ) : account.href ? (
+          <a href={account.href} aria-label={account.label} aria-current={account.current ? "page" : undefined} className={tileClass}>
             {tile}
           </a>
         ) : account.onClick ? (
-          <button type="button" aria-label={accountName} onClick={account.onClick} className={tileClass}>
+          <button type="button" aria-label={account.label} onClick={account.onClick} className={tileClass}>
             {tile}
           </button>
         ) : (
@@ -96,6 +115,12 @@ function SidebarFoot({ status, account, secondAction, settings, collapsed: colla
     )
   }
 
+  // The row writes the name beside the tile, so the tile goes unnamed there ("Sean, $1.20 today", not "Sean Sean").
+  const rowTile = (
+    <span aria-hidden="true" className="contents">
+      <InitialTile size="s" initials={account.initials} src={account.src} />
+    </span>
+  )
   const lines = (
     <span className="flex min-w-0 flex-1 flex-col">
       <span data-slot="sidebar-foot-name" className="type-ui-emphasis truncate text-text-body">
@@ -130,18 +155,18 @@ function SidebarFoot({ status, account, secondAction, settings, collapsed: colla
             aria-current={account.current ? "page" : undefined}
             className={cn(accountClass, "hover:bg-surface-hover")}
           >
-            {tile}
+            {rowTile}
             {lines}
           </a>
         ) : account.onClick ? (
           <button type="button" aria-label={account.label} onClick={account.onClick} className={cn(accountClass, "hover:bg-surface-hover")}>
-            {tile}
+            {rowTile}
             {lines}
             <Icon name="chevron--sort" size="sm" className="shrink-0 text-text-label" />
           </button>
         ) : (
           <div className={accountClass}>
-            {tile}
+            {rowTile}
             {lines}
           </div>
         )}
