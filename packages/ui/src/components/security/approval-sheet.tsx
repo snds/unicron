@@ -386,7 +386,7 @@ export function ApprovalSheet({
       overline={
         <>
           {overline ?? approvalSheetOverline[kind]}
-          <span aria-hidden> // </span>
+          <span aria-hidden> · </span>
           <span data-slot="approval-sheet-timer" role="timer" aria-live="off" className={cn(urgent && !expired && "text-critical-text")}>
             {expired ? "Expired" : `${formatCountdown(displayRemaining)} left`}
           </span>

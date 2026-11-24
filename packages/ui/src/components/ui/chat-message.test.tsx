@@ -106,7 +106,7 @@ describe("ChatMessage", () => {
       </ChatMessage>
     )
     const end = container.querySelector('[data-slot="chat-message-end"]')!
-    expect(end).toHaveTextContent("// cut off // stopped")
+    expect(end).toHaveTextContent("cut off · stopped")
     expect(end.className).toContain("type-overline")
   })
 
