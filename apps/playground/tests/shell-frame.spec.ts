@@ -757,9 +757,14 @@ test.describe("the desktop demos against their Figma frames (1440 wide)", () => 
     // Figma draws the overline and the 48/48 title with no gap on a desktop; it was 4 low.
     expect(title.y - overline.bottom).toBe(0)
     await page.setViewportSize({ width: 390, height: 844 })
-    const phoneOverline = await box(page.locator('[data-slot="page-head-overline"]').first())
-    const phoneTitle = await box(page.locator('[data-slot="page-head-title"]').first())
-    expect(phoneTitle.y - phoneOverline.bottom).toBe(4)
+    // The frame re-lays out after the resize; measure once it has settled, not the frame before.
+    await expect
+      .poll(async () => {
+        const phoneOverline = await box(page.locator('[data-slot="page-head-overline"]').first())
+        const phoneTitle = await box(page.locator('[data-slot="page-head-title"]').first())
+        return phoneTitle.y - phoneOverline.bottom
+      })
+      .toBe(4)
   })
 
   test("Lockdown: the request 16 under the head at y 216, the fields 24 under it (Desktop / 01)", async ({ page }) => {
