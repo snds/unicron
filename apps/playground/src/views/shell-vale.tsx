@@ -48,6 +48,9 @@ const MESSAGES = [
   { id: "calendar", sender: "Calendar", time: "TUE", subject: "Dentist moved to 4:30 PM", preview: "Your appointment on Nov 18 has a new time." },
   { id: "pine", sender: "Pine Hollow Cabins", time: "TUE", subject: "Booking confirmation PH-20817", preview: "Fri 11.20 – Sun 11.22 // 2 nights. Check-in after 15:00." },
   { id: "ben", sender: "Ben Ortiz", time: "MON", subject: "Lunch Thursday?", preview: "The new place on 5th has a patio. Noon works for me." },
+  { id: "library", sender: "Harbor Library", time: "MON", subject: "Two holds are ready", preview: "Pick them up at the front desk by Saturday." },
+  { id: "school", sender: "Maple Street School", time: "SUN", subject: "Field trip forms due Friday", preview: "Sign and return the permission slip for the aquarium visit." },
+  { id: "northwind", sender: "Northwind Air", time: "SUN", subject: "Your trip to Portland", preview: "Check-in opens 24 hours before departure." },
 ]
 
 // Decisions §3: an update shows only as a mark on the way into Settings. The demo holds one ready.

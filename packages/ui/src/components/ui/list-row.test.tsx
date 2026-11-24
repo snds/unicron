@@ -10,7 +10,7 @@ const TASK = { index: "01", title: "Migrate vault login to OPAQUE", meta: "SEA-5
 const slot = (container: HTMLElement, name: string) => container.querySelector(`[data-slot="${name}"]`) as HTMLElement | null
 
 describe("ListRow (Figma 9:181)", () => {
-  it("inline: folio index, subtitle title, overline meta, overline status in label ink", () => {
+  it("inline: folio index, ui-emphasis title, meta and status in the meta role, label ink", () => {
     const { container } = render(<ListRow {...TASK} />)
     const row = slot(container, "list-row")!
     expect(row).toHaveAttribute("data-layout", "inline")
@@ -19,36 +19,40 @@ describe("ListRow (Figma 9:181)", () => {
     expect(slot(container, "list-row-index")).toHaveTextContent("01")
     expect(slot(container, "list-row-index")!.className).toContain("type-folio")
     expect(slot(container, "list-row-index")!.className).toContain("w-(--c-list-row-leading-width)")
-    expect(slot(container, "list-row-title")!.className).toContain("type-subtitle")
-    expect(slot(container, "list-row-meta")!.className).toEqual(expect.stringContaining("type-overline"))
+    expect(slot(container, "list-row-title")!.className).toContain("type-ui-emphasis")
+    expect(slot(container, "list-row-meta")!.className).toEqual(expect.stringContaining("type-meta"))
     expect(slot(container, "list-row-meta")!.className).toContain("truncate")
     const status = slot(container, "list-row-status")!
-    expect(status.className).toEqual(expect.stringContaining("type-overline"))
-    expect(status.className).toContain("text-muted-foreground")
+    expect(status.className).toEqual(expect.stringContaining("type-meta"))
+    expect(status.className).toContain("text-text-label")
     expect(status.className).toContain("whitespace-nowrap")
   })
 
-  it("keeps Figma's paddings and gaps: 20 / 20 and gap 4 (label), 20 / 16, gap 6 and 2 under the body (plain)", () => {
+  it("keeps Figma's 2.0 paddings and gaps: 8 / 10, gap 12, body gap 4 (label), gap 6 and 2 under the body (plain), no divider", () => {
     const { container, rerender } = render(<ListRow {...TASK} />)
     const row = () => slot(container, "list-row")!.className.split(/\s+/)
-    expect(row()).toEqual(expect.arrayContaining(["px-4", "gap-6", "pt-5", "pb-5", "items-baseline", "rule-t"]))
+    expect(row()).toEqual(expect.arrayContaining(["px-2.5", "gap-3", "py-2", "items-baseline", "rounded-md"]))
+    expect(row()).not.toContain("rule-t")
     expect(slot(container, "list-row-body")!.className).toContain("gap-1")
     rerender(<ListRow {...TASK} metaStyle="plain" />)
-    expect(row()).toEqual(expect.arrayContaining(["pt-5", "pb-4"]))
+    expect(row()).toEqual(expect.arrayContaining(["py-2"]))
     expect(slot(container, "list-row-body")!.className.split(/\s+/)).toEqual(expect.arrayContaining(["gap-1.5", "pb-0.5"]))
     expect(slot(container, "list-row-meta")!.className).toContain("type-meta")
   })
 
-  it("live colours only the status, in the live ink", () => {
+  it("live (retired) colours only the status, in the working ink", () => {
     const { container } = render(<ListRow {...TASK} tone="live" status="Running 04:12" />)
-    expect(slot(container, "list-row-status")!.className).toContain("text-secondary-live")
-    expect(slot(container, "list-row-title")!.className).toContain("text-foreground")
+    expect(slot(container, "list-row-status")!.className).toContain("text-status-working")
+    expect(slot(container, "list-row-title")!.className).toContain("text-text-body")
   })
 
-  it("selected is primary-soft with the 2px edge (an inset shadow), default text colours, and says aria-current", () => {
+  it("selected is the 8% fill with the 2px inset bar, default text colours, and says aria-current", () => {
     const { container } = render(<ListRow {...TASK} selected onClick={() => undefined} />)
     const row = slot(container, "list-row")!
-    expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(["bg-primary-soft", "edge-l", "rule-t"]))
+    expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(["bg-surface-selected", "rounded-md"]))
+    const bar = slot(container, "list-row-bar")!
+    expect(bar).toHaveAttribute("aria-hidden", "true")
+    expect(bar.className.split(/\s+/)).toEqual(expect.arrayContaining(["inset-y-2", "start-1.5", "w-0.5", "bg-primary-text"]))
     expect(row).toHaveAttribute("data-selected")
     expect(row.className).not.toMatch(/(^|\s)bg-primary(\s|$)/)
     expect(screen.getByRole("button", { name: TASK.title })).toHaveAttribute("aria-current", "true")
@@ -77,7 +81,7 @@ describe("ListRow (Figma 9:181)", () => {
     const row = slot(container, "list-row")!.className
     expect(row).toContain("has-[[data-slot=list-row-main]:focus-visible]:outline-ring")
     expect(row).toContain("has-[[data-slot=list-row-main]:focus-visible]:outline-offset-[calc(var(--stroke-emphasis)*-1)]")
-    expect(row).toContain("has-[[data-slot=list-row-main]:hover]:bg-[image:linear-gradient(var(--state-hover),var(--state-hover))]")
+    expect(row).toContain("has-[[data-slot=list-row-main]:hover]:not-data-selected:bg-surface-hover")
   })
 
   it("is plain text, not a control, with no href, onClick or mainRender", () => {
@@ -111,7 +115,7 @@ describe("ListRow (Figma 9:181)", () => {
     expect(container.querySelectorAll('[data-slot="progress-segment"][data-filled]')).toHaveLength(3)
   })
 
-  it("message: unread square in ink, sender, time, subject, preview cut at two lines by default", () => {
+  it("message: unread dot in info/fill, sender, time, subject, preview cut at one line by default", () => {
     const { container } = render(
       <ListRow
         layout="message"
@@ -124,27 +128,26 @@ describe("ListRow (Figma 9:181)", () => {
       />
     )
     const row = slot(container, "list-row")!
-    expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(["px-3", "py-4"]))
+    expect(row.className.split(/\s+/)).toEqual(expect.arrayContaining(["px-3", "py-2.5"]))
     const unread = slot(container, "list-row-unread")!
     expect(unread).toHaveAttribute("aria-hidden", "true")
-    expect(unread.className.split(/\s+/)).toEqual(expect.arrayContaining(["size-(--c-list-row-unread-size)", "bg-foreground"]))
-    expect(unread.className).not.toContain("rounded")
+    expect(unread.className.split(/\s+/)).toEqual(expect.arrayContaining(["size-(--c-list-row-unread-size)", "bg-info-fill", "rounded-full"]))
     expect(slot(container, "list-row-sender")!.className).toContain("type-ui-emphasis")
-    expect(slot(container, "list-row-time")!.className).toContain("type-overline")
+    expect(slot(container, "list-row-time")!.className).toContain("type-caption")
     expect(slot(container, "list-row-subject")!.className).toContain("type-ui")
-    expect(slot(container, "list-row-preview")!.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-caption", "line-clamp-2"]))
+    expect(slot(container, "list-row-preview")!.className.split(/\s+/)).toEqual(expect.arrayContaining(["type-caption", "line-clamp-1"]))
     const link = screen.getByRole("link", { name: "Unread Mira Chen Cabin for the 20th, confirmed" })
     expect(link).toHaveAccessibleDescription("09:14 Booked the two-bedroom. Check-in is after 3.")
   })
 
   it("message: count, tag, account and previewLines", () => {
     const { container } = render(
-      <ListRow layout="message" sender="Theo Park" count={3} tag={<span>Work</span>} account="Personal" time="Wed" subject="Re: Saturday carpool" preview="I can take both kids" previewLines={1} />
+      <ListRow layout="message" sender="Theo Park" count={3} tag={<span>Work</span>} account="Personal" time="Wed" subject="Re: Saturday carpool" preview="I can take both kids" previewLines={2} />
     )
     expect(slot(container, "list-row-count")).toHaveTextContent("03")
     expect(slot(container, "list-row-tag")).toHaveTextContent("Work")
-    expect(slot(container, "list-row-time")).toHaveTextContent("Personal // Wed")
-    expect(slot(container, "list-row-preview")!.className).toContain("line-clamp-1")
+    expect(slot(container, "list-row-time")).toHaveTextContent("Personal · Wed")
+    expect(slot(container, "list-row-preview")!.className).toContain("line-clamp-2")
   })
 
   it("leading takes the 40px column in place of the index; marks follow the title; a badge follows the status", () => {

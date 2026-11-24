@@ -39,6 +39,8 @@ const CHECKS = [
   { index: "S-03", title: "Skill has no trigger words", meta: "skills/ux-copy", status: "Failing" },
   { index: "H-07", title: "Harness points at a renamed folder", meta: "harness/visual-qa", status: "Failing" },
   { index: "S-11", title: "Two skills claim one trigger", meta: "skills/figma", status: "Failing" },
+  { index: "K-02", title: "A knowledge note has no owner", meta: "knowledge/vale", status: "Failing" },
+  { index: "H-09", title: "Harness test runs on Windows", meta: "harness/browser", status: "Failing" },
 ]
 
 const ACTIVITY = [

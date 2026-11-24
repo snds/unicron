@@ -50,8 +50,16 @@ const ITEMS = [
   { letter: "S", id: "steam", title: "Steam", meta: "store.steampowered.com", status: "Passkey + Code" },
   { letter: "S", id: "stripe", title: "Stripe", meta: "dashboard.stripe.com", status: "Login" },
   { letter: "S", id: "synology", title: "Synology", meta: "quickconnect.to", status: "Login + Code" },
+  { letter: "S", id: "signal", title: "Signal", meta: "signal.org", status: "Passkey" },
+  { letter: "S", id: "slack", title: "Slack", meta: "app.slack.com", status: "Login + Code" },
+  { letter: "S", id: "soundcloud", title: "SoundCloud", meta: "soundcloud.com", status: "Login" },
+  { letter: "S", id: "substack", title: "Substack", meta: "substack.com", status: "Login // Reused" },
   { letter: "T", id: "tailscale", title: "Tailscale", meta: "login.tailscale.com", status: "Passkey" },
   { letter: "T", id: "ticketmaster", title: "Ticketmaster", meta: "ticketmaster.com", status: "Login // Weak" },
+  { letter: "T", id: "todoist", title: "Todoist", meta: "app.todoist.com", status: "Login" },
+  { letter: "T", id: "trello", title: "Trello", meta: "trello.com", status: "Passkey" },
+  { letter: "T", id: "tumblr", title: "Tumblr", meta: "tumblr.com", status: "Login" },
+  { letter: "T", id: "twitch", title: "Twitch", meta: "twitch.tv", status: "Login + Code" },
 ]
 
 // The demo's vault: a password that is never fetched from anywhere real, a clipboard that only
@@ -64,7 +72,7 @@ const host: SecretFieldHost = {
 }
 const getPassword = () => Promise.resolve(new TextEncoder().encode("larch-ember-quartz-17"))
 const AT = 1_800_000_000
-const LETTER_COUNTS: Record<string, number> = { S: 4, T: 2 }
+const LETTER_COUNTS: Record<string, number> = { S: 8, T: 6 }
 
 function Items() {
   const frame = useAppFrame()
@@ -74,8 +82,7 @@ function Items() {
   const open = picked ?? (frame.split ? "steam" : null)
   const pushed = open !== null && !frame.split
   // The phone draws Steam first (the item with the request); the desktop list is A to Z under letters.
-  const phoneOrder = ["steam", "spotify", "stripe", "synology", "tailscale", "ticketmaster"]
-  const rows = frame.split ? ITEMS : phoneOrder.map((id) => ITEMS.find((i) => i.id === id)!)
+  const rows = frame.split ? ITEMS : [ITEMS.find((i) => i.id === "steam")!, ...ITEMS.filter((i) => i.id !== "steam")]
 
   return (
     <>

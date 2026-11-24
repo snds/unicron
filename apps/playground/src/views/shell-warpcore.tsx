@@ -47,6 +47,10 @@ const TASKS = [
   { id: "sea-46", index: "04", title: "Index the Vale decision records", meta: "SEA-46 // Vale // Local model // Risk 1", status: "Queued" },
   { id: "sea-44", index: "05", title: "Nightly dependency audit", meta: "SEA-44 // Synapse // Codex // Risk 1", status: "Failed" },
   { id: "sea-43", index: "06", title: "Rename the vault export command", meta: "SEA-43 // Lockdown // Codex // Risk 1", status: "Done" },
+  { id: "sea-41", index: "07", title: "Trim the Synapse brains view", meta: "SEA-41 // Synapse // Claude Code // Risk 1", status: "Done" },
+  { id: "sea-39", index: "08", title: "Move the release notes to Vale", meta: "SEA-39 // Vale // Codex // Risk 1", status: "Done" },
+  { id: "sea-38", index: "09", title: "Rotate the gateway keys", meta: "SEA-38 // Workspace // Claude Code // Risk 2", status: "Done" },
+  { id: "sea-36", index: "10", title: "Pin the motion tests to one browser", meta: "SEA-36 // Unicron // Codex // Risk 1", status: "Done" },
 ]
 
 const STEPS: { title: string; status: StepStatus; statusLabel?: string }[] = [
