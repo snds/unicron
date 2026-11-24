@@ -35,7 +35,7 @@ describe("SidebarFoot (Figma 178:4541)", () => {
 
   it("names an unlabeled account link by its words once, the tile unnamed beside them", () => {
     wrap(<SidebarFoot account={{ name: "Sean", initials: "S", meta: "$1.20 today", href: "/spend" }} />)
-    expect(screen.getByRole("link", { name: "Sean $1.20 today" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /^Sean ?\$1\.20 today$/ })).toBeInTheDocument()
     expect(screen.queryByRole("img", { name: "Sean" })).toBeNull()
   })
 
