@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.1.1
+
+### Patch Changes
+
+- SidebarFoot: in the rail, the tile is the way into Settings (with its tooltip, shortcut, dot, and Current fill), so Settings stays reachable when the sidebar is collapsed.
+
 ## 2.1.0
 
 ### Minor Changes

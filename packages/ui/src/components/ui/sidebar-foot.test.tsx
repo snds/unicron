@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -43,10 +43,19 @@ describe("SidebarFoot (Figma 178:4541)", () => {
     expect(container.querySelector('[data-slot="sidebar-foot-account"] svg')).not.toBeNull()
   })
 
-  it("is the tile alone when collapsed", () => {
-    wrap(<SidebarFoot collapsed status={{ icon: "renew", text: "Synced" }} account={{ name: "Sean", initials: "S", meta: "$1.20 today" }} settings={{ onClick: () => {} }} />)
+  it("is the tile alone when collapsed, and the tile opens Settings", () => {
+    const onClick = vi.fn()
+    wrap(<SidebarFoot collapsed status={{ icon: "renew", text: "Synced" }} account={{ name: "Sean", initials: "S", meta: "$1.20 today" }} settings={{ onClick, current: true }} />)
     expect(screen.queryByText("Synced")).toBeNull()
-    expect(screen.queryByRole("button", { name: "Settings" })).toBeNull()
-    expect(screen.getByText("S")).toBeInTheDocument()
+    const button = screen.getByRole("button", { name: "Settings" })
+    expect(button).toContainElement(screen.getByText("S"))
+    expect(button).toHaveAttribute("aria-current", "page")
+    fireEvent.click(button)
+    expect(onClick).toHaveBeenCalledOnce()
+  })
+
+  it("links the rail's tile where the account goes when there is no Settings", () => {
+    wrap(<SidebarFoot collapsed account={{ name: "Sean", initials: "S", href: "/spend", label: "Spend" }} />)
+    expect(screen.getByRole("link", { name: "Spend" })).toHaveAttribute("href", "/spend")
   })
 })
