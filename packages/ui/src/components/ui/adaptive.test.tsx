@@ -186,7 +186,7 @@ describe("AdaptiveMenu", () => {
       expect(count.className.split(" ")).toEqual(expect.arrayContaining(["type-folio", "text-text-body", "ms-auto"]))
       const starred = screen.getByRole(role, { name: "Starred, 4" })
       expect(starred).not.toHaveAttribute("aria-current")
-      expect(starred.querySelector('[data-slot="adaptive-menu-item-count"]')).toHaveTextContent("04")
+      expect(starred.querySelector('[data-slot="adaptive-menu-item-count"]')).toHaveTextContent("4")
       expect(starred.querySelector('[data-slot="adaptive-menu-item-count"]')!.className).toContain("text-text-label")
       // Zero shows nothing and says nothing.
       expect(screen.getByRole(role, { name: "Sent" }).querySelector('[data-slot="adaptive-menu-item-count"]')).toBeNull()

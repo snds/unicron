@@ -215,7 +215,7 @@ describe("Accessory (Figma 20:1713)", () => {
   it("a countdown follows the meta as decisions §13 writes it, hidden from assistive tech; the open button's name does not tick (contract 5.1c C7)", () => {
     const { container, rerender } = render(<Accessory tone="live" meta="Sending" countdown={8} title="Board games for the cabin" onOpen={() => {}} announce="Sending. 10 seconds to undo." />)
     const countdown = container.querySelector('[data-slot="accessory-countdown"]')!
-    expect(countdown).toHaveTextContent("// 08 S")
+    expect(countdown).toHaveTextContent("· 08 S")
     expect(countdown).toHaveAttribute("aria-hidden", "true")
     const open = screen.getByRole("button", { name: /Board games/ })
     expect(open.textContent).toContain("08 S")

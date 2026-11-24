@@ -364,7 +364,7 @@ describe("StatusItem (contract 5.1b #4)", () => {
     render(<StatusItem tone="live" mark="square" text="Sending" countdown={8} progress={{ value: 2, max: 10 }} action={{ label: "Undo", onClick: () => {} }} announce="Sending. 10 seconds to undo." />)
     expect(document.querySelector('[data-slot="status-item-text"]')).toHaveClass("type-overline", "text-secondary-live")
     expect(document.querySelector('[data-slot="status-item-countdown"]')).toHaveAttribute("aria-hidden", "true")
-    expect(document.querySelector('[data-slot="status-item-countdown"]')).toHaveTextContent("// 08 S")
+    expect(document.querySelector('[data-slot="status-item-countdown"]')).toHaveTextContent("· 08 S")
     expect(document.querySelector('[data-slot="status-item-progress"]')).toHaveAttribute("aria-hidden", "true")
     expect(screen.getByRole("status")).toHaveTextContent("Sending. 10 seconds to undo.")
     expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument()
@@ -404,7 +404,7 @@ describe("AppFrameStatusLine", () => {
     )
     const line = screen.getByRole("banner")
     expect(line).toHaveClass("rule-b", "h-16")
-    expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toHaveTextContent("Personal // OverviewSample")
+    expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toHaveTextContent("Personal / OverviewSample")
     expect(line.querySelectorAll('[data-slot="status-item"]')).toHaveLength(2)
   })
 

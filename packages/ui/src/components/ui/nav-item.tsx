@@ -199,7 +199,7 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
             {title}
             {count !== undefined ? (
               <>
-                <span aria-hidden="true">{` // ${formatNavCount(count)}`}</span>
+                <span aria-hidden="true">{` · ${formatNavCount(count)}`}</span>
                 <span className="sr-only">{`, ${count.toLocaleString("en-US")}`}</span>
               </>
             ) : null}

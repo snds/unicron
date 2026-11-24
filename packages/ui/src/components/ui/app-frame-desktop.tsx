@@ -643,7 +643,7 @@ function StatusItem({ tone = "neutral", mark, text, short, countdown, progress, 
       ) : null}
       {countdown !== undefined ? (
         <span data-slot="status-item-countdown" aria-hidden="true" className={cn("type-overline shrink-0 tabular-nums", ink)}>
-          {`// ${formatCountdown(countdown)}`}
+          {`· ${formatCountdown(countdown)}`}
         </span>
       ) : null}
     </>
@@ -726,7 +726,7 @@ function Crumbs({ crumbs, badge }: { crumbs: AppFrameCrumb[]; badge?: React.Reac
             <li key={`${i}-${crumb.label}`} className={cn("flex min-w-0 items-center", last ? "shrink" : "shrink-0")}>
               {i > 0 ? (
                 <span aria-hidden="true" className="whitespace-pre">
-                  {" // "}
+                  {" / "}
                 </span>
               ) : null}
               {link && crumb.href ? (

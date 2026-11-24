@@ -245,7 +245,7 @@ function Accessory({
             {meta}
             {countdown !== undefined ? (
               <span data-slot="accessory-countdown" aria-hidden="true" className="tabular-nums">
-                {`${meta ? " // " : ""}${formatCountdown(countdown)}`}
+                {`${meta ? " · " : ""}${formatCountdown(countdown)}`}
               </span>
             ) : null}
           </span>

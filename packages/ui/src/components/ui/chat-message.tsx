@@ -119,7 +119,7 @@ export function ChatMessage({
             {meta}
             {streaming && phase ? (
               <>
-                {meta ? " // " : null}
+                {meta ? " · " : null}
                 <span data-slot="chat-message-phase">{phase}</span>
               </>
             ) : null}
