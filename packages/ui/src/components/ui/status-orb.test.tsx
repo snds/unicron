@@ -98,18 +98,31 @@ describe("StatusOrb", () => {
   })
 })
 
-describe("StatusOrb in the 2026-11 look", () => {
+describe("StatusOrb as the 2.0 Status Mark", () => {
   const knobs = JSON.parse(readFileSync(resolve(__dirname, "../../../../tokens/tokens/component/chat.json"), "utf8"))["status-orb"]
 
-  it("takes live from secondary-live, needs-you from the yellow, and the rest from label ink", () => {
-    expect(knobs.thinking.$value).toBe("{secondary-live}")
-    expect(knobs.working.$value).toBe("{secondary-live}")
+  it("takes each state from the shared status colours, and needs-you from the yellow", () => {
+    expect(knobs.thinking.$value).toBe("{status-working}")
+    expect(knobs.working.$value).toBe("{status-working}")
     expect(knobs["needs-you"].$value).toBe("{needs-you-fill}")
-    expect(knobs.failed.$value).toBe("{critical-text}")
-    for (const state of ["idle", "queued", "paused", "stopped", "offline"]) expect(knobs[state].$value).toBe("{text-label}")
+    expect(knobs.done.$value).toBe("{status-done}")
+    expect(knobs["done-ink"].$value).toBe("{primary-on-fill}")
+    expect(knobs.failed.$value).toBe("{status-failed}")
+    expect(knobs["failed-ink"].$value).toBe("{critical-on-fill}")
+    for (const state of ["idle", "queued", "paused", "stopped", "offline"]) expect(knobs[state].$value).toBe("{status-idle}")
   })
 
-  it("outlines the needs-you square in the yellow's ink, so it reads on stone", () => {
+  it("draws done and failed as a disc with a check or a cross in the fill's ink", () => {
+    for (const state of ["done", "failed"] as const) {
+      const { container, unmount } = render(<StatusOrb state={state} tooltip={false} />)
+      const glyph = container.querySelector('svg[data-slot="status-orb-glyph"]')!
+      expect(glyph.querySelector("circle")).toHaveAttribute("fill", "currentColor")
+      expect(glyph.querySelector("path")).toHaveAttribute("stroke", `var(--c-status-orb-${state}-ink)`)
+      unmount()
+    }
+  })
+
+  it("outlines the needs-you dot in the yellow's ink, so it reads on stone", () => {
     expect(knobs["needs-you-edge"].$value).toBe("{needs-you-on-fill}")
     const { container, rerender } = render(<StatusOrb state="needs-you" tooltip={false} />)
     const dot = container.querySelector('[data-slot="status-orb-dot"]')!
@@ -119,8 +132,9 @@ describe("StatusOrb in the 2026-11 look", () => {
     expect(container.querySelector('[data-slot="status-orb-dot"]')!.className).not.toContain("ring-")
   })
 
-  it("draws its dot and halo square: the stylesheet gives them no radius", () => {
+  it("draws its marks round, and idle as a hollow ring", () => {
     const block = css.slice(css.indexOf("StatusOrb (components/ui/status-orb.tsx)"), css.indexOf("Count Badge (components/ui/count-badge.tsx"))
-    expect(block).not.toMatch(/border-radius/)
+    expect(block).toMatch(/\[data-slot="status-orb-halo"\] \{\s*position: absolute;\s*border-radius: 50%;/)
+    expect(block).toMatch(/\[data-state="idle"\] > \[data-slot="status-orb-dot"\],[^{]*\{[^}]*background: transparent;/)
   })
 })

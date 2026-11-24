@@ -122,6 +122,9 @@ const SQUARE = {
  * - `corner`: at an icon's top right, an overline-high count (`TabBarItem`, `FloatButton`).
  * - `below`: under an icon, in the overline role (`RailItem`).
  */
+// Written out whole, so Tailwind sees each class.
+const COUNT_TYPE = { folio: "type-folio", overline: "type-overline", caption: "type-caption" } as const
+
 export function NavMark({
   mark,
   placement,
@@ -130,8 +133,8 @@ export function NavMark({
 }: {
   mark: NavMarkResolved | null
   placement: NavMarkPlacement
-  /** The type role of a count: folio inline, overline below and at a corner. A Top Tab's count is overline, as its label is. */
-  type?: "folio" | "overline"
+  /** The type role of a count: folio inline, overline below and at a corner. A Pill Tab's count is caption (2.0). */
+  type?: "folio" | "overline" | "caption"
   className?: string
 }) {
   if (!mark) return null
@@ -188,7 +191,7 @@ export function NavMark({
       data-tone={mark.tone}
       aria-hidden="true"
       className={cn(
-        (type ?? (placement === "inline" ? "folio" : "overline")) === "folio" ? "type-folio" : "type-overline",
+        COUNT_TYPE[type ?? (placement === "inline" ? "folio" : "overline")],
         "shrink-0",
         // Waiting on the person: the yellow behind the number, its own ink on it (any ink the host passed gives way).
         needsYou ? "on-needs-you rounded-sm bg-needs-you-fill px-1 text-needs-you-on-fill" : className

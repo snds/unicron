@@ -47,8 +47,8 @@ describe("orientation variants", () => {
     expect(container.querySelector('[data-slot="tabs"]')).toHaveAttribute("data-orientation", "horizontal")
     const trigger = container.querySelector('[data-slot="tabs-trigger"]')
     expect(trigger).toHaveAttribute("data-active")
-    // Hover previews the line marker; the selected tab keeps it solid.
-    expect(trigger?.className).toContain("group-data-[variant=line]/tabs-list:not-data-active:hover:after:opacity-40")
+    // A vertical list starts its pills at the leading edge (2.0 Pill Tab).
+    expect(trigger?.className).toContain("group-data-vertical/tabs:justify-start")
   })
 
   it("a fill-size list takes its container's height; the default keeps its own", () => {
@@ -68,10 +68,8 @@ describe("orientation variants", () => {
     )
     const [fill, normal] = container.querySelectorAll('[data-slot="tabs-list"]')
     expect(fill).toHaveAttribute("data-size", "fill")
-    // tailwind-merge keeps the later height, so fill wins over the default 40px (1.0: the
-    // segmented control and the Top Tab line are both 40 tall).
+    // A 2.0 list hugs its 28px pills; fill takes the container's height and the pills center in it.
     expect(fill.className).toContain("group-data-horizontal/tabs:h-full")
-    expect(fill.className).not.toContain("group-data-horizontal/tabs:h-10")
-    expect(normal.className).toContain("group-data-horizontal/tabs:h-10")
+    expect(normal.className).not.toContain("group-data-horizontal/tabs:h-full")
   })
 })

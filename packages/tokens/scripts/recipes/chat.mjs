@@ -71,18 +71,21 @@ export const recipes = [
   { id: "code-block-text", source: "code block: type-code-inline text-text-body on bg-surface-raised", kind: "text-body", paint: r("text-body"), over: RAISED },
 
   // ── StatusOrb (component knobs, chat.json) ──────────────────────────────────────────────────
-  // Dots, halos and rings are marks (solid, Lc 30); glyphs are drawn ink (text-label, Lc 60).
+  // 2.0 Status Mark (Figma 143:540): every state is a filled or stroked shape, so each is a mark
+  // (solid, Lc 30), the same floor as status/* in the core. The check and the cross sit on their
+  // disc, so they are measured as ink on that fill.
   ...[["ground", GROUND], ["raised", RAISED]].flatMap(([on, stack]) => [
-    { id: `orb-live-${on}`, source: "status orb thinking and working: --c-status-orb-working (secondary-live)", kind: "solid", paint: r("c-status-orb-working"), over: stack },
-    { id: `orb-idle-${on}`, source: "status orb idle and offline: --c-status-orb-idle (text-label), a square", kind: "solid", paint: r("c-status-orb-idle"), over: stack },
-    ...(on === "raised" ? [] : [{ id: `orb-glyph-${on}`, source: "status orb queued, paused, stopped: the glyph in --c-status-orb-queued (text-label)", kind: "text-label", paint: r("c-status-orb-queued"), over: stack }]),
-    { id: `orb-done-${on}`, source: "status orb done: the check glyph in --c-status-orb-done (success-foreground)", kind: "text-label", paint: r("c-status-orb-done"), over: stack },
-    ...(on === "raised" ? [] : [{ id: `orb-failed-${on}`, source: "status orb failed: the glyph in --c-status-orb-failed (critical-text)", kind: "text-label", paint: r("c-status-orb-failed"), over: stack }]),
-    // The needs-you square reads by its yellow on graphite and by its ink outline on stone; each
+    { id: `orb-live-${on}`, source: "status mark thinking and working: --c-status-orb-working (status/working)", kind: "solid", paint: r("c-status-orb-working"), over: stack },
+    { id: `orb-idle-${on}`, source: "status mark idle, offline, and the queued, paused and stopped glyphs: --c-status-orb-idle (status/idle)", kind: "solid", paint: r("c-status-orb-idle"), over: stack },
+    { id: `orb-done-${on}`, source: "status mark done: the disc in --c-status-orb-done (status/done)", kind: "solid", paint: r("c-status-orb-done"), over: stack },
+    { id: `orb-failed-${on}`, source: "status mark failed: the disc in --c-status-orb-failed (status/failed)", kind: "solid", paint: r("c-status-orb-failed"), over: stack },
+    // The needs-you dot reads by its yellow on graphite and by its ink outline on stone; each
     // part is measured on the ground where it carries the shape.
-    { id: `orb-needs-you-${on}`, modes: "graphite", source: "status orb needs-you on graphite: the square in --c-status-orb-needs-you (the yellow)", kind: "solid", paint: r("c-status-orb-needs-you"), over: stack },
-    { id: `orb-needs-you-edge-${on}`, modes: "stone", source: "status orb needs-you on stone: the 1px outline in --c-status-orb-needs-you-edge (the yellow's ink)", kind: "solid", paint: r("c-status-orb-needs-you-edge"), over: stack },
+    { id: `orb-needs-you-${on}`, modes: "graphite", source: "status mark needs-you on graphite: the dot in --c-status-orb-needs-you (the yellow)", kind: "solid", paint: r("c-status-orb-needs-you"), over: stack },
+    { id: `orb-needs-you-edge-${on}`, modes: "stone", source: "status mark needs-you on stone: the 1px outline in --c-status-orb-needs-you-edge (the yellow's ink)", kind: "solid", paint: r("c-status-orb-needs-you-edge"), over: stack },
   ]),
+  { id: "orb-done-check", source: "status mark done: the check in --c-status-orb-done-ink on its disc", kind: "solid", paint: r("c-status-orb-done-ink"), over: [...GROUND, r("c-status-orb-done")] },
+  { id: "orb-failed-cross", source: "status mark failed: the cross in --c-status-orb-failed-ink on its disc", kind: "solid", paint: r("c-status-orb-failed-ink"), over: [...GROUND, r("c-status-orb-failed")] },
 
   // ── IndicatorMark (component knobs, chat.json) ──────────────────────────────────────────────
   ...[["ground", GROUND], ["raised", RAISED], ["soft", SOFT]].flatMap(([on, stack]) => [
