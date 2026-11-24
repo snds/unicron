@@ -14,7 +14,7 @@ package ships. Built to:
   map, no nesting and nothing to fetch, for a page with no Tailwind (an extension's in-page
   frame). With no class its root follows the browser's light or dark setting; `class="stone"` or
   `class="graphite"` forces one.
-- `dist/tokens.json` — the same tokens, flat, for tooling. `themeSlots` lists the 28 slots a
+- `dist/tokens.json` — the same tokens, flat, for tooling. `themeSlots` lists the 10 accent slots a
   theme declares, and `type` the 24 type roles.
 - `unicron-contrast` (bin) — the contrast gate, for your own theme:
   `unicron-contrast src/app-extension.css --exceptions src/contrast-exceptions.json`.
@@ -37,7 +37,7 @@ Most apps do not import this directly: `@unicron/ui/styles` already does.
 
 ## Set the theme
 
-Declare your app's 28 theme slots in your own layer (`examples/app-extension.css` shows a whole
+Declare your app's 10 accent slots in your own layer (`examples/app-extension.css` shows a whole
 one), then switch it on in the app's HTML, not in CSS:
 
 ```html
@@ -61,11 +61,11 @@ file does not name (`--print-exceptions` writes the first list for you). See
 
 | File | Holds |
 |---|---|
-| `tokens/global.json` | tier 1: raw values, and the 28 theme slots with Unicron's default theme |
+| `tokens/global.json` | tier 1: raw values: the 10 accent slots with Unicron's default accent, and the shared 2.0 neutrals, status, labels and charts |
 | `tokens/semantic.json` | tier 2: Figma's roles, and the shadcn contract as aliases of them |
 | `tokens/type.json` | the 24 type roles |
 | `tokens/component.json`, `tokens/component/<area>.json` | tier 3: component knobs |
-| `tokens/figma/theme-2026-11.json` | a snapshot of the Figma read-out; the parity check compares against it |
+| `tokens/figma/theme-2026-11-24.json` | a snapshot of the Figma read-out; the parity check compares against it |
 
 ## Checks
 

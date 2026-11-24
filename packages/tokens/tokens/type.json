@@ -1,29 +1,396 @@
 {
-  "$description": "Type roles: the 23 text styles of Figma's `Unicron Type/` folder, and mono-row (1.1, waiting on its Figma style), one set for every app and both grounds. Each is a DTCG typography composite. The family is a reference to a tier 1 font; weight, size, line height and letter spacing are Figma's numbers, in Figma's units (px, and em for the percent). The build emits five variables per role: --type-<role>-family, -weight, -size, -leading and -tracking (size and leading in rem, tracking in em). @unicron/ui's stylesheet turns each role into one `type-<role>` utility. A change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
+  "$description": "Type roles: the 22 text styles of Figma's `Unicron Type/` folder (Unicron 2.0, read 2026-11-24), the eight retired ones (Unicron Type/Retired/, kept for parts not yet restyled) and mono-row (waiting on its Figma style), one set for every app and both grounds. One sans (Geist) for every interface role; mono only for code. Each is a DTCG typography composite: the family is a reference to a tier 1 font; weight, size, line height and letter spacing are Figma's numbers, in Figma's units (px, and em for the percent). The build emits five variables per role: --type-<role>-family, -weight, -size, -leading and -tracking. @unicron/ui's stylesheet turns each role into one `type-<role>` utility. A change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
   "type": {
-    "display": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 700, "fontSize": "72px", "lineHeight": "68px", "letterSpacing": "-0.04em" }, "$description": "Figma Unicron Type/display: Geist Bold 72/68, -4%. Empty-state hero, big moments. The line box is shorter than the type on purpose (72/68)." },
-    "display-compact": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 700, "fontSize": "48px", "lineHeight": "48px", "letterSpacing": "-0.03em" }, "$description": "Figma Unicron Type/display/compact: Geist Bold 48/48, -3%. The compact display size." },
-    "title": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 700, "fontSize": "32px", "lineHeight": "36px", "letterSpacing": "-0.015em" }, "$description": "Figma Unicron Type/title: Geist Bold 32/36, -1.5%. Section and view titles; large screen titles." },
-    "lead": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 500, "fontSize": "24px", "lineHeight": "32px", "letterSpacing": "-0.01em" }, "$description": "Figma Unicron Type/lead: Geist Medium 24/32, -1%. The paragraph that opens a response or a page; sheet and dialog titles." },
-    "subtitle": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 500, "fontSize": "18px", "lineHeight": "28px", "letterSpacing": "-0.005em" }, "$description": "Figma Unicron Type/subtitle: Geist Medium 18/28, -0.5%. Section titles in panels and cards; phone top-bar titles." },
-    "body": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 400, "fontSize": "16px", "lineHeight": "24px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/body: Geist Regular 16/24. Default reading text." },
-    "body-strong": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 500, "fontSize": "16px", "lineHeight": "24px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/body/strong: Geist Medium 16/24. Emphasis within body. Differs from body only in weight." },
-    "response": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 400, "fontSize": "17px", "lineHeight": "28px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/response: Geist Regular 17/28. Model output text." },
-    "ui": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 500, "fontSize": "15px", "lineHeight": "20px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/ui: Geist Medium 15/20. Controls, buttons, menus." },
-    "ui-emphasis": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 600, "fontSize": "15px", "lineHeight": "20px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/ui/emphasis: Geist SemiBold 15/20. Emphasized control text. Differs from ui only in weight." },
-    "label": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 500, "fontSize": "14px", "lineHeight": "20px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/label: Geist Medium 14/20. Form labels, tabs." },
-    "caption": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 400, "fontSize": "13px", "lineHeight": "20px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/caption: Geist Regular 13/20. Supporting text under media or tables." },
-    "overline": { "$type": "typography", "$value": { "fontFamily": "{font.mono}", "fontWeight": 500, "fontSize": "11px", "lineHeight": "16px", "letterSpacing": "0.04em" }, "$extensions": { "unicron.type": { "case": "upper" } }, "$description": "Figma Unicron Type/overline: Geist Mono Medium 11/16, +4%. The small label above a title. The only role with a case: upper. Type the text in normal case." },
-    "folio": { "$type": "typography", "$value": { "fontFamily": "{font.mono}", "fontWeight": 500, "fontSize": "12px", "lineHeight": "20px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/folio: Geist Mono Medium 12/20. Running headers, page or step markers. Differs from meta only in weight." },
-    "meta": { "$type": "typography", "$value": { "fontFamily": "{font.mono}", "fontWeight": 400, "fontSize": "12px", "lineHeight": "20px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/meta: Geist Mono Regular 12/20. Timestamps, model name, counts." },
-    "mono-row": { "$type": "typography", "$value": { "fontFamily": "{font.mono}", "fontWeight": 400, "fontSize": "13px", "lineHeight": "20px", "letterSpacing": "0em" }, "$extensions": { "unicron.type": { "figma": "pending" } }, "$description": "Geist Mono Regular 13/20, as typed: the mono line of a row that holds a person's own words (a username, a site), at the 13px a popup keeps reading text at (Lockdown 4, 1.1). The meta role is the same at 12px. Not in Figma yet: Sean adds `Unicron Type/mono/row`." },
-    "code-inline": { "$type": "typography", "$value": { "fontFamily": "{font.mono}", "fontWeight": 400, "fontSize": "15px", "lineHeight": "20px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/code/inline: Geist Mono Regular 15/20. Inline code. Matches the line height of ui text." },
-    "code-display": { "$type": "typography", "$value": { "fontFamily": "{font.mono}", "fontWeight": 500, "fontSize": "36px", "lineHeight": "40px", "letterSpacing": "0.12em" }, "$description": "Figma Unicron Type/code/display: Geist Mono Medium 36/40, +12%. Large codes, for example a one-time code." },
-    "number-hero": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 700, "fontSize": "168px", "lineHeight": "148px", "letterSpacing": "-0.05em" }, "$description": "Figma Unicron Type/number/hero: Geist Bold 168/148, -5%. Hero numbers. The line box is shorter than the type on purpose (168/148)." },
-    "number-metric": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 700, "fontSize": "44px", "lineHeight": "44px", "letterSpacing": "-0.02em" }, "$description": "Figma Unicron Type/number/metric: Geist Bold 44/44, -2%. Metric values." },
-    "number-index": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 700, "fontSize": "28px", "lineHeight": "32px", "letterSpacing": "-0.02em" }, "$description": "Figma Unicron Type/number/index: Geist Bold 28/32, -2%. Index numerals (item 03, task 014)." },
-    "number-count": { "$type": "typography", "$value": { "fontFamily": "{font.mono}", "fontWeight": 400, "fontSize": "24px", "lineHeight": "28px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/number/count: Geist Mono Regular 24/28. Counts." },
-    "brand-wordmark": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 700, "fontSize": "13px", "lineHeight": "16px", "letterSpacing": "0.12em" }, "$description": "Figma Unicron Type/brand/wordmark: Geist Bold 13/16, +12%. The app wordmark in the App Lockup." },
-    "icon-glyph": { "$type": "typography", "$value": { "fontFamily": "{font.sans}", "fontWeight": 400, "fontSize": "32px", "lineHeight": "32px", "letterSpacing": "0em" }, "$description": "Figma Unicron Type/icon/glyph: Geist Regular 32/32. The letter in a placeholder mark. No component on the Figma components page uses it." }
+    "display": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 700,
+        "fontSize": "72px",
+        "lineHeight": "68px",
+        "letterSpacing": "-0.04em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/display: Geist Bold 72/68, -4%. Empty-state hero, big moments. The line box is shorter than the type on purpose (72/68).",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "display-compact": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 700,
+        "fontSize": "48px",
+        "lineHeight": "48px",
+        "letterSpacing": "-0.03em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/display/compact: Geist Bold 48/48, -3%. The compact display size.",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "title": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 600,
+        "fontSize": "20px",
+        "lineHeight": "28px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/title: Geist SemiBold 20/28. Page titles in an app: 20/28."
+    },
+    "lead": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 500,
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-0.01em"
+      },
+      "$description": "Figma Unicron Type/lead: Geist Medium 24/32, -1%. The Home greeting and a large lead line."
+    },
+    "subtitle": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 600,
+        "fontSize": "15px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/subtitle: Geist SemiBold 15/20. Panel and section headings."
+    },
+    "body": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 400,
+        "fontSize": "15px",
+        "lineHeight": "24px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/body: Geist Regular 15/24. Chat prose and long text: 15/24."
+    },
+    "body-strong": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 500,
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/body/strong: Geist Medium 16/24. Emphasised long text."
+    },
+    "response": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 400,
+        "fontSize": "15px",
+        "lineHeight": "24px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/response: Geist Regular 15/24. An agent's reply."
+    },
+    "ui": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 400,
+        "fontSize": "13px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/ui: Geist Regular 13/20. Interface text: sidebar rows, panel rows, meta lines that read as text."
+    },
+    "ui-emphasis": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 500,
+        "fontSize": "13px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/ui/emphasis: Geist Medium 13/20. Button labels and the selected row."
+    },
+    "label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 500,
+        "fontSize": "13px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/label: Geist Medium 13/20. A field's label."
+    },
+    "caption": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 400,
+        "fontSize": "12px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/caption: Geist Regular 12/16. Small support text."
+    },
+    "overline": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 600,
+        "fontSize": "11px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.04em"
+      },
+      "$extensions": {
+        "unicron.type": {
+          "case": "upper"
+        }
+      },
+      "$description": "Figma Unicron Type/overline: Geist SemiBold 11/16, +4%. Small all-caps section labels, in the sans. The only role with a case: upper. Type the text in normal case."
+    },
+    "folio": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 500,
+        "fontSize": "12px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/folio: Geist Medium 12/16. A small emphasised number or count."
+    },
+    "meta": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 400,
+        "fontSize": "12px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/meta: Geist Regular 12/16. Time, engine and place lines."
+    },
+    "mono-row": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.mono}",
+        "fontWeight": 400,
+        "fontSize": "13px",
+        "lineHeight": "20px",
+        "letterSpacing": "0em"
+      },
+      "$extensions": {
+        "unicron.type": {
+          "figma": "pending"
+        }
+      },
+      "$description": "Geist Mono Regular 13/20, as typed: the mono line of a row that holds a person's own words (a username, a site), at the 13px a popup keeps reading text at (Lockdown 4, 1.1). The meta role is the same at 12px. Not in Figma yet: Sean adds `Unicron Type/mono/row`."
+    },
+    "code-inline": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.mono}",
+        "fontWeight": 400,
+        "fontSize": "13px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/code/inline: Geist Mono Regular 13/20. Code, paths and ids inside text."
+    },
+    "code-display": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.mono}",
+        "fontWeight": 500,
+        "fontSize": "36px",
+        "lineHeight": "40px",
+        "letterSpacing": "0.12em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/code/display: Geist Mono Medium 36/40, +12%. Large codes, for example a one-time code.",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "number-hero": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 700,
+        "fontSize": "168px",
+        "lineHeight": "148px",
+        "letterSpacing": "-0.05em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/number/hero: Geist Bold 168/148, -5%. Hero numbers. The line box is shorter than the type on purpose (168/148).",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "number-metric": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 700,
+        "fontSize": "44px",
+        "lineHeight": "44px",
+        "letterSpacing": "-0.02em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/number/metric: Geist Bold 44/44, -2%. Metric values.",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "number-index": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 700,
+        "fontSize": "28px",
+        "lineHeight": "32px",
+        "letterSpacing": "-0.02em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/number/index: Geist Bold 28/32, -2%. Index numerals (item 03, task 014).",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "number-count": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 600,
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-0.005em"
+      },
+      "$description": "Figma Unicron Type/number/count: Geist SemiBold 24/32, -0.5%. A large count in a tile."
+    },
+    "brand-wordmark": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 700,
+        "fontSize": "13px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.12em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/brand/wordmark: Geist Bold 13/16, +12%. The app wordmark in the App Lockup.",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "icon-glyph": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 400,
+        "fontSize": "32px",
+        "lineHeight": "32px",
+        "letterSpacing": "0em"
+      },
+      "$description": "Retired in Figma (Unicron Type/Retired/, 2026-11-23); kept for parts not yet restyled, removed in 2.1. Figma Unicron Type/icon/glyph: Geist Regular 32/32. The letter in a placeholder mark. No component on the Figma components page uses it.",
+      "$extensions": {
+        "unicron.type": {
+          "figma": "retired"
+        }
+      }
+    },
+    "control": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 400,
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/control: Geist Regular 14/20. Text inside fields and controls: 14/20."
+    },
+    "large-title": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 700,
+        "fontSize": "28px",
+        "lineHeight": "34px",
+        "letterSpacing": "-0.0142857em"
+      },
+      "$description": "Figma Unicron Type/large-title: Geist Bold 28/34, -1.4286%. The phone's large title: 28/34."
+    },
+    "tab-label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 500,
+        "fontSize": "10px",
+        "lineHeight": "12px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/tab-label: Geist Medium 10/12. Phone tab bar labels: 10/12."
+    },
+    "tab-label-selected": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 600,
+        "fontSize": "10px",
+        "lineHeight": "12px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/tab-label/selected: Geist SemiBold 10/12. The selected phone tab label."
+    },
+    "control-strong": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 600,
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/control/strong: Geist SemiBold 14/20. A strong control label."
+    },
+    "code-reveal": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.mono}",
+        "fontWeight": 400,
+        "fontSize": "15px",
+        "lineHeight": "24px",
+        "letterSpacing": "0.02em"
+      },
+      "$description": "Figma Unicron Type/code/reveal: Geist Mono Regular 15/24, +2%. A revealed secret or code, spaced for reading aloud."
+    },
+    "crumb": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 500,
+        "fontSize": "15px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.0em"
+      },
+      "$description": "Figma Unicron Type/crumb: Geist Medium 15/20. The title row's breadcrumb and the Settings location label: 15/20."
+    }
   }
 }

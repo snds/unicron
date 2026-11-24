@@ -1,0 +1,3855 @@
+{
+  "$description": "Snapshot of the Figma read-out: the theme roles in all 10 modes, the 22 type roles, and the space, radius and size numbers. Written from read-only Plugin API scripts against the published library (Unicron 2.0); never edited by hand. scripts/figma-parity.mjs (run by `pnpm test`) fails when a built value differs from it.",
+  "source": {
+    "file": "nmLJwY8cugquuZqs8xyZr9",
+    "name": "Unicron — Theme Studies v0.2 (published 2026-11-24)",
+    "extracted": "2026-11-24",
+    "method": "read-only Plugin API scripts"
+  },
+  "modes": [
+    "warpcore / graphite",
+    "warpcore / stone",
+    "vale / graphite",
+    "vale / stone",
+    "lockdown / graphite",
+    "lockdown / stone",
+    "synapse / graphite",
+    "synapse / stone",
+    "fontface / graphite",
+    "fontface / stone"
+  ],
+  "defaultMode": "warpcore / graphite",
+  "roles": {
+    "primary/fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#5B54E8",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#4F46E5",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#27728F",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#186683",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#8A6A5E",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#7D5E54",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#B42A72",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#A8226A",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#0F766E",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#0F766E",
+          "alpha": 1
+        }
+      }
+    },
+    "primary/on-fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "primary/text": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#A3A8FF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#4B44D6",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#86BDD7",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#186683",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#D4B3A5",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#7D5E54",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#F28FC4",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#A3195F",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#5EC4B6",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#0F766E",
+          "alpha": 1
+        }
+      }
+    },
+    "primary/soft": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#5B54E8",
+          "alpha": 0.18
+        },
+        "warpcore / stone": {
+          "hex": "#4F46E5",
+          "alpha": 0.102
+        },
+        "vale / graphite": {
+          "hex": "#27728F",
+          "alpha": 0.22
+        },
+        "vale / stone": {
+          "hex": "#186683",
+          "alpha": 0.102
+        },
+        "lockdown / graphite": {
+          "hex": "#A18072",
+          "alpha": 0.18
+        },
+        "lockdown / stone": {
+          "hex": "#7D5E54",
+          "alpha": 0.102
+        },
+        "synapse / graphite": {
+          "hex": "#B42A72",
+          "alpha": 0.18
+        },
+        "synapse / stone": {
+          "hex": "#A8226A",
+          "alpha": 0.102
+        },
+        "fontface / graphite": {
+          "hex": "#0F766E",
+          "alpha": 0.18
+        },
+        "fontface / stone": {
+          "hex": "#0F766E",
+          "alpha": 0.102
+        }
+      }
+    },
+    "primary/display": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#A3A8FF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#4B44D6",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#58A0BE",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#186683",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#D4B3A5",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#7D5E54",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#F28FC4",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#A3195F",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#5EC4B6",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#0F766E",
+          "alpha": 1
+        }
+      }
+    },
+    "surface/ground": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#16171A",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#16171A",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#16171A",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#16171A",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#16171A",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "surface/sunken": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#0F1012",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#F6F6F7",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#0F1012",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#F6F6F7",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#0F1012",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#F6F6F7",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#0F1012",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#F6F6F7",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#0F1012",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#F6F6F7",
+          "alpha": 1
+        }
+      }
+    },
+    "surface/raised": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#1C1D20",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#1C1D20",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#1C1D20",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#1C1D20",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#1C1D20",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "surface/popover": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#232428",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#232428",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#232428",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#232428",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#232428",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "surface/popover-frost": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#232428",
+          "alpha": 0.722
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 0.722
+        },
+        "vale / graphite": {
+          "hex": "#232428",
+          "alpha": 0.722
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 0.722
+        },
+        "lockdown / graphite": {
+          "hex": "#232428",
+          "alpha": 0.722
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 0.722
+        },
+        "synapse / graphite": {
+          "hex": "#232428",
+          "alpha": 0.722
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 0.722
+        },
+        "fontface / graphite": {
+          "hex": "#232428",
+          "alpha": 0.722
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 0.722
+        }
+      }
+    },
+    "surface/hover": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.051
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.051
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.051
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.051
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.051
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.051
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.051
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.051
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.051
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.051
+        }
+      }
+    },
+    "surface/selected": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        }
+      }
+    },
+    "surface/scrim": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#141618",
+          "alpha": 0.639
+        },
+        "vale / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#141618",
+          "alpha": 0.639
+        },
+        "lockdown / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#141618",
+          "alpha": 0.639
+        },
+        "synapse / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#141618",
+          "alpha": 0.639
+        },
+        "fontface / graphite": {
+          "hex": "#000000",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#141618",
+          "alpha": 0.639
+        }
+      }
+    },
+    "line/rule": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        }
+      }
+    },
+    "line/strong": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        }
+      }
+    },
+    "line/field": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        }
+      }
+    },
+    "line/grid-dot": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        }
+      }
+    },
+    "text/body": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        }
+      }
+    },
+    "text/secondary": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        }
+      }
+    },
+    "text/label": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        }
+      }
+    },
+    "text/faint": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#5E6066",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#9A9CA1",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#5E6066",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#9A9CA1",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#5E6066",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#9A9CA1",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#5E6066",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#9A9CA1",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#5E6066",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#9A9CA1",
+          "alpha": 1
+        }
+      }
+    },
+    "secondary/live": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        }
+      }
+    },
+    "secondary/soft": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#19353D",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#C9DCE5",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#19353D",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#C9DCE5",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#19353D",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#C9DCE5",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#19353D",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#C9DCE5",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#19353D",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#C9DCE5",
+          "alpha": 1
+        }
+      }
+    },
+    "needs-you/fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#F0B429",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#F0B429",
+          "alpha": 1
+        }
+      }
+    },
+    "needs-you/on-fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        }
+      }
+    },
+    "critical/fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        }
+      }
+    },
+    "critical/on-fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "critical/text": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#FF978A",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#B6322D",
+          "alpha": 1
+        }
+      }
+    },
+    "critical/soft": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#3E1F1B",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFD9D3",
+          "alpha": 1
+        }
+      }
+    },
+    "status/done": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        }
+      }
+    },
+    "status/working": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        }
+      }
+    },
+    "status/failed": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#BE2323",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#B7191C",
+          "alpha": 1
+        }
+      }
+    },
+    "status/idle": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#8A8C92",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        }
+      }
+    },
+    "info/fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#2870BD",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#0D74CE",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#2870BD",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#0D74CE",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#2870BD",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#0D74CE",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#2870BD",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#0D74CE",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#2870BD",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#0D74CE",
+          "alpha": 1
+        }
+      }
+    },
+    "info/on-fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "severity/concerning/fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFC53D",
+          "alpha": 1
+        }
+      }
+    },
+    "severity/concerning/on-fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#4F3422",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#4F3422",
+          "alpha": 1
+        }
+      }
+    },
+    "severity/urgent/fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#DC3E42",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#DC3E42",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#DC3E42",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#DC3E42",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#DC3E42",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        }
+      }
+    },
+    "severity/urgent/on-fill": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "qr/plate": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#FFFFFF",
+          "alpha": 1
+        }
+      }
+    },
+    "qr/module": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#0A0A0D",
+          "alpha": 1
+        }
+      }
+    },
+    "label/red": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#E5484D",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#E5484D",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#E5484D",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#E5484D",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#E5484D",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#CE2C31",
+          "alpha": 1
+        }
+      }
+    },
+    "label/orange": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#F76B15",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#CC4E00",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#F76B15",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#CC4E00",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#F76B15",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#CC4E00",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#F76B15",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#CC4E00",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#F76B15",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#CC4E00",
+          "alpha": 1
+        }
+      }
+    },
+    "label/amber": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#E8A33D",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#9A6700",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#E8A33D",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#9A6700",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#E8A33D",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#9A6700",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#E8A33D",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#9A6700",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#E8A33D",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#9A6700",
+          "alpha": 1
+        }
+      }
+    },
+    "label/green": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#4CC38A",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1C7C4D",
+          "alpha": 1
+        }
+      }
+    },
+    "label/teal": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#12A594",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#0D7D70",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#12A594",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#0D7D70",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#12A594",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#0D7D70",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#12A594",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#0D7D70",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#12A594",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#0D7D70",
+          "alpha": 1
+        }
+      }
+    },
+    "label/sky": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#2EAAD8",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#0A7AA6",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#2EAAD8",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#0A7AA6",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#2EAAD8",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#0A7AA6",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#2EAAD8",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#0A7AA6",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#2EAAD8",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#0A7AA6",
+          "alpha": 1
+        }
+      }
+    },
+    "label/blue": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#6CA8F5",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1F64C8",
+          "alpha": 1
+        }
+      }
+    },
+    "label/indigo": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#3E63DD",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#3451B2",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#3E63DD",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#3451B2",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#3E63DD",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#3451B2",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#3E63DD",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#3451B2",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#3E63DD",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#3451B2",
+          "alpha": 1
+        }
+      }
+    },
+    "label/purple": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#8E4EC6",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#7340A8",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#8E4EC6",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#7340A8",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#8E4EC6",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#7340A8",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#8E4EC6",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#7340A8",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#8E4EC6",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#7340A8",
+          "alpha": 1
+        }
+      }
+    },
+    "label/pink": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#E98AA8",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#B4366A",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#E98AA8",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#B4366A",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#E98AA8",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#B4366A",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#E98AA8",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#B4366A",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#E98AA8",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#B4366A",
+          "alpha": 1
+        }
+      }
+    },
+    "label/brown": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#AD7F58",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#8A6142",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#AD7F58",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#8A6142",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#AD7F58",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#8A6142",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#AD7F58",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#8A6142",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#AD7F58",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#8A6142",
+          "alpha": 1
+        }
+      }
+    },
+    "label/gray": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#8B8D98",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#8B8D98",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#8B8D98",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#8B8D98",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#8B8D98",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#6A6C72",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-1": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#4066C2",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#355BBD",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#4066C2",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#355BBD",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#4066C2",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#355BBD",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#4066C2",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#355BBD",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#4066C2",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#355BBD",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-2": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#D67523",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#D16E0D",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#D67523",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#D16E0D",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#D67523",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#D16E0D",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#D67523",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#D16E0D",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#D67523",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#D16E0D",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-3": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#13A5B2",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#199EAA",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#13A5B2",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#199EAA",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#13A5B2",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#199EAA",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#13A5B2",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#199EAA",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#13A5B2",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#199EAA",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-4": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#1F812D",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#06791F",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#1F812D",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#06791F",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#1F812D",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#06791F",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#1F812D",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#06791F",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#1F812D",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#06791F",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-5": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#D76797",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#D45C91",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#D76797",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#D45C91",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#D76797",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#D45C91",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#D76797",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#D45C91",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#D76797",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#D45C91",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-6": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#87660C",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#CB9903",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#87660C",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#CB9903",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#87660C",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#CB9903",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#87660C",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#CB9903",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#87660C",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#CB9903",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-7": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#886ACF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#6C4AB3",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#886ACF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#6C4AB3",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#886ACF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#6C4AB3",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#886ACF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#6C4AB3",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#886ACF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#6C4AB3",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/series-8": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#CA5551",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#AC3031",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#CA5551",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#AC3031",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#CA5551",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#AC3031",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#CA5551",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#AC3031",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#CA5551",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#AC3031",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/other": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#6B6D74",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#A1A1AA",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#6B6D74",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#A1A1AA",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#6B6D74",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#A1A1AA",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#6B6D74",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#A1A1AA",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#6B6D74",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#A1A1AA",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/seq-1": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/seq-2": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/seq-3": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/seq-4": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#698FE5",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#698FE5",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/seq-5": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#4971D3",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#8CADF3",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#4971D3",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/seq-6": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#3959A6",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#B2CAFE",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#3959A6",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/seq-7": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#29427C",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#D8E5FF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#29427C",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/div-neg-3": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#80A3EF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#335198",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#80A3EF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#335198",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#80A3EF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#335198",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#80A3EF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#335198",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#80A3EF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#335198",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/div-neg-2": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#4B74D8",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#527BDB",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#4B74D8",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#527BDB",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#4B74D8",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#527BDB",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#4B74D8",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#527BDB",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#4B74D8",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#527BDB",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/div-neg-1": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#2E498A",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#98B7F8",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#2E498A",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#98B7F8",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#2E498A",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#98B7F8",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#2E498A",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#98B7F8",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#2E498A",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#98B7F8",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/div-mid": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#3A3B40",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#E4E4E7",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#3A3B40",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#E4E4E7",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#3A3B40",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#E4E4E7",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#3A3B40",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#E4E4E7",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#3A3B40",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#E4E4E7",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/div-pos-1": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#763B03",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#E9A679",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#763B03",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#E9A679",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#763B03",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#E9A679",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#763B03",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#E9A679",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#763B03",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#E9A679",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/div-pos-2": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#C16300",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#D17935",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#C16300",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#D17935",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#C16300",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#D17935",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#C16300",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#D17935",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#C16300",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#D17935",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/div-pos-3": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#E19763",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#9F5104",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#E19763",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#9F5104",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#E19763",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#9F5104",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#E19763",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#9F5104",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#E19763",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#9F5104",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/grid": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.078
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.078
+        }
+      }
+    },
+    "viz/axis": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 0.141
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 0.141
+        }
+      }
+    },
+    "viz/ink": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#B3B5BA",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#4F5157",
+          "alpha": 1
+        }
+      }
+    },
+    "viz/focus": {
+      "modes": {
+        "warpcore / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "warpcore / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "vale / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "vale / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "lockdown / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "lockdown / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "synapse / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "synapse / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        },
+        "fontface / graphite": {
+          "hex": "#ECEDEF",
+          "alpha": 1
+        },
+        "fontface / stone": {
+          "hex": "#1A1B1E",
+          "alpha": 1
+        }
+      }
+    }
+  },
+  "type": {
+    "title": {
+      "family": "Geist",
+      "style": "SemiBold",
+      "weight": 600,
+      "size": 20,
+      "lineHeight": 28,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "lead": {
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 24,
+      "lineHeight": 32,
+      "letterSpacingPercent": -1,
+      "case": "ORIGINAL"
+    },
+    "subtitle": {
+      "family": "Geist",
+      "style": "SemiBold",
+      "weight": 600,
+      "size": 15,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "body": {
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 15,
+      "lineHeight": 24,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "body/strong": {
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 16,
+      "lineHeight": 24,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "response": {
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 15,
+      "lineHeight": 24,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "ui": {
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 13,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "ui/emphasis": {
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 13,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "label": {
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 13,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "caption": {
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 12,
+      "lineHeight": 16,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "overline": {
+      "family": "Geist",
+      "style": "SemiBold",
+      "weight": 600,
+      "size": 11,
+      "lineHeight": 16,
+      "letterSpacingPercent": 4,
+      "case": "UPPER"
+    },
+    "folio": {
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 12,
+      "lineHeight": 16,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "meta": {
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 12,
+      "lineHeight": 16,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "code/inline": {
+      "family": "Geist Mono",
+      "style": "Regular",
+      "weight": 400,
+      "size": 13,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "number/count": {
+      "family": "Geist",
+      "style": "SemiBold",
+      "weight": 600,
+      "size": 24,
+      "lineHeight": 32,
+      "letterSpacingPercent": -0.5,
+      "case": "ORIGINAL"
+    },
+    "control": {
+      "family": "Geist",
+      "style": "Regular",
+      "weight": 400,
+      "size": 14,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "large-title": {
+      "family": "Geist",
+      "style": "Bold",
+      "weight": 700,
+      "size": 28,
+      "lineHeight": 34,
+      "letterSpacingPercent": -1.4286,
+      "case": "ORIGINAL"
+    },
+    "tab-label": {
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 10,
+      "lineHeight": 12,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "tab-label/selected": {
+      "family": "Geist",
+      "style": "SemiBold",
+      "weight": 600,
+      "size": 10,
+      "lineHeight": 12,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "control/strong": {
+      "family": "Geist",
+      "style": "SemiBold",
+      "weight": 600,
+      "size": 14,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    },
+    "code/reveal": {
+      "family": "Geist Mono",
+      "style": "Regular",
+      "weight": 400,
+      "size": 15,
+      "lineHeight": 24,
+      "letterSpacingPercent": 2,
+      "case": "ORIGINAL"
+    },
+    "crumb": {
+      "family": "Geist",
+      "style": "Medium",
+      "weight": 500,
+      "size": 15,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "case": "ORIGINAL"
+    }
+  },
+  "space": {
+    "space/000": {
+      "px": 0
+    },
+    "space/002": {
+      "px": 2
+    },
+    "space/004": {
+      "px": 4
+    },
+    "space/006": {
+      "px": 6
+    },
+    "space/008": {
+      "px": 8
+    },
+    "space/010": {
+      "px": 10
+    },
+    "space/012": {
+      "px": 12
+    },
+    "space/014": {
+      "px": 14
+    },
+    "space/016": {
+      "px": 16
+    },
+    "space/020": {
+      "px": 20
+    },
+    "space/024": {
+      "px": 24
+    },
+    "space/028": {
+      "px": 28
+    },
+    "space/032": {
+      "px": 32
+    },
+    "space/036": {
+      "px": 36
+    },
+    "space/040": {
+      "px": 40
+    },
+    "space/048": {
+      "px": 48
+    },
+    "space/056": {
+      "px": 56
+    },
+    "space/064": {
+      "px": 64
+    },
+    "space/096": {
+      "px": 96
+    }
+  },
+  "radius": {
+    "radius/none": {
+      "px": 0
+    },
+    "radius/xs": {
+      "px": 4
+    },
+    "radius/control": {
+      "px": 6
+    },
+    "radius/md": {
+      "px": 8
+    },
+    "radius/lg": {
+      "px": 12
+    },
+    "radius/xl": {
+      "px": 16
+    },
+    "radius/round": {
+      "px": 999
+    }
+  },
+  "size": {
+    "size/control": {
+      "px": 48
+    },
+    "size/touch-min": {
+      "px": 44
+    },
+    "size/check": {
+      "px": 20
+    },
+    "size/index": {
+      "px": 24
+    },
+    "size/track": {
+      "px": 4
+    },
+    "size/icon": {
+      "px": 20
+    },
+    "size/control-s": {
+      "px": 28
+    },
+    "size/control-m": {
+      "px": 32
+    },
+    "size/control-l": {
+      "px": 44
+    }
+  }
+}

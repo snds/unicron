@@ -1,0 +1,19 @@
+/*
+ * Fontface's theme, as Fontface declares it in its own layer (Unicron 1.1: no app's theme lives in the
+ * core). Since Unicron 2.0 a theme is the accent only: the 10 slots, 5 per ground, from Figma's
+ * `fontface / graphite` and `fontface / stone` modes. The playground loads it so its theme switcher can show
+ * Fontface; fontface.json beside it holds the same values, and `unicron-contrast` measures them (its misses
+ * are listed in fontface.exceptions.json). The contrast run fails if this file and fontface.json differ.
+ */
+[data-theme="fontface"] {
+  --g-theme-graphite-primary-fill: #0F766E;
+  --g-theme-graphite-primary-on-fill: #FFFFFF;
+  --g-theme-graphite-primary-text: #5EC4B6;
+  --g-theme-graphite-primary-soft: #0F766E2E;
+  --g-theme-graphite-primary-display: #5EC4B6;
+  --g-theme-stone-primary-fill: #0F766E;
+  --g-theme-stone-primary-on-fill: #FFFFFF;
+  --g-theme-stone-primary-text: #0F766E;
+  --g-theme-stone-primary-soft: #0F766E1A;
+  --g-theme-stone-primary-display: #0F766E;
+}

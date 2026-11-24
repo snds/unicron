@@ -1,0 +1,69 @@
+{
+  "$description": "App theme (an example app layer, a fixture of the playground and the contrast tool): Fontface. The 10 theme slots, 5 per ground: the accent, all an app sets since Unicron 2.0 (every other role is shared). Figma's `fontface / graphite` and `fontface / stone` modes of `Unicron / Theme`, read 2026-11-24 from the published library. This file and fontface.css beside it are the playground's copy of the theme Fontface declares, so the theme switcher can show it and `unicron-contrast` measures it (its exceptions: fontface.exceptions.json). Raw hex only; a change is a change in Figma first (scripts/figma-parity.mjs holds this file to the read-out).",
+  "$extensions": {
+    "unicron.app": {
+      "name": "fontface",
+      "order": 5,
+      "figmaModes": {
+        "graphite": "fontface / graphite",
+        "stone": "fontface / stone"
+      }
+    }
+  },
+  "theme": {
+    "graphite": {
+      "primary-fill": {
+        "$type": "color",
+        "$value": "#0F766E",
+        "$description": "Figma primary/fill in fontface / graphite."
+      },
+      "primary-on-fill": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma primary/on-fill in fontface / graphite."
+      },
+      "primary-text": {
+        "$type": "color",
+        "$value": "#5EC4B6",
+        "$description": "Figma primary/text in fontface / graphite."
+      },
+      "primary-soft": {
+        "$type": "color",
+        "$value": "#0F766E2E",
+        "$description": "Figma primary/soft in fontface / graphite."
+      },
+      "primary-display": {
+        "$type": "color",
+        "$value": "#5EC4B6",
+        "$description": "Figma primary/display in fontface / graphite."
+      }
+    },
+    "stone": {
+      "primary-fill": {
+        "$type": "color",
+        "$value": "#0F766E",
+        "$description": "Figma primary/fill in fontface / stone."
+      },
+      "primary-on-fill": {
+        "$type": "color",
+        "$value": "#FFFFFF",
+        "$description": "Figma primary/on-fill in fontface / stone."
+      },
+      "primary-text": {
+        "$type": "color",
+        "$value": "#0F766E",
+        "$description": "Figma primary/text in fontface / stone."
+      },
+      "primary-soft": {
+        "$type": "color",
+        "$value": "#0F766E1A",
+        "$description": "Figma primary/soft in fontface / stone."
+      },
+      "primary-display": {
+        "$type": "color",
+        "$value": "#0F766E",
+        "$description": "Figma primary/display in fontface / stone."
+      }
+    }
+  }
+}

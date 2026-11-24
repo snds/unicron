@@ -2,15 +2,15 @@
 // Builds dist/tokens.css and dist/tokens.json from the DTCG sources in tokens/.
 //
 // Three tiers, three CSS prefixes:
-//   tokens/global.json          → --g-*   raw values. Includes the 28 theme slots (--g-theme-*), with
-//                                         Unicron's own default theme.
+//   tokens/global.json          → --g-*   raw values. Includes the 10 theme slots (--g-theme-*: the accent
+//                                         only, since 2.0), with Unicron's own default accent.
 //   tokens/semantic.json        → --*     roles: Figma's theme roles, with the shadcn contract as
 //                                         aliases of them. light = $value, dark = $extensions["unicron.modes"].dark
 //   tokens/component.json       → --c-*   per-component knobs that alias semantic tokens
 //   + tokens/component/*.json             the same tier, one file per component area, merged in
 //
 // Two axes (docs/02-tokens.md → Two axes):
-//   theme   the 28 theme slots. The core ships one generic default (global.json); an app declares
+//   theme   the 10 theme slots (the accent). The core ships one generic default (global.json); an app declares
 //           its own in its own layer, as `[data-theme="<app>"] { --g-theme-…: …; }` (Unicron 1:
 //           no app's theme lives in the core). docs/05-consuming.md → Declare your app's theme.
 //   ground  graphite (dark) and stone (light). Tier 2 reads the stone slot in light and the
@@ -216,11 +216,11 @@ for (const tier of tiers) {
   if (dark.length) blocks.dark.push({ tier: tier.name, lines: dark })
 }
 
-// ── The theme axis: the 28 slots of global.json → theme ─────────────────────────────────────
+// ── The theme axis: the 10 slots of global.json → theme ─────────────────────────────────────
 // The core holds only its own default. Each slot is a raw value, so an app's layer can replace it
 // under [data-theme="<app>"] and every role and knob above follows.
 const slotTokens = tiers[0].tokens.filter((t) => t.path[0] === "theme")
-if (slotTokens.length !== 28) throw new Error(`global.json: expected 28 theme slots, found ${slotTokens.length}`)
+if (slotTokens.length !== 10) throw new Error(`global.json: expected 10 theme slots (the accent, Unicron 2.0), found ${slotTokens.length}`)
 for (const { path: p, token } of slotTokens) {
   if (typeof token.$value !== "string" || /[{]|var\(/.test(token.$value)) {
     throw new Error(`global.json ${p.join(".")}: a theme slot holds a raw value, not a reference`)
@@ -271,12 +271,25 @@ for (const { path: p, token } of flatten(readJson(path.join(src, "type.json"))))
 
 // ── The Tailwind theme map ───────────────────────────────────────────────────────────────────
 const theme = semanticJson.$extensions?.[THEME_KEY] ?? {}
-// Radius scale for Tailwind (rounded-sm … rounded-4xl) as multiples of --radius.
-for (const [step, factor] of Object.entries(theme.radius ?? {})) {
-  blocks.theme.push(
-    factor === 1 ? `  --radius-${step}: var(--radius);` : `  --radius-${step}: calc(var(--radius) * ${factor});`
-  )
+// The radius scale and the two shadows for Tailwind (rounded-xs … rounded-4xl, shadow-popover,
+// shadow-dialog). Their theme keys share names with roles (--radius-md is both), and in the inline
+// block a key that reads its own name would read itself. So they go in the plain @theme block below
+// as the literal values the roles resolve to: Tailwind writes `border-radius: var(--radius-md)` and
+// `box-shadow: var(--shadow-popover)` (with its own shadow plumbing), which read the roles.
+/** "{radius-md}" → the literal it resolves to, through every alias. */
+function literal(ref, from) {
+  let value = ref
+  for (let i = 0; i < 8 && typeof value === "string" && /^\{[^}]+\}$/.test(value); i++) {
+    const dotted = value.slice(1, -1)
+    const found = tiers.flatMap((t) => t.tokens).find((t) => t.path.join(".") === dotted)
+    if (!found) throw new Error(`${from}: unresolved reference ${value}`)
+    value = found.token.$value
+  }
+  return value
 }
+const plainTheme = []
+for (const [step, ref] of Object.entries(theme.radius ?? {})) plainTheme.push(`  --radius-${step}: ${literal(ref, `unicron.theme radius.${step}`)};`)
+for (const [name, ref] of Object.entries(theme.shadow ?? {})) plainTheme.push(`  --shadow-${name}: ${literal(ref, `unicron.theme shadow.${name}`)};`)
 // Named sizes for Tailwind's spacing and sizing utilities (h-control, size-control, min-h-touch-min).
 for (const [name, value] of Object.entries(theme.spacing ?? {})) {
   blocks.theme.push(`  --spacing-${name}: ${toCss(value, "dimension", `unicron.theme spacing.${name}`)};`)
@@ -325,8 +338,8 @@ css += `/* ── Tailwind v4 theme map: exposes tier 2 as utilities (bg-surface
 // role. In the inline block it would read itself, so it sits in a plain @theme block: Tailwind
 // then writes `border-radius: var(--radius)`, the role, as every other step does, and declares
 // the key on its theme layer with the role's own value (where the role is not declared, as in a
-// shadow root, the corner is still 2px).
-css += `/* ── Tailwind v4 theme key for the bare \`rounded\` class: --radius, named like the role, so not inline ── */\n@theme {\n  --radius: ${flat["--radius"].value};\n}\n`
+// shadow root, the corner still resolves).
+css += `/* ── Tailwind v4 theme keys named like roles (bare \`rounded\`, the radius scale, the shadows), so not inline ── */\n@theme {\n  --radius: ${literal("{radius}", "--radius")};\n${plainTheme.join("\n")}\n}\n`
 
 // ── The plain sheet: dist/plain.css (@unicron/tokens/plain.css) ───────────────────────────────
 // For a page with no Tailwind that may load nothing it does not own: the browser extension's
@@ -350,7 +363,7 @@ let plain = `/* Generated by @unicron/tokens (scripts/build.mjs) from the JSON s
    Tailwind (an extension frame). No @theme, no nested style rule, no @import, no url(): it loads
    under a policy of style-src 'self' alone. Grounds: with no class the root follows the browser's
    prefers-color-scheme; the class stone (or light) forces stone, graphite (or dark) forces
-   graphite. An app's theme: its own [data-theme] block of the 28 slots, on the root or a box. */\n\n`
+   graphite. An app's theme: its own [data-theme] block of the 10 accent slots, on the root or a box. */\n\n`
 for (const { tier, lines } of blocks.light) {
   if (tier === "global") {
     plain += block(`${titles.global} · theme slots hold the Unicron default`, ":root", lines)
@@ -375,7 +388,7 @@ fs.writeFileSync(
   JSON.stringify(
     {
       $generated: "@unicron/tokens scripts/build.mjs",
-      // The 28 theme slots an app declares under its own [data-theme] (their default values are in
+      // The 10 theme slots an app declares under its own [data-theme] (their default values are in
       // `tokens`). The contrast tool (bin unicron-contrast) measures an app's theme by them.
       themeSlots,
       // The type roles, grouped: { body: { family, weight, size, leading, tracking }, … }.

@@ -1,37 +1,19 @@
 /*
  * Synapse's theme, as Synapse declares it in its own layer (Unicron 1.1: no app's theme lives in the
- * core). The 28 slots, 14 per ground, from Figma's `synapse / graphite` and `synapse / stone` modes. The
- * playground loads it so its theme switcher can show Synapse; synapse.json beside it holds the same
- * values with their Figma ids, and `unicron-contrast` measures them (its misses are listed in
- * synapse.exceptions.json). The contrast run fails if this file and synapse.json differ.
+ * core). Since Unicron 2.0 a theme is the accent only: the 10 slots, 5 per ground, from Figma's
+ * `synapse / graphite` and `synapse / stone` modes. The playground loads it so its theme switcher can show
+ * Synapse; synapse.json beside it holds the same values, and `unicron-contrast` measures them (its misses
+ * are listed in synapse.exceptions.json). The contrast run fails if this file and synapse.json differ.
  */
 [data-theme="synapse"] {
-  --g-theme-graphite-ground: #1C181A;
-  --g-theme-graphite-raised: #242022;
-  --g-theme-graphite-rule: #373133;
-  --g-theme-graphite-grid-dot: #3F383B;
-  --g-theme-graphite-faint: #655E61;
-  --g-theme-graphite-label: #B9B2B5;
-  --g-theme-graphite-secondary: #D8D3D4;
-  --g-theme-graphite-body: #F3EFF0;
-  --g-theme-graphite-primary-fill: #B90D75;
+  --g-theme-graphite-primary-fill: #B42A72;
   --g-theme-graphite-primary-on-fill: #FFFFFF;
-  --g-theme-graphite-primary-text: #FF8FCC;
-  --g-theme-graphite-primary-soft: #3A1B29;
-  --g-theme-graphite-primary-display: #FA59AC;
-  --g-theme-graphite-live: #31C8C9;
-  --g-theme-stone-ground: #F4EEF0;
-  --g-theme-stone-raised: #FDF7F9;
-  --g-theme-stone-rule: #D8D0D3;
-  --g-theme-stone-grid-dot: #C3BBBE;
-  --g-theme-stone-faint: #AAA2A5;
-  --g-theme-stone-label: #6D6769;
-  --g-theme-stone-secondary: #403C3D;
-  --g-theme-stone-body: #181516;
-  --g-theme-stone-primary-fill: #AB006A;
+  --g-theme-graphite-primary-text: #F28FC4;
+  --g-theme-graphite-primary-soft: #B42A722E;
+  --g-theme-graphite-primary-display: #F28FC4;
+  --g-theme-stone-primary-fill: #A8226A;
   --g-theme-stone-primary-on-fill: #FFFFFF;
-  --g-theme-stone-primary-text: #A52C6D;
-  --g-theme-stone-primary-soft: #FDD2E3;
-  --g-theme-stone-primary-display: #AB006A;
-  --g-theme-stone-live: #007778;
+  --g-theme-stone-primary-text: #A3195F;
+  --g-theme-stone-primary-soft: #A8226A1A;
+  --g-theme-stone-primary-display: #A3195F;
 }

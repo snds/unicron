@@ -167,28 +167,31 @@ components. Never edit the core semantic tier to add a role.
 ## 3a. Declare your app's theme
 
 Since 1.1 the core ships no app's theme (Unicron 1): it ships one generic default, and each app
-declares its own. Your theme is the **28 theme slots**, 14 per ground, as raw colours, under your
-own `data-theme` (the first block of the example layer):
+declares its own. Since 2.0 your theme is the **accent only: 10 slots**, 5 per ground, as raw
+colours, under your own `data-theme` (the first block of the example layer). Surfaces, inks,
+lines, status, counts, labels and charts are shared by every app, so the apps look the same and
+only their accent differs:
 
 ```css
 [data-theme="vale"] {
-  --g-theme-graphite-ground: #161A1C;
-  --g-theme-graphite-raised: #1E2224;
-  /* … all 14 graphite slots, then all 14 stone slots … */
-  --g-theme-stone-live: #397059;
+  --g-theme-graphite-primary-fill: #27728F;
+  --g-theme-graphite-primary-on-fill: #FFFFFF;
+  --g-theme-graphite-primary-text: #86BDD7;
+  --g-theme-graphite-primary-soft: #27728F38;
+  --g-theme-graphite-primary-display: #58A0BE;
+  /* … then the same five for stone … */
 }
 ```
 
-- **The slots.** Per ground: `ground`, `raised`, `rule`, `grid-dot`, `faint`, `label`,
-  `secondary`, `body`, `primary-fill`, `primary-on-fill`, `primary-text`, `primary-soft`,
-  `primary-display`, `live`. The full names are in `@unicron/tokens`'s `dist/tokens.json`
-  (`themeSlots`); what each one is for is in [02 · Tokens → Theme slots](02-tokens.md#theme-slots-tier-1).
-  Declare all 28: a slot you leave out shows Unicron's default.
+- **The slots.** Per ground: `primary-fill`, `primary-on-fill`, `primary-text`, `primary-soft`
+  (a wash: the fill with its alpha, eight hex digits), `primary-display`. The full names are in
+  `@unicron/tokens`'s `dist/tokens.json` (`themeSlots`). Declare all 10: a slot you leave out
+  shows Unicron's default. Coming from 1.1? See [10 · Migrating to 2.0](10-migrating-to-2.0.md).
 - **Switch it on in the HTML**, once: `<html data-theme="vale">`. Every core role, knob and
   component follows; nothing else changes.
 - **Keep a copy as JSON if you like** (the shape of `global.json`'s `theme` group, with each
   slot's Figma id in its `$description`): the contrast tool reads either. The playground's copies
-  of the four apps' themes are examples: `apps/playground/src/app-themes/<app>.json` and `.css`.
+  of the five apps' themes are examples: `apps/playground/src/app-themes/<app>.json` and `.css`.
 - **Run the contrast tool in CI.** `@unicron/tokens` ships `unicron-contrast`. It lays your slots
   over the core's built roles and knobs and measures every pair the components paint, on
   graphite and stone, against the same floors as the core:
