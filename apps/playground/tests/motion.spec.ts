@@ -294,7 +294,8 @@ for (const contract of motionContracts as readonly MotionContract[]) {
             blur: getComputedStyle(el).backdropFilter,
           }))
           if (!SCALE_IS_VALUE.has(contract.id)) expect(look.scale, `${contract.id} scale at ${share}`).toBe("none")
-          expect(look.blur, `${contract.id} backdrop filter at ${share}`).toBe("none")
+          // A frosted surface (2.0 menus) holds its blur still the whole way; nothing animates a blur.
+          expect(look.blur, `${contract.id} backdrop filter at ${share}`).toMatch(/^(none|blur\(24px\))$/)
         }
         await release(page)
       })

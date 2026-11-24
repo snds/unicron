@@ -4,7 +4,7 @@
 //   - a component's box is a multiple of 4px tall;
 //   - every piece of text is one of the 31 type roles (family, weight, size, line height);
 //   - a gap between a component's parts is on the spacing scale (4px steps; 2, 6, 10, 14 inside);
-//   - nothing is blurred, and the one gradient is the scroll edge's mask.
+//   - nothing is blurred but the frosted menu, and the one gradient is the scroll edge's mask.
 //
 // And on the four shell demos, the signal rules: the solid primary fill covers under 10% of the
 // screen, and at most one needs-you block or strip shows.
@@ -109,6 +109,8 @@ const OFF_SCALE: Record<string, Exception> = {
  * sections run past the pinned foot. Both fade content into the ground; neither paints colour.
  */
 const GRADIENT_ALLOWED = new Set(["app-frame-scroll-edge", "app-frame-sidebar-middle"])
+// The one blur: the frosted menu (2.0, the `surface-frost` utility), a backdrop blur and nothing else.
+const FROST_ALLOWED = new Set(["dropdown-menu-content", "dropdown-menu-sub-content"])
 
 // ── The measure, in the page ────────────────────────────────────────────────────────────────────
 
@@ -233,7 +235,11 @@ for (const size of SIZES) {
         const offScale = Object.fromEntries(Object.entries(seen.gaps).filter(([slot]) => !(slot in OFF_SCALE)))
         expect(offScale, "gaps off the spacing scale").toEqual({})
 
-        const effects = seen.effects.filter((line) => !(line.endsWith("gradient mask") && GRADIENT_ALLOWED.has(line.split(":")[0]!)))
+        const effects = seen.effects.filter(
+          (line) =>
+            !(line.endsWith("gradient mask") && GRADIENT_ALLOWED.has(line.split(":")[0]!)) &&
+            !(/: backdrop-filter blur\(/.test(line) && FROST_ALLOWED.has(line.split(":")[0]!))
+        )
         expect(effects, "blur, backdrop filters, and gradients other than the scroll edge").toEqual([])
       })
     }

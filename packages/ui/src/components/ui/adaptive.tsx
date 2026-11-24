@@ -385,12 +385,12 @@ function AdaptiveMenu({
 }
 
 /**
- * A sheet row: the menu row's look, as Vale 05's folder sheet draws its Nav Items. The label role
- * in secondary ink, glyph and words; body ink under the pointer; the current or picked row on the
- * `primary-soft` tile in body ink. 36 tall as drawn, and 44 on a touch screen. A button.
+ * A sheet row: the menu row's look (Figma Menu Item, 2.0). The ui role in body ink, glyph and
+ * words; the 5% hover fill under the pointer; the current or picked row on the 8% selected fill.
+ * 32 tall as drawn, and 44 on a touch screen. A button.
  */
 const SHEET_ROW =
-  "type-label text-text-secondary relative flex min-h-9 w-full cursor-default items-center gap-2.5 rounded px-2.5 py-2 text-left select-none pointer-coarse:min-h-touch-min hover:bg-accent hover:text-text-body active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-checked:bg-primary-soft aria-checked:text-text-body data-current:bg-primary-soft data-current:text-text-body data-current:hover:bg-primary-soft [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
+  "type-ui text-text-body relative flex min-h-8 w-full cursor-default items-center gap-2.5 rounded px-2.5 py-1.5 text-left select-none pointer-coarse:min-h-touch-min hover:bg-surface-hover active:bg-surface-selected disabled:pointer-events-none disabled:opacity-50 aria-checked:bg-surface-selected data-current:bg-surface-selected data-current:hover:bg-surface-selected [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
 
 /** A row's count, at its end, as a Nav Item draws it: the folio role, label ink, body ink on the current row. Said after the words. */
 function MenuCount({ count, current }: { count: number; current: boolean }) {
@@ -413,7 +413,7 @@ export interface AdaptiveMenuItemProps {
   /** `destructive`: the words and glyph in the critical ink. */
   variant?: "default" | "destructive"
   disabled?: boolean
-  /** Its keys, shown in a Kbd at the end on a desktop (`⌘N`). A phone has no keys, so it shows none. */
+  /** Its keys, shown at the end on a desktop (`⌘N`). A phone has no keys, so it shows none. */
   shortcut?: string
   /** Keep the menu open after picking it. */
   keepOpen?: boolean
@@ -421,7 +421,7 @@ export interface AdaptiveMenuItemProps {
   count?: number
   /**
    * The row for where the person already is (the open folder, the account in use): the
-   * `primary-soft` tile and body ink, as a current Nav Item, and `aria-current`.
+   * 8% selected fill, as the current Menu Item, and `aria-current`.
    */
   current?: boolean
 }

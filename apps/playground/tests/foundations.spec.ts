@@ -501,7 +501,7 @@ test("a scrim is the scrim role at its knob: never opaque, never blurred", async
   }
 })
 
-test("no glass: nothing in the built stylesheet blurs what is behind it", async ({ page }) => {
+test("one glass: nothing in the built stylesheet blurs what is behind it but the frost utility", async ({ page }) => {
   await open(page, "warpcore", "graphite")
   // The playground's stylesheet holds the ui stylesheet and every class the primitives use, so a
   // `backdrop-blur-*` left on any component shows up here, by its selector.
@@ -512,7 +512,8 @@ test("no glass: nothing in the built stylesheet blurs what is behind it", async 
         if (rule instanceof CSSStyleRule) {
           const style = rule.style
           const values = ["backdrop-filter", "-webkit-backdrop-filter", "--tw-backdrop-blur"].map((name) => style.getPropertyValue(name))
-          if (values.some((value) => /blur\(/.test(value))) found.push(rule.selectorText)
+          // The frosted menu (2.0) is the one blur, and only through its utility.
+          if (values.some((value) => /blur\(/.test(value)) && rule.selectorText !== ".surface-frost") found.push(rule.selectorText)
         } else if ("cssRules" in rule) walk((rule as CSSGroupingRule).cssRules)
       }
     }

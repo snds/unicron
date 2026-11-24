@@ -258,7 +258,7 @@ test("under style-src 'self' a Select's list adds no <style> tag as it opens; ov
 
 // ── menus ──────────────────────────────────────────────────────────────────────────────────────
 
-test("menu rows are Nav Items, as Figma draws the quick-create menu: the label role (13/20 Medium since 2.0) in secondary ink", async ({ page }) => {
+test("menu rows are Menu Items (Figma 76:325): the ui role (13/20 Regular) in body ink, 32 tall", async ({ page }) => {
   await open(page, "dropdown-menu", "vale", "graphite")
   const row = page.locator('[data-slot="dropdown-menu-item"]').filter({ hasText: "New message" }).first()
   await expect(row).toBeVisible()
@@ -266,25 +266,23 @@ test("menu rows are Nav Items, as Figma draws the quick-create menu: the label r
     const s = getComputedStyle(el)
     return { size: s.fontSize, leading: s.lineHeight, weight: s.fontWeight }
   })
-  expect(type).toEqual({ size: "13px", leading: "20px", weight: "500" })
-  const secondary = await role(page, "--text-secondary")
-  // The row's words and glyph are text/secondary on graphite: #D3D4D7, shared by every app since 2.0.
-  expect(secondary).toBe("#D3D4D7")
-  expect(await colorOf(row)).toBe(secondary)
-  expect(await colorOf(row.locator('[data-slot="icon"]').first())).toBe(secondary)
-  expect(await heightOf(row)).toBe(36)
+  expect(type).toEqual({ size: "13px", leading: "20px", weight: "400" })
+  const body = await role(page, "--text-body")
+  expect(await colorOf(row)).toBe(body)
+  expect(await colorOf(row.locator('[data-slot="icon"]').first())).toBe(body)
+  expect(await heightOf(row)).toBe(32)
 })
 
-test("a folder sheet can be built from AdaptiveMenu: counts, and the open folder on the primary-soft tile in body ink", async ({ page }) => {
+test("a folder sheet can be built from AdaptiveMenu: counts, and the open folder on the 8% selected fill", async ({ page }) => {
   await open(page, "adaptive", "vale", "graphite")
   const rows = page.locator('[data-slot="adaptive-menu-item"]')
   const inbox = rows.filter({ hasText: "Inbox" }).first()
   const starred = rows.filter({ hasText: "Starred" }).first()
   await expect(inbox).toBeVisible()
   expect(await inbox.getAttribute("aria-current")).toBe("true")
-  expect(await colorOf(inbox, "background-color")).toBe(await role(page, "--primary-soft"))
+  expect(await colorOf(inbox, "background-color")).toBe(await role(page, "--surface-selected"))
   expect(await colorOf(inbox)).toBe(await role(page, "--text-body"))
-  expect(await colorOf(starred)).toBe(await role(page, "--text-secondary"))
+  expect(await colorOf(starred)).toBe(await role(page, "--text-body"))
   await expect(inbox.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("012")
   await expect(starred.locator('[data-slot="adaptive-menu-item-count"]')).toHaveText("004")
   expect(await starred.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px")

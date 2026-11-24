@@ -1,6 +1,6 @@
 // Generated from shadcn/ui (MIT) by the shadcn-material transform (base: Base UI, style: nova). See README → Regenerating components.
 // Edit freely — this is owned source, like any shadcn component.
-// Promoted from: Seeded in snds/unicron (2026-11 design direction: solid menus, the quick-create menu drawn on the app pages (Vale and Lockdown States 03: raised, 1px rule, padding 8, gap 4, overline, Nav Item rows); the frosted menu of 2026-10-15 reversed; no app PR, no DSA record)
+// Promoted from: Seeded in snds/unicron (2.0: Figma Menu 76:415 and Menu Item 76:325, frosted by default per Sean's 2026-11-23 ruling; no app PR, no DSA record)
 "use client"
 
 import * as React from "react"
@@ -11,7 +11,6 @@ import { MENU_WIDTHS, type MenuWidth } from "../menu-width"
 import { cn } from "../../lib/utils"
 
 import { Icon } from "../icon"
-import { Kbd } from "./kbd"
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
@@ -28,11 +27,13 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
 export type DropdownMenuWidth = MenuWidth
 
 /**
- * The panel, solid and square like every overlay: the raised surface, a 1px rule, the 2px corner,
- * 8 inside and 4 between rows, no shadow and no blur (the frosted menu of 2026-10-15 is reversed).
+ * The panel, frosted (Figma Menu, 2.0): the popover frost at 72% over a 24px backdrop blur, the
+ * popover shadow and a 1px rule (the `surface-frost` utility), 8px corners, 4 inside. Rows sit 4
+ * apart, not Figma's 2, so a menu stays on the 4px grid; a separator takes 4 (its hairline and 3
+ * under it). With reduced transparency it is the solid popover surface.
  */
 const PANEL =
-  "bg-surface-raised text-text-body rule-box relative flex flex-col gap-1 rounded p-2 outline-none max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto data-closed:overflow-hidden"
+  "surface-frost text-text-body relative flex flex-col gap-1 rounded-md p-1 outline-none max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto data-closed:overflow-hidden"
 
 /**
  * It fades and moves 8px off its anchor: no zoom. 120ms both ways, and still when opened or closed
@@ -103,7 +104,7 @@ function DropdownMenuGroup({ className, ...props }: MenuPrimitive.Group.Props) {
 }
 
 /** A section label: an overline, in label ink, flush with the panel's padding (as Figma draws `CREATE // LONG PRESS`). */
-const LABEL = "type-overline text-text-label select-none data-inset:pl-2.5"
+const LABEL = "type-overline text-text-label select-none px-2.5 py-1 data-inset:pl-10"
 
 /**
  * A small heading in a menu, set as an overline. Inside a `DropdownMenuGroup` or
@@ -155,7 +156,7 @@ function DropdownMenuLabel({
  * a current row also takes the `primary-soft` tile, as a current Nav Item does.
  */
 const ITEM =
-  "type-label text-text-secondary group/dropdown-menu-item relative flex min-h-9 cursor-default items-center gap-2.5 rounded px-2.5 py-2 outline-hidden select-none pointer-coarse:min-h-touch-min data-highlighted:bg-accent data-highlighted:text-text-body data-checked:text-text-body data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
+  "type-ui text-text-body group/dropdown-menu-item relative flex min-h-8 cursor-default items-center gap-2.5 rounded px-2.5 py-1.5 outline-hidden select-none pointer-coarse:min-h-touch-min data-highlighted:bg-surface-hover data-checked:text-text-body data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-10 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5"
 
 function DropdownMenuItem({
   className,
@@ -167,7 +168,7 @@ function DropdownMenuItem({
   inset?: boolean
   /** `destructive`: the words and glyph in the critical ink. */
   variant?: "default" | "destructive"
-  /** The row for where the person already is (the open folder): the `primary-soft` tile and body ink, `aria-current`. */
+  /** The row for where the person already is (the open folder): the 8% selected fill, `aria-current`. */
   current?: boolean
 }) {
   return (
@@ -179,7 +180,7 @@ function DropdownMenuItem({
       aria-current={current ? "true" : undefined}
       className={cn(
         ITEM,
-        "data-current:bg-primary-soft data-current:text-text-body",
+        "data-current:bg-surface-selected",
         // Critical ink holds through the highlight: the highlight's body ink must not replace it.
         "data-[variant=destructive]:text-critical-text data-[variant=destructive]:data-highlighted:text-critical-text",
         className
@@ -205,7 +206,7 @@ function DropdownMenuSubTrigger({
     <MenuPrimitive.SubmenuTrigger
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
-      className={cn(ITEM, "data-popup-open:bg-accent data-popup-open:text-text-body", className)}
+      className={cn(ITEM, "data-popup-open:bg-surface-hover", className)}
       {...props}
     >
       {children}
@@ -324,21 +325,21 @@ function DropdownMenuSeparator({
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn("bg-line-rule -mx-2 mt-1 mb-0.75 h-px shrink-0", className)}
+      className={cn("bg-line-rule mb-0.75 h-px shrink-0", className)}
       {...props}
     />
   )
 }
 
-/** The row's keys, in a Kbd at its end (`⌘N`). Said with the row for assistive tech; set `aria-keyshortcuts` on the item too. */
+/** The row's keys at its end (`⌘N`), in the meta role and label ink, as Figma Menu Item draws them. Said with the row for assistive tech; set `aria-keyshortcuts` on the item too. */
 function DropdownMenuShortcut({
   className,
   children,
   ...props
 }: React.ComponentProps<"span">) {
   return (
-    <span data-slot="dropdown-menu-shortcut" className={cn("ml-auto flex shrink-0 pl-4", className)} {...props}>
-      <Kbd>{children}</Kbd>
+    <span data-slot="dropdown-menu-shortcut" className={cn("ml-auto shrink-0 pl-4 type-meta text-text-label", className)} {...props}>
+      {children}
     </span>
   )
 }
