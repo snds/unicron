@@ -1,5 +1,11 @@
 # @unicron/tokens
 
+## 2.0.1
+
+### Patch Changes
+
+- Stone `text/label` is one step darker: #6A6C72 to #686A70, in Figma and code (Sean, 2026-11-24). On a selected row (8% over the ground) it measured 4.48:1, just under WCAG AA. It now measures 4.62:1. Graphite is unchanged.
+
 ## 2.0.0
 
 ### Major Changes

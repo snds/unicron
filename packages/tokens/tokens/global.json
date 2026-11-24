@@ -280,8 +280,8 @@
       },
       "stone": {
         "$type": "color",
-        "$value": "#6A6C72",
-        "$description": "Figma text/label, every stone mode."
+        "$value": "#686A70",
+        "$description": "Figma text/label, every stone mode. One step darker in 2.0.2 (Sean, 2026-11-24): #6A6C72 measured 4.48:1 on a selected row (8% over the ground, #EDEDED), under WCAG AA; this is 4.62:1."
       }
     },
     "text-faint": {
