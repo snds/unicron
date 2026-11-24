@@ -146,6 +146,8 @@ export {
 export * from "./components/ui/spinner"
 export * from "./components/ui/split-button"
 export * from "./components/ui/status-orb"
+export * from "./components/ui/task-row"
+export * from "./components/ui/ask-row"
 export * from "./components/ui/steps"
 export * from "./components/ui/summary-block"
 export * from "./components/ui/swipe-row"
