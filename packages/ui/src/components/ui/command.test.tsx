@@ -274,7 +274,7 @@ describe("Command in the 2026-11 look", () => {
     render(<Palette />)
     const box = document.querySelector('[data-slot="command-input-wrapper"]') as HTMLElement
     const cls = box.className.split(" ")
-    expect(cls).toEqual(expect.arrayContaining(["px-4", "gap-2", "rounded-lg"]))
+    expect(cls).toEqual(expect.arrayContaining(["px-4", "gap-2", "rounded"]))
     expect(cls).not.toContain("px-3")
     expect(cls).not.toContain("gap-3")
     const input = screen.getByRole("combobox").className.split(" ")

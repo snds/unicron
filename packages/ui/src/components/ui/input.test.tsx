@@ -9,15 +9,15 @@ import { Textarea } from "./textarea"
 
 const classes = (el: Element) => el.className.split(/\s+/)
 
-// Every field draws Figma 32:48's box: raised, a 1px rule inside, the 2px corner, the ui role;
+// Every field draws Figma 32:48's box (2.0): raised, a 1px rule inside, the 6px control corner, the ui role;
 // the 2px primary border on focus and the critical one when invalid, and no outer ring.
-const BOX = ["bg-surface-raised", "rule-box", "rounded-lg", "type-ui", "outline-none"]
+const BOX = ["bg-surface-raised", "rule-box", "rounded", "type-ui", "outline-none"]
 
 describe("Input", () => {
-  it("is the Text Field box, 48 tall and 16px in, with Figma's focus and error borders", () => {
+  it("is the Text Field box, 32 tall (44 on touch) and 10px in, with Figma's focus and error borders", () => {
     render(<Input aria-label="Email" />)
     const input = screen.getByRole("textbox", { name: "Email" })
-    expect(classes(input)).toEqual(expect.arrayContaining([...BOX, "h-control", "px-4", "focus:rule-box-emphasis", "aria-invalid:rule-box-emphasis", "focus:[--rule-color:var(--line-focus)]", "aria-invalid:[--rule-color:var(--line-invalid)]"]))
+    expect(classes(input)).toEqual(expect.arrayContaining([...BOX, "h-control-m", "pointer-coarse:h-touch-min", "px-2.5", "focus:rule-box-emphasis", "aria-invalid:rule-box-emphasis", "focus:[--rule-color:var(--line-focus)]", "aria-invalid:[--rule-color:var(--line-invalid)]"]))
     // No ring of its own: the field draws its focus inside its box.
     expect(input.className).not.toMatch(/focus-visible:ring/)
     expect(input.className).not.toMatch(/(^|\s)border(\s|$)/)
@@ -35,10 +35,10 @@ describe("Input", () => {
 })
 
 describe("Textarea", () => {
-  it("is the same box, 12 / 16 in, at least 48 tall", () => {
+  it("is the same box, 6 / 10 in, at least 32 tall", () => {
     render(<Textarea aria-label="Note" />)
     const area = screen.getByRole("textbox", { name: "Note" })
-    expect(classes(area)).toEqual(expect.arrayContaining([...BOX, "min-h-control", "px-4", "py-3"]))
+    expect(classes(area)).toEqual(expect.arrayContaining([...BOX, "min-h-control-m", "px-2.5", "py-1.5"]))
   })
 })
 
@@ -64,7 +64,7 @@ describe("InputGroup", () => {
     const control = screen.getByRole("textbox", { name: "Search mail" })
     const group = screen.getAllByRole("group")[0]!
     expect(group).toHaveAttribute("data-slot", "input-group")
-    expect(classes(group)).toEqual(expect.arrayContaining([...BOX, "min-h-control", "focus-within:rule-box-emphasis", "has-[[aria-invalid=true]]:rule-box-emphasis"]))
+    expect(classes(group)).toEqual(expect.arrayContaining([...BOX, "min-h-control-m", "focus-within:rule-box-emphasis", "has-[[aria-invalid=true]]:rule-box-emphasis"]))
     expect(control).toHaveAttribute("data-slot", "input-group-control")
     expect(control.className).not.toContain("rule-box")
     expect(control.className).toContain("bg-transparent")
