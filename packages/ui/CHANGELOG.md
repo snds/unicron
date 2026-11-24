@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.0.1
+
+### Patch Changes
+
+- ca5c157: The last parts that still drew `//` between facts now draw ` · `, as the rest of 2.0 does: Chat Message end marks (`cut off · stopped`), Needs You and Agent Prompt "more" (`· +1`), the Agent Prompt timer, the Approval Sheet timer, and Run Trace's one line.
+
 ## 2.0.0
 
 ### Major Changes
