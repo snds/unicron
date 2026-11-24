@@ -1,4 +1,4 @@
-// Icons (?view=icons): the curated Carbon set, every icon by its name, at the two sizes the
+// Icons (?view=icons): the curated set (Material Symbols Rounded drawings, 1.x Carbon names), every icon by its name, at the two sizes the
 // direction allows: 20 px by default, 16 px in compact controls.
 //
 // The list is read from the same file the build reads (packages/ui/src/icons/names.json), so
@@ -47,9 +47,9 @@ export default function IconsView() {
   return (
     <div className="flex flex-col gap-12 p-6">
       <header className="flex flex-col gap-1">
-        <p className="type-overline font-mono text-muted-foreground">Icons // Carbon // {count(total)}</p>
+        <p className="type-overline font-mono text-muted-foreground">Icons // Material Symbols Rounded // {count(total)}</p>
         <p className="type-measure text-muted-foreground">
-          Each tile shows one icon at 20 px and at 16 px, then its name. The drawing is Carbon's 32 px art, scaled, filled with the
+          Each tile shows one icon at 20 px and at 16 px, then its name. The drawing is Material Symbols Rounded (outlined, 400), scaled, filled with the
           text color.
         </p>
       </header>

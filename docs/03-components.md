@@ -146,7 +146,7 @@ was restyled; [07 · Migrating to 1.0](07-migrating-to-1.0.md) lists what change
 | `summary-block` | `SummaryBlock` (`overline`, `lines`, children, `footer`, `caption`, `actions`, `state`: ready, loading, error; `error`), `summaryBlockCopy` | Chat | section. 1.0 |
 | `prose` | `Prose` (`variant`: body, 16/24 with blocks 16 apart; response, 17/28 with blocks 24 apart, for what a model wrote and for a mail's body), `proseVariants` | Content | div. 1.0 |
 | `code-block` | `CodeBlock` (`code`, `label`, `language`, `copy`, `wrap`), `CopyButton` (`text`, `label`, `copiedLabel`), `COPIED_FOR_MS`, `codeBlockCopy`, `copyButtonCopy` | Content · Action | figure + pre; IconButton. 1.0 |
-| `icon` | `Icon` (`name`, `size`: md 20, sm 16, or a number; `label`, `tone`), `IconName`, `CoreIconName`, `IconSize`, `IconTone`, `UnicronIconRegistry`, `registerIcons`, `isIconName`, `iconNames`, `iconFromMaterial` | Content | inline SVG; IBM Carbon, a curated set (`src/icons/names.json`) |
+| `icon` | `Icon` (`name`, `size`: md 20, sm 16, or a number; `label`, `tone`), `IconName`, `CoreIconName`, `IconSize`, `IconTone`, `UnicronIconRegistry`, `registerIcons`, `isIconName`, `iconNames`, `iconFromMaterial` | Content | inline SVG; Material Symbols Rounded drawings under the 1.x Carbon names (`src/icons/names.json`, `src/icons/drawings.json`) |
 
 ### Layout helpers
 
@@ -283,8 +283,10 @@ transform (README → Regenerating components) rather than hand-writing.
 
 ### Icons
 
-`<Icon name="arrow--right" />` draws an inline SVG from the curated Carbon set. The name is typed
-(`IconName`); a name not in the set is a type error. The set is Figma's 57, what the components
+`<Icon name="arrow--right" />` draws an inline SVG from the curated set. Since 2.0 every drawing
+is Material Symbols Rounded (outlined, weight 400), as Figma draws it; the names stay the 1.x
+Carbon names, and `src/icons/drawings.json` maps each to the Material file that draws it. The
+name is typed (`IconName`); a name not in the set is a type error. The set is Figma's 57, what the components
 draw, and the Carbon match for every Material name the four apps used (265 since 1.1; the 47
 extras left, see [08 · Migrating to 1.1](08-migrating-to-1.1.md#icons)). The data is one object a
 bundler cannot trim, so every icon in it costs every app: a name joins `src/icons/names.json` only

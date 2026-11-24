@@ -3,7 +3,7 @@ import { resolve } from "node:path"
 import { render } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
-import { CARBON_ICONS_VERSION, iconData } from "../icons/data.gen"
+import { MATERIAL_SYMBOLS_VERSION, iconData } from "../icons/data.gen"
 import { iconNames, isIconName, parseIconMarkup, registerIcons } from "../icons/registry"
 import { Icon, type IconName } from "./icon"
 
@@ -16,17 +16,21 @@ declare module "./icon" {
 }
 
 const names = JSON.parse(readFileSync(resolve(__dirname, "../icons/names.json"), "utf8")) as Record<string, string[] | string>
+const drawings = JSON.parse(readFileSync(resolve(__dirname, "../icons/drawings.json"), "utf8")) as Record<string, string>
 const map = JSON.parse(readFileSync(resolve(__dirname, "../../codemod/material-to-carbon.json"), "utf8")) as Record<string, unknown>
 const svg = (container: HTMLElement) => container.querySelector("svg[data-slot=icon]") as SVGSVGElement
 
 describe("Icon", () => {
-  it("draws Carbon's 32 px art as inline SVG in the current color", () => {
+  it("draws Material Symbols Rounded, scaled onto the 32 grid, as inline SVG in the current color", () => {
     const { container } = render(<Icon name="arrow--right" />)
     const icon = svg(container)
     expect(icon).toHaveAttribute("viewBox", "0 0 32 32")
     expect(icon).toHaveAttribute("fill", "currentColor")
     expect(icon).toHaveAttribute("data-icon-name", "arrow--right")
-    expect(icon.querySelector("path")?.getAttribute("d")).toBe("M18 6 16.57 7.393 24.15 15 4 15 4 17 24.15 17 16.57 24.573 18 26 28 16 18 6z")
+    // Material's 960 grid (y from -960) lands on the 32 grid.
+    expect(icon.querySelector("g")?.getAttribute("transform")).toBe("matrix(.0333333 0 0 .0333333 0 32)")
+    expect(drawings["arrow--right"]).toBe("arrow_forward")
+    expect(icon.querySelector("g > path")?.getAttribute("d")).toMatch(/^M/)
     // No icon font: nothing is text, and nothing names a font.
     expect(icon.querySelector("text")).toBeNull()
     expect(icon.textContent).toBe("")
@@ -104,9 +108,12 @@ describe("the curated set", () => {
     expect(curated.filter((name) => /magic|wand|sparkle|ai-generate|ai-label/.test(name))).toEqual([])
   })
 
-  it("says which @carbon/icons it came from", () => {
-    expect(CARBON_ICONS_VERSION).toMatch(/^\d+\.\d+\.\d+$/)
-    expect(map._carbon).toBe(`@carbon/icons ${CARBON_ICONS_VERSION}`)
+  it("says which Material Symbols it came from, and names a drawing for every icon and nothing else", () => {
+    expect(MATERIAL_SYMBOLS_VERSION).toMatch(/^\d+\.\d+\.\d+$/)
+    const drawn = Object.keys(drawings).filter((name) => !name.startsWith("$"))
+    expect(drawn.sort()).toEqual([...curated].sort())
+    // The 2.0 noun map (Figma): an agent is smart_toy, a skill school, a tool build, a tag label.
+    expect([drawings.bot, drawings["skill-level"], drawings.tools, drawings.tag]).toEqual(["smart_toy", "school", "build", "label"])
   })
 
   // The build script and the component each hold the list of elements and attributes they

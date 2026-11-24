@@ -2,14 +2,16 @@
 // Builds src/icons/data.gen.ts: the curated icon set as name → inner SVG markup.
 //
 // Source of the names: src/icons/names.json (every group in it, merged).
-// Source of the drawings: the 32 px art in @carbon/icons (Apache-2.0), read from its svg/32 folder.
-// The output is checked in, so apps and CI never need @carbon/icons at run time.
+// Source of the drawings (2.0): Material Symbols Rounded, outlined, weight 400, from
+// @material-symbols/svg-400 (Apache-2.0). src/icons/drawings.json names the file for each name.
+// Each drawing is scaled from Material's 960 grid onto the 32 grid the Icon component draws.
+// The output is checked in, so apps and CI never need @material-symbols/svg-400 at run time.
 //
 //   node scripts/build-icons.mjs           write the file
 //   node scripts/build-icons.mjs --check   write nothing; exit 1 if the file on disk is stale
 //
 // The output is the same for the same inputs: names sorted by code point, no dates.
-// It stops, and says why, on a name Carbon does not have at 32 px, on a duplicate name, and on any
+// It stops, and says why, on a name with no drawing, on a duplicate name, and on any
 // element or attribute the Icon component does not draw (so nothing is dropped in silence).
 
 import fs from "node:fs"
@@ -19,6 +21,7 @@ import { fileURLToPath } from "node:url"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const namesFile = path.join(root, "src", "icons", "names.json")
+const drawingsFile = path.join(root, "src", "icons", "drawings.json")
 const outFile = path.join(root, "src", "icons", "data.gen.ts")
 const check = process.argv.includes("--check")
 
@@ -52,34 +55,33 @@ names.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 
 // ── drawings ────────────────────────────────────────────────────────────────────────────────────
 const require = createRequire(path.join(root, "package.json"))
-let carbonRoot
+let symbolsRoot
 try {
-  carbonRoot = path.dirname(require.resolve("@carbon/icons/package.json"))
+  symbolsRoot = path.dirname(require.resolve("@material-symbols/svg-400/package.json"))
 } catch {
-  fail("@carbon/icons is not installed (it is a devDependency of @unicron/ui)")
+  fail("@material-symbols/svg-400 is not installed (it is a devDependency of @unicron/ui)")
 }
-const carbonVersion = JSON.parse(fs.readFileSync(path.join(carbonRoot, "package.json"), "utf8")).version
-const svgDir = path.join(carbonRoot, "svg", "32")
-// Most icons sit in svg/32; a few sit one folder down (svg/32/<namespace>/).
-const folders = [svgDir, ...fs.readdirSync(svgDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => path.join(svgDir, e.name)).sort()]
-
-function drawing(name) {
-  for (const folder of folders) {
-    const file = path.join(folder, `${name}.svg`)
-    if (fs.existsSync(file)) return fs.readFileSync(file, "utf8").trim()
-  }
-  return null
+const symbolsVersion = JSON.parse(fs.readFileSync(path.join(symbolsRoot, "package.json"), "utf8")).version
+const drawings = JSON.parse(fs.readFileSync(drawingsFile, "utf8"))
+for (const name of Object.keys(drawings)) {
+  if (!name.startsWith("$") && !seenIn.has(name)) fail(`drawings.json names "${name}", which names.json does not list`)
 }
 
-const WRAPPER = /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 32 32">([\s\S]*)<\/svg>$/
+const WRAPPER = /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="48" height="48" viewBox="0 -960 960 960">([\s\S]*)<\/svg>$/
 const TAG = /<(\/?)([A-Za-z][\w:-]*)((?:\s+[\w:-]+="[^"]*")*)\s*(\/?)>/g
+// Material's grid is 960 with y from -960 to 0; the Icon component's is 32 from 0. Scale by 32/960
+// and move down by 32, so a drawing lands in the same box a Carbon one did.
+const FIT = "matrix(.0333333 0 0 .0333333 0 32)"
 
 const entries = []
 for (const name of names) {
-  const svg = drawing(name)
-  if (!svg) fail(`"${name}" (names.json → ${seenIn.get(name)}) has no 32 px drawing in @carbon/icons ${carbonVersion}`)
+  const file = drawings[name]
+  if (!file) fail(`"${name}" (names.json → ${seenIn.get(name)}) has no Material Symbols file in drawings.json`)
+  const source = path.join(symbolsRoot, "rounded", `${file}.svg`)
+  if (!fs.existsSync(source)) fail(`"${name}" → ${file}: no rounded/${file}.svg in @material-symbols/svg-400 ${symbolsVersion}`)
+  const svg = fs.readFileSync(source, "utf8").trim()
   const inner = svg.match(WRAPPER)?.[1]
-  if (inner === undefined) fail(`"${name}": expected an <svg viewBox="0 0 32 32"> wrapper, got ${svg.slice(0, 80)}…`)
+  if (inner === undefined) fail(`"${name}" → ${file}: expected Material's <svg viewBox="0 -960 960 960"> wrapper, got ${svg.slice(0, 80)}…`)
   // Everything between the wrapper tags must be tags the Icon component knows.
   const rest = inner.replace(TAG, (_whole, _close, element, attributes) => {
     if (!ELEMENTS.has(element)) fail(`"${name}" uses <${element}>, which Icon does not draw`)
@@ -89,18 +91,19 @@ for (const name of names) {
     return ""
   })
   if (rest.trim() !== "") fail(`"${name}" holds markup that is not a plain tag: ${rest.trim().slice(0, 60)}`)
-  entries.push([name, inner])
+  entries.push([name, `<g transform="${FIT}">${inner}</g>`])
 }
 
 // ── output ──────────────────────────────────────────────────────────────────────────────────────
-const out = `// Generated by packages/ui/scripts/build-icons.mjs from @carbon/icons ${carbonVersion} (Apache-2.0, © IBM Corp.). Do not edit.
-// The list of names is src/icons/names.json. Each value is the inner markup of Carbon's 32 px drawing.
+const out = `// Generated by packages/ui/scripts/build-icons.mjs from @material-symbols/svg-400 ${symbolsVersion} (Material Symbols Rounded, Apache-2.0, © Google). Do not edit.
+// The list of names is src/icons/names.json; the file that draws each is src/icons/drawings.json.
+// Each value is the inner markup of an <svg viewBox="0 0 32 32">: Material's drawing, scaled onto the 32 grid.
 // Regenerate with \`pnpm --filter @unicron/ui icons:build\`; \`pnpm test\` fails while this file is stale.
 
-/** The version of @carbon/icons these drawings came from. */
-export const CARBON_ICONS_VERSION = ${JSON.stringify(carbonVersion)}
+/** The version of @material-symbols/svg-400 these drawings came from. */
+export const MATERIAL_SYMBOLS_VERSION = ${JSON.stringify(symbolsVersion)}
 
-/** Every icon in the curated set, by its Carbon svg name. */
+/** Every icon in the curated set, by its name (the 1.x Carbon svg names). */
 export type CoreIconName =
 ${entries.map(([name]) => `  | ${JSON.stringify(name)}`).join("\n")}
 
@@ -114,12 +117,12 @@ if (check) {
   const current = fs.existsSync(outFile) ? fs.readFileSync(outFile, "utf8") : null
   if (current !== out) {
     fail(
-      `${path.relative(root, outFile)} is stale: it does not match names.json and @carbon/icons ${carbonVersion}.\n` +
+      `${path.relative(root, outFile)} is stale: it does not match names.json, drawings.json and @material-symbols/svg-400 ${symbolsVersion}.\n` +
         "  Run `pnpm --filter @unicron/ui icons:build` and commit the result."
     )
   }
-  console.log(`✓ ${path.relative(root, outFile)} is current (${entries.length} icons, @carbon/icons ${carbonVersion})`)
+  console.log(`✓ ${path.relative(root, outFile)} is current (${entries.length} icons, @material-symbols/svg-400 ${symbolsVersion})`)
 } else {
   fs.writeFileSync(outFile, out)
-  console.log(`✓ wrote ${path.relative(root, outFile)} (${entries.length} icons, @carbon/icons ${carbonVersion})`)
+  console.log(`✓ wrote ${path.relative(root, outFile)} (${entries.length} icons, @material-symbols/svg-400 ${symbolsVersion})`)
 }
