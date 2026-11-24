@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.1.3
+
+### Patch Changes
+
+- AppFrame: beside the flush sidebar, the last content column keeps 4 px at its end, as at its start, so a centred reading column stays centred (2.1.2 kept 16 and pulled it 6 px off centre).
+
 ## 2.1.2
 
 ### Patch Changes
