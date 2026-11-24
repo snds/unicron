@@ -131,7 +131,7 @@ describe("DropdownMenuLabel", () => {
   })
 })
 
-describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown States 03)", () => {
+describe("DropdownMenu in the 2.0 look (Figma Menu 76:415, Menu Item 76:325)", () => {
   function QuickCreate({ scrim = true, onSelect }: { scrim?: boolean; onSelect?: (what: string) => void }) {
     return (
       <DropdownMenu open>
@@ -158,11 +158,12 @@ describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown Stat
     )
   }
 
-  it("is solid and square: the raised surface, a 1px rule, the 2px corner, 8 inside and 4 between rows; no frost, no shadow", () => {
+  it("is frosted: the surface-frost utility (frost, blur, shadow and rule in one), 8px corners, 4 inside and 4 between rows", () => {
     render(<QuickCreate />)
     const cls = content().className.split(" ")
-    expect(cls).toEqual(expect.arrayContaining(["bg-surface-raised", "rule-box", "rounded", "p-2", "gap-1", "flex-col"]))
-    expect(cls.some((c) => /blur|shadow|backdrop|\/70|rounded-lg|zoom/.test(c))).toBe(false)
+    expect(cls).toEqual(expect.arrayContaining(["surface-frost", "rounded-md", "p-1", "gap-1", "flex-col"]))
+    // The blur and the shadow come only from the utility, never as loose classes.
+    expect(cls.some((c) => /backdrop-blur|shadow-|zoom/.test(c))).toBe(false)
   })
 
   it("scrim dims the page with the menu scrim (quick create); a plain menu draws none", () => {
@@ -179,18 +180,20 @@ describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown Stat
     expect(screen.getByText("Create // long press").className.split(" ")).toEqual(expect.arrayContaining(["type-overline", "text-text-label"]))
   })
 
-  it("rows are Nav Items, as Figma draws them: the label role in secondary ink, 36 tall (44 on touch), a 20px glyph 10 from the words; the highlight on bg-accent in body ink", () => {
+  it("rows are Menu Items, as Figma draws them: the ui role in body ink, 32 tall (44 on touch), a 20px glyph 10 from the words; the 5% hover fill", () => {
     render(<QuickCreate />)
     const row = screen.getByRole("menuitem", { name: /New message/ })
     expect(row.className.split(" ")).toEqual(
-      expect.arrayContaining(["type-label", "text-text-secondary", "min-h-9", "pointer-coarse:min-h-touch-min", "gap-2.5", "px-2.5", "data-highlighted:bg-accent", "data-highlighted:text-text-body", "[&_svg:not([class*='size-'])]:size-5"])
+      expect.arrayContaining(["type-ui", "text-text-body", "min-h-8", "py-1.5", "pointer-coarse:min-h-touch-min", "gap-2.5", "px-2.5", "data-highlighted:bg-surface-hover", "[&_svg:not([class*='size-'])]:size-5"])
     )
   })
 
-  it("the keys sit in a Kbd at the row's end", () => {
+  it("the keys sit at the row's end in the meta role and label ink", () => {
     render(<QuickCreate />)
     const row = screen.getByRole("menuitem", { name: /New message/ })
-    expect(row.querySelector('[data-slot="dropdown-menu-shortcut"] [data-slot="kbd"]')).toHaveTextContent("⌘N")
+    const keys = row.querySelector('[data-slot="dropdown-menu-shortcut"]') as HTMLElement
+    expect(keys).toHaveTextContent("⌘N")
+    expect(keys.className.split(" ")).toEqual(expect.arrayContaining(["type-meta", "text-text-label", "ml-auto"]))
   })
 
   it("a destructive row reads in the critical ink, highlighted too", () => {
@@ -200,7 +203,7 @@ describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown Stat
     expect(row.className).toContain("data-[variant=destructive]:data-highlighted:text-critical-text")
   })
 
-  it("the current row takes the primary-soft tile and body ink, and says so", () => {
+  it("the current row takes the 8% selected fill, and says so", () => {
     render(
       <DropdownMenu open>
         <DropdownMenuTrigger>Folders</DropdownMenuTrigger>
@@ -213,7 +216,7 @@ describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown Stat
     const inbox = screen.getByRole("menuitem", { name: "Inbox" })
     expect(inbox).toHaveAttribute("aria-current", "true")
     expect(inbox).toHaveAttribute("data-current", "")
-    expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["data-current:bg-primary-soft", "data-current:text-text-body"]))
+    expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["data-current:bg-surface-selected"]))
     const starred = screen.getByRole("menuitem", { name: "Starred" })
     expect(starred).not.toHaveAttribute("aria-current")
     expect(starred).not.toHaveAttribute("data-current")
@@ -224,11 +227,11 @@ describe("DropdownMenu in the 2026-11 look (quick create: Vale and Lockdown Stat
     expect(screen.getByRole("menuitemcheckbox", { name: "Show weekends" })).toHaveAttribute("aria-checked", "true")
   })
 
-  it("a separator is a hairline, edge to edge", () => {
+  it("a separator is a hairline as wide as the rows", () => {
     render(<QuickCreate />)
-    expect((document.querySelector('[data-slot="dropdown-menu-separator"]') as HTMLElement).className.split(" ")).toEqual(
-      expect.arrayContaining(["bg-line-rule", "h-px", "-mx-2"])
-    )
+    const cls = (document.querySelector('[data-slot="dropdown-menu-separator"]') as HTMLElement).className.split(" ")
+    expect(cls).toEqual(expect.arrayContaining(["bg-line-rule", "h-px", "mb-0.75"]))
+    expect(cls.some((c) => c.startsWith("-mx"))).toBe(false)
   })
 
   it("picking a row runs it from the keyboard", async () => {

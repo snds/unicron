@@ -143,7 +143,7 @@ describe("AdaptiveMenu", () => {
     const menu = screen.getByRole("menu", { name: "Folders" })
     expect(menu).toHaveAttribute("data-slot", "dropdown-menu-content")
     expect(screen.getByText("Mail // personal")).toHaveAttribute("data-slot", "dropdown-menu-label")
-    expect(screen.getByRole("menuitem", { name: /Inbox/ }).querySelector('[data-slot="kbd"]')).toHaveTextContent("G I")
+    expect(screen.getByRole("menuitem", { name: /Inbox/ }).querySelector('[data-slot="dropdown-menu-shortcut"]')).toHaveTextContent("G I")
     expect(screen.getByRole("group", { name: "Accounts // 02" })).toBeInTheDocument()
   })
 
@@ -154,7 +154,7 @@ describe("AdaptiveMenu", () => {
     const inbox = screen.getByRole("button", { name: "Inbox" })
     expect(inbox).toHaveAttribute("data-slot", "adaptive-menu-item")
     expect(inbox.querySelector('[data-slot="kbd"]')).toBeNull()
-    expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["type-label", "text-text-secondary", "pointer-coarse:min-h-touch-min", "hover:bg-accent", "hover:text-text-body"]))
+    expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["type-ui", "text-text-body", "pointer-coarse:min-h-touch-min", "hover:bg-surface-hover"]))
     expect(screen.getByRole("group", { name: "Accounts // 02" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Empty trash" }).className).toContain("text-critical-text")
   })
@@ -179,7 +179,7 @@ describe("AdaptiveMenu", () => {
       const inbox = screen.getByRole(role, { name: "Inbox, 12" })
       expect(inbox).toHaveAttribute("aria-current", "true")
       expect(inbox).toHaveAttribute("data-current", "")
-      expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["data-current:bg-primary-soft", "data-current:text-text-body"]))
+      expect(inbox.className.split(" ")).toEqual(expect.arrayContaining(["data-current:bg-surface-selected"]))
       const count = inbox.querySelector('[data-slot="adaptive-menu-item-count"]') as HTMLElement
       expect(count).toHaveTextContent("12")
       expect(count).toHaveAttribute("aria-hidden", "true")

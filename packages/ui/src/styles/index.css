@@ -950,6 +950,25 @@ html:has([data-slot="app-frame"]) body {
 @utility scrim-dialog {
   background-color: color-mix(in oklab, var(--surface-scrim) calc(var(--c-scrim-dialog) * 100%), transparent);
 }
+/*
+ * Frost: the one blur in the system (2.0, Sean's 2026-11-23 ruling: frosted glass menus by default).
+ * The popover frost at 72% over a 24px backdrop blur, the popover shadow, and the 1px rule drawn
+ * inside. A person who asks for less transparency gets the solid popover surface.
+ */
+@utility surface-frost {
+  background-color: var(--surface-popover-frost);
+  -webkit-backdrop-filter: blur(var(--blur-frost));
+  backdrop-filter: blur(var(--blur-frost));
+  box-shadow:
+    var(--shadow-popover),
+    inset 0 0 0 var(--stroke-rule) var(--line-rule);
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--surface-popover);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 @utility scrim-menu {
   background-color: color-mix(in oklab, var(--surface-scrim) calc(var(--c-scrim-menu) * 100%), transparent);
 }

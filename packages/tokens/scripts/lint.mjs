@@ -285,7 +285,7 @@ const CLASS_RULES = [
   [/(?<![\w-])text-(?:xs|sm|base|lg|xl|[2-9]xl)(?![\w-])/g, "a raw type size; write a type role (type-ui, type-caption …)"],
   [/(?<![\w-])font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)(?![\w-])/g, "a raw font weight; write a type role (type-ui-emphasis, type-body-strong …)"],
   [/(?<![\w-])leading-(?!\(|\[inherit\])[\w[.][^\s"'`]*/g, "a raw line height; a type role sets it (leading-(--token) and leading-[inherit] are fine)"],
-  [/(?<![\w-])(?:backdrop-blur(?:-[\w[\]().-]+)?|backdrop-filter|blur-[\w[(][^\s"'`]*)(?![\w-])/g, "a blur; nothing in the system is blurred (contract 1.5)"],
+  [/(?<![\w-])(?:backdrop-blur(?:-[\w[\]().-]+)?|backdrop-filter|blur-[\w[(][^\s"'`]*)(?![\w-])/g, "a blur; the one blur is the frosted menu, through the surface-frost utility (2.0)"],
   [/(?<![\w-])(?:drop-shadow|text-shadow)(?:-[\w[(][^\s"'`]*)?(?![\w-])/g, "a drop shadow; surfaces are solid with a 1px rule"],
   [/(?<![\w-])(?:inset-)?shadow-(?!none(?![\w-])|\[inset_)[\w[(][^\s"'`]*/g, "a shadow; surfaces are solid with a 1px rule (shadow-none and a token-built shadow-[inset_…] stroke are fine)"],
 ]
