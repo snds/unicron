@@ -150,7 +150,8 @@ function useSwitcherGestures(onSwipe: ((direction: PageHeadSwipe) => void) | und
  *
  * `collapsed` is the scrolled form: the large head gives way to a small centred title in the
  * subtitle role, 48 high, to sit in the top row between the lockup and its buttons. It arrives
- * on the existing `motion-pop` recipe, and only fades under reduced motion.
+ * on the existing `motion-pop` recipe, and only fades under reduced motion. Its `actions` keep
+ * the end of the row, so a short screen (which draws the head collapsed) still has them.
  *
  * With `switcher`, the whole head is the button (cross-app decisions §7), and so is the small title.
  */
@@ -192,9 +193,14 @@ function PageHead({
         data-slot="page-head"
         data-size={size}
         data-collapsed=""
-        className={cn("flex h-control min-w-0 items-center justify-center", className)}
+        className={cn(
+          // With actions, a three-part row: the title stays centred and the actions keep the end.
+          actions ? "grid h-control min-w-0 grid-cols-[1fr_auto_1fr] items-center" : "flex h-control min-w-0 items-center justify-center",
+          className,
+        )}
         {...props}
       >
+        {actions ? <span aria-hidden="true" /> : null}
         <h1 data-slot="page-head-title" className="motion-pop flex min-w-0 justify-center">
           {switcherButtonProps ? (
             <ButtonPrimitive
@@ -209,6 +215,11 @@ function PageHead({
             <span className="type-subtitle truncate text-center text-text-body">{title}</span>
           )}
         </h1>
+        {actions ? (
+          <div data-slot="page-head-actions" className="flex min-w-0 items-center justify-end gap-2">
+            {actions}
+          </div>
+        ) : null}
       </div>
     )
   }
