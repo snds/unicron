@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.1.4
+
+### Patch Changes
+
+- PageHead: the collapsed form keeps its `actions` at the end of the row, with the title still centred. A short screen draws the head collapsed, so its buttons (New task, Check again) no longer vanish there.
+
 ## 2.1.3
 
 ### Patch Changes

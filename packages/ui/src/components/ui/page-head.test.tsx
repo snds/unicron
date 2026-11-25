@@ -168,6 +168,16 @@ describe("PageHead", () => {
     expect(container.querySelector('[data-slot="page-head-meta"]')).toBeNull()
   })
 
+  it("collapsed with actions: the title stays centred and the actions keep the end", () => {
+    const { container } = render(<PageHead title="Board" actions={<button type="button">New task</button>} collapsed />)
+    const root = container.querySelector('[data-slot="page-head"]')!
+    expect(classesOf(root)).toEqual(expect.arrayContaining(["grid", "grid-cols-[1fr_auto_1fr]"]))
+    const actions = container.querySelector('[data-slot="page-head-actions"]')!
+    expect(actions).toContainElement(screen.getByRole("button", { name: "New task" }))
+    expect(actions.className).toContain("justify-end")
+    expect(root.lastElementChild).toBe(actions)
+  })
+
   it("collapsed with a switcher: the small title stays a button", () => {
     render(<PageHead title="Personal" switcher={{ label: "Switch workspace" }} collapsed />)
     const button = screen.getByRole("button", { name: "Personal, Switch workspace" })
