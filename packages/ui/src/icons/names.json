@@ -269,6 +269,10 @@
     "warning",
     "warning--hex",
     "wifi",
-    "workspace--import"
+    "workspace--import",
+    "face--add",
+    "markdown",
+    "microphone",
+    "return"
   ]
 }

@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.1.6
+
+### Patch Changes
+
+- Icons: four more names for Warpcore's chat, drawn with Material Symbols Rounded like the rest: `microphone` (mic, reply by voice), `face--add` (add_reaction), `markdown` (markdown) and `return` (keyboard_return). The codemod maps those Material names to them.
+
 ## 2.1.5
 
 ### Patch Changes
