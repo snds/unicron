@@ -8,7 +8,6 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cn } from "../../lib/utils"
 import type { IconName } from "../icon"
 import { useAppFrame } from "./app-frame-context"
-import { FloatButton } from "./float-button"
 import { IconButton } from "../icon-button"
 import { Rail, RailItem, formatNavCount, rovingTarget } from "./rail"
 
@@ -71,7 +70,7 @@ export type ContextPanelProps = Omit<React.ComponentProps<"aside">, "children"> 
  * - `open`: the 2.0 Right Panel (Figma 127:460). A 48 head of pill tabs with tab semantics (a
  *   `tablist`, arrow keys, Home and End) and a ghost collapse button at its end; the body; and,
  *   when the panel can be asked, a docked `composer`. 360 wide on the ground, a rule at its start.
- * - `rail`: the expand float button over a `Rail` of `RailItem`s: each tab's glyph and count, the
+ * - `rail`: a `Rail` of `RailItem`s, Expand first: each tab's glyph and count, the
  *   live ink where something runs. Pressing one opens the panel at that tab.
  * - `hidden`: nothing; the conversation takes the room.
  *
@@ -156,13 +155,13 @@ function ContextPanel({
         data-column="side"
         data-shown=""
         aria-label={label}
-        // No space of its own above the expand button: it starts on the columns' line, 24 under the
-        // top bar's rule (Figma cw-04: the button from y 88 to 132, the first glyph at 149).
-        className={cn("flex h-full min-h-0 shrink-0 flex-col items-center gap-2 [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l", className)}
+        // No space of its own above the expand item: it starts on the columns' line, 24 under the top bar's rule.
+        className={cn("flex h-full min-h-0 shrink-0 flex-col items-center [[data-column][data-shown]+&]:ps-3 [[data-column][data-shown]+&]:rule-l", className)}
         {...props}
       >
-        <FloatButton ref={expandRef} label={expandLabel} icon="open-panel--right" aria-expanded={false} onClick={() => ask("open")} />
         <Rail edge="right" aria-label={label}>
+          {/* Expand is one more tile of the rail: the same size, corner and hover as the tabs under it, so the column reads as one (Warpcore, 2026-11-25). */}
+          <RailItem ref={expandRef} label={expandLabel} icon="open-panel--right" aria-expanded={false} onClick={() => ask("open")} />
           {tabs.map((tab) => (
             <RailItem
               key={tab.value}

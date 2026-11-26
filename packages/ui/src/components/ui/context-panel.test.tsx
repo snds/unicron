@@ -156,7 +156,11 @@ describe("ContextPanel", () => {
   it("expands from the rail with its own button", () => {
     setViewport(1440, 900)
     render(<Workspace initial="rail" />)
-    fireEvent.click(screen.getByRole("button", { name: "Expand panel" }))
+    // Expand is a tile of the rail, the same shape as the tabs under it, and the first stop of its arrow keys.
+    const expand = screen.getByRole("button", { name: "Expand panel" })
+    expect(expand).toHaveAttribute("data-slot", "rail-item")
+    expect(screen.getByRole("toolbar").querySelector('[data-slot="rail-item"]')).toBe(expand)
+    fireEvent.click(expand)
     expect(screen.getByRole("complementary", { name: "Context" })).toHaveAttribute("data-state", "open")
   })
 

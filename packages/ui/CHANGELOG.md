@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.1.5
+
+### Patch Changes
+
+- ContextPanel: the rail's Expand is a `RailItem`, the first tile of the rail, so it has the same size, corner and hover as the tabs under it (it was a FloatButton with its own box). It is also the first stop of the rail's arrow keys.
+
 ## 2.1.4
 
 ### Patch Changes
