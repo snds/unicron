@@ -32,7 +32,7 @@ const iconTileVariants = cva("relative inline-flex shrink-0 items-center justify
   variants: {
     size: {
       // In a sidebar row, in the icon's 20px place: 22 square on the 6px corner, a 14px glyph.
-      s: "size-[22px] -mx-px rounded-md",
+      s: "size-5.5 -mx-px rounded-md",
       // A project's head: 32 square on the 8px corner, a 20px glyph.
       m: "size-8 rounded-lg",
     },

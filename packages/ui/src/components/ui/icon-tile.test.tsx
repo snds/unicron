@@ -12,7 +12,7 @@ describe("IconTile (Warpcore IA canvas, project tiles)", () => {
       </>
     )
     const [s, m] = container.querySelectorAll('[data-slot="icon-tile"]')
-    expect(s!.className).toContain("size-[22px]")
+    expect(s!.className).toContain("size-5.5")
     expect(s!.className).toContain("rounded-md")
     expect(s!.querySelector("svg")).toHaveAttribute("width", "14")
     expect(m!.className).toContain("size-8")
