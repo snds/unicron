@@ -1,5 +1,13 @@
 # @unicron/ui
 
+## 2.2.0
+
+### Minor Changes
+
+- IconTile: a glyph on a small tinted square, a project's mark (Warpcore's sidebar and project head). `s` is 22 with a 14px glyph, `m` is 32 with a 20px glyph. It takes one of the twelve swatch roles, or none for a neutral tile. `ICON_TILE_SWATCHES` lists them for a colour picker.
+- NavItem: `tile` puts an IconTile in the icon's place, in the sidebar and on its rail.
+- NavSection: `open` and `onOpenChange` make the heading a button with a chevron that shows and hides the list (Recents).
+
 ## 2.1.6
 
 ### Patch Changes

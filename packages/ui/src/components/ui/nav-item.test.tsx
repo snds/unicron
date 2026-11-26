@@ -10,6 +10,15 @@ const classesOf = (el: Element) => el.className.split(/\s+/)
 const rowOf = (el: Element) => el.closest('[data-slot="nav-item"]')!
 
 describe("NavItem (Figma 15:487)", () => {
+  it("a tile takes the icon's place: the project's glyph on its tinted square", () => {
+    const { container } = render(<NavItem label="Warpcore" href="/p/1" icon="folder" tile={{ icon: "cube", swatch: 10 }} />)
+    const tile = container.querySelector('[data-slot="nav-item-tile"]')
+    expect(tile).toHaveAttribute("data-swatch", "10")
+    // One glyph only: the tile's.
+    expect(container.querySelectorAll("svg")).toHaveLength(1)
+    expect(screen.getByRole("link", { name: "Warpcore" })).toBeInTheDocument()
+  })
+
   it("is a link to its place, named by its label and its count; the index is not read out", () => {
     render(<NavItem href="/mail" label="Mail" index="01" icon="email" count={12} />)
     const link = screen.getByRole("link", { name: "Mail, 12" })
@@ -216,6 +225,26 @@ describe("NavItem (Figma 15:487)", () => {
 })
 
 describe("NavSection", () => {
+  it("with open and onOpenChange, the heading is a button that shows and hides the list", async () => {
+    function Recents() {
+      const [open, setOpen] = useState(true)
+      return (
+        <NavSection title="Recents" open={open} onOpenChange={setOpen}>
+          <NavItem label="Pick a solar provider" href="/c/1" />
+        </NavSection>
+      )
+    }
+    render(<Recents />)
+    const heading = screen.getByRole("button", { name: "Recents" })
+    expect(heading).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getByRole("link", { name: "Pick a solar provider" })).toBeInTheDocument()
+    await userEvent.click(heading)
+    expect(heading).toHaveAttribute("aria-expanded", "false")
+    expect(screen.queryByRole("link", { name: "Pick a solar provider" })).toBeNull()
+    // The group keeps its name from the heading.
+    expect(screen.getByRole("group", { name: "Recents" })).toBeInTheDocument()
+  })
+
   it("names its group with an overline heading and its count, and lists its items", () => {
     render(
       <NavSection title="Apps" count={4}>

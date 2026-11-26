@@ -91,6 +91,7 @@ export * from "./components/ui/filter-chip"
 export * from "./components/ui/float-button"
 export * from "./components/ui/highlight"
 export * from "./components/ui/initial-tile"
+export * from "./components/ui/icon-tile"
 export * from "./components/ui/input-group"
 export * from "./components/ui/indicator"
 export {

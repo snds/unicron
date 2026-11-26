@@ -22,6 +22,7 @@ import {
   rovingTarget,
   type NavMarkProp,
 } from "./rail"
+import { IconTile, type IconTileSwatch } from "./icon-tile"
 import { swatchFillClasses, type SwatchId } from "./tile"
 import { Tooltip, TooltipContent } from "./tooltip"
 
@@ -71,6 +72,12 @@ export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
    * `tree` a section is a list of links, whatever the items' levels.
    */
   tree?: boolean
+  /**
+   * The heading opens and closes the list (Recents): a button with a chevron after the title. Give
+   * `open` and `onOpenChange` together; the app keeps the choice. Closed, the list is not drawn.
+   */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 /**
@@ -78,7 +85,7 @@ export type NavSectionProps = Omit<React.ComponentProps<"div">, "title"> & {
  * ("Apps // 04", "Mail // folders"): the heading, then the items, each 4px apart. The space
  * between two sections is the sidebar's (Vale draws 28). The group is named by its heading.
  */
-function NavSection({ title, count, action, collapsed: collapsedProp, checkable, tree: treeProp = false, className, children, ...props }: NavSectionProps) {
+function NavSection({ title, count, action, collapsed: collapsedProp, checkable, tree: treeProp = false, open, onOpenChange, className, children, ...props }: NavSectionProps) {
   const rail = React.useContext(AppFrameRailContext)
   const collapsed = collapsedProp ?? rail
   // The rail is a column of rail items: no radio group and no tree there.
@@ -182,10 +189,23 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
     if (target) moveTo(items, target)
   }
 
+  // A heading that opens and closes the list. Never on the rail, which shows no headings.
+  const foldable = open !== undefined && !collapsed
+  const heading = (
+    <>
+      {title}
+      {count !== undefined ? (
+        <>
+          <span aria-hidden="true">{` · ${formatNavCount(count)}`}</span>
+          <span className="sr-only">{`, ${count.toLocaleString("en-US")}`}</span>
+        </>
+      ) : null}
+    </>
+  )
   // A tree and a radio group carry the heading's name themselves; a list sits in a named group.
   const ownName = tree || radios
   // The rail draws icons only: a group whose rows have none (a list of conversations) leaves the rail.
-  if (collapsed && !React.Children.toArray(children).some((child) => React.isValidElement<{ icon?: unknown }>(child) && child.props.icon)) return null
+  if (collapsed && !React.Children.toArray(children).some((child) => React.isValidElement<{ icon?: unknown; tile?: unknown }>(child) && (child.props.icon || child.props.tile))) return null
 
   return (
     <NavSectionContext.Provider value={context}>
@@ -198,15 +218,26 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
         {...props}
       >
         <div data-slot="nav-section-head" className={cn("flex min-h-4 items-center gap-2", collapsed && "sr-only")}>
-          <p id={headingId} className="type-overline text-text-label min-w-0 flex-1 truncate">
-            {title}
-            {count !== undefined ? (
-              <>
-                <span aria-hidden="true">{` · ${formatNavCount(count)}`}</span>
-                <span className="sr-only">{`, ${count.toLocaleString("en-US")}`}</span>
-              </>
-            ) : null}
-          </p>
+          {foldable ? (
+            <p className="min-w-0 flex-1">
+              <button
+                type="button"
+                id={headingId}
+                aria-expanded={open}
+                onClick={() => onOpenChange?.(!open)}
+                className="type-overline text-text-label hover:text-text-secondary -mx-1 inline-flex max-w-full items-center gap-0.5 rounded-sm px-1 outline-none focus-visible:ring-2 focus-visible:ring-(--line-focus)"
+              >
+                <span className="truncate">{heading}</span>
+                <span data-slot="nav-section-chevron" aria-hidden="true" className={cn("inline-flex shrink-0 transition-[rotate] duration-(--motion-fast) ease-(--motion-ease)", !open && "-rotate-90")}>
+                  <Icon name="chevron--down" size={14} />
+                </span>
+              </button>
+            </p>
+          ) : (
+            <p id={headingId} className="type-overline text-text-label min-w-0 flex-1 truncate">
+              {heading}
+            </p>
+          )}
           {action && !collapsed ? (
             // Out of the heading's line box, so a 32px button keeps the heading 16px high.
             <div data-slot="nav-section-action" className="-my-2 flex shrink-0 items-center">
@@ -214,7 +245,8 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
             </div>
           ) : null}
         </div>
-        <ul
+        {foldable && !open ? null : (
+          <ul
           ref={listRef}
           data-slot="nav-section-list"
           role={tree ? "tree" : radios ? "radiogroup" : "list"}
@@ -225,6 +257,7 @@ function NavSection({ title, count, action, collapsed: collapsedProp, checkable,
         >
           {children}
         </ul>
+        )}
       </div>
     </NavSectionContext.Provider>
   )
@@ -303,6 +336,8 @@ export type NavItemProps = Omit<useRender.ComponentProps<"a">, "children" | "ari
   toneLabel?: string
   /** A colour square in the icon's place: a calendar, a persona. */
   swatch?: NavItemSwatch
+  /** A project's mark in the icon's place: its glyph on a tinted square (Icon Tile). */
+  tile?: { icon: IconName; swatch?: IconTileSwatch | null }
   /** Off: half strength, still in the tab order so its `description` (the reason) can be read. */
   disabled?: boolean
 }
@@ -334,6 +369,7 @@ function NavItem({
   tone = "neutral",
   toneLabel = "error",
   swatch,
+  tile,
   disabled = false,
   render,
   className,
@@ -423,7 +459,8 @@ function NavItem({
         </span>
       ) : null}
       {checkable ? <CheckMark checked={Boolean(checked)} radio={Boolean(radio)} /> : null}
-      {icon ? <Icon name={icon} /> : null}
+      {icon && !tile ? <Icon name={icon} /> : null}
+      {tile ? <IconTile data-slot="nav-item-tile" icon={tile.icon} swatch={tile.swatch} size="s" /> : null}
       {swatch ? (
         <span data-slot="nav-item-swatch" aria-hidden="true" className="inline-flex size-5 shrink-0 items-center justify-center">
           <span className={cn("size-2", swatchFill(swatch))} />
@@ -497,7 +534,7 @@ function NavItem({
             style={style}
             {...(mergeProps<"a">(props, { ...ownProps, type: undefined }) as TooltipPrimitive.Trigger.Props)}
           >
-            {icon ? <Icon name={icon} /> : null}
+            {tile ? <IconTile icon={tile.icon} swatch={tile.swatch} size="s" /> : icon ? <Icon name={icon} /> : null}
             <NavMark mark={resolved} placement="below" className="text-text-label" />
           </TooltipPrimitive.Trigger>
           <TooltipContent side="right">
