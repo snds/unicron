@@ -719,13 +719,19 @@ export type AppFrameColumnProps = React.ComponentProps<"section"> &
   AppFrameRefreshProps & {
   /** Center the content in the reading column (720 at most). */
   reading?: boolean
+  /**
+   * Run the frame's full height on a desktop: no 24 above and below, and no 8 on top, so a panel inside
+   * (a context panel) and the column's rule reach the top bar and the window's foot. The content keeps
+   * its own room: pad it with `pt-8 pb-6` where it should sit as before.
+   */
+  bleed?: boolean
 }
 
 /**
  * A content column that is always the screen: a page with one column (Search, Spend, Overview), or
  * the conversation between a chat list and a context panel. It fills the room.
  */
-function AppFrameColumn({ reading = false, onRefresh, className, children, ...props }: AppFrameColumnProps) {
+function AppFrameColumn({ reading = false, bleed = false, onRefresh, className, children, ...props }: AppFrameColumnProps) {
   const frame = useAppFrame()
   const { attach, className: columnClass, attrs, context, pullMark } = useColumn("content", true, onRefresh)
   return (
@@ -734,7 +740,8 @@ function AppFrameColumn({ reading = false, onRefresh, className, children, ...pr
         ref={attach}
         data-slot="app-frame-column"
         {...attrs}
-        className={cn(columnClass, !frame.phone && "flex-1", className)}
+        data-bleed={bleed && !frame.phone ? "" : undefined}
+        className={cn(columnClass, !frame.phone && "flex-1", bleed && !frame.phone && "-my-6 h-auto pt-0", className)}
         {...props}
       >
         {pullMark}

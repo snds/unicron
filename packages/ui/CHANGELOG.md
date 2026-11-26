@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.1.5
+
+### Patch Changes
+
+- ContextPanel: the rail's Expand is a `RailItem`, the first tile of the rail, so it has the same size, corner and hover as the tabs under it (it was a FloatButton with its own box). It is also the first stop of the rail's arrow keys.
+- AppFrameColumn: `bleed` runs the column the frame's full height on a desktop (no 24 above and below, no 8 on top), so a context panel inside it and the column's rule reach the top bar and the window's foot. The content pads itself where it should sit as before.
+
 ## 2.1.4
 
 ### Patch Changes
