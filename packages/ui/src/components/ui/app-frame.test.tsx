@@ -371,6 +371,23 @@ describe("columns that are always the screen", () => {
     expect(column).toHaveClass("last:-me-4", "last:pe-4")
   })
 
+  it("bleed: runs the frame's full height on a desktop, so a panel inside reaches the top bar and the foot", () => {
+    setViewport(1440, 900)
+    render(
+      <AppFrame>
+        <AppFrameMain>
+          <AppFrameColumn bleed aria-label="Chat">
+            The conversation
+          </AppFrameColumn>
+        </AppFrameMain>
+      </AppFrame>
+    )
+    const column = screen.getByRole("region", { name: "Chat" })
+    expect(column).toHaveAttribute("data-bleed")
+    expect(column).toHaveClass("-my-6", "h-auto", "pt-0")
+    expect(column).not.toHaveClass("h-full", "pt-2")
+  })
+
   it("keeps the phone's 16 from the edges for content that is not a full-bleed row", () => {
     setViewport(390, 844)
     render(
