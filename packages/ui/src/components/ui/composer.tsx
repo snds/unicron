@@ -347,8 +347,9 @@ export function Composer({
           // or the line size. Two rows there would leave almost nothing of the conversation to read.
           ONE_ROW,
           size === "line" && ONE_ROW_ALWAYS,
-          // A quote keeps its own line over a one-row box: the row wraps under it.
-          quote && "flex-wrap",
+          // A quote keeps its own line over a one-row box: the row wraps under it. Only a row wraps: a
+          // wrapping column sizes its items to their content, so a long quote ran out of the box on a phone.
+          quote && (size === "line" ? "flex-wrap" : "short:flex-wrap group-data-[keyboard=open]/frame:flex-wrap"),
           // Focus in the field: Figma's 2px inside border in the focus line (--line-focus), as a Text Field draws it.
           "has-[[data-slot=composer-field]:focus]:rule-box-emphasis has-[[data-slot=composer-field]:focus]:[--rule-color:var(--line-focus)]",
           disabled && !focusable && "opacity-50"

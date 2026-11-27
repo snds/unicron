@@ -393,4 +393,13 @@ describe("Composer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel reply" }))
     expect(dismiss).toHaveBeenCalledOnce()
   })
+
+  it("wraps for a quote only as a row: a wrapping column would size the quote to its text and run it out of the box", () => {
+    const { rerender } = render(<Composer quote={<ComposerQuote>{"word ".repeat(100)}</ComposerQuote>} />)
+    const box = () => document.querySelector('[data-slot="composer-box"]')!.className.split(" ")
+    expect(box()).not.toContain("flex-wrap")
+    expect(box()).toContain("short:flex-wrap")
+    rerender(<Composer size="line" quote={<ComposerQuote>{"word ".repeat(100)}</ComposerQuote>} />)
+    expect(box()).toContain("flex-wrap")
+  })
 })
