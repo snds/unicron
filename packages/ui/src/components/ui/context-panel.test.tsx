@@ -217,4 +217,20 @@ describe("ContextPanel", () => {
     render(<Workspace />)
     expect(document.querySelector('[data-slot="context-panel-dock"]')).toBeNull()
   })
+
+  it("leaves out its own collapse button when another control shows and hides it", () => {
+    setViewport(1440, 900)
+    render(
+      <AppFrame>
+        <AppFrameMain>
+          <AppFrameColumn>chat</AppFrameColumn>
+          <ContextPanel state="open" collapsible={false} tabs={TABS} value="tasks" onValueChange={() => {}}>
+            body
+          </ContextPanel>
+        </AppFrameMain>
+      </AppFrame>
+    )
+    expect(screen.getByRole("tablist", { name: "Context" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Collapse panel" })).toBeNull()
+  })
 })

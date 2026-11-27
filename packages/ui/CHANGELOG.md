@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.3.0
+
+### Minor Changes
+
+- Composer: `quote` puts a reply's quote inside the box, at its top over the field. `ComposerQuote` draws it: the reply glyph, the quoted words on one line on the hover wash, and a × named "Cancel reply". In a one-row box it keeps its own line.
+- ContextPanel: `collapsible={false}` leaves out the open head's collapse button, for an app whose title row already shows and hides the panel.
+
 ## 2.2.0
 
 ### Minor Changes

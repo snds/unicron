@@ -2,7 +2,7 @@ import * as React from "react"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import { Composer, composerCopy } from "./composer"
+import { Composer, ComposerQuote, composerCopy } from "./composer"
 
 const field = () => screen.getByRole("textbox", { name: "Message" })
 const type = (text: string) => fireEvent.change(field(), { target: { value: text } })
@@ -379,5 +379,18 @@ describe("Composer", () => {
     expect(box).toHaveAttribute("name", "body")
     expect(box).toHaveAttribute("enterkeyhint", "send")
     expect(ref.current).toBe(box)
+  })
+
+  it("carries a reply's quote inside the box, over the field, with a × that takes it back", () => {
+    const dismiss = vi.fn()
+    render(<Composer quote={<ComposerQuote label="Replying to Claude" onDismiss={dismiss}>The QNAP TS-264 is faster</ComposerQuote>} />)
+    const box = document.querySelector('[data-slot="composer-box"]')!
+    const quote = screen.getByRole("group", { name: "Replying to Claude" })
+    expect(box.contains(quote)).toBe(true)
+    // At the top of the box, before the field.
+    expect(quote.compareDocumentPosition(screen.getByRole("textbox")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText("The QNAP TS-264 is faster")).toHaveAttribute("title", "The QNAP TS-264 is faster")
+    fireEvent.click(screen.getByRole("button", { name: "Cancel reply" }))
+    expect(dismiss).toHaveBeenCalledOnce()
   })
 })
