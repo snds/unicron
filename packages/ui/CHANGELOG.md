@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.6.0
+
+### Minor Changes
+
+- `HoverCard`, `HoverCardTrigger`, `HoverCardContent`, `HoverCardTitle` (Warpcore, from the pi-desktop teardown, 2026-11-27): a short read-only card that opens when a pointer rests on a row for 500 ms (`HOVER_CARD_DELAY_MS`), on Base UI's Preview Card. The raised surface, a 1px rule, the 2px corner, 12 in, 240 wide, the caption role. Touch never opens it, so it never holds the only way to anything.
+- `NavItem` `hoverCard`: the item opens that card, with the given children. Not drawn while the sidebar is collapsed.
+
 ## 2.5.0
 
 ### Minor Changes
