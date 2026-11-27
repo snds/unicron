@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.4.0
+
+### Minor Changes
+
+- Phone tab roots (Sean, 2026-11-27): an `AppFrameTopRow` with a `lockup` over a column with an `AppFramePageHead` shows no lockup. While the page rests, the row's `actions` stand on the head's title row; once it has scrolled, the row shows the small title and the actions. The content's clearance is only the band's top, so nothing moves on scroll. A column with no page head keeps the lockup row.
+- `AppFramePageHead` on a phone draws `lg` and `md` at `sm`: the display sizes took a quarter of the screen.
+
 ## 2.3.1
 
 ### Patch Changes

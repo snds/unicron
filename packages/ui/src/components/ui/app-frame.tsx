@@ -150,6 +150,7 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
   const minimized = phone && (pinnedMinimized ?? scrolled)
 
   const [head, setHead] = React.useState<AppFrameHead | null>(null)
+  const [topSlot, setTopSlot] = React.useState<HTMLElement | null>(null)
   const [bottom, setBottom] = React.useState<AppFrameBottomSlots | null>(null)
   const [railTop, setRailTop] = React.useState<HTMLDivElement | null>(null)
   const [railBottom, setRailBottom] = React.useState<HTMLDivElement | null>(null)
@@ -222,6 +223,8 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       setScroller,
       head,
       setHead,
+      topSlot,
+      setTopSlot,
       bottom,
       setBottom,
       rail: { top: railTop, bottom: railBottom },
@@ -252,6 +255,7 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       tight,
       minimized,
       head,
+      topSlot,
       bottom,
       railTop,
       railBottom,
@@ -819,11 +823,16 @@ export type AppFramePageHeadProps = PageHeadProps & {
  * `gap` sets the space under it and `below` holds a chip row that belongs to it, so an app never
  * needs a class to place a head.
  */
-function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, className, ...props }: AppFramePageHeadProps) {
+function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, size, actions, className, ...props }: AppFramePageHeadProps) {
   const frame = useAppFrame()
   const shown = useAppFrameColumnShown()
-  const { setHead } = frame
+  const { setHead, setTopSlot } = frame
   const registers = frame.phone && shown
+  // A phone's titles stand at `sm` at most: the display sizes took a quarter of the screen, and the
+  // canvases draw a tab root's title at 28 with its actions on its row (Sean, 2026-11-27).
+  const shownSize = frame.phone && (size === undefined || size === "lg" || size === "md") ? "sm" : size
+  // The top row's actions stand here while the page rests (`AppFrameTopRow`).
+  const slot = registers ? <span ref={setTopSlot} data-slot="app-frame-page-head-top-actions" className="flex items-center gap-2" /> : null
 
   const latest = React.useRef(switcher)
   React.useLayoutEffect(() => {
@@ -858,11 +867,27 @@ function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, class
   // collapse), so it starts 12 above a column's page-head line: Figma cw-01 draws its overline from
   // y 84 and those buttons from y 88 to 132. What it heads starts 24 under that row, which is 20
   // under the head (the first message's meta from y 156).
-  const lifted = props.size === "xs" && !frame.phone && frame.layout !== "rail"
+  const lifted = shownSize === "xs" && !frame.phone && frame.layout !== "rail"
   const under = gap === "none" ? "" : gap === "sm" || frame.phone ? "pb-4" : lifted ? "pb-5" : hasBelow ? "pb-7" : "pb-8"
   return (
     <div data-slot="app-frame-page-head" data-gap={gap} className={cn(under, lifted && "-mt-3", frame.phone && !inset && "px-4", className)}>
-      <PageHead title={title} switcher={switcher} collapsed={collapsed ?? frame.layout === "rail"} {...props} />
+      <PageHead
+        title={title}
+        switcher={switcher}
+        collapsed={collapsed ?? frame.layout === "rail"}
+        size={shownSize}
+        actions={
+          slot ? (
+            <>
+              {actions}
+              {slot}
+            </>
+          ) : (
+            actions
+          )
+        }
+        {...props}
+      />
       {hasBelow ? (
         <div data-slot="app-frame-page-head-below" className="mt-4 min-w-0">
           {below}

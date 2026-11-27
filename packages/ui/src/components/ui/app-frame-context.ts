@@ -273,6 +273,12 @@ export interface AppFrameContextValue {
   setScroller: (el: HTMLElement | null) => void
   head: AppFrameHead | null
   setHead: (head: AppFrameHead | null) => void
+  /**
+   * The page head's place for the top row's actions on a phone tab root: while the page rests, the
+   * row's actions stand on the head's title row and the row shows no lockup (Sean, 2026-11-27).
+   */
+  topSlot: HTMLElement | null
+  setTopSlot: (el: HTMLElement | null) => void
   bottom: AppFrameBottomSlots | null
   setBottom: (slots: AppFrameBottomSlots | null) => void
   rail: AppFrameRailSlots
@@ -333,6 +339,8 @@ export function useAppFrame(): AppFrameContextValue {
     setScroller: noop,
     head: null,
     setHead: noop,
+    topSlot: null,
+    setTopSlot: noop,
     bottom: null,
     setBottom: noop,
     rail: { top: null, bottom: null },
