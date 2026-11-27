@@ -182,6 +182,38 @@ describe("Composer", () => {
     expect(screen.getByRole("button", { name: "Stop" })).toHaveAttribute("aria-busy", "true")
   })
 
+  it("while a reply streams with onQueue, typing makes the button a Send that queues, and Stop moves aside", () => {
+    const onSend = vi.fn()
+    const onQueue = vi.fn()
+    const onStop = vi.fn()
+    render(<Composer streaming onStop={onStop} onSend={onSend} onQueue={onQueue} />)
+    // Empty: the button is Stop, as before.
+    expect(screen.getByRole("button", { name: "Stop" })).toHaveAttribute("data-action", "stop")
+    type("And then?")
+    const queue = screen.getByRole("button", { name: composerCopy.queue })
+    expect(queue).toHaveAttribute("data-action", "queue")
+    const stop = screen.getByRole("button", { name: "Stop" })
+    expect(stop).toHaveAttribute("data-slot", "composer-stop")
+    fireEvent.click(stop)
+    expect(onStop).toHaveBeenCalledTimes(1)
+    enter()
+    expect(onQueue).toHaveBeenCalledWith("And then?")
+    expect(onSend).not.toHaveBeenCalled()
+    expect(field()).toHaveValue("")
+  })
+
+  it("Option+Enter steers: the text goes into the reply in progress, and the queue button says how", () => {
+    const onQueue = vi.fn()
+    const onSteer = vi.fn()
+    render(<Composer streaming onStop={() => {}} onQueue={onQueue} onSteer={onSteer} />)
+    type("Use the newer API")
+    expect(screen.getByRole("button", { name: composerCopy.queue })).toHaveAccessibleDescription(composerCopy.steerHint)
+    enter({ altKey: true })
+    expect(onSteer).toHaveBeenCalledWith("Use the newer API")
+    expect(onQueue).not.toHaveBeenCalled()
+    expect(field()).toHaveValue("")
+  })
+
   // Stop, the waiting clock and Send are one DOM node. A host that ends the state inside the press
   // (the usual way) re-renders that node as the submit button before the browser runs the click's
   // own action, so the same press went on to submit the form: Stop sent the draft, and cancelling

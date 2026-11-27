@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.5.0
+
+### Minor Changes
+
+- Composer `onQueue` and `onSteer` (Warpcore, from the pi-desktop teardown, 2026-11-27): while a reply streams, typing makes the button a Send named "Send after this reply" that hands the text to `onQueue`, and Stop moves to a small ghost button before it (`data-slot="composer-stop"`). Option+Enter (Alt+Enter) hands it to `onSteer` instead, to go into the reply in progress; the queue button's description says so. Without `onQueue` nothing changes: the button stays Stop while a reply streams.
+
 ## 2.4.0
 
 ### Minor Changes
