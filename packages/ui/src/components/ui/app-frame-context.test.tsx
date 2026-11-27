@@ -202,10 +202,12 @@ describe("the phone's chrome on scroll (rules.md 6.5)", () => {
     const scrollTo = mockScroll(list)
     rerender(<Inbox />)
 
-    // At rest: the wordmark, no small title, no hairline; the strip above the row, the whole tab bar.
+    // At rest: a tab root with a page head has no lockup; the row's actions stand on the head's
+    // title row (Sean, 2026-11-27). No small title, no hairline; the strip above the row, the whole tab bar.
     expect(frame).toHaveAttribute("data-layout", "phone")
     expect(frame).not.toHaveAttribute("data-minimized")
-    expect(screen.getByText("Vale")).not.toHaveClass("sr-only")
+    expect(screen.queryByText("Vale")).toBeNull()
+    expect(container.querySelector('[data-slot="app-frame-page-head-top-actions"]')).toContainElement(screen.getByRole("button", { name: "Settings" }))
     expect(container.querySelector('[data-slot="app-frame-top-row-title"]')).toBeNull()
     expect(container.querySelector('[data-slot="app-frame-top-row"]')).not.toHaveClass("rule-b")
     let { above, row, bars } = bottomBars(container)
@@ -215,8 +217,9 @@ describe("the phone's chrome on scroll (rules.md 6.5)", () => {
 
     scrollTo(200)
     expect(frame).toHaveAttribute("data-minimized")
-    // The wordmark hides (the name stays the lockup's), the small title shows, a hairline appears.
-    expect(screen.getByText("Vale")).toHaveClass("sr-only")
+    // The small title shows with the actions in the row, and a hairline appears. Still no lockup.
+    expect(screen.queryByText("Vale")).toBeNull()
+    expect(container.querySelector('[data-slot="app-frame-top-row-actions"]')).toContainElement(screen.getByRole("button", { name: "Settings" }))
     expect(container.querySelector('[data-slot="app-frame-top-row-title"]')).toHaveTextContent("Inbox")
     expect(container.querySelector('[data-slot="app-frame-top-row"]')).toHaveClass("rule-b")
     // The tab bar shrinks to the active tab and the strip joins the row, compact: one bar.
@@ -236,7 +239,7 @@ describe("the phone's chrome on scroll (rules.md 6.5)", () => {
     expect(frame).toHaveAttribute("data-minimized")
     scrollTo(0)
     expect(frame).not.toHaveAttribute("data-minimized")
-    expect(screen.getByText("Vale")).not.toHaveClass("sr-only")
+    expect(screen.queryByText("Vale")).toBeNull()
     ;({ above, bars } = bottomBars(container))
     expect(above.querySelector('[data-slot="accessory"]')).toBeInTheDocument()
     expect(bars).toBe(2)

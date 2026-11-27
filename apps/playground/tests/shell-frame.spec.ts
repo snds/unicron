@@ -66,15 +66,20 @@ test.describe("the phone's chrome on scroll (rules.md 6.5)", () => {
       await expect(frame).not.toHaveAttribute("data-minimized")
       expect((await bottomBars(page)).bars).toBeLessThanOrEqual(2)
 
-      // At rest the wordmark shows; the tab bar holds all its tabs.
-      await expect(topRow.locator('[data-slot="app-lockup-name"]')).toBeVisible()
+      // A tab root with a page head has no lockup: the row's actions stand on the head's row
+      // (Sean, 2026-11-27). Without one, the wordmark shows at rest. The tab bar holds all its tabs.
+      const headed = (await page.locator('[data-slot="app-frame-page-head-top-actions"]').count()) > 0
+      const lockupName = topRow.locator('[data-slot="app-lockup-name"]')
+      if (headed) await expect(lockupName).toHaveCount(0)
+      else await expect(lockupName).toBeVisible()
       const restWidth = (await tabBar.boundingBox())!.width
       expect(restWidth).toBeGreaterThan(100)
 
       await scrollShown(page, 400)
       await expect(frame).toHaveAttribute("data-minimized", "")
       // The wordmark hides (its name stays for assistive tech), the small centred title shows, a hairline appears.
-      await expect(topRow.locator('[data-slot="app-lockup-name"]')).toHaveClass(/sr-only/)
+      if (headed) await expect(lockupName).toHaveCount(0)
+      else await expect(lockupName).toHaveClass(/sr-only/)
       await expect(topRow.locator('[data-slot="app-frame-top-row-title"]')).toBeVisible()
       const shadow = await topRow.evaluate((el) => getComputedStyle(el).boxShadow)
       expect(shadow).not.toBe("none")
@@ -96,7 +101,8 @@ test.describe("the phone's chrome on scroll (rules.md 6.5)", () => {
 
       await scrollShown(page, 0)
       await expect(frame).not.toHaveAttribute("data-minimized")
-      await expect(topRow.locator('[data-slot="app-lockup-name"]')).not.toHaveClass(/sr-only/)
+      if (headed) await expect(lockupName).toHaveCount(0)
+      else await expect(lockupName).not.toHaveClass(/sr-only/)
       await expect.poll(async () => (await tabBar.boundingBox())!.width).toBeGreaterThan(100)
       expect((await bottomBars(page)).bars).toBeLessThanOrEqual(2)
     })

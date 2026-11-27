@@ -173,8 +173,13 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
   // On a short screen with nothing at the top of the content, the band is only the 16 above it:
   // the page head's small title sits there, level with the trailing column's first button.
   const bare = rail && !hasChildren
+  // A tab root with a page head (Sean, 2026-11-27): no lockup, and while the page rests the row's
+  // actions stand on the head's title row; once it has scrolled, the row shows the small title
+  // and the actions. The content's clearance is only the band's top, so nothing moves on scroll.
+  const headed = !hasChildren && !rail && frame.topSlot !== null
+  const [rest, setRest] = React.useState<HTMLDivElement | null>(null)
   // The content starts 16 below the row: the band reaches 12 below it, so 4 more.
-  useClearance(band, "top", shows, null, bare ? 0 : 4)
+  useClearance(headed ? rest : band, "top", shows, null, headed ? 0 : bare ? 0 : 4)
   if (!shows) return null
 
   const minimized = frame.minimized
@@ -188,6 +193,16 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
       React.isValidElement<React.ComponentProps<typeof TopBar>>(children) && children.type === TopBar && children.props.title === undefined
         ? React.cloneElement(children, { title: minimized ? smallTitle : undefined })
         : children
+  } else if (headed) {
+    content = minimized ? (
+      <div data-slot="app-frame-top-row-bar" className="grid h-control min-w-0 grid-cols-[minmax(max-content,1fr)_minmax(0,max-content)_minmax(max-content,1fr)] items-center gap-2">
+        <span aria-hidden="true" />
+        {smallTitle ? <SmallTitle title={smallTitle} switcher={smallSwitcher} /> : <span aria-hidden="true" />}
+        <div data-slot="app-frame-top-row-actions" className="flex items-center justify-end gap-2">
+          {actions}
+        </div>
+      </div>
+    ) : null
   } else if (!rail) {
     const mark =
       React.isValidElement<{ showName?: boolean }>(lockup) && lockup.props.showName === undefined
@@ -219,7 +234,7 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
           // The solid ground the content scrolls under (the top scroll edge): on the row itself, so
           // its hairline, an inset shadow, is not covered by a child's fill.
           "absolute inset-x-0 top-0 z-20 bg-surface-ground px-4",
-          !bare && "pb-3",
+          !bare && !(headed && !minimized) && "pb-3",
           // 16 from the top of the screen, or 4 below the status bar where there is one (Figma: y 52).
           "pt-[max(--spacing(1),calc(--spacing(4)-env(safe-area-inset-top)))]",
           // Once the page has scrolled under it, a hairline (States 02: y 111).
@@ -232,6 +247,15 @@ function AppFrameTopRow({ lockup, actions, title, switcher, children, className,
       >
         {content}
       </div>
+      {headed ? (
+        <div
+          ref={setRest}
+          aria-hidden="true"
+          data-slot="app-frame-top-row-rest"
+          className="pointer-events-none invisible absolute inset-x-0 top-0 pt-[max(--spacing(1),calc(--spacing(4)-env(safe-area-inset-top)))]"
+        />
+      ) : null}
+      {headed && !minimized && actions && frame.topSlot ? createPortal(actions, frame.topSlot) : null}
       {rail && actions && frame.rail.top ? createPortal(actions, frame.rail.top) : null}
     </>
   )
