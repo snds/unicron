@@ -57,6 +57,11 @@ export type ContextPanelProps = Omit<React.ComponentProps<"aside">, "children"> 
    * width (696). Narrower than expanded it covers the content as a pushed screen.
    */
   artifact?: React.ReactNode
+  /**
+   * The open head draws its own collapse button. Default true. Pass false when another control
+   * shows and hides the panel (Warpcore's title row toggle), so there is one way, not two.
+   */
+  collapsible?: boolean
   /** The collapse control's name. Default "Collapse panel". */
   collapseLabel?: string
   /** The expand control's name. Default "Expand panel". */
@@ -88,6 +93,7 @@ function ContextPanel({
   composer,
   sheet,
   artifact,
+  collapsible = true,
   collapseLabel = "Collapse panel",
   expandLabel = "Expand panel",
   className,
@@ -250,7 +256,7 @@ function ContextPanel({
             )
           })}
         </div>
-        {pinned ? null : (
+        {pinned || !collapsible ? null : (
           <IconButton
             ref={collapseRef}
             size="icon-sm"

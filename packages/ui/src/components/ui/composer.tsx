@@ -6,6 +6,7 @@ import * as React from "react"
 
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
+import { IconButton } from "../icon-button"
 import { Button } from "./button"
 import { fieldTextOnTouch } from "./input"
 
@@ -31,6 +32,8 @@ const ONE_ROW =
 export const composerCopy = {
   /** The field's name when the host gives none. */
   field: "Message",
+  /** The quote's × when the host gives no name. */
+  cancelReply: "Cancel reply",
   send: "Send",
   stop: "Stop",
   /** The button while a message waits for the network: pressing it cancels the wait. */
@@ -76,6 +79,11 @@ export interface ComposerProps extends Omit<React.ComponentProps<"form">, "onSub
   chips?: React.ReactNode
   /** A status strip above the chips (an Accessory): a finished background task, "Sends when you're back online." */
   status?: React.ReactNode
+  /**
+   * A reply's quote, inside the box at its top, over the field: a `ComposerQuote`. It stays on its
+   * own line when the box is one row.
+   */
+  quote?: React.ReactNode
   /** The tools row's first slot: an attach button (`<IconButton icon="add" size="icon-sm" label="Attach a file" />`). */
   attach?: React.ReactNode
   /** A second leading action after it: Vale's expand to the full message form. */
@@ -120,8 +128,8 @@ function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null) {
  * `sendKey` says, and never while an input method is composing. Focus draws the field's 2px
  * inside border in the focus line (`--line-focus`) on the box, as a Text Field does.
  *
- * Above the box, top to bottom: `status`, `chips`, then the `disabledReason` line. Inside it:
- * `attach` and `leadingAction` before the field.
+ * Above the box, top to bottom: `status`, `chips`, then the `disabledReason` line. Inside it: a
+ * reply's `quote` at the top, then the field, then `attach` and `leadingAction` before Send.
  */
 export function Composer({
   value: valueProp,
@@ -143,6 +151,7 @@ export function Composer({
   sendKey = "enter",
   chips,
   status,
+  quote,
   attach,
   leadingAction,
   fieldRef,
@@ -338,11 +347,18 @@ export function Composer({
           // or the line size. Two rows there would leave almost nothing of the conversation to read.
           ONE_ROW,
           size === "line" && ONE_ROW_ALWAYS,
+          // A quote keeps its own line over a one-row box: the row wraps under it.
+          quote && "flex-wrap",
           // Focus in the field: Figma's 2px inside border in the focus line (--line-focus), as a Text Field draws it.
           "has-[[data-slot=composer-field]:focus]:rule-box-emphasis has-[[data-slot=composer-field]:focus]:[--rule-color:var(--line-focus)]",
           disabled && !focusable && "opacity-50"
         )}
       >
+        {quote ? (
+          <div data-slot="composer-quote-slot" className="min-w-0 basis-full">
+            {quote}
+          </div>
+        ) : null}
         <textarea
           data-slot="composer-field"
           rows={1}
@@ -381,5 +397,39 @@ export function Composer({
         </div>
       </div>
     </form>
+  )
+}
+
+export interface ComposerQuoteProps extends Omit<React.ComponentProps<"div">, "children"> {
+  /** The quoted words, cut to one line with an ellipsis; the full text is the line's title. */
+  children: string
+  /** Who is being answered, for a screen reader: "Replying to Claude". */
+  label?: string
+  /** The × takes the quote back. Without it, no ×. */
+  onDismiss?: () => void
+  /** The ×'s name. Default "Cancel reply". */
+  dismissLabel?: string
+}
+
+/**
+ * The quote a reply carries, inside the Composer's box at its top (Warpcore's Reply, coverage
+ * canvas "Reply quote in composer"): the reply glyph, the quoted words on one line in secondary
+ * ink on the hover wash, and a small × that takes it back. Pass it as the Composer's `quote`.
+ */
+export function ComposerQuote({ children, label, onDismiss, dismissLabel = composerCopy.cancelReply, className, ...props }: ComposerQuoteProps) {
+  return (
+    <div
+      data-slot="composer-quote"
+      role="group"
+      aria-label={label}
+      className={cn("bg-surface-hover text-text-secondary type-caption flex min-w-0 items-center gap-2 rounded py-1 pr-1 pl-2", className)}
+      {...props}
+    >
+      <Icon name="reply" className="size-4 shrink-0" />
+      <span data-slot="composer-quote-text" title={children} className="min-w-0 flex-1 truncate">
+        {children}
+      </span>
+      {onDismiss ? <IconButton size="icon-xs" variant="ghost" icon="close" label={dismissLabel} onClick={onDismiss} /> : null}
+    </div>
   )
 }
