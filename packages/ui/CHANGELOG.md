@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.3.1
+
+### Patch Changes
+
+- Composer: a long `quote` stays inside the box on a phone. The box wrapped as a column too, which sized the quote to its whole text, so it ran off the edge with its ×.
+
 ## 2.3.0
 
 ### Minor Changes
