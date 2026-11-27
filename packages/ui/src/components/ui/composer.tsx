@@ -38,6 +38,10 @@ export const composerCopy = {
   stop: "Stop",
   /** The button while a message waits for the network: pressing it cancels the wait. */
   waiting: "Waiting to send. Cancel",
+  /** Send while a reply is being written, with `onQueue`: the message waits its turn. */
+  queue: "Send after this reply",
+  /** The hint tied to that button, for `onSteer`: how to send into the reply now instead. */
+  steerHint: "Option+Enter sends it now, into the reply.",
 }
 
 export interface ComposerProps extends Omit<React.ComponentProps<"form">, "onSubmit" | "onChange" | "children"> {
@@ -59,6 +63,17 @@ export interface ComposerProps extends Omit<React.ComponentProps<"form">, "onSub
   onStop?: () => void
   /** Stop was pressed and the reply is ending: Stop keeps its name and shows a spinner. */
   stopping?: boolean
+  /**
+   * While `streaming`, typing makes the button a Send that queues: the text goes here, to wait until the
+   * reply ends (pi-desktop's follow-up queue). Stop stays, as a small ghost button before it. Without
+   * this, the button stays Stop while a reply is written, as before.
+   */
+  onQueue?: (value: string) => void
+  /**
+   * While `streaming`, Option+Enter (Alt+Enter) sends the text into the reply in progress instead of
+   * queuing it: the agent reads it after its current step. Clear the text yourself, as after `onSend`.
+   */
+  onSteer?: (value: string) => void
   /** Send was pressed offline: the button is a clock named "Waiting to send. Cancel". */
   waiting?: boolean
   onCancelWaiting?: () => void
@@ -125,7 +140,9 @@ function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null) {
  * While `streaming` the button is Stop (focus moves back to the field when it swaps, and again
  * when the reply ends under the keyboard and Stop turns back into a Send that cannot send). While
  * `waiting` it is a clock that cancels the wait. Enter sends and Shift+Enter makes a line, or as
- * `sendKey` says, and never while an input method is composing. Focus draws the field's 2px
+ * `sendKey` says, and never while an input method is composing. With `onQueue`, typing while a
+ * reply streams makes the button a Send named "Send after this reply" that queues the text, and Stop
+ * stays as a small ghost button before it; with `onSteer` too, Option+Enter sends it into the reply now. Focus draws the field's 2px
  * inside border in the focus line (`--line-focus`) on the box, as a Text Field does.
  *
  * Above the box, top to bottom: `status`, `chips`, then the `disabledReason` line. Inside it: a
@@ -142,6 +159,8 @@ export function Composer({
   streaming = false,
   onStop,
   stopping = false,
+  onQueue,
+  onSteer,
   waiting = false,
   onCancelWaiting,
   disabled = false,
@@ -164,6 +183,8 @@ export function Composer({
   const text = controlled ? valueProp : own
   const empty = text.trim() === ""
   const state: ComposerState = waiting ? "waiting" : streaming ? "streaming" : sending ? "sending" : empty ? "empty" : "typing"
+  // A reply is being written and there is something typed: the button queues it, and Stop moves aside.
+  const queueing = streaming && !empty && !waiting && !disabled && !sendDisabled && Boolean(onQueue)
   const canSend = !empty && !sending && !streaming && !waiting && !disabled && !sendDisabled
   // Nothing but the empty field stands in the way: Send is unavailable, at full strength.
   const idle = empty && !sending && !streaming && !waiting && !disabled && !sendDisabled
@@ -187,8 +208,18 @@ export function Composer({
     onValueChange?.(next)
   }
   const send = () => {
+    if (queueing) {
+      onQueue?.(text)
+      if (!controlled) setOwn("")
+      return
+    }
     if (!canSend) return
     onSend?.(text)
+    if (!controlled) setOwn("")
+  }
+  const steer = () => {
+    if (!queueing || !onSteer) return
+    onSteer(text)
     if (!controlled) setOwn("")
   }
 
@@ -243,6 +274,12 @@ export function Composer({
     // An input method composing (Japanese, Chinese, Korean) owns Enter until it commits.
     if (e.defaultPrevented || e.key !== "Enter" || e.nativeEvent.isComposing || e.keyCode === 229) return
     const mode = sendKey === "auto" ? (coarsePointer() ? "none" : "enter") : sendKey
+    // Option+Enter while a reply is written: into the reply now, whichever key sends.
+    if (queueing && onSteer && e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+      e.preventDefault()
+      steer()
+      return
+    }
     const wants =
       mode === "enter" ? !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey : mode === "mod-enter" ? (e.metaKey || e.ctrlKey) && !e.altKey : false
     if (!wants) return
@@ -262,10 +299,33 @@ export function Composer({
     handler?.()
   }
   let action: React.ReactNode
+  // While queueing, Stop is still there: a small ghost button before the Send that queues.
+  const stopAside = queueing ? (
+    <Button type="button" variant="ghost" size="icon-sm" aria-label={composerCopy.stop} data-slot="composer-stop" loading={stopping} disabled={disabled} onClick={press(onStop)}>
+      <Icon name="stop--filled--alt" />
+    </Button>
+  ) : null
+  const steerId = React.useId()
   if (waiting) {
     action = (
       <Button ref={button} type="button" size="icon" className={SEND} aria-label={composerCopy.waiting} data-slot="composer-send" data-action="waiting" onClick={press(onCancelWaiting)} disabled={disabled} {...trackFocus}>
         <Icon name="time" className="size-5" />
+      </Button>
+    )
+  } else if (queueing) {
+    action = (
+      <Button
+        ref={button}
+        type="submit"
+        size="icon"
+        className={SEND}
+        aria-label={composerCopy.queue}
+        aria-describedby={onSteer ? steerId : undefined}
+        data-slot="composer-send"
+        data-action="queue"
+        {...trackFocus}
+      >
+        <Icon name="arrow--up" className="size-5" />
       </Button>
     )
   } else if (streaming) {
@@ -394,7 +454,13 @@ export function Composer({
             </div>
           ) : null}
           <span aria-hidden="true" className="flex-1" />
+          {stopAside}
           {action}
+          {queueing && onSteer ? (
+            <span id={steerId} className="sr-only">
+              {composerCopy.steerHint}
+            </span>
+          ) : null}
         </div>
       </div>
     </form>
