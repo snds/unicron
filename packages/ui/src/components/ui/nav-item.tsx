@@ -24,6 +24,7 @@ import {
 } from "./rail"
 import { IconTile, type IconTileSwatch } from "./icon-tile"
 import { swatchFillClasses, type SwatchId } from "./tile"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card"
 import { Tooltip, TooltipContent } from "./tooltip"
 
 /* ── Section ─────────────────────────────────────────────────────────────────────────────────── */
@@ -330,6 +331,12 @@ export type NavItemProps = Omit<useRender.ComponentProps<"a">, "children" | "ari
   action?: React.ReactNode
   /** A second line under the label (a vault's owner, why the item is off). Read as its description. */
   description?: React.ReactNode
+  /**
+   * A short card that opens when a pointer rests on the item for half a second (`HoverCardContent`'s
+   * children: a `HoverCardTitle`, then a few facts). Touch never opens it, so it holds nothing that
+   * is only there. Not drawn while the sidebar is collapsed, where the tooltip names the item.
+   */
+  hoverCard?: React.ReactNode
   /** `critical`: something there is broken (an account that stopped syncing). Ink and a glyph, and words in the name. */
   tone?: NavItemTone
   /** The words `tone="critical"` adds to the name. Default "error". */
@@ -366,6 +373,7 @@ function NavItem({
   onExpandedChange,
   action,
   description,
+  hoverCard,
   tone = "neutral",
   toneLabel = "error",
   swatch,
@@ -596,7 +604,14 @@ function NavItem({
         // The inset bar: 2 × 16, 3px in from the start edge, in the accent's text colour.
         <span data-slot="nav-item-bar" aria-hidden="true" className="pointer-events-none absolute start-0.75 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-xs bg-primary-text" />
       ) : null}
-      {main}
+      {hoverCard ? (
+        <HoverCard>
+          <HoverCardTrigger render={main} />
+          <HoverCardContent>{hoverCard}</HoverCardContent>
+        </HoverCard>
+      ) : (
+        main
+      )}
       {disclosure}
       {action ? (
         <div
