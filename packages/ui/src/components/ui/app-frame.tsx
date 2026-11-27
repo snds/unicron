@@ -876,6 +876,8 @@ function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, size,
         switcher={switcher}
         collapsed={collapsed ?? frame.layout === "rail"}
         size={shownSize}
+        // A phone keeps the actions on the title's row: a long overline no longer pushes them under it.
+        className={frame.phone ? "flex-nowrap [&>[data-slot=page-head-main]]:basis-0" : undefined}
         actions={
           slot ? (
             <>
