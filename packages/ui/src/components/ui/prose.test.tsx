@@ -115,11 +115,11 @@ describe("Prose response: bold and h4 at the reply's size, in the strong weight 
     expect(css).not.toMatch(/font-size|line-height/)
   })
 
-  it("is not a type role of its own: the roles stay Figma's 22, its 8 retired ones and mono-row (2.0)", () => {
+  it("is not a type role of its own: the roles stay Figma's 22, its 8 retired ones, mono-row (2.0) and nav-title (2.8)", () => {
     const file = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../../tokens/tokens/type.json"), "utf8"))
     const roles = Object.keys(file.type).filter((k) => !k.startsWith("$"))
-    expect(roles).toHaveLength(31)
-    expect(roles.filter((role) => file.type[role].$extensions?.["unicron.type"]?.figma === "pending")).toEqual(["mono-row"])
+    expect(roles).toHaveLength(32)
+    expect(roles.filter((role) => file.type[role].$extensions?.["unicron.type"]?.figma === "pending")).toEqual(["mono-row", "nav-title"])
     expect(roles).toContain("response")
     expect(roles).toContain("body-strong")
     expect(JSON.stringify(file)).not.toMatch(/response-strong|responseStrong|response strong/i)

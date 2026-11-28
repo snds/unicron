@@ -165,7 +165,7 @@ describe("PageHead", () => {
     expect(classesOf(root)).toEqual(expect.arrayContaining(["h-control", "justify-center"]))
     const heading = screen.getByRole("heading", { level: 1, name: "Inbox" })
     expect(heading.className).toContain("motion-pop")
-    expect(heading.querySelector(".type-subtitle")).not.toBeNull()
+    expect(heading.querySelector(".type-nav-title")).not.toBeNull()
     expect(container.querySelector('[data-slot="page-head-overline"]')).toBeNull()
     expect(container.querySelector('[data-slot="page-head-meta"]')).toBeNull()
   })

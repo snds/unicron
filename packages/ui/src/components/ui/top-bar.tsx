@@ -9,7 +9,7 @@ import { FloatButton } from "./float-button"
 
 export type TopBarProps = Omit<React.ComponentProps<"div">, "title"> & {
   /**
-   * The small centred title (subtitle role). Leave it out while the page's own head shows the
+   * The small centred title (nav-title role, 17/24). Leave it out while the page's own head shows the
    * title; the frame passes it once that head has scrolled away.
    */
   title?: React.ReactNode
@@ -46,7 +46,7 @@ function TopBar({ title, titleAs = "p", onBack, backLabel = "Back", start, actio
         {start ?? (onBack ? <FloatButton label={backLabel} icon="arrow--left" size="l" onClick={onBack} /> : null)}
       </div>
       {title ? (
-        <Title data-slot="top-bar-title" className="type-subtitle motion-pop min-w-0 truncate text-center text-text-body">
+        <Title data-slot="top-bar-title" className="type-nav-title motion-pop min-w-0 truncate text-center text-text-body">
           {title}
         </Title>
       ) : (

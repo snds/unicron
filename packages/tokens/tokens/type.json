@@ -1,5 +1,5 @@
 {
-  "$description": "Type roles: the 22 text styles of Figma's `Unicron Type/` folder (Unicron 2.0, read 2026-11-24), the eight retired ones (Unicron Type/Retired/, kept for parts not yet restyled) and mono-row (waiting on its Figma style), one set for every app and both grounds. One sans (Geist) for every interface role; mono only for code. Each is a DTCG typography composite: the family is a reference to a tier 1 font; weight, size, line height and letter spacing are Figma's numbers, in Figma's units (px, and em for the percent). The build emits five variables per role: --type-<role>-family, -weight, -size, -leading and -tracking. @unicron/ui's stylesheet turns each role into one `type-<role>` utility. A change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
+  "$description": "Type roles: the 22 text styles of Figma's `Unicron Type/` folder (Unicron 2.0, read 2026-11-24), the eight retired ones (Unicron Type/Retired/, kept for parts not yet restyled) and mono-row and nav-title (waiting on their Figma styles), one set for every app and both grounds. One sans (Geist) for every interface role; mono only for code. Each is a DTCG typography composite: the family is a reference to a tier 1 font; weight, size, line height and letter spacing are Figma's numbers, in Figma's units (px, and em for the percent). The build emits five variables per role: --type-<role>-family, -weight, -size, -leading and -tracking. @unicron/ui's stylesheet turns each role into one `type-<role>` utility. A change here is a change in Figma first (scripts/figma-parity.mjs holds the two together).",
   "type": {
     "display": {
       "$type": "typography",
@@ -391,6 +391,22 @@
         "letterSpacing": "0.0em"
       },
       "$description": "Figma Unicron Type/crumb: Geist Medium 15/20. The title row's breadcrumb and the Settings location label: 15/20."
+    },
+    "nav-title": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.sans}",
+        "fontWeight": 600,
+        "fontSize": "17px",
+        "lineHeight": "24px",
+        "letterSpacing": "0.0em"
+      },
+      "$extensions": {
+        "unicron.type": {
+          "figma": "pending"
+        }
+      },
+      "$description": "Geist SemiBold 17/24: the small centred title of a phone's top row (a pushed screen's TopBar, a scrolled page's title), as the Warpcore canvases draw it at 17 (Sean, 2026-11-28, every app). Not in Figma yet: Sean adds `Unicron Type/nav-title`."
     }
   }
 }

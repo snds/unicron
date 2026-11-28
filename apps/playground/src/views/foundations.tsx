@@ -325,6 +325,7 @@ const TYPE_ROLES: { role: string; paint: string; sample: string | ((app: string)
   { role: "control-strong", paint: "type-control-strong", sample: "Approve" },
   { role: "crumb", paint: "type-crumb", sample: "Settings" },
   { role: "large-title", paint: "type-large-title", sample: "Projects" },
+  { role: "nav-title", paint: "type-nav-title", sample: "Settings" },
   { role: "tab-label", paint: "type-tab-label", sample: "Home" },
   { role: "tab-label-selected", paint: "type-tab-label-selected", sample: "Board" },
   { role: "code-reveal", paint: "type-code-reveal", sample: "R7K2-N9QX" },

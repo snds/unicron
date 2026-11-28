@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.8.0
+
+### Minor Changes
+
+- Type role `nav-title` (Geist SemiBold 17/24, `type-nav-title`; needs @unicron/tokens with the role): the small centred title of a phone's top row. `TopBar`'s title, the top row's scrolled title and switcher, and `PageHead`'s collapsed title move to it from subtitle (15/20), as the Warpcore canvases draw them at 17 (Sean, 2026-11-28, every app). Not in Figma yet.
+- `PageHead` size `phone`: the title and its count stay on one line (the title truncates), so a count no longer wraps alone under the title beside the head's buttons.
+
 ## 2.7.0
 
 ### Minor Changes

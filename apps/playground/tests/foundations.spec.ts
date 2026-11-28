@@ -69,6 +69,8 @@ const TYPE: Record<string, [family: "Geist" | "Geist Mono", weight: number, size
   "control-strong": ["Geist", 600, 14, 20, 0],
   "crumb": ["Geist", 500, 15, 20, 0],
   "large-title": ["Geist", 700, 28, 34, -0.0142857],
+  // Not in Figma yet (2.8): the phone top row's small title.
+  "nav-title": ["Geist", 600, 17, 24, 0],
   "tab-label": ["Geist", 500, 10, 12, 0],
   "tab-label-selected": ["Geist", 600, 10, 12, 0],
   "code-reveal": ["Geist Mono", 400, 15, 24, 0.02],

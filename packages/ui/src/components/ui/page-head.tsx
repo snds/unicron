@@ -211,11 +211,11 @@ function PageHead({
               {...(switcherButtonProps as ButtonPrimitive.Props)}
               className="hit-area flex min-w-0 items-center gap-1 rounded-sm px-2 py-1 text-text-body transition-[background-color] duration-(--motion-fast) ease-(--motion-ease) hover:bg-state-hover active:bg-state-pressed"
             >
-              <span className="type-subtitle truncate">{title}</span>
+              <span className="type-nav-title truncate">{title}</span>
               {chevron}
             </ButtonPrimitive>
           ) : (
-            <span className="type-subtitle truncate text-center text-text-body">{title}</span>
+            <span className="type-nav-title truncate text-center text-text-body">{title}</span>
           )}
         </h1>
         {actions ? (
@@ -275,11 +275,12 @@ function PageHead({
             {switcher && overline ? chevron : null}
           </p>
         ) : null}
-        <div className={cn("flex min-w-0 flex-wrap items-baseline gap-y-1", size === "lg" ? "gap-x-4" : "gap-x-3")}>
+        {/* A phone's title keeps its count on its line: beside the head's buttons a wrapped "/1" sat alone under "Board". */}
+        <div className={cn("flex min-w-0 items-baseline gap-y-1", size === "phone" ? "flex-nowrap" : "flex-wrap", size === "lg" ? "gap-x-4" : "gap-x-3")}>
           <h1
             data-slot="page-head-title"
             // large-title's 34px line is the one off the 4px grid: its box stands 36 tall, the type unchanged.
-            className={cn(TITLE[size], "min-w-0 text-text-body", size === "phone" && "min-h-9")}
+            className={cn(TITLE[size], "min-w-0 text-text-body", size === "phone" && "min-h-9 truncate")}
           >
             {title}
           </h1>

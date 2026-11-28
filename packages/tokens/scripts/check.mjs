@@ -271,9 +271,11 @@ const TYPE_ROLES = [
   // Added in 2.0 from the published library: controls, the phone's large title and tab labels, a
   // revealed code, the breadcrumb.
   "control", "large-title", "tab-label", "tab-label-selected", "control-strong", "code-reveal", "crumb",
+  // Added in 2.8 for the phone's top-row title (17/24), ahead of its Figma style.
+  "nav-title",
 ]
-assert.deepEqual(Object.keys(typeRoles), TYPE_ROLES, "expected the 31 type roles: Figma's 22, the 8 retired ones, and mono-row after meta (Lockdown 4, 1.1)")
-assert.deepEqual(Object.keys(typeRoles).filter((role) => typeRoles[role].figma === "pending"), ["mono-row"], "mono-row is the one type role waiting on its Figma style")
+assert.deepEqual(Object.keys(typeRoles), TYPE_ROLES, "expected the 32 type roles: Figma's 22, the 8 retired ones, mono-row after meta (Lockdown 4, 1.1) and nav-title last (2.8)")
+assert.deepEqual(Object.keys(typeRoles).filter((role) => typeRoles[role].figma === "pending"), ["mono-row", "nav-title"], "mono-row and nav-title are the type roles waiting on their Figma styles")
 const TYPE_PARTS = {
   family: /^var\(--g-font-(sans|mono)\)$/,
   weight: /^[4-7]00$/,
