@@ -464,26 +464,19 @@ test.describe("on a phone", () => {
     })
   }
 
-  test("a NavItem takes a touch across 44px (contract 6.6): a phone's settings list is made of them", async ({ page }) => {
+  test("a phone's settings landing takes a touch across 44px (contract 6.6): its rows are 52 tall (2.10)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await open(page, "settings-vale", "vale", "graphite")
     expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true)
-    const rows = page.locator('[data-slot="nav-item-main"]')
+    const rows = page.locator('[data-slot="settings-landing-row"]')
     expect(await rows.count()).toBeGreaterThan(2)
     const second = rows.nth(1)
     await second.scrollIntoViewIfNeeded()
     const box = (await second.boundingBox())!
-    // Drawn 32 tall, as the 2.0 Sidebar Row is.
-    expect(Math.round(box.height)).toBe(32)
-    const target = await second.evaluate((row) => {
-      const before = getComputedStyle(row, "::before")
-      return { content: before.content, height: Number.parseFloat(before.height) }
-    })
-    expect(target.content).not.toBe("none")
-    expect(target.height).toBeGreaterThanOrEqual(44)
-    // A touch 3px above the drawn row still lands on it (its 44px target reaches 4px past each edge).
-    const hit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('[data-slot="nav-item-main"]')?.textContent ?? null, { x: box.x + box.width / 2, y: box.y + box.height + 3 })
-    expect(hit).not.toBeNull()
+    expect(Math.round(box.height)).toBeGreaterThanOrEqual(52)
+    // The middle of the row lands on the row.
+    const hit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('[data-slot="settings-landing-row"]') !== null, { x: box.x + box.width / 2, y: box.y + box.height / 2 })
+    expect(hit).toBe(true)
   })
 })
 
