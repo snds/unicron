@@ -94,4 +94,46 @@ describe("SettingsFrame (decisions §5)", () => {
     expect(document.querySelector('[data-slot="app-frame-list"]')).toHaveAttribute("inert")
     expect(screen.getByRole("heading", { level: 2, name: "Mail" })).toBeInTheDocument()
   })
+
+  it("on a phone the landing is group cards: each row says its state, a control row flips in place, the foot closes it (2.10)", () => {
+    setViewport(390, 844)
+    const sections: SettingsSection[] = [
+      { value: "models", label: "Models", icon: "machine-learning-model", group: "Agents", detail: "2 connected" },
+      { value: "auto", label: "Update automatically", group: "This device", control: <input type="checkbox" aria-label="Update automatically" /> },
+      { value: "about", label: "About", group: "Warpcore", mark: { square: true, label: "Update ready" } },
+    ]
+    function Landing() {
+      const [value, setValue] = React.useState<string | null>(null)
+      return (
+        <AppFrame>
+          <AppFrameMain>
+            <SettingsFrame sections={sections} value={value} onValueChange={setValue} foot={<button>Sign out</button>}>
+              rows
+            </SettingsFrame>
+          </AppFrameMain>
+        </AppFrame>
+      )
+    }
+    render(<Landing />)
+    const cards = document.querySelectorAll('[data-slot="settings-landing-group"]')
+    expect(cards).toHaveLength(3)
+    expect(cards[0]!.className).toEqual(expect.stringContaining("rounded-xl"))
+    expect(cards[0]!.className).not.toMatch(/rule-|divide-/)
+    expect(screen.getByRole("heading", { level: 2, name: "Agents" })).toHaveClass("type-overline")
+    const models = screen.getByRole("button", { name: "Models" })
+    expect(models.querySelector('[data-slot="settings-landing-detail"]')).toHaveTextContent("2 connected")
+    expect(screen.getByRole("button", { name: "About, Update ready" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Update automatically" })).toBeNull()
+    expect(screen.getByRole("checkbox", { name: "Update automatically" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Sign out" }).closest('[data-slot="settings-landing-foot"]')).not.toBeNull()
+    fireEvent.click(models)
+    expect(document.querySelector('[data-slot="app-frame-detail"]')).toHaveAttribute("data-pushed")
+  })
+
+  it("on a desktop a control row is not a section of the list", () => {
+    setViewport(1440, 900)
+    render(<Settings sections={[...FEW, { value: "auto", label: "Update automatically", control: <input type="checkbox" aria-label="Update automatically" /> }]} />)
+    expect(screen.queryByRole("button", { name: "Update automatically" })).toBeNull()
+    expect(screen.queryByRole("checkbox")).toBeNull()
+  })
 })

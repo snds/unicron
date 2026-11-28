@@ -1,6 +1,6 @@
 {
   "name": "@unicron/ui",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "description": "unicron React primitives: shadcn/ui (base-nova style) on Base UI, IBM Carbon icons, styled with Tailwind v4 against @unicron/tokens.",
   "license": "Apache-2.0",
   "author": "Sean Sands",
