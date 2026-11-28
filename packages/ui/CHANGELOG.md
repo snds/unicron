@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.11.0
+
+### Minor Changes
+
+- `AppFramePageHead` takes `bar`: on a desktop with a `TitleRow`, the title row already names the page, so the head draws no title of its own (it stays the page's `h1`, visually hidden), its `actions` stand at the end of the title row, and only `below` (the filter chips) is drawn. The page starts with what it lists, as in Claude (Sean, 2026-11-28 page review: no giant titles that repeat the top bar). A phone, and a desktop without a title row, draw the head as before.
+- `TitleRow` holds the page's actions in `title-row-page-actions`, before its own `actions` and the panel toggle.
+
 ## 2.10.1
 
 ### Patch Changes

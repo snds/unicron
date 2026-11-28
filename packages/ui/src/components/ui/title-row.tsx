@@ -8,6 +8,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cn } from "../../lib/utils"
 import { Icon } from "../icon"
 import { IconButton } from "../icon-button"
+import { useAppFrame } from "./app-frame-context"
 
 export interface TitleRowCrumb {
   label: string
@@ -73,6 +74,7 @@ function TitleRow({
   className,
   ...props
 }: TitleRowProps) {
+  const { setBarSlot } = useAppFrame()
   const settings = kind === "settings"
   const parentLink = !settings && parent && (parent.href || parent.onClick)
   const parentClass = "type-crumb min-w-0 truncate text-text-secondary"
@@ -133,6 +135,8 @@ function TitleRow({
         </div>
       ) : null}
       <div data-slot="title-row-end" className="ms-auto flex shrink-0 items-center gap-1">
+        {/* A page head marked `bar` puts its actions here (AppFramePageHead): labelled buttons, 8 apart. */}
+        <span ref={setBarSlot} data-slot="title-row-page-actions" className="flex items-center gap-2 empty:hidden" />
         {actions}
         {panelToggle ? (
           <IconButton
