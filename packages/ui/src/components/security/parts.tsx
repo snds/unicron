@@ -97,8 +97,8 @@ export function rowClasses(size: RowSize) {
   const stacked = size === "stacked"
   const display = size === "display" || displayAuto
   return {
-    // The rule is drawn on top, inside the box: it adds no height (contract §1.6).
-    root: "@container/row rule-t",
+    // No hairline between rows (Sean, 2026-11-28: away from the extra dividers), as Field Row and List Row.
+    root: "@container/row",
     inner: cn(
       "flex min-w-0 gap-4",
       stacked && "items-center py-3",

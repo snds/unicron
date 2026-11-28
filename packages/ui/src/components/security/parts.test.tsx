@@ -34,7 +34,7 @@ describe("rowClasses: the Field Row sizes", () => {
     expect(rowClasses("default").inner).toContain("items-baseline")
     expect(rowClasses("stacked").body).toContain("flex-col")
     expect(rowClasses("auto").inner).toContain("@max-lg/row:items-center")
-    expect(rowClasses("auto").root).toContain("rule-t")
+    expect(rowClasses("auto").root).not.toContain("rule-t")
   })
 })
 

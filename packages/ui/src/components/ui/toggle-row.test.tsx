@@ -61,9 +61,10 @@ describe("ToggleRow (Figma 32:54)", () => {
     expect(control).toHaveAttribute("aria-checked", "true")
   })
 
-  it("pins the drawn look: 12 / 16 rhythm, ui label, caption description, rule on top by default", () => {
+  it("pins the drawn look: 12 / 16 rhythm, ui label, caption description, no rule by default", () => {
     render(<ToggleRow label="Lock after 5 minutes" description="Also locks when the screen sleeps." />)
-    expect(classesOf(row())).toEqual(expect.arrayContaining(["flex", "items-center", "gap-4", "py-3", "rule-t"]))
+    expect(classesOf(row())).toEqual(expect.arrayContaining(["flex", "items-center", "gap-4", "py-3"]))
+    expect(classesOf(row())).not.toContain("rule-t")
     expect(classesOf(row()).some((c) => c === "border" || c.startsWith("border-"))).toBe(false)
     expect(classesOf(screen.getByText("Lock after 5 minutes"))).toEqual(expect.arrayContaining(["type-ui", "text-foreground"]))
     expect(classesOf(screen.getByText("Also locks when the screen sleeps."))).toEqual(expect.arrayContaining(["type-caption", "text-support-foreground"]))

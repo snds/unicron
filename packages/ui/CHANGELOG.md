@@ -6,6 +6,7 @@
 
 - Round controls (Sean, 2026-11-28, every app: the phone's controls have circular corners, away from the Swiss layout). Fully round: `Button` (all sizes but `inline`), `FloatButton`, `Switch` (track and knob), `TabBar` and its tabs, `Toggle`, `ToggleGroup`, `ButtonGroup`'s ends and the `Tabs` trigger. The `Composer` box's corner is 24 (the xl radius × 1.5). Inputs, menus, rows, cards and dialogs keep their radii. Figma follows.
 - `SectionHeader` draws no hairline: the space between the title and the action stays, the line goes.
+- `FieldRow`, `ToggleRow` and the security rows (Secret Field, approval facts) draw no hairline by default (Sean, 2026-11-28: no extra dividers). Pass `rule="top"` where a list truly needs one; a List Card keeps its own dividers.
 
 ## 2.8.0
 

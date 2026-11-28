@@ -30,7 +30,7 @@ describe("FieldRow (Figma 15:512)", () => {
     for (const size of ["default", "display", "stacked"] as const) expect(at(size).some((c) => /^p[xlr]-/.test(c))).toBe(false)
     render(<FieldRow label="Username">kestrel.04</FieldRow>)
     const row = screen.getByRole("group")
-    expect(classesOf(row)).toContain("rule-t")
+    expect(classesOf(row)).not.toContain("rule-t")
     // A stroke never adds height: the rule is an inset shadow, never a border.
     expect(classesOf(row).some((c) => c === "border" || c.startsWith("border-"))).toBe(false)
   })

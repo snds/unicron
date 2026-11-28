@@ -28,7 +28,7 @@ export type ToggleRowProps = Omit<SwitchProps, "className" | "children" | "rende
   badge?: React.ReactNode
   /** A quiet slot before the switch, in label ink: where the setting applies, often a text button that opens a menu. */
   meta?: React.ReactNode
-  /** Which side draws the hairline. Default `top`, to match List Row and Field Row (contract §9.9). */
+  /** Which side draws a hairline. Default `none`, as List Row and Field Row (Sean, 2026-11-28). */
   rule?: FieldRowRule
   /** Add the 16px side padding of a full-bleed phone row (Figma's Toggle Row draws it at phone width). Default false. */
   inset?: boolean
@@ -52,7 +52,7 @@ function ToggleRow({
   description,
   badge,
   meta,
-  rule = "top",
+  rule = "none",
   inset = false,
   disabledReason,
   className,
