@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.7.0
+
+### Minor Changes
+
+- `PageHead` size `phone`: the large-title role (28/34), for a phone tab screen's title. `AppFramePageHead` on a phone now maps `lg`, `md` and no size to `phone`, where 2.4.0 mapped them to `sm` (title, 20/28). Sean's call (2026-11-27) was phone tab titles of about 28 to 32px, in every app; 20 fell outside it. `sm` stays title (20/28) for a detail head beside a pane.
+
 ## 2.6.0
 
 ### Minor Changes

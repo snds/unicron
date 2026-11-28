@@ -45,6 +45,8 @@ describe("PageHead", () => {
     expect(container.querySelector('[data-slot="page-head-count"]')!.className).toContain("type-folio")
     rerender(<PageHead size="sm" title="Migrate vault login to OPAQUE" />)
     expect(classesOf(screen.getByRole("heading"))).toContain("type-title")
+    rerender(<PageHead size="phone" title="Chats" />)
+    expect(classesOf(screen.getByRole("heading"))).toContain("type-large-title")
   })
 
   it("meta can sit on its own line under the title (a desktop detail head)", () => {
