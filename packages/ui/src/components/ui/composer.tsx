@@ -402,7 +402,7 @@ export function Composer({
       <div
         data-slot="composer-box"
         className={cn(
-          "bg-surface-raised inset-ring inset-ring-line-field flex min-w-0 flex-col gap-2.5 rounded-xl pt-3 pr-3 pb-2.5 pl-4",
+          "bg-surface-raised inset-ring inset-ring-line-field flex min-w-0 flex-col gap-2.5 rounded-[calc(var(--radius-xl)*1.5)] pt-3 pr-3 pb-2.5 pl-4",
           // One row, the field beside its tools, wherever height is scarce: a phone on its side, an open keyboard,
           // or the line size. Two rows there would leave almost nothing of the conversation to read.
           ONE_ROW,

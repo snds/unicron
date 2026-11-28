@@ -46,7 +46,7 @@ function ToggleGroup({
       data-orientation={orientation}
       style={{ "--gap": spacing } as React.CSSProperties}
       className={cn(
-        "group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-vertical:flex-col data-vertical:items-stretch",
+        "group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-full data-vertical:flex-col data-vertical:items-stretch",
         // Joined outline items: the group draws the one hairline box, the items a rule between them.
         "data-[spacing=0]:data-[variant=outline]:rule-box",
         className
@@ -87,7 +87,7 @@ function ToggleGroupItem({
       data-spacing={context.spacing}
       className={cn(
         // Colour only: an item of a joined bar never moves out of line with its neighbours.
-        "shrink-0 transition-[color,background-color,box-shadow] focus:z-10 focus-visible:z-10 group-data-[spacing=0]/toggle-group:rounded-none group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg",
+        "shrink-0 transition-[color,background-color,box-shadow] focus:z-10 focus-visible:z-10 group-data-[spacing=0]/toggle-group:rounded-none group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-full group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-full group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-full group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-full",
         toggleVariants({
           variant: joinedOutline ? "default" : look,
           size: context.size || size,

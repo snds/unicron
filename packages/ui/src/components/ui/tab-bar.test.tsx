@@ -49,10 +49,10 @@ describe("TabBar (Figma 20:1657)", () => {
     expect(mail.querySelector('[data-slot="nav-mark"]')).toHaveTextContent("12")
   })
 
-  it("draws as Figma does: 48 high, raised, a 1px rule inside, 4px padding and gap, 2px corner; tabs share the width", () => {
+  it("draws as Figma does: 48 high, raised, a 1px rule inside, 4px padding and gap, fully round; tabs share the width", () => {
     render(<Vale />)
     const bar = screen.getByRole("tablist")
-    expect(classesOf(bar)).toEqual(expect.arrayContaining(["h-control", "bg-surface-raised", "rule-box", "p-1", "gap-1", "rounded-sm", "grow", "basis-0"]))
+    expect(classesOf(bar)).toEqual(expect.arrayContaining(["h-control", "bg-surface-raised", "rule-box", "p-1", "gap-1", "rounded-full", "grow", "basis-0"]))
     const tab = screen.getByRole("tab", { name: "Calendar" })
     expect(classesOf(tab)).toEqual(expect.arrayContaining(["grow", "basis-0", "h-full", "hit-area", "text-text-label", "hover:bg-state-hover", "active:bg-state-pressed"]))
   })

@@ -25,10 +25,10 @@ describe("FloatButton (Figma 20:1690)", () => {
     expect(primary).not.toContain("rule-box")
   })
 
-  it("m is the touch floor (44), l is the control size (48), square, on the control radius, with a 20px glyph", () => {
+  it("m is the touch floor (44), l is the control size (48), round (Sean, 2026-11-28), with a 20px glyph", () => {
     expect(classesOf({ size: "m" })).toContain("size-touch-min")
     expect(classesOf({ size: "l" })).toContain("size-control")
-    expect(classesOf()).toEqual(expect.arrayContaining(["rounded-lg", "[&_svg]:size-5"]))
+    expect(classesOf()).toEqual(expect.arrayContaining(["rounded-full", "[&_svg]:size-5"]))
   })
 
   it("casts no shadow, and leaves the stylesheet's focus ring alone", () => {

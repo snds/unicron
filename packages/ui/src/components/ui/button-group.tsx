@@ -18,14 +18,14 @@ import { Separator } from "./separator"
 // between two parts on its own 1px, and the part after it keeps its own edge.
 // (The selector is written out in each class: Tailwind reads class names from the source as text.)
 const buttonGroupVariants = cva(
-  "has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-lg flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
+  "has-[>[data-slot=button-group]]:gap-2 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-full flex w-fit items-stretch *:focus-visible:relative *:focus-visible:z-10 [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
     variants: {
       orientation: {
         horizontal:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-lg! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator],:focus,:focus-within,[aria-invalid=true],[data-popup-open],:has([aria-invalid=true]))]:join-l",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-r-full! *:data-slot:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator],:focus,:focus-within,[aria-invalid=true],[data-popup-open],:has([aria-invalid=true]))]:join-l",
         vertical:
-          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-lg! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator],:focus,:focus-within,[aria-invalid=true],[data-popup-open],:has([aria-invalid=true]))]:join-t",
+          "[&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-full! flex-col *:data-slot:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]:not([data-slot=button-group-separator])+[data-slot]:not([data-slot=button-group-separator],:focus,:focus-within,[aria-invalid=true],[data-popup-open],:has([aria-invalid=true]))]:join-t",
       },
     },
     defaultVariants: {

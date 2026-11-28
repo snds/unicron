@@ -230,8 +230,9 @@ function TabBar({
         aria-label={label}
         aria-orientation={navigation === "tabs" ? orientation : undefined}
         className={cn(
-          // Figma 20:1657: raised surface, a 1px rule inside the box, 4px padding and gap, the 2px corner.
-          "rule-box flex shrink-0 gap-1 rounded-sm bg-surface-raised p-1 select-none",
+          // Figma 20:1657: raised surface, a 1px rule inside the box, 4px padding and gap. Fully round,
+          // with round tabs inside it (Sean, 2026-11-28: the phone's controls have circular corners).
+          "rule-box flex shrink-0 gap-1 rounded-full bg-surface-raised p-1 select-none",
           // The finger owns a slide along the bar; the page does not scroll or zoom from it. A vertical
           // bar that scrolls hands the slide to its own scroll instead.
           scrolls ? "touch-pan-y" : "touch-none",
@@ -361,7 +362,7 @@ function TabBarItem({ value, icon, label, mark, render, className, onClick, ...p
     props: mergeProps<"button">(
       {
         className: cn(
-          "hit-area relative inline-flex min-w-0 shrink items-center justify-center rounded-sm text-text-label",
+          "hit-area relative inline-flex min-w-0 shrink items-center justify-center rounded-full text-text-label",
           // Colours answer at once (fast); folding away when minimized moves on the state role.
           "[transition:color_var(--motion-fast)_var(--motion-ease),background-color_var(--motion-fast)_var(--motion-ease),flex-grow_var(--motion-state)_var(--motion-ease-move),height_var(--motion-state)_var(--motion-ease-move),opacity_var(--motion-state)_var(--motion-ease-move),visibility_var(--motion-state)]",
           "hover:bg-state-hover active:bg-state-pressed",

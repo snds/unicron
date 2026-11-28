@@ -127,11 +127,10 @@ describe("Button sizes", () => {
     expect(classes.some((name) => /^active:text-\S+\/\d+$/.test(name))).toBe(false)
   })
 
-  it("the corner is the control radius (6), and shape=\"pill\" no longer rounds it", () => {
-    expect(classesOf({})).toContain("rounded")
+  it("the corner is fully round (Sean, 2026-11-28), and shape=\"pill\" changes nothing", () => {
+    expect(classesOf({})).toContain("rounded-full")
     const pill = classesOf({ shape: "pill" })
-    expect(pill).toContain("rounded")
-    expect(pill).not.toContain("rounded-full")
+    expect(pill).toContain("rounded-full")
     expect(buttonVariants({ shape: "pill", size: "sm" })).toBe(buttonVariants({ size: "sm" }))
   })
 

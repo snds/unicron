@@ -18,7 +18,7 @@ const PRESSED =
 
 const toggleVariants = cva(
   cn(
-    "group/toggle inline-flex shrink-0 items-center justify-center gap-2 rounded-lg type-overline whitespace-nowrap text-foreground select-none hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-invalid:inset-ring-2 aria-invalid:inset-ring-line-invalid [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "group/toggle inline-flex shrink-0 items-center justify-center gap-2 rounded-full type-overline whitespace-nowrap text-foreground select-none hover:bg-state-hover active:bg-state-pressed disabled:pointer-events-none disabled:opacity-50 aria-invalid:inset-ring-2 aria-invalid:inset-ring-line-invalid [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     PRESSED
   ),
   {

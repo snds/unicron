@@ -33,7 +33,7 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-lg p-1 transition-[background-color,box-shadow] data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/85 data-unchecked:bg-surface-raised data-unchecked:not-aria-invalid:inset-ring data-unchecked:not-aria-invalid:inset-ring-input data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) data-disabled:pointer-events-none data-disabled:opacity-50",
+        "peer group/switch hit-area inline-flex h-6 w-11 shrink-0 items-center rounded-full p-1 transition-[background-color,box-shadow] data-checked:bg-primary data-checked:hover:bg-primary/90 data-checked:active:bg-primary/85 data-unchecked:bg-surface-raised data-unchecked:not-aria-invalid:inset-ring data-unchecked:not-aria-invalid:inset-ring-input data-unchecked:hover:bg-accent aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) data-disabled:pointer-events-none data-disabled:opacity-50",
         className
       )}
       {...props}
@@ -41,7 +41,7 @@ function Switch({
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
         // The knob slides on --motion-fast; under reduced motion it changes place without sliding.
-        className="pointer-events-none block size-4 rounded-none transition-transform duration-(--motion-fast) ease-(--motion-ease) data-checked:translate-x-5 data-checked:bg-primary-foreground data-unchecked:translate-x-0 data-unchecked:bg-muted-foreground"
+        className="pointer-events-none block size-4 rounded-full transition-transform duration-(--motion-fast) ease-(--motion-ease) data-checked:translate-x-5 data-checked:bg-primary-foreground data-unchecked:translate-x-0 data-unchecked:bg-muted-foreground"
       />
     </SwitchPrimitive.Root>
   )

@@ -16,7 +16,8 @@ describe("SectionHeader (Figma 32:60)", () => {
     expect(slot(container, "section-header-count").className).toContain("type-meta")
     const rule = slot(container, "section-header-rule")
     expect(rule).toHaveAttribute("aria-hidden", "true")
-    expect(rule.className.split(/\s+/)).toEqual(expect.arrayContaining(["h-(--stroke-rule)", "flex-1", "bg-line-rule"]))
+    expect(rule.className.split(/\s+/)).toContain("flex-1")
+    expect(rule.className).not.toMatch(/bg-line|stroke-rule/)
   })
 
   it("32 tall, children centred, 12 between; Figma's 16 at the sides only when inset", () => {

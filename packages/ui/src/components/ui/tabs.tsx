@@ -69,7 +69,7 @@ function TabsList({
 // (surface/selected), the same in every app. Icons 20px. On a coarse pointer it takes a 44px
 // target (`hit-area`).
 const TRIGGER = cn(
-  "type-ui hit-area relative inline-flex h-control-s shrink-0 items-center justify-center gap-1.5 rounded px-2.25 py-1 whitespace-nowrap text-text-secondary transition-[color,background-color] duration-(--motion-fast) ease-(--motion-ease) select-none",
+  "type-ui hit-area relative inline-flex h-control-s shrink-0 items-center justify-center gap-1.5 rounded-full px-2.25 py-1 whitespace-nowrap text-text-secondary transition-[color,background-color] duration-(--motion-fast) ease-(--motion-ease) select-none",
   "not-data-active:hover:bg-surface-hover active:bg-surface-selected focus-visible:z-10 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
   "data-active:type-ui-emphasis data-active:bg-surface-selected data-active:text-text-body",
   "group-data-vertical/tabs:justify-start",

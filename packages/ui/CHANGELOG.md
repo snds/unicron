@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.9.0
+
+### Minor Changes
+
+- Round controls (Sean, 2026-11-28, every app: the phone's controls have circular corners, away from the Swiss layout). Fully round: `Button` (all sizes but `inline`), `FloatButton`, `Switch` (track and knob), `TabBar` and its tabs, `Toggle`, `ToggleGroup`, `ButtonGroup`'s ends and the `Tabs` trigger. The `Composer` box's corner is 24 (the xl radius × 1.5). Inputs, menus, rows, cards and dialogs keep their radii. Figma follows.
+- `SectionHeader` draws no hairline: the space between the title and the action stays, the line goes.
+
 ## 2.8.0
 
 ### Minor Changes
