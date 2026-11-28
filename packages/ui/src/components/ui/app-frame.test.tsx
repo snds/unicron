@@ -22,6 +22,7 @@ import {
   StatusItem,
 } from "./app-frame"
 import { shrinkFor } from "./app-frame-context"
+import { TitleRow } from "./title-row"
 import { Accessory } from "./accessory"
 import { NavItem, NavSection } from "./nav-item"
 import { Input } from "./input"
@@ -413,6 +414,44 @@ describe("columns that are always the screen", () => {
     expect(screen.getByTestId("outer")).toHaveClass("px-4", "flex", "min-h-full", "flex-col")
     expect(screen.getByTestId("inner")).not.toHaveClass("px-4")
     expect(document.querySelector('[data-slot="app-frame-page-head"]')).not.toHaveClass("px-4")
+  })
+
+  // Page review (Sean, 2026-11-28): the desktop title row already names a top-level page, so its
+  // head draws no second, giant title; its actions move to the title row; the chips stay.
+  describe("AppFramePageHead bar: the title row names the page on a desktop", () => {
+    const page = () => (
+      <AppFrame>
+        <TitleRow current="Chats" />
+        <AppFramePageHead bar title="Chats" actions={<button type="button">New chat</button>} below={<span>All</span>} />
+      </AppFrame>
+    )
+
+    it("draws no visible title, keeps the h1 for screen readers, and moves the actions into the title row", () => {
+      setViewport(1440, 900)
+      render(page())
+      const h1 = screen.getByRole("heading", { level: 1, name: "Chats" })
+      expect(h1).toHaveClass("sr-only")
+      const row = document.querySelector('[data-slot="title-row-page-actions"]') as HTMLElement
+      expect(row).toContainElement(screen.getByRole("button", { name: "New chat" }))
+      expect(screen.getByText("All")).toBeInTheDocument()
+      expect(document.querySelector('[data-slot="page-head-title"]')).toBeNull()
+    })
+
+    it("leaves a phone's head as it was", () => {
+      setViewport(390, 844)
+      render(page())
+      expect(document.querySelector('[data-slot="app-frame-page-head"]')).not.toHaveAttribute("data-bar")
+    })
+
+    it("draws as before when no title row is on screen", () => {
+      setViewport(1440, 900)
+      render(
+        <AppFrame>
+          <AppFramePageHead bar title="Chats" />
+        </AppFrame>
+      )
+      expect(document.querySelector('[data-slot="app-frame-page-head"]')).not.toHaveAttribute("data-bar")
+    })
   })
 
   // rules.md 5.4: never more space inside a group than between two. The head always added 32 under

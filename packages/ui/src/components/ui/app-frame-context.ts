@@ -279,6 +279,12 @@ export interface AppFrameContextValue {
    */
   topSlot: HTMLElement | null
   setTopSlot: (el: HTMLElement | null) => void
+  /**
+   * The desktop title row's place for a page's actions (`TitleRow`). A page head marked `bar` puts
+   * its actions here and draws no title of its own, since the title row already names the page.
+   */
+  barSlot: HTMLElement | null
+  setBarSlot: (el: HTMLElement | null) => void
   bottom: AppFrameBottomSlots | null
   setBottom: (slots: AppFrameBottomSlots | null) => void
   rail: AppFrameRailSlots
@@ -341,6 +347,8 @@ export function useAppFrame(): AppFrameContextValue {
     setHead: noop,
     topSlot: null,
     setTopSlot: noop,
+    barSlot: null,
+    setBarSlot: noop,
     bottom: null,
     setBottom: noop,
     rail: { top: null, bottom: null },

@@ -3,6 +3,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { readLength } from "../../lib/length"
 import { cn } from "../../lib/utils"
 import { DETAIL_MIN_WIDTH, sidebarRailAt, useViewport } from "../use-viewport"
@@ -151,6 +152,7 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
 
   const [head, setHead] = React.useState<AppFrameHead | null>(null)
   const [topSlot, setTopSlot] = React.useState<HTMLElement | null>(null)
+  const [barSlot, setBarSlot] = React.useState<HTMLElement | null>(null)
   const [bottom, setBottom] = React.useState<AppFrameBottomSlots | null>(null)
   const [railTop, setRailTop] = React.useState<HTMLDivElement | null>(null)
   const [railBottom, setRailBottom] = React.useState<HTMLDivElement | null>(null)
@@ -225,6 +227,8 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       setHead,
       topSlot,
       setTopSlot,
+      barSlot,
+      setBarSlot,
       bottom,
       setBottom,
       rail: { top: railTop, bottom: railBottom },
@@ -256,6 +260,7 @@ function AppFrame({ layout: pinnedLayout, minimized: pinnedMinimized, contained 
       minimized,
       head,
       topSlot,
+      barSlot,
       bottom,
       railTop,
       railBottom,
@@ -814,6 +819,14 @@ export type AppFramePageHeadProps = PageHeadProps & {
    * y 248); on a phone it stays 16 (Mobile / 06: chips at y 200, the first row at y 240).
    */
   below?: React.ReactNode
+  /**
+   * The desktop title row already names this page (a top-level page: Chats, Projects, Settings).
+   * On a desktop the head then draws no title (it stays the page's `h1` for screen readers), its
+   * actions stand at the end of the title row, and only `below` (the filter chips) is drawn, so
+   * the page starts with what it lists, as in Claude (Sean, 2026-11-28 page review). A phone is
+   * unchanged. Without a `TitleRow` on screen the head draws as before.
+   */
+  bar?: boolean
 }
 
 /**
@@ -823,7 +836,7 @@ export type AppFramePageHeadProps = PageHeadProps & {
  * `gap` sets the space under it and `below` holds a chip row that belongs to it, so an app never
  * needs a class to place a head.
  */
-function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, size, actions, className, ...props }: AppFramePageHeadProps) {
+function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, size, actions, bar, className, ...props }: AppFramePageHeadProps) {
   const frame = useAppFrame()
   const shown = useAppFrameColumnShown()
   const { setHead, setTopSlot } = frame
@@ -869,6 +882,21 @@ function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, size,
   // y 84 and those buttons from y 88 to 132. What it heads starts 24 under that row, which is 20
   // under the head (the first message's meta from y 156).
   const lifted = shownSize === "xs" && !frame.phone && frame.layout !== "rail"
+  // After every hook (they run the same each render). A desktop page the title row already names: no second title, its actions in the title row.
+  if (bar && !frame.phone && frame.barSlot) {
+    const hasChips = below !== undefined && below !== null && below !== false
+    return (
+      <div data-slot="app-frame-page-head" data-bar="" className={cn(hasChips && gap !== "none" && "pb-6", className)}>
+        <h1 className="sr-only">{title}</h1>
+        {shown && actions ? createPortal(actions, frame.barSlot) : null}
+        {hasChips ? (
+          <div data-slot="app-frame-page-head-below" className="min-w-0">
+            {below}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
   const under = gap === "none" ? "" : gap === "sm" || frame.phone ? "pb-4" : lifted ? "pb-5" : hasBelow ? "pb-7" : "pb-8"
   return (
     <div data-slot="app-frame-page-head" data-gap={gap} className={cn(under, lifted && "-mt-3", frame.phone && !inset && "px-4", className)}>
