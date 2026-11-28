@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.10.0
+
+### Minor Changes
+
+- `SettingsFrame` on a phone: the landing is rounded group cards (Sean, 2026-11-28, option A of the Settings landing canvas, every app). Sections group by `group`; each row has a tinted icon, its name, `detail` (what it holds now: "2 connected", "System") and a chevron. A section with `control` (a `Switch`) flips in place on the landing and is left out of a desktop's list. `foot` takes one quiet action under the groups (Sign out). No hairlines between rows.
+
 ## 2.9.0
 
 ### Minor Changes

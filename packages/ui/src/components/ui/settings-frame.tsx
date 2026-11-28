@@ -5,11 +5,11 @@
 import * as React from "react"
 
 import { cn } from "../../lib/utils"
-import type { IconName } from "../icon"
+import { Icon, type IconName } from "../icon"
 import { AppFrameDetail, AppFrameInset, AppFrameList } from "./app-frame"
 import { useAppFrame } from "./app-frame-context"
 import { NavItem, NavSection } from "./nav-item"
-import type { NavMarkProp } from "./rail"
+import { NavMark, nameWithMark, resolveNavMark, type NavMarkProp } from "./rail"
 
 export interface SettingsSection {
   value: string
@@ -22,6 +22,16 @@ export interface SettingsSection {
   description?: string
   /** A mark on its row: the update square on About (decisions §3). */
   mark?: NavMarkProp
+  /**
+   * On a phone's landing, what the section holds now, at the row's end ("2 connected", "System", a
+   * Badge "Update ready"), so the landing says the state before anything is opened (Sean, 2026-11-28).
+   */
+  detail?: React.ReactNode
+  /**
+   * A setting flipped in place on a phone's landing (a `Switch` for "Update automatically"): the row
+   * holds the control and pushes nothing. Such a row is the phone's only; a desktop shows it in its section.
+   */
+  control?: React.ReactNode
 }
 
 export type SettingsFrameProps = Omit<React.ComponentProps<"div">, "title"> & {
@@ -43,8 +53,86 @@ export type SettingsFrameProps = Omit<React.ComponentProps<"div">, "title"> & {
   overview?: React.ReactNode
   /** The page's head above the section list (Vale T0: `AppFramePageHead` "Settings // Personal + Work", "Settings"). */
   head?: React.ReactNode
+  /** On a phone, under the landing's groups: one quiet action such as Sign out. */
+  foot?: React.ReactNode
   /** The open section's rows: `FieldRow`, `ToggleRow`, `SectionHeader`. */
   children?: React.ReactNode
+}
+
+/** A phone's landing: groups in the order they first appear, sections without a group in one unnamed group. */
+function landingGroups(sections: SettingsSection[]): { title?: string; items: SettingsSection[] }[] {
+  const groups: { title?: string; items: SettingsSection[] }[] = []
+  for (const section of sections) {
+    const group = groups.find((g) => g.title === section.group)
+    if (group) group.items.push(section)
+    else groups.push({ title: section.group, items: [section] })
+  }
+  return groups
+}
+
+/** A landing row's look: 52 tall, a tinted icon, the name, the state at the end. */
+const LANDING_ROW = "flex min-h-13 w-full items-center gap-3 px-4 text-left text-text-body"
+
+/**
+ * The phone's Settings landing (Sean, 2026-11-28, option A): rounded group cards on the sunken
+ * surface, each row with a tinted icon, its name and what it holds now, then a chevron. A row with a
+ * `control` flips in place. No hairlines between rows: the gap and the card group them.
+ */
+function SettingsLanding({ sections, onOpen, foot }: { sections: SettingsSection[]; onOpen: (value: string) => void; foot?: React.ReactNode }) {
+  const headingId = React.useId()
+  return (
+    <div data-slot="settings-landing" className="flex flex-col gap-5">
+      {landingGroups(sections).map((group, i) => (
+        <section key={group.title ?? `group-${i}`} aria-labelledby={group.title ? `${headingId}-${i}` : undefined} className="flex flex-col gap-2">
+          {group.title ? (
+            <h2 id={`${headingId}-${i}`} className="type-overline px-4">
+              {group.title}
+            </h2>
+          ) : null}
+          <ul role="list" data-slot="settings-landing-group" className="flex flex-col rounded-xl bg-surface-sunken py-1">
+            {group.items.map((section) => {
+              const icon = section.icon ? (
+                <span aria-hidden className="flex size-7.5 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary-text">
+                  <Icon name={section.icon} size={18} />
+                </span>
+              ) : null
+              const mark = resolveNavMark(section.mark)
+              return (
+                <li key={section.value} data-section={section.value}>
+                  {section.control ? (
+                    <div data-slot="settings-landing-row" data-kind="control" className={LANDING_ROW}>
+                      {icon}
+                      <span className="type-body min-w-0 flex-1">{section.label}</span>
+                      {section.control}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      data-slot="settings-landing-row"
+                      aria-label={nameWithMark(section.label, mark)}
+                      onClick={() => onOpen(section.value)}
+                      className={cn(LANDING_ROW, "rounded-lg transition-colors outline-none hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-(--line-focus)")}
+                    >
+                      {icon}
+                      <span className="type-body min-w-0 flex-1 truncate">{section.label}</span>
+                      {section.detail !== undefined ? (
+                        <span data-slot="settings-landing-detail" className="type-body min-w-0 shrink truncate text-muted-foreground">
+                          {section.detail}
+                        </span>
+                      ) : null}
+                      <NavMark mark={mark} placement="inline" />
+                      <Icon name="chevron--right" size="sm" className="shrink-0 text-text-label" />
+                    </button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
+      {foot ? <div data-slot="settings-landing-foot" className="flex justify-center">{foot}</div> : null}
+    </div>
+  )
 }
 
 /** Groups in the order they first appear; one unnamed group when there are seven sections or fewer. */
@@ -66,15 +154,18 @@ function grouped(sections: SettingsSection[]): { title?: string; items: Settings
  *
  * - Expanded: the section list (204) beside one content column up to 720; the section head is its
  *   title and one line. Past seven sections the list is grouped under overlines.
- * - Phone and medium: the drawn Settings rows first (`overview`), then the whole section list;
- *   each section pushes, and the app's `TopBar` back (or the status line's) returns with
+ * - Phone and medium: the drawn Settings rows first (`overview`), then the landing (2.10, Sean's
+ *   option A): rounded group cards by `group`, each row with its `detail` (the state now) and a
+ *   chevron, a `control` row flipping in place, then `foot` (Sign out). Each section pushes, and the app's `TopBar` back (or the status line's) returns with
  *   `onValueChange(null)`.
  * - "Find a setting" (`search`) from ten sections up.
  *
  * Place it in `AppFrameMain`.
  */
-function SettingsFrame({ label = "Settings sections", sections, value, onValueChange, search, overview, head, className, children, ...props }: SettingsFrameProps) {
+function SettingsFrame({ label = "Settings sections", sections: allSections, value, onValueChange, search, overview, head, foot, className, children, ...props }: SettingsFrameProps) {
   const frame = useAppFrame()
+  // A control row is the phone landing's only; everywhere else the list holds sections that open.
+  const sections = frame.split ? allSections.filter((s) => !s.control) : allSections
   const shownValue = value ?? (frame.split ? (sections[0]?.value ?? null) : null)
   const current = sections.find((s) => s.value === shownValue)
   const groups = grouped(sections)
@@ -115,7 +206,13 @@ function SettingsFrame({ label = "Settings sections", sections, value, onValueCh
         {!frame.split && overview ? <div data-slot="settings-frame-overview" className="pb-8">{overview}</div> : null}
         <AppFrameInset className="flex flex-col gap-6">
           {findable ? <div data-slot="settings-frame-search">{search}</div> : null}
-          {list}
+          {frame.split ? (
+            list
+          ) : (
+            <nav aria-label={label} data-slot="settings-frame-nav">
+              <SettingsLanding sections={sections} onOpen={onValueChange} foot={foot} />
+            </nav>
+          )}
         </AppFrameInset>
       </AppFrameList>
       <AppFrameDetail open={value !== null} onBack={() => onValueChange(null)} aria-label={current?.label}>

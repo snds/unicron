@@ -3,18 +3,19 @@
 // setting" from ten; on a phone the drawn rows first, then every section, each pushed.
 // View: ?view=settings-frame
 import { useState } from "react"
-import { FieldRow, FieldRowAction, SearchField, SettingsFrame, type SettingsSection } from "@unicron/ui"
+import { Button, FieldRow, FieldRowAction, SearchField, SettingsFrame, Switch, type SettingsSection } from "@unicron/ui"
 
 import { FrameBox, Specimen } from "./_frame-boxes"
 
 const SYNAPSE: SettingsSection[] = [
-  { value: "profile", label: "Profile", icon: "user--avatar", group: "You", description: "The persona in focus and how agents address you." },
+  { value: "profile", label: "Profile", icon: "user--avatar", group: "You", description: "The persona in focus and how agents address you.", detail: "Sean" },
   { value: "personas", label: "Personas", icon: "user--multiple", group: "You" },
   { value: "agents", label: "Agents", icon: "bot", group: "You" },
   { value: "workspace", label: "Workspace", icon: "folder", group: "Workspace" },
   { value: "rules", label: "Rules", icon: "rule", group: "Workspace" },
   { value: "harnesses", label: "Harnesses", icon: "flow", group: "Workspace" },
-  { value: "appearance", label: "Appearance", icon: "contrast", group: "This Mac" },
+  { value: "appearance", label: "Appearance", icon: "contrast", group: "This Mac", detail: "System" },
+  { value: "auto-update", label: "Update automatically", icon: "renew", group: "This Mac", control: <Switch aria-label="Update automatically" defaultChecked /> },
   { value: "device", label: "Device and security", icon: "locked", group: "This Mac" },
   { value: "shortcuts", label: "Shortcuts and gestures", icon: "keyboard", group: "This Mac" },
   { value: "about", label: "About", icon: "information", group: "About", mark: { square: true, label: "Update ready" } },
@@ -23,7 +24,17 @@ const SYNAPSE: SettingsSection[] = [
 function Many({ phone = false }: { phone?: boolean }) {
   const [value, setValue] = useState<string | null>(phone ? null : "profile")
   return (
-    <SettingsFrame sections={SYNAPSE} value={value} onValueChange={setValue} search={<SearchField aria-label="Find a setting" placeholder="Find a setting" />}>
+    <SettingsFrame
+      sections={SYNAPSE}
+      value={value}
+      onValueChange={setValue}
+      search={<SearchField aria-label="Find a setting" placeholder="Find a setting" />}
+      foot={
+        <Button variant="ghost" className="text-critical-text">
+          Sign out
+        </Button>
+      }
+    >
       <FieldRow label="Persona" action={<FieldRowAction>Change</FieldRowAction>}>
         Sean // personal
       </FieldRow>
@@ -37,12 +48,12 @@ function Many({ phone = false }: { phone?: boolean }) {
 export default function SettingsFrameView() {
   return (
     <div className="flex flex-col gap-10 p-4 sm:p-6">
-      <Specimen label="Ten sections // grouped under overlines; Find a setting">
+      <Specimen label="Ten sections · grouped; Find a setting">
         <FrameBox width={1280} height={640} layout="expanded" label="Synapse // Profile">
           <Many />
         </FrameBox>
       </Specimen>
-      <Specimen label="Phone // the section list, each one pushes">
+      <Specimen label="Phone · the landing: group cards, each row with its state">
         <FrameBox width={390} height={844} layout="phone" label="Synapse // the list">
           <Many phone />
         </FrameBox>
