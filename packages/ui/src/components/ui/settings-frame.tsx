@@ -32,6 +32,11 @@ export interface SettingsSection {
    * holds the control and pushes nothing. Such a row is the phone's only; a desktop shows it in its section.
    */
   control?: React.ReactNode
+  /**
+   * `false`: the section opens by its `value` (an address, a link) but has no row in the list. Profile,
+   * which the account row at the top of the list opens, as on the phone (Warpcore page review, 2026-11-28).
+   */
+  listed?: boolean
 }
 
 export type SettingsFrameProps = Omit<React.ComponentProps<"div">, "title"> & {
@@ -138,7 +143,8 @@ function SettingsLanding({ sections, onOpen, foot }: { sections: SettingsSection
 
 /** Groups in the order they first appear; one unnamed group when there are seven sections or fewer. */
 function grouped(sections: SettingsSection[]): { title?: string; items: SettingsSection[] }[] {
-  if (sections.length <= 7) return [{ items: sections }]
+  // Grouped past seven, or at any count once the app names every section's group (as the phone does).
+  if (sections.length <= 7 && !sections.every((s) => s.group)) return [{ items: sections }]
   const groups: { title?: string; items: SettingsSection[] }[] = []
   for (const section of sections) {
     const title = section.group ?? "More"
@@ -154,7 +160,7 @@ function grouped(sections: SettingsSection[]): { title?: string; items: Settings
  * frame's own columns.
  *
  * - Expanded: the section list (204) beside one content column up to 720; the section head is its
- *   title and one line. Past seven sections the list is grouped under overlines.
+ *   title and one line. Past seven sections, or once every section names its group, the list is grouped under overlines. A section with `listed: false` opens by value without a row.
  * - Phone and medium: the drawn Settings rows first (`overview`), then the landing (2.10, Sean's
  *   option A): rounded group cards by `group`, each row with its `detail` (the state now) and a
  *   chevron, a `control` row flipping in place, then `foot` (Sign out). Each section pushes, and the app's `TopBar` back (or the status line's) returns with
@@ -167,10 +173,12 @@ function SettingsFrame({ label = "Settings sections", sections: allSections, val
   const frame = useAppFrame()
   // A control row is the phone landing's only; everywhere else the list holds sections that open.
   const sections = frame.split ? allSections.filter((s) => !s.control) : allSections
-  const shownValue = value ?? (frame.split ? (sections[0]?.value ?? null) : null)
+  // The rows: an unlisted section still opens (its content shows), it just has no row.
+  const rows = sections.filter((s) => s.listed !== false)
+  const shownValue = value ?? (frame.split ? (rows[0]?.value ?? null) : null)
   const current = sections.find((s) => s.value === shownValue)
-  const groups = grouped(sections)
-  const findable = sections.length >= 10 && search
+  const groups = grouped(rows)
+  const findable = rows.length >= 10 && search
 
   const list = (
     <nav aria-label={label} data-slot="settings-frame-nav" className={cn("flex flex-col gap-7", frame.split && "w-(--c-app-frame-settings-list)")}>
@@ -211,7 +219,7 @@ function SettingsFrame({ label = "Settings sections", sections: allSections, val
             list
           ) : (
             <nav aria-label={label} data-slot="settings-frame-nav">
-              <SettingsLanding sections={sections} onOpen={onValueChange} foot={foot} />
+              <SettingsLanding sections={rows} onOpen={onValueChange} foot={foot} />
             </nav>
           )}
         </AppFrameInset>

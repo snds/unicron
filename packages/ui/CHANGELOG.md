@@ -1,5 +1,12 @@
 # @unicron/ui
 
+## 2.12.0
+
+### Minor Changes
+
+- `SettingsFrame`: a section with `listed: false` opens by its `value` (an address, a link) but has no row in the list, on a desktop or a phone. Profile uses it: the account row at the top of the list opens it, as on the phone (Warpcore page review, 2026-11-28). With no section asked for, a desktop opens the first listed one.
+- `SettingsFrame` on a desktop groups the list under overlines at any count once every section names its `group`, so a desktop's groups match the phone's landing. Lists with ungrouped sections still group only past seven.
+
 ## 2.11.0
 
 ### Minor Changes

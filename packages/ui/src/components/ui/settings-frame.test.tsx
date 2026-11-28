@@ -139,4 +139,26 @@ describe("SettingsFrame (decisions §5)", () => {
     expect(screen.queryByRole("button", { name: "Update automatically" })).toBeNull()
     expect(screen.queryByRole("checkbox")).toBeNull()
   })
+
+  it("groups a short list once every section names its group (2.12)", () => {
+    setViewport(1440, 900)
+    render(<Settings sections={FEW.map((s, i) => ({ ...s, group: i ? "Mail" : "You" }))} />)
+    expect(screen.getByRole("group", { name: "You" })).toBeInTheDocument()
+    expect(screen.getByRole("group", { name: "Mail" })).toBeInTheDocument()
+  })
+
+  it("opens an unlisted section by value, with no row for it, on a desktop and a phone (2.12)", () => {
+    setViewport(1440, 900)
+    const sections: SettingsSection[] = [{ value: "profile", label: "Profile", listed: false }, ...FEW]
+    const { unmount } = render(<Settings sections={sections} />)
+    // The first listed section shows when none is asked for, not the unlisted one.
+    expect(screen.getByRole("heading", { level: 2, name: "Accounts" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Profile" })).toBeNull()
+    unmount()
+    render(<Settings sections={sections} initial="profile" />)
+    expect(screen.getByRole("heading", { level: 2, name: "Profile" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Profile" })).toBeNull()
+    setViewport(390, 844)
+    expect(screen.queryByRole("button", { name: "Profile" })).toBeNull()
+  })
 })
