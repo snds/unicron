@@ -828,9 +828,10 @@ function AppFramePageHead({ title, switcher, collapsed, gap = "md", below, size,
   const shown = useAppFrameColumnShown()
   const { setHead, setTopSlot } = frame
   const registers = frame.phone && shown
-  // A phone's titles stand at `sm` at most: the display sizes took a quarter of the screen, and the
-  // canvases draw a tab root's title at 28 with its actions on its row (Sean, 2026-11-27).
-  const shownSize = frame.phone && (size === undefined || size === "lg" || size === "md") ? "sm" : size
+  // A phone's display sizes stand at `phone` (large-title, 28/34): the display sizes took a quarter
+  // of the screen, and the canvases draw a tab root's title at 28 with its actions on its row
+  // (Sean, 2026-11-27).
+  const shownSize = frame.phone && (size === undefined || size === "lg" || size === "md") ? "phone" : size
   // The top row's actions stand here while the page rests (`AppFrameTopRow`).
   const slot = registers ? <span ref={setTopSlot} data-slot="app-frame-page-head-top-actions" className="flex items-center gap-2" /> : null
 

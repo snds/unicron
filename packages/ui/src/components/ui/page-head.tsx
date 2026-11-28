@@ -18,11 +18,13 @@ import { formatNavCount } from "./rail"
  * `md`: display/compact (48/48), every phone list and Vale's desktop lists. The default. On a
  *   phone its overline sits 4 above the title; in a desktop frame they touch, as Vale's desktop
  *   lists draw them (Unicron 77).
- * `sm`: title (32/36), a two-word phone title or a detail head beside a pane.
+ * `phone`: large-title (28/34), a phone tab screen's title on the frame's top row. Phone frames
+ *   map `lg` and `md` to it (Sean, 2026-11-27: phone tab titles about 28 to 32px, in every app).
+ * `sm`: title (20/28), a detail head beside a pane.
  * `xs`: lead (24/32), a conversation's head, as Warpcore's chat workspace draws it (cw-01:
  *   "OPAQUE login" 24px medium, 4 under its overline).
  */
-export type PageHeadSize = "lg" | "md" | "sm" | "xs"
+export type PageHeadSize = "lg" | "md" | "phone" | "sm" | "xs"
 
 /** Which way a sideways swipe on the switcher went. */
 export type PageHeadSwipe = "previous" | "next"
@@ -77,6 +79,7 @@ export type PageHeadProps = Omit<React.ComponentProps<"div">, "title"> & {
 const TITLE: Record<PageHeadSize, string> = {
   lg: "type-display",
   md: "type-display-compact",
+  phone: "type-large-title",
   sm: "type-title",
   xs: "type-lead",
 }
@@ -273,7 +276,11 @@ function PageHead({
           </p>
         ) : null}
         <div className={cn("flex min-w-0 flex-wrap items-baseline gap-y-1", size === "lg" ? "gap-x-4" : "gap-x-3")}>
-          <h1 data-slot="page-head-title" className={cn(TITLE[size], "min-w-0 text-text-body")}>
+          <h1
+            data-slot="page-head-title"
+            // large-title's 34px line is the one off the 4px grid: its box stands 36 tall, the type unchanged.
+            className={cn(TITLE[size], "min-w-0 text-text-body", size === "phone" && "min-h-9")}
+          >
             {title}
           </h1>
           {switcher && !overline ? chevron : null}
