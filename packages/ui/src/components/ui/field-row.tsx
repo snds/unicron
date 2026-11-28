@@ -267,7 +267,7 @@ export type FieldRowProps = Omit<React.ComponentProps<"div">, "children" | "role
   menu?: React.ReactNode
   /** The overflow button's name and the menu's title. Default "More actions for {label}". */
   menuLabel?: string
-  /** Which side draws the hairline. Default `top`, as Figma draws it. */
+  /** Which side draws a hairline. Default `none` (Sean, 2026-11-28: no dividers a list doesn't need, as List Row since 2.0). */
   rule?: FieldRowRule
   /** Add the 16px side padding of a full-bleed phone row. Default false: no side padding, as drawn. */
   inset?: boolean
@@ -294,7 +294,7 @@ function FieldRow({
   action,
   menu,
   menuLabel,
-  rule = "top",
+  rule = "none",
   inset = false,
   disabledReason,
   className,

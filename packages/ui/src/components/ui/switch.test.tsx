@@ -58,11 +58,10 @@ describe("Switch (Figma 32:53, Toggle)", () => {
     expect(classesOf(control)).toEqual(expect.arrayContaining(["data-disabled:pointer-events-none", "data-disabled:opacity-50"]))
   })
 
-  it("the track is 44 × 24 with 4px of padding on the control radius", () => {
+  it("the track is 44 × 24 with 4px of padding, fully round (Sean, 2026-11-28)", () => {
     render(<Switch aria-label="Lock after 5 minutes" />)
     const track = classesOf(screen.getByRole("switch"))
-    expect(track).toEqual(expect.arrayContaining(["h-6", "w-11", "p-1", "rounded-lg"]))
-    expect(track).not.toContain("rounded-full")
+    expect(track).toEqual(expect.arrayContaining(["h-6", "w-11", "p-1", "rounded-full"]))
   })
 
   it("on is the primary fill; off is the raised surface edged in a field's 3:1 border, not the hairline", () => {
@@ -80,13 +79,13 @@ describe("Switch (Figma 32:53, Toggle)", () => {
     expect(track).not.toContain("data-unchecked:rule-box")
   })
 
-  it("the knob is a 16px square that travels 20px on a motion role", () => {
+  it("the knob is a 16px circle that travels 20px on a motion role", () => {
     const { container } = render(<Switch aria-label="Lock after 5 minutes" />)
     const knob = classesOf(container.querySelector('[data-slot="switch-thumb"]')!)
     expect(knob).toEqual(
       expect.arrayContaining([
         "size-4",
-        "rounded-none",
+        "rounded-full",
         "data-unchecked:translate-x-0",
         "data-checked:translate-x-5",
         "data-checked:bg-primary-foreground",
@@ -95,7 +94,7 @@ describe("Switch (Figma 32:53, Toggle)", () => {
         "duration-(--motion-fast)",
       ])
     )
-    expect(knob.some((c) => c.startsWith("rounded-") && c !== "rounded-none")).toBe(false)
+    expect(knob.filter((c) => c.startsWith("rounded-"))).toEqual(["rounded-full"])
   })
 
   it("leaves the stylesheet's focus ring alone, and widens its touch target on a coarse pointer", () => {

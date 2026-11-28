@@ -518,7 +518,7 @@ describe("Dialog anatomy (2026-11: Lockdown D05, D09; Vale D02)", () => {
     expect(save).toHaveAttribute("data-kind", "confirm")
     expect(save).toHaveAttribute("data-variant", "default")
     expect(save.querySelector('[data-icon-name="checkmark"]')).not.toBeNull()
-    expect(save.className).not.toMatch(/max-sm:|rounded-full|sr-only/)
+    expect(save.className).not.toMatch(/max-sm:|sr-only/)
     const cancel = screen.getByRole("button", { name: "Cancel" })
     expect(cancel).toHaveAttribute("data-variant", "secondary")
     expect(cancel.querySelector("svg")).toBeNull()

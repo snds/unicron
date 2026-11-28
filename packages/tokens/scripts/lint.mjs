@@ -316,6 +316,46 @@ const ROUND_ALLOWED = [
     count: 1,
     why: "the 2.0 Composer's Send is a 32px circle on the accent fill (Figma Composer 32:91, radius/round)",
   },
+  {
+    file: "packages/ui/src/components/ui/button-group.tsx",
+    count: 3,
+    why: "its first and last button's outer ends: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
+  {
+    file: "packages/ui/src/components/ui/button.tsx",
+    count: 1,
+    why: "every button but the inline one: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
+  {
+    file: "packages/ui/src/components/ui/float-button.tsx",
+    count: 1,
+    why: "the float button: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
+  {
+    file: "packages/ui/src/components/ui/switch.tsx",
+    count: 2,
+    why: "the track and its knob: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
+  {
+    file: "packages/ui/src/components/ui/tab-bar.tsx",
+    count: 2,
+    why: "the bar and each tab: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
+  {
+    file: "packages/ui/src/components/ui/tabs.tsx",
+    count: 1,
+    why: "each trigger: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
+  {
+    file: "packages/ui/src/components/ui/toggle-group.tsx",
+    count: 5,
+    why: "each item, and the group's ends in both directions: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
+  {
+    file: "packages/ui/src/components/ui/toggle.tsx",
+    count: 1,
+    why: "the toggle: round controls (Sean, 2026-11-28, every app: circular corners on the tab bar, buttons and other controls, away from the Swiss layout)",
+  },
 ]
 const ROUND = /(?<![\w-])rounded(?:-[trblse]{1,2})?-full(?![\w-])/g
 // An arbitrary value: `…-[value]`. Inside it a raw length is a number with px or rem that is not

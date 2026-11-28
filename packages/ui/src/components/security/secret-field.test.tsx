@@ -661,8 +661,8 @@ describe("SecretField 1.0: the Field Row look", () => {
     const host = fakeHost()
     const { container } = render(<SecretField label="Password" getSecret={() => Promise.resolve(bytes())} host={host} clipboardTimer={20} />)
     const root = container.querySelector('[data-slot="secret-field"]')!
-    // The row: the rule on top (it adds no height), a container so it can stack on a phone.
-    expect(root.className).toContain("rule-t")
+    // The row: no hairline, a container so it can stack on a phone.
+    expect(root.className).not.toContain("rule-t")
     expect(root.className).toContain("@container/row")
     expect(root).toHaveAttribute("data-size", "auto")
     expect(container.querySelector('[data-slot="secret-field-label"]')).toHaveClass("type-overline", "text-text-label")

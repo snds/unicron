@@ -15,7 +15,8 @@
 //     its theme; these files are the playground's copies, so they must still be exactly Figma's.
 //   - the type roles: family, weight, size, line height, letter spacing, case. A role marked
 //     `"figma": "pending"` (mono-row, 1.1) is not in Figma yet, and one marked `"figma": "retired"`
-//     is in Figma's Retired folder: both reported, not failed.
+//     is in Figma's Retired folder: both reported, not failed. One marked `"figma": "ahead"` (overline,
+//     2.3) is in Figma but the code moved first, on Sean's word: its values are reported, not failed.
 //   - the size variables, and the radius scale (each step, and Tailwind's keys for it)
 //   - the spacing values, against Tailwind's 4px unit (spacing has no tokens of its own)
 //
@@ -147,7 +148,9 @@ for (const theme of fixtures) {
 const typeName = (figmaName) => figmaName.replace(/\//g, "-")
 const pendingType = Object.keys(built.type).filter((role) => built.type[role].figma === "pending")
 const retiredType = Object.keys(built.type).filter((role) => built.type[role].figma === "retired")
+const aheadType = Object.keys(built.type).filter((role) => built.type[role].figma === "ahead")
 for (const role of retiredType) gaps.push(`retired type role ${role}`)
+for (const role of aheadType) gaps.push(`type role ${role}: the code is ahead of Figma's style`)
 for (const role of pendingType) {
   if (Object.keys(snapshot.type).map(typeName).includes(role)) differences.push(`type ${role}: Figma has it now; take "figma": "pending" off it in tokens/type.json`)
   else gaps.push(`type role ${role}`)
@@ -165,6 +168,7 @@ for (const [figmaName, want] of Object.entries(snapshot.type)) {
     differences.push(`type ${figmaName}: --type-${role}-* is not in the built CSS`)
     continue
   }
+  if (aheadType.includes(role)) continue
   // The stack opens with the variable font, then the family as Figma names it.
   const stack = resolveValue(part("family"), rootVars).split(",").map((f) => f.trim().replace(/^"|"$/g, ""))
   same(`type ${figmaName} family`, stack.slice(0, 2).join(", "), `${want.family} Variable, ${want.family}`)

@@ -119,7 +119,9 @@ function SectionHeader({
       {hasCount ? <Count count={count} /> : null}
     </>
   )
-  const rule = letter ? null : <span data-slot="section-header-rule" aria-hidden="true" className="h-(--stroke-rule) min-w-4 flex-1 bg-line-rule" />
+  // The space that pushes the action to the end. No line: the hairline was a divider the sections
+  // didn't need (Sean, 2026-11-28: away from the Swiss layout's extra dividers).
+  const rule = letter ? null : <span data-slot="section-header-rule" aria-hidden="true" className="min-w-4 flex-1" />
   const actionSlot = action ? (
     <span data-slot="section-header-action" className="inline-flex shrink-0 items-center">
       {action}

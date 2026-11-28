@@ -294,12 +294,12 @@ describe("ApprovalSheet 1.0: the review look and the matching modes", () => {
     }
   })
 
-  it("the facts are Field Rows: overline label, mono value, a rule on top", async () => {
+  it("the facts are Field Rows: overline label, mono value, no rule", async () => {
     setup()
     await arm()
     const rows = dialog().querySelectorAll('[data-slot="approval-sheet-context-row"]')
     expect(rows).toHaveLength(4)
-    expect(rows[0]!.className).toContain("rule-t")
+    expect(rows[0]!.className).not.toContain("rule-t")
     expect(within(rows[0] as HTMLElement).getByText("What")).toHaveClass("type-overline")
     expect(within(rows[0] as HTMLElement).getByText("Sign in to the vault")).toHaveClass("type-code-inline")
   })

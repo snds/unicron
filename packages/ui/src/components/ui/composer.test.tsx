@@ -15,7 +15,7 @@ describe("Composer", () => {
     expect(root.tagName).toBe("FORM")
     expect(root).toHaveAttribute("data-state", "empty")
     const box = container.querySelector('[data-slot="composer-box"]')!
-    for (const c of ["bg-surface-raised", "inset-ring-line-field", "flex-col", "gap-2.5", "rounded-xl", "pt-3", "pr-3", "pb-2.5", "pl-4"]) expect(box.className.split(" ")).toContain(c)
+    for (const c of ["bg-surface-raised", "inset-ring-line-field", "flex-col", "gap-2.5", "rounded-[calc(var(--radius-xl)*1.5)]", "pt-3", "pr-3", "pb-2.5", "pl-4"]) expect(box.className.split(" ")).toContain(c)
     // Focus draws Figma's 2px primary-fill inside border on the box, as a Text Field does.
     expect(box.className).toContain("has-[[data-slot=composer-field]:focus]:rule-box-emphasis")
     expect(field()).toHaveAttribute("placeholder", "Reply to Mira")

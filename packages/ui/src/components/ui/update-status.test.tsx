@@ -205,7 +205,7 @@ describe("the update rows in the Field Row and Toggle Row looks", () => {
   it("UpdateStatusRow: a label column, the version in mono, the actions as overline words", () => {
     const { container, rerender } = render(<UpdateStatusRow status={status1} appName="Lockdown" onCheck={noop} onRestart={noop} onReload={noop} />)
     const row = container.querySelector('[data-slot="update-status-row"]')!
-    expect(row.className).toContain("rule-t")
+    expect(row.className).not.toContain("rule-t")
     expect(container.querySelector('[data-slot="update-status-row-label"]')).toHaveTextContent("Version")
     expect(container.querySelector('[data-slot="update-status-row-version"]')).toHaveClass("type-code-inline")
     expect(screen.getByRole("button", { name: "Check for updates" })).toHaveClass("type-overline")
@@ -217,7 +217,7 @@ describe("the update rows in the Field Row and Toggle Row looks", () => {
   it("AutoCheckSwitch: the words are the switch's label, so a tap on them turns it", () => {
     const onCheckedChange = vi.fn()
     const { container } = render(<AutoCheckSwitch status={status1} onCheckedChange={onCheckedChange} />)
-    expect(container.querySelector('[data-slot="auto-check-switch"] [data-slot="toggle-row"]')!.className).toContain("rule-t")
+    expect(container.querySelector('[data-slot="auto-check-switch"] [data-slot="toggle-row"]')!.className).not.toContain("rule-t")
     fireEvent.click(screen.getByText("Check for updates automatically"))
     expect(onCheckedChange).toHaveBeenCalledWith(false)
   })

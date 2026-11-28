@@ -276,6 +276,7 @@ const TYPE_ROLES = [
 ]
 assert.deepEqual(Object.keys(typeRoles), TYPE_ROLES, "expected the 32 type roles: Figma's 22, the 8 retired ones, mono-row after meta (Lockdown 4, 1.1) and nav-title last (2.8)")
 assert.deepEqual(Object.keys(typeRoles).filter((role) => typeRoles[role].figma === "pending"), ["mono-row", "nav-title"], "mono-row and nav-title are the type roles waiting on their Figma styles")
+assert.deepEqual(Object.keys(typeRoles).filter((role) => typeRoles[role].figma === "ahead"), ["overline"], "overline (sentence case, 2.3) is ahead of its Figma style")
 const TYPE_PARTS = {
   family: /^var\(--g-font-(sans|mono)\)$/,
   weight: /^[4-7]00$/,
@@ -292,7 +293,8 @@ for (const role of TYPE_ROLES) {
   // Every line height sits on the 4px grid, but the phone's large title, which is Figma's 28/34.
   if (role !== "large-title") assert.equal((parseFloat(root.get(`--type-${role}-leading`)) * 16) % 4, 0, `--type-${role}-leading is not a multiple of 4px`)
 }
-assert.equal(typeRoles.overline.case, "upper", "overline is the one role with a case")
+// 2.3: no role has a case. The overline left the Swiss caps (Sean, 2026-11-28, every app).
+for (const role of TYPE_ROLES) assert.equal(typeRoles[role].case, undefined, `type.${role} sets no case`)
 
 for (const name of ["motion-spin", "motion-pulse"]) assert.ok(light.has(`--${name}`), `missing --${name}`)
 

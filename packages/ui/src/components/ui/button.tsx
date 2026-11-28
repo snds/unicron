@@ -32,7 +32,7 @@ const variants = cva(
   // No border, and nothing about focus: the edge of an outlined kind is an inset ring, and the
   // focus ring is the stylesheet's one rule for every control (2px solid --ring, 2px clear of it).
   // A control opts out of that rule with outline-none; this one must not.
-  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded whitespace-nowrap select-none motion-push disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) [&_svg:not([class*='size-'])]:size-icon [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full whitespace-nowrap select-none motion-push disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-50 aria-busy:[&>svg]:hidden aria-invalid:inset-ring-2 aria-invalid:inset-ring-(--line-invalid) [&_svg:not([class*='size-'])]:size-icon [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {

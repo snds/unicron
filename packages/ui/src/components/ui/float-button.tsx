@@ -32,7 +32,7 @@ const variants = cva(
   // A floating control sits over content, so every fill here is opaque: a hover is a mix towards
   // the ground, never a see-through fill. No shadow: nothing in the system casts one. Focus is the
   // stylesheet's one ring for every control; nothing here resets it.
-  "group/float-button motion-press-sm inline-flex shrink-0 items-center justify-center rounded-lg select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0",
+  "group/float-button motion-press-sm inline-flex shrink-0 items-center justify-center rounded-full select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0",
   {
     variants: {
       look: {

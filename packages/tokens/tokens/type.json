@@ -148,16 +148,16 @@
       "$value": {
         "fontFamily": "{font.sans}",
         "fontWeight": 600,
-        "fontSize": "11px",
+        "fontSize": "13px",
         "lineHeight": "16px",
-        "letterSpacing": "0.04em"
+        "letterSpacing": "0.0em"
       },
       "$extensions": {
         "unicron.type": {
-          "case": "upper"
+          "figma": "ahead"
         }
       },
-      "$description": "Figma Unicron Type/overline: Geist SemiBold 11/16, +4%. Small all-caps section labels, in the sans. The only role with a case: upper. Type the text in normal case."
+      "$description": "Geist SemiBold 13/16, sentence case: the small label over a section or a value. It was Figma's 11/16 all caps at +4%; Sean (2026-11-28, every app) moved away from the Swiss caps, so it is typed and shown as written, in the same 16px line. Not in Figma yet: Sean updates `Unicron Type/overline`."
     },
     "folio": {
       "$type": "typography",
