@@ -1,5 +1,11 @@
 # @unicron/tokens
 
+## 2.2.0
+
+### Minor Changes
+
+- Type role `nav-title`: Geist SemiBold 17/24, the phone top row's small centred title (Sean, 2026-11-28, every app). Marked `figma: pending` until `Unicron Type/nav-title` is in Figma.
+
 ## 2.1.0
 
 ### Minor Changes

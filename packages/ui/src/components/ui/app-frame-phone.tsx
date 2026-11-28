@@ -134,7 +134,7 @@ export type AppFrameTopRowProps = Omit<React.ComponentProps<"div">, "title" | "c
 function SmallTitle({ title, switcher }: { title: string; switcher?: PageHeadSwitcher }) {
   if (!switcher) {
     return (
-      <p data-slot="app-frame-top-row-title" aria-hidden="true" className="type-subtitle motion-pop min-w-0 truncate text-center text-text-body">
+      <p data-slot="app-frame-top-row-title" aria-hidden="true" className="type-nav-title motion-pop min-w-0 truncate text-center text-text-body">
         {title}
       </p>
     )
@@ -146,7 +146,7 @@ function SmallTitle({ title, switcher }: { title: string; switcher?: PageHeadSwi
       {...(mergeProps<"button">(buttonProps as React.ComponentProps<"button">, { "aria-label": `${title}, ${label}` }) as ButtonPrimitive.Props)}
       className="motion-pop hit-area flex min-w-0 items-center justify-center gap-1 rounded-sm px-2 py-1 text-text-body transition-[background-color] duration-(--motion-fast) ease-(--motion-ease) hover:bg-state-hover active:bg-state-pressed"
     >
-      <span className="type-subtitle truncate">{title}</span>
+      <span className="type-nav-title truncate">{title}</span>
       <span aria-hidden="true" className="inline-flex text-text-label">
         <Icon name="chevron--down" size="sm" />
       </span>

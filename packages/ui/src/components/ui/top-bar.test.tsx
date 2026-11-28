@@ -41,7 +41,7 @@ describe("TopBar", () => {
     rerender(<TopBar onBack={() => {}} title="Migrate vault login to OPAQUE" />)
     const title = container.querySelector('[data-slot="top-bar-title"]')!
     expect(title.tagName).toBe("P")
-    expect(classesOf(title)).toEqual(expect.arrayContaining(["type-subtitle", "truncate", "text-center", "text-text-body", "motion-pop"]))
+    expect(classesOf(title)).toEqual(expect.arrayContaining(["type-nav-title", "truncate", "text-center", "text-text-body", "motion-pop"]))
   })
 
   it("the title can be the page's heading, and the back button can be named or replaced", () => {

@@ -603,6 +603,14 @@ html:has([data-slot="app-frame"]) body {
   line-height: var(--type-large-title-leading);
   letter-spacing: var(--type-large-title-tracking);
 }
+/* A phone top row's small centred title: a pushed screen's, or a page's once it has scrolled (2.8, 17/24). */
+@utility type-nav-title {
+  font-family: var(--type-nav-title-family);
+  font-weight: var(--type-nav-title-weight);
+  font-size: var(--type-nav-title-size);
+  line-height: var(--type-nav-title-leading);
+  letter-spacing: var(--type-nav-title-tracking);
+}
 /* A phone tab bar's label (2.0). */
 @utility type-tab-label {
   font-family: var(--type-tab-label-family);
