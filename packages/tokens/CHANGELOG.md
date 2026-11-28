@@ -1,5 +1,11 @@
 # @unicron/tokens
 
+## 2.3.0
+
+### Minor Changes
+
+- Type role `overline` leaves the Swiss caps (Sean, 2026-11-28, every app): Geist SemiBold 13/16 in sentence case, no tracking, no `case`. Same 16px line, so nothing moves. Marked `figma: "ahead"` (a new status: in Figma, but the code moved first; parity reports it and does not fail) until Sean updates `Unicron Type/overline`. No role sets a case now.
+
 ## 2.2.0
 
 ### Minor Changes

@@ -53,7 +53,7 @@ const TYPE: Record<string, [family: "Geist" | "Geist Mono", weight: number, size
   "ui-emphasis": ["Geist", 500, 13, 20, 0],
   "label": ["Geist", 500, 13, 20, 0],
   "caption": ["Geist", 400, 12, 16, 0],
-  "overline": ["Geist", 600, 11, 16, 0.04],
+  "overline": ["Geist", 600, 13, 16, 0],
   "folio": ["Geist", 500, 12, 16, 0],
   "meta": ["Geist", 400, 12, 16, 0],
   // Not in Figma yet (Lockdown 4, 1.1): Sean adds `Unicron Type/mono/row`.
@@ -293,7 +293,7 @@ test("the 31 type roles draw the Figma text styles", async ({ page }) => {
     expect(seen.leading, `${role} line height`).toBeCloseTo(leading, 1)
     expect(seen.tracking, `${role} letter spacing`).toBeCloseTo(size * tracking, 1)
     // Overline is the only role with a case.
-    expect(seen.transform, `${role} case`).toBe(role === "overline" ? "uppercase" : "none")
+    expect(seen.transform, `${role} case`).toBe("none")
     if (TABULAR.includes(role)) expect(seen.numeric, `${role} figures`).toContain("tabular-nums")
     else expect(seen.numeric, `${role} figures`).not.toContain("tabular-nums")
     // Every line height sits on the 4px grid, but the phone's large title (28/34, as iOS draws it).

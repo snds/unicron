@@ -473,14 +473,13 @@ html:has([data-slot="app-frame"]) body {
   letter-spacing: var(--type-caption-tracking);
   text-wrap: pretty;
 }
-/* A mono caps label above what it names, with `//` between its parts. Type it in sentence case; the role sets the capitals. It is the only role with a case. Ink: labels (--muted-foreground), unless a colour class says otherwise. */
+/* A small label above what it names, shown as typed (sentence case, ` · ` between parts; 2.3 left the Swiss caps and the `//`). Ink: labels (--muted-foreground), unless a colour class says otherwise. */
 @utility type-overline {
   font-family: var(--type-overline-family);
   font-weight: var(--type-overline-weight);
   font-size: var(--type-overline-size);
   line-height: var(--type-overline-leading);
   letter-spacing: var(--type-overline-tracking);
-  text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: var(--muted-foreground);
 }
