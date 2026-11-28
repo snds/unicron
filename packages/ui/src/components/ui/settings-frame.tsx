@@ -9,7 +9,7 @@ import { Icon, type IconName } from "../icon"
 import { AppFrameDetail, AppFrameInset, AppFrameList } from "./app-frame"
 import { useAppFrame } from "./app-frame-context"
 import { NavItem, NavSection } from "./nav-item"
-import { NavMark, nameWithMark, resolveNavMark, type NavMarkProp } from "./rail"
+import { NavMark, resolveNavMark, type NavMarkProp } from "./rail"
 
 export interface SettingsSection {
   value: string
@@ -109,7 +109,6 @@ function SettingsLanding({ sections, onOpen, foot }: { sections: SettingsSection
                     <button
                       type="button"
                       data-slot="settings-landing-row"
-                      aria-label={nameWithMark(section.label, mark)}
                       onClick={() => onOpen(section.value)}
                       className={cn(LANDING_ROW, "rounded-lg transition-colors outline-none hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-(--line-focus)")}
                     >
@@ -121,6 +120,8 @@ function SettingsLanding({ sections, onOpen, foot }: { sections: SettingsSection
                         </span>
                       ) : null}
                       <NavMark mark={mark} placement="inline" />
+                      {/* The name is the row's own words (axe: label in name); a mark's words are added for a screen reader. */}
+                      {mark?.words ? <span className="sr-only">{`, ${mark.words}`}</span> : null}
                       <Icon name="chevron--right" size="sm" className="shrink-0 text-text-label" />
                     </button>
                   )}

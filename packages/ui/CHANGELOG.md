@@ -1,5 +1,11 @@
 # @unicron/ui
 
+## 2.10.1
+
+### Patch Changes
+
+- `SettingsFrame` phone landing: a row's accessible name is its own words (name, then its state), with a mark's words added for a screen reader, so axe's label-in-name rule passes.
+
 ## 2.10.0
 
 ### Minor Changes
